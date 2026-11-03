@@ -76,9 +76,11 @@ TOTAL=$(grep -o 'android:name="[^"]*"' AndroidManifest.xml | cut -d'"' -f2 | gre
 # (+13.4KB measured). Alternatives examined and refused: trimming Writer
 # templates / symbol layouts (functional, test-bound content), UI-string
 # gutting (unreviewable Arabic quality), deferring the store (the week's
-# deliverable). Decision: one documented raise to 520,000B (+4%). The
-# entitlements week must live UNDER this ceiling — the next overflow requires
-# real trimming, not another raise.
+# deliverable). Decision: one documented raise to 520,000B (+4%).
+# Signed-dict week (vc 60) lived under the ceiling as ordered: SignedDict +
+# the Dictionary.load consumption wiring cost +5,540B measured → 518,560B,
+# headroom 1,440B. The entitlements week (vc 61) inherits that headroom ONLY —
+# the next overflow requires real trimming, not another raise.
 [ "$R8D" -le 520000 ] || { echo "R8_GATE_FAILED: dex $R8D > 520000 budget — trim before shipping" >&2; exit 1; }
 echo "R8_OK dex=$R8D bytes, mapping=$MAPPED program classes, manifest components kept=$KEPT/$TOTAL"
 [ "$FAILS" = "0" ] || exit 1

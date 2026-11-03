@@ -3,9 +3,11 @@ package com.hark.neokey;
 import android.content.Context;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -68,6 +70,23 @@ final class Dictionary {
             String line;
             while ((line = r.readLine()) != null) if (!line.isEmpty()) list.add(line);
             r.close();
+            // Phase 3, week 2 — the SIGNED community pack is consumed AFTER the
+            // installed corpus (order contract, docs/SIGNED-DICT.md §4): pack
+            // words append in pack order behind the corpus ranks, norm-duplicates
+            // already in the corpus are skipped (first wins). A pack that fails
+            // pin or re-judge is refused ENTIRELY — never partially merged; on
+            // device that degrades to "no enrichment", never a broken dictionary.
+            try {
+                InputStream in = c.getAssets().open("community_dict.json");
+                ByteArrayOutputStream bo = new ByteArrayOutputStream();
+                byte[] pbuf = new byte[8192];
+                int rn;
+                while ((rn = in.read(pbuf)) > 0) bo.write(pbuf, 0, rn);
+                in.close();
+                SignedDict.Pack pack = SignedDict.verify(bo.toByteArray(), null);
+                SignedDict.MergePlan plan = SignedDict.mergePlan(list, pack);
+                for (String pw : plan.add) list.add(pw);
+            } catch (Exception ignored) { }
             final int n = list.size();
             Integer[] idx = new Integer[n];
             final String[] k = new String[n];

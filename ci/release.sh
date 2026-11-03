@@ -63,6 +63,13 @@ if [ "${STOREUI_GATE:-}" = "OK" ]; then
   STOREUI_BLOCK=$',\n    "store": { "verifiedBy": "ci/store_ui_gate.sh", "contract": "docs/PHASE3-W1-REPORT.md", "catalogPacks": 25, "catalogFounders": 10, "catalogCents": '"${STOREUI_CATALOG_CENTS:-0}"', "ledgerClosesCents": '"${STOREUI_LEDGER_CENTS:-0}"', "negativesRefused": "'"${STOREUI_NEGATIVES:-0}"'", "installP50Us": '"${STOREUI_P50_US:-0}"', "wallet": "local cents ledger — real payment provider is a deployment decision" }'
 fi
 
+
+# Signed community-pack gate (phase 3, week 2) — present when the gate ran
+SIGNEDICT_BLOCK=""
+if [ "${SIGNEDICT_GATE:-}" = "OK" ]; then
+  SIGNEDICT_BLOCK=$',\n    "signedCommunityPack": { "verifiedBy": "ci/signeddict_gate.sh", "contract": "docs/SIGNED-DICT.md", "packWords": '"${SIGNEDICT_PACK_WORDS:-0}"', "mergeAdd": '"${SIGNEDICT_MERGE_ADD:-0}"', "mergeSkip": '"${SIGNEDICT_MERGE_SKIP:-0}"', "negativesRefused": "'"${SIGNEDICT_NEGATIVES:-0}"'", "verifyP50Us": '"${SIGNEDICT_P50_US:-0}"', "consumedBy": "Dictionary.load after the installed corpus" }'
+fi
+
 cat > "$OUT/release-manifest.json" <<EOF
 {
   "app": "com.hark.neokey",
@@ -73,7 +80,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$STOREUI_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$STOREUI_BLOCK$SIGNEDICT_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
   "signedBy": "release workflow only — signing secrets never leave the vault"

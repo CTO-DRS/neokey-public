@@ -98,6 +98,9 @@ stage_community() { ci/community_gate.sh; }
 # ---- 3n: in-app store gate (roadmap phase 3, week 1) ----------------------------
 stage_storeui() { ci/store_ui_gate.sh; }
 
+# ---- 3o: signed community-pack gate (phase 3, week 2) -----------------------------
+stage_signeddict() { ci/signeddict_gate.sh; }
+
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
 
@@ -241,6 +244,15 @@ collect_gates() {
   echo "STOREUI_P50_US=$(echo "$SU_LINE" | sed -E 's/.*p50_install_us=([0-9]+).*/\1/')" >> "$GATES"
   echo "STOREUI_CATALOG_CENTS=$(echo "$SU_LINE" | sed -E 's/.*catalog_cents=([0-9]+).*/\1/')" >> "$GATES"
   echo "STOREUI_LEDGER_CENTS=$(echo "$SU_LINE" | sed -E 's/.*ledger_closes=([0-9]+).*/\1/')" >> "$GATES"
+  # signed community-pack gate numbers (phase 3, week 2)
+  echo "SIGNEDICT_GATE=$(grep -q '^SIGNEDICT_GATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  SD_LINE=$(grep '^SIGNEDICT_GATE_OK' "$LOG" | tail -1)
+  echo "SIGNEDICT_NEGATIVES=$(echo "$SD_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
+  echo "SIGNEDICT_PACK_WORDS=$(echo "$SD_LINE" | sed -E 's/.*pack_words=([0-9]+).*/\1/')" >> "$GATES"
+  echo "SIGNEDICT_MERGE_ADD=$(echo "$SD_LINE" | sed -E 's/.*merge_add=([0-9]+).*/\1/')" >> "$GATES"
+  echo "SIGNEDICT_MERGE_SKIP=$(echo "$SD_LINE" | sed -E 's/.*merge_skip=([0-9]+).*/\1/')" >> "$GATES"
+  echo "SIGNEDICT_P50_US=$(echo "$SD_LINE" | sed -E 's/.*p50_verify_us=([0-9]+).*/\1/')" >> "$GATES"
+  echo "SIGNEDICT_INSTALLED=$(echo "$SD_LINE" | sed -E 's/.*installed=([0-9]+).*/\1/')" >> "$GATES"
 }
 
 # ---- run the line -------------------------------------------------------------
@@ -259,6 +271,7 @@ run_stage "syncclient" stage_syncclient
 run_stage "themestore" stage_themestore
 run_stage "nqfport" stage_nqfport
 run_stage "community" stage_community
+run_stage "signeddict" stage_signeddict
 run_stage "storeui" stage_storeui
 if [ "${SKIP_BUILD:-0}" = "1" ]; then
   skip_stage "build" "SKIP_BUILD=1 (JVM gates only)"
