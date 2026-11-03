@@ -1,6 +1,0 @@
-# إثبات سلبي موثق — إخفاء SignedDict.java يكسر بوابة الدمج الموقّع
-File src/com/hark/neokey/SignedDict.java is missing
-SIGNEDICT_GATE_FAILED compile
-# الإعادة بعد استرجاع SignedDict.java:
-SIGNEDICT_GATE_OK verified=2 negatives=19/19 pack_words=11 merge_add=11 merge_skip=0 p50_verify_us=575 installed=134188
-SIGNEDICT_GATE OK

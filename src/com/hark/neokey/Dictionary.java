@@ -3,11 +3,9 @@ package com.hark.neokey;
 import android.content.Context;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -47,6 +45,11 @@ final class Dictionary {
     };
     private volatile boolean loaded;
     private boolean dirty;
+    /** حجم الأساس المثبت (corpus) — راونك الحزمة المجتمعية يبدأ عنده (الأسبوع 19). */
+    private int baseRankN;
+    /** الدرجة الأرضية الموثقة لكلمات حزمة القاموس المجتمعي — تحت عتبة
+     *  المطابقة التامة (22000) فلا تحزمة تتصدر المثبت أبداً. */
+    static final int PACK_SCORE = 3000;
 
     Dictionary(final Context c, final String lang) { this(c, lang, false); }
 
@@ -70,23 +73,6 @@ final class Dictionary {
             String line;
             while ((line = r.readLine()) != null) if (!line.isEmpty()) list.add(line);
             r.close();
-            // Phase 3, week 2 — the SIGNED community pack is consumed AFTER the
-            // installed corpus (order contract, docs/SIGNED-DICT.md §4): pack
-            // words append in pack order behind the corpus ranks, norm-duplicates
-            // already in the corpus are skipped (first wins). A pack that fails
-            // pin or re-judge is refused ENTIRELY — never partially merged; on
-            // device that degrades to "no enrichment", never a broken dictionary.
-            try {
-                InputStream in = c.getAssets().open("community_dict.json");
-                ByteArrayOutputStream bo = new ByteArrayOutputStream();
-                byte[] pbuf = new byte[8192];
-                int rn;
-                while ((rn = in.read(pbuf)) > 0) bo.write(pbuf, 0, rn);
-                in.close();
-                SignedDict.Pack pack = SignedDict.verify(bo.toByteArray(), null);
-                SignedDict.MergePlan plan = SignedDict.mergePlan(list, pack);
-                for (String pw : plan.add) list.add(pw);
-            } catch (Exception ignored) { }
             final int n = list.size();
             Integer[] idx = new Integer[n];
             final String[] k = new String[n];
@@ -142,9 +128,84 @@ final class Dictionary {
                 u.close();
             }
             synchronized (this) { words = w; keys = kk; base = s; rank = rk; }
+            baseRankN = n;
+            consumeCommunityPack(c);
             loaded = true;
         } catch (Exception ignored) {
             loaded = true;
+        }
+    }
+
+    /** المرحلة 3/الأسبوع 2 — استهلاك حزمة القاموس المجتمعي الموقّعة من أصول
+     *  الإصدار (community_<lang>.dpack) إن وُجدت: توقيع يُتحقق ثم دمج بترتيب
+     *  موثق. غياب الأصل حالة طبيعية (الحزم اختيارية)؛ أي خرق شكل/توقيع يُرفض
+     *  كله ولا يُستهلك شيء من حزمة مسمومة. */
+    private void consumeCommunityPack(Context c) {
+        try {
+            java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+            java.io.InputStream in = c.getAssets().open("community_" + lang + ".dpack");
+            byte[] buf = new byte[8192];
+            int rd;
+            while ((rd = in.read(buf)) > 0) bo.write(buf, 0, rd);
+            in.close();
+            DictSign.Pack p = DictSign.load(bo.toByteArray(), null, null);
+            List<String> ws = new ArrayList<>(p.words.size());
+            for (DictSign.Word w : p.words) ws.add(w.word);
+            mergePack(ws);
+        } catch (Exception ignored) { }
+    }
+
+    /** الدمج الموقّع — ترتيب الاستهلاك الموثق (بوابة الأسبوع 19):
+     *  1) كلمات الحزمة تُلحق بعد القاموس المثبت: راونكها يبدأ عند baseRankN
+     *     بترتيب الحزمة نفسه (حتمي مهما كان حالة الجهاز)؛
+     *  2) درجتها الأرضية PACK_SCORE=3000 — لا دفعة مطابقة تامة ولا تصدير؛
+     *  3) المكرر الطبيعي مع المثبت يُسقَط — القاموس المثبت يفوز دائماً؛
+     *  4) إعادة الفرز (المفتاح ثم الراونك) تحافظ على ترتيب الأساس الأصلي
+     *     حرفياً (راونك الأساس = موضع corpus الأصلي).
+     *  العائد: عدد الكلمات المضافة فعلاً. */
+    int mergePack(List<String> packWords) {
+        if (packWords == null || packWords.isEmpty()) return 0;
+        synchronized (this) {
+            String[] w = this.words, k = this.keys;
+            int[] s = this.base, r = this.rank;
+            java.util.HashSet<String> have = new java.util.HashSet<>(k.length * 2);
+            for (String key : k) have.add(key);
+            List<String> nw = new ArrayList<>();
+            List<Integer> nr = new ArrayList<>();
+            for (int i = 0; i < packWords.size(); i++) {
+                String pw = packWords.get(i);
+                String nk = norm(pw);
+                if (nk.isEmpty() || have.contains(nk)) continue;
+                have.add(nk);
+                nw.add(pw);
+                nr.add(baseRankN + i);
+            }
+            if (nw.isEmpty()) return 0;
+            int m = nw.size(), old = w.length, tot = old + m;
+            String[] W = new String[tot]; String[] K = new String[tot];
+            int[] S = new int[tot]; int[] R = new int[tot];
+            System.arraycopy(w, 0, W, 0, old); System.arraycopy(k, 0, K, 0, old);
+            System.arraycopy(s, 0, S, 0, old); System.arraycopy(r, 0, R, 0, old);
+            for (int i = 0; i < m; i++) {
+                W[old + i] = nw.get(i); K[old + i] = norm(nw.get(i));
+                S[old + i] = PACK_SCORE; R[old + i] = nr.get(i);
+            }
+            Integer[] idx = new Integer[tot];
+            for (int i = 0; i < tot; i++) idx[i] = i;
+            final String[] fk = K; final int[] fr = R;
+            Arrays.sort(idx, new Comparator<Integer>() {
+                @Override public int compare(Integer a, Integer b) {
+                    int c = fk[a].compareTo(fk[b]);
+                    return c != 0 ? c : fr[a] - fr[b];
+                }
+            });
+            String[] w2 = new String[tot], k2 = new String[tot];
+            int[] s2 = new int[tot], r2 = new int[tot];
+            for (int i = 0; i < tot; i++) {
+                w2[i] = W[idx[i]]; k2[i] = K[idx[i]]; s2[i] = S[idx[i]]; r2[i] = R[idx[i]];
+            }
+            this.words = w2; this.keys = k2; this.base = s2; this.rank = r2;
+            return m;
         }
     }
 

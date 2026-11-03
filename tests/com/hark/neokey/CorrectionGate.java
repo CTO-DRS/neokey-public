@@ -67,8 +67,8 @@ public final class CorrectionGate {
         files.mkdirs();
         Dictionary dict = new Dictionary(new FakeContext(files), "ar");
         long t0 = System.currentTimeMillis();
-        while (!dict.knows("من") && System.currentTimeMillis() - t0 < 30000) Thread.sleep(100);
-        need(dict.knows("من"), "dictionary did not load");
+        while (!dict.isLoaded() && System.currentTimeMillis() - t0 < 30000) Thread.sleep(100);
+        need(dict.isLoaded(), "dictionary did not load");
 
         List<String[]> sentences = new ArrayList<>();
         for (String line : Files.readAllLines(new File("assets/testset_ar.txt").toPath(), StandardCharsets.UTF_8)) {

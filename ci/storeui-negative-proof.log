@@ -1,6 +1,2 @@
-# إثبات سلبي موثق — إخفاء StoreUi.java يكسر بوابة المتجر (أعيد توليده في vc 60)
 File src/com/hark/neokey/StoreUi.java is missing
 STOREUI_GATE_FAILED compile
-# الإعادة بعد استرجاع StoreUi.java:
-STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16 p50_install_us=224 catalog_cents=7325 ledger_closes=7325 checks=79
-STOREUI_GATE OK

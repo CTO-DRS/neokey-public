@@ -34,8 +34,7 @@ SRC="src/com/hark/neokey/ClipItem.java src/com/hark/neokey/ClipRepo.java src/com
  src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java \
  src/com/hark/neokey/ThemePack.java src/com/hark/neokey/Economy.java \
  src/com/hark/neokey/NqfPort.java src/com/hark/neokey/CommunityDict.java \
- src/com/hark/neokey/SignedDict.java \
- src/com/hark/neokey/StoreUi.java \
+ src/com/hark/neokey/StoreUi.java src/com/hark/neokey/DictSign.java \
  $(find tests -name '*.java')"
 if command -v javac >/dev/null 2>&1; then
   javac -nowarn -encoding UTF-8 -cp "$JAR" -d build/test $SRC
@@ -57,5 +56,5 @@ java -cp build/test:$JAR com.hark.neokey.ThemePackTest
 java -cp build/test:$JAR com.hark.neokey.EconomyTest
 java -cp build/test:$JAR com.hark.neokey.NqfPortTest
 java -cp build/test:$JAR com.hark.neokey.CommunityDictTest
-java -cp build/test:$JAR com.hark.neokey.SignedDictTest
 java -cp build/test:$JAR com.hark.neokey.StoreUiTest
+java -cp build/test:$JAR com.hark.neokey.DictSignTest

@@ -63,11 +63,10 @@ if [ "${STOREUI_GATE:-}" = "OK" ]; then
   STOREUI_BLOCK=$',\n    "store": { "verifiedBy": "ci/store_ui_gate.sh", "contract": "docs/PHASE3-W1-REPORT.md", "catalogPacks": 25, "catalogFounders": 10, "catalogCents": '"${STOREUI_CATALOG_CENTS:-0}"', "ledgerClosesCents": '"${STOREUI_LEDGER_CENTS:-0}"', "negativesRefused": "'"${STOREUI_NEGATIVES:-0}"'", "installP50Us": '"${STOREUI_P50_US:-0}"', "wallet": "local cents ledger — real payment provider is a deployment decision" }'
 fi
 
-
-# Signed community-pack gate (phase 3, week 2) — present when the gate ran
-SIGNEDICT_BLOCK=""
-if [ "${SIGNEDICT_GATE:-}" = "OK" ]; then
-  SIGNEDICT_BLOCK=$',\n    "signedCommunityPack": { "verifiedBy": "ci/signeddict_gate.sh", "contract": "docs/SIGNED-DICT.md", "packWords": '"${SIGNEDICT_PACK_WORDS:-0}"', "mergeAdd": '"${SIGNEDICT_MERGE_ADD:-0}"', "mergeSkip": '"${SIGNEDICT_MERGE_SKIP:-0}"', "negativesRefused": "'"${SIGNEDICT_NEGATIVES:-0}"'", "verifyP50Us": '"${SIGNEDICT_P50_US:-0}"', "consumedBy": "Dictionary.load after the installed corpus" }'
+# Signed-dictionary-merge gate (phase 3, week 2) — present when the gate ran
+DICTSIGN_BLOCK=""
+if [ "${DICTSIGN_GATE:-}" = "OK" ]; then
+  DICTSIGN_BLOCK=$',\n    "dictsign": { "verifiedBy": "ci/dictsign_gate.sh", "contract": "docs/PHASE3-W2-REPORT.md", "packAsset": "assets/community_ar.dpack", "packWords": '"${DICTSIGN_WORDS:-0}"', "negativesRefused": "'"${DICTSIGN_NEGATIVES:-0}"'", "publishP50Us": '"${DICTSIGN_P50_PUBLISH_US:-0}"', "loadP50Us": '"${DICTSIGN_P50_LOAD_US:-0}"', "trustChain": "review -> statement -> sha256 signature -> golden pin -> engine merge after installed corpus" }'
 fi
 
 cat > "$OUT/release-manifest.json" <<EOF
@@ -80,7 +79,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$STOREUI_BLOCK$SIGNEDICT_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
   "signedBy": "release workflow only — signing secrets never leave the vault"

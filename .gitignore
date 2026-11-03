@@ -17,9 +17,3 @@ build/
 !.env.example
 # downloadable tool jars (sqlite-jdbc, ecj, r8, android.jar) — see docs/R8.md and tests/run.sh header
 tools/*.jar
-
-# transient sandbox artifacts
-__pycache__/
-*.pyc
-.DS_Store
-tool-results/
