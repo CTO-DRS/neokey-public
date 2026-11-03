@@ -75,6 +75,12 @@ if [ "${ENTGATE:-}" = "OK" ]; then
   ENTGATE_BLOCK=$',\n    "entitlements": { "verifiedBy": "ci/entitlement_gate.sh", "contract": "docs/PHASE3-W3-REPORT.md", "recordKind": "entitlement (ownership pin only — binaries always come from the pinned catalog)", "granted": '"${ENTGATE_GRANTED:-0}"', "negativesRefused": "'"${ENTGATE_NEGATIVES:-0}"'", "collectP50Us": '"${ENTGATE_P50_COLLECT_US:-0}"', "applyP50Us": '"${ENTGATE_P50_APPLY_US:-0}"', "serverEntropyX100": '"${ENTGATE_ENTROPY:-0}"', "trustChain": "catalog purchase -> entitlement record -> E2E sealed sync -> grantFromSync by exact pin -> install from catalog" }'
 fi
 
+# Phase-3 closing gate (phase 3, week 4) — present when the closing gate ran
+PHASE3_BLOCK=""
+if [ "${PHASE3_GATE:-}" = "OK" ]; then
+  PHASE3_BLOCK=$',\n    "phase3Close": { "verifiedBy": "ci/phase3_gate.sh", "contract": "docs/PHASE3-W4-REPORT.md", "phaseGatesGreen": "'"${PHASE3_GATES:-0/0}"'", "regressions": "'"${PHASE3_REGRESSIONS:-?}"'", "dexBytes": '"${PHASE3_DEX:-0}"', "dexCeiling": '"${PHASE3_CEILING:-520000}"', "versionCode": '"$VC"', "tests": "'"${PHASE3_TESTS:-0/0}"'", "negatives": "'"${PHASE3_NEGATIVES:-?}"'", "exitCriteria": "all phase-3 gates re-run green + zero pinned regressions + dex under ceiling + versionCode bumped" }'
+fi
+
 cat > "$OUT/release-manifest.json" <<EOF
 {
   "app": "com.hark.neokey",
@@ -85,7 +91,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$PHASE3_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
   "signedBy": "release workflow only — signing secrets never leave the vault"

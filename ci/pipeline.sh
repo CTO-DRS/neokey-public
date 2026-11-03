@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → build → release manifest
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → phase-3 gates → phase3 close → build → release manifest (21 stages)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -103,6 +103,9 @@ stage_storeui() { ci/store_ui_gate.sh; }
 
 # ---- 3p: entitlements-across-devices gate (roadmap phase 3, week 3) -------------
 stage_entitlement() { ci/entitlement_gate.sh; }
+
+# ---- 3q: phase-3 CLOSING gate (roadmap phase 3, week 4) -----------------------
+stage_phase3() { ci/phase3_gate.sh; }
 
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
@@ -300,6 +303,7 @@ else
   skip_stage "r8" "tools/r8.jar or tools/android.jar missing (see docs/R8.md) — shrink proof runs where they exist"
 fi
 collect_gates   # BEFORE the release stage — the manifest must carry the real gate numbers
+run_stage "phase3"   stage_phase3   # closing gate reads THIS run's gates.env
 run_stage "release"  stage_release
 
 # ---- summary ------------------------------------------------------------------
