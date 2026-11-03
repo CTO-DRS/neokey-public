@@ -82,6 +82,11 @@ TOTAL=$(grep -o 'android:name="[^"]*"' AndroidManifest.xml | cut -d'"' -f2 | gre
 # Phase 3 W2 (vc 60, signed dictionary merge) measured: 513,020 -> 518,200B
 # (+5,180B for DictSign + engine merge + gate) — 1,800B remain. W3 entitlements
 # must TRIM, not raise.
+# Phase 3 W3 (vc 61, entitlements across devices) measured: 518,200 -> 518,744B
+# (+544B for the entitlement record type + collect/apply + grantFromSync bridge;
+# prediction said it would not fit — it did, so NO raise and the trim lever was
+# still pulled: isHex64 deduplicated to one reference). W4 close-out gate: no
+# regression under the same ceiling with all features reachable.
 [ "$R8D" -le 520000 ] || { echo "R8_GATE_FAILED: dex $R8D > 520000 budget — trim before shipping" >&2; exit 1; }
 echo "R8_OK dex=$R8D bytes, mapping=$MAPPED program classes, manifest components kept=$KEPT/$TOTAL"
 [ "$FAILS" = "0" ] || exit 1

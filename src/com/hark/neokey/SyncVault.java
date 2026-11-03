@@ -238,7 +238,11 @@ public final class SyncVault {
     public static final String KIND_DICT_WORD = "dict_word";
     public static final String KIND_SHORTCUT = "shortcut";
     public static final String KIND_SETTING = "setting";
-    static final String[] KINDS = {KIND_THEME, KIND_CLIP_PIN, KIND_DICT_WORD, KIND_SHORTCUT, KIND_SETTING};
+    /** المرحلة 3، الأسبوع 3: الملكية المشتراة تعبر الأجهزة (لا الثنائيات —
+     *  الثنائيات من الكتالوج المثبت بدبوسه الذهبي). */
+    public static final String KIND_ENTITLEMENT = "entitlement";
+    static final String[] KINDS = {KIND_THEME, KIND_CLIP_PIN, KIND_DICT_WORD, KIND_SHORTCUT,
+            KIND_SETTING, KIND_ENTITLEMENT};
 
     public static boolean knownKind(String k) {
         for (String x : KINDS) if (x.equals(k)) return true;
@@ -355,7 +359,10 @@ public final class SyncVault {
             p.ws(); long ts = p.num(); p.ws(); p.expect(',');
             p.ws(); boolean tomb = p.take() == '1'; p.ws(); p.expect(',');
             p.ws(); String body = p.str(); p.ws(); p.expect(']');
-            out.add(new Rec(id, kind, key, body, rev, ts, tomb));
+            // سجل مزروع من نوع مجهول يُتجاهل (توافق مستقبلي + دفاع في العمق):
+            // لا يسمّم الكتلة كلها ولا يصل الحالة — الإنشاء المحلي لأنواع مجهولة
+            // يبقى مرفوضاً حصرياً في Rec (فشل مغلق عند الكتابة، تسامح عند القراءة).
+            if (knownKind(kind)) out.add(new Rec(id, kind, key, body, rev, ts, tomb));
             p.ws();
             char c = p.take();
             if (c == ']') break;

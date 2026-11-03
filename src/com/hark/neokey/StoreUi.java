@@ -70,7 +70,8 @@ public final class StoreUi {
         public int packCount() { return byId.size(); }
     }
 
-    private static boolean isHex64(String s) {
+    /** فحص دبيس 64-hex — مرجع واحد (يستخدمه أيضاً مرشح شكل SyncState). */
+    static boolean isHex64(String s) {
         if (s == null || s.length() != 64) return false;
         for (int i = 0; i < 64; i++) {
             char c = s.charAt(i);
@@ -221,10 +222,28 @@ public final class StoreUi {
             return t;
         }
 
+        /** حالة الملكية للمزامنة (المرحلة 3، الأسبوع 3): packId → دبوس الشراء. */
+        public Map<String, String> ownedPins() { return new LinkedHashMap<>(owned); }
+
         /** الإغلاق الشهري مفوَّض حصراً للاقتصاد الوحيد (70/30 سنت-دقيق). */
         public Economy.Month monthClose() { return Economy.monthClose(sales); }
 
-        /** سطر استحقاقات حتمي (تزامن لاحقاً كنوع سجل): packId:pin8 مرتبة. */
+        /**
+         * منح ملكية من مزامنة جهاز آخر (المرحلة 3، الأسبوع 3): الاستعادة تعيد
+         * الملكية لا الثنائيات — الدبيس يجب أن يطابق كتالوج هذا الجهاز حرفياً
+         * (المصدر الوحيد للثنائيات هو الكتالوج المثبت بدبوسه الذهبي)، وإلا فشل
+         * مغلق. idempotent بالكامل: إعادة منح نفس الملكية = نجاح بلا أثر ثانٍ،
+         * لا بيع ولا قيد في الدفتر — المال لا يُلمس هنا (المشترى دفع على جهازه).
+         */
+        public Result grantFromSync(String packId, String pin) {
+            Pack p = catalog.pack(packId);
+            if (p == null) return Result.no("NO_PACK");
+            if (!p.sha256.equals(pin)) return Result.no("PIN_MISMATCH");
+            if (!owned.containsKey(packId)) owned.put(packId, p.sha256);
+            return Result.ok();
+        }
+
+        /** سطر استحقاقات حتمي (مُزامن كنوع سجل entitlement منذ الأسبوع 3): packId:pin8 مرتبة. */
         public String restoreCode() {
             List<String> ids = new ArrayList<>(owned.keySet());
             Collections.sort(ids);

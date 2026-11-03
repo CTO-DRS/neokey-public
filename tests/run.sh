@@ -58,3 +58,4 @@ java -cp build/test:$JAR com.hark.neokey.NqfPortTest
 java -cp build/test:$JAR com.hark.neokey.CommunityDictTest
 java -cp build/test:$JAR com.hark.neokey.StoreUiTest
 java -cp build/test:$JAR com.hark.neokey.DictSignTest
+java -cp build/test:$JAR com.hark.neokey.EntitlementTest

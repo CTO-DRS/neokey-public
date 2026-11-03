@@ -27,8 +27,9 @@ import java.util.Map;
  *
  * ما لا يُزامن أبداً (فشل مغلق): مفتاح الذكاء الاصطناعي (ai_key)، حالة بوابة
  * الشبكة وسطور التدقيق (net_*)، أسرار الجلسة (sync_*)، الحافظة المؤقتة نفسها،
- * سجل الأعطال، عدادات الإحصاء المحلية، صورة الخلفية، ومكتبة السمات (تُزامن لاحقاً
- * كسجلات سمات كاملة بعد قياس حصتها من الحصة).
+ * سجل الأعطال، عدادات الإحصاء المحلية، وصورة الخلفية. مكتبة السمات تُزامن
+ * بصيغة ملكية فقط منذ المرحلة 3/الأسبوع 3: سجل entitlement لكل حزمة مملوكة
+ * (الدبوس) — الثنائيات لا تُزامن إطلاقاً، فهي من الكتالوج المثبت بدبوسه الذهبي.
  */
 public final class SyncState {
 
@@ -38,6 +39,8 @@ public final class SyncState {
     static final int CAP_SHORTCUTS = 100;
     static final int CAP_DICT_WORDS = 3000;   // يبقى JSON ضمن الحصة المجانية 1MB
     static final int CAP_SETTINGS = 120;
+    /** سقف سجلات الملكية المتزامنة = سقف مكتبة المتجر نفسه. */
+    static final int CAP_ENTITLEMENTS = StoreUi.MAX_LIBRARY;
 
     /** مفاتيح الإعدادات القابلة للمزامنة — قائمة بيضاء صريحة (أي شيء آخر يُرفض).
      *  السمة الحالية مستبعدة عمداً — تُزامن كسجل theme:current وحده (لا تكرار
@@ -68,6 +71,8 @@ public final class SyncState {
         public final Map<String, String> shortcuts = new LinkedHashMap<>(); // pref "shortcuts"
         public final List<String> pinTexts = new ArrayList<>();             // الحافظة المثبتة بالترتيب
         public final Map<String, String> settings = new LinkedHashMap<>();  // من القائمة البيضاء فقط
+        /** الملكية المشتراة: packId → دبوس الشراء (sha256 للحزمة المراجَعة). */
+        public final Map<String, String> entitlements = new LinkedHashMap<>();
     }
 
     // ---- التجميع: Snapshot → سجلات ----------------------------------------------
@@ -117,6 +122,17 @@ public final class SyncState {
                     e.getKey(), e.getValue(), rev, ts, false));
             n++;
         }
+        // الملكية المشتراة: سجل لكل حزمة، الدبيس كاملاً (64 hex) — مرتب بإدراج
+        // المخزن (حتمي)، والمكرر عبر معرف الحزمة مستحيل بنيوياً (Map).
+        n = 0;
+        for (Map.Entry<String, String> e : s.entitlements.entrySet()) {
+            if (n >= CAP_ENTITLEMENTS) break;
+            String pin = e.getValue();
+            if (pin == null || !isHex64(pin)) continue;             // بلا دبيس سليم لا سجل
+            out.add(new SyncVault.Rec("ent:" + e.getKey(), SyncVault.KIND_ENTITLEMENT,
+                    e.getKey(), pin, rev, ts, false));
+            n++;
+        }
         return out;
     }
 
@@ -132,10 +148,13 @@ public final class SyncState {
         public final Map<String, String> shortcuts = new LinkedHashMap<>();
         public final List<String> pins = new ArrayList<>();        // نصوص بالترتيب (استبدال قائمة التثبيت)
         public final Map<String, String> settings = new LinkedHashMap<>(); // من القائمة البيضاء فقط
+        /** ملكية مستعادة: packId → دبيس مطابق للكتالوج — المنح عند الجسر لا هنا. */
+        public final Map<String, String> entitlements = new LinkedHashMap<>();
 
         public int count() {
             return (themeIdx >= 0 ? 1 : 0) + dictAr.size() + dictEn.size() + exceptions.size()
-                    + phrases.size() + shortcuts.size() + pins.size() + settings.size();
+                    + phrases.size() + shortcuts.size() + pins.size() + settings.size()
+                    + entitlements.size();
         }
     }
 
@@ -164,6 +183,11 @@ public final class SyncState {
                 try { pinsByPos.put(Integer.parseInt(r.key), r.body); } catch (NumberFormatException ignored) { }
             } else if (r.id.startsWith("st:")) {
                 if (syncable(r.key)) p.settings.put(r.key, r.body);
+            } else if (r.id.startsWith("ent:")) {
+                // الدبيس يُتحقق منه عند المنح ضد الكتالوج (StoreUi.grantFromSync) —
+                // هنا مرشح شكل فقط: بلا دبيس 64-hex لا يصل الخطة.
+                if (isHex64(r.body) && r.key != null && !r.key.isEmpty())
+                    p.entitlements.put(r.key, r.body);
             }
         }
         for (Map.Entry<Integer, String> e : pinsByPos.entrySet()) p.pins.add(e.getValue());
@@ -185,6 +209,11 @@ public final class SyncState {
 
     private static List<String> cap(List<String> in, int cap) {
         return in.size() <= cap ? in : in.subList(in.size() - cap, in.size());
+    }
+
+    /** فحص دبيس 64-hex (مرجع واحد: StoreUi.isHex64 — هنا مرشح شكل لا مرجع ثقة). */
+    private static boolean isHex64(String s) {
+        return StoreUi.isHex64(s);
     }
 
     private SyncState() { }
