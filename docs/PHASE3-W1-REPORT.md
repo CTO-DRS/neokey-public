@@ -58,7 +58,8 @@ ThemePack+Economy من R8-stripped (صفر بايت) إلى القابل للو�
 
 - الاختبارات: 1145 → **1193** (+48، صفر فشل) — 13 جناحاً بطبعة `RESULT`.
 - البوابة: `STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16
-  p50_install_us=196 catalog_cents=7325 ledger_closes=7325 checks=79`.
+  p50_install_us=196 catalog_cents=7325 ledger_closes=7325 checks=79`
+  (جولة الحزم النهائية قاست 182µs — تشتت جدولة فقط، كل الفحوص 79/79).
 - R8: dex 513,020B ≤ 520,000B، mapping 207 كلاساً، مكونات 10/10.
 - إثبات سلبي: إخفاء `StoreUi.java` → `STOREUI_GATE_FAILED compile` exit 1
   (evidence/storeui-negative-proof.log) — استعادة وإعادة تحقق خضراء.

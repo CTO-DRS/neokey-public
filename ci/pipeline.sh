@@ -237,7 +237,7 @@ collect_gates() {
   # in-app store gate numbers (phase 3, week 1)
   echo "STOREUI_GATE=$(grep -q '^STOREUI_GATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   SU_LINE=$(grep '^STOREUI_GATE_OK' "$LOG" | tail -1)
-  echo "STOREUI_NEGATIVES=$(echo "$SU_LINE" | sed -E 's/.*negatives=([0-9]+)\\/([0-9]+).*/\1\\/\2/')" >> "$GATES"
+  echo "STOREUI_NEGATIVES=$(echo "$SU_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
   echo "STOREUI_P50_US=$(echo "$SU_LINE" | sed -E 's/.*p50_install_us=([0-9]+).*/\1/')" >> "$GATES"
   echo "STOREUI_CATALOG_CENTS=$(echo "$SU_LINE" | sed -E 's/.*catalog_cents=([0-9]+).*/\1/')" >> "$GATES"
   echo "STOREUI_LEDGER_CENTS=$(echo "$SU_LINE" | sed -E 's/.*ledger_closes=([0-9]+).*/\1/')" >> "$GATES"
