@@ -1,0 +1,39 @@
+{
+  "spec": "NQF v1",
+  "contract": "docs/NQF-PORT.md",
+  "generatedAt": "2026-11-03T11:14:39.901704785Z",
+  "assets": {
+    "ar.txt": {"bytes": 1923439, "sha256": "fcc6cf243371183db10dbeabd4f5bc5c2bcacb3c341579eb47fe543ec0cf281e", "lines": 150123, "unique": 150123 },
+    "ar_gulf.txt": {"bytes": 3723, "sha256": "f3d10c305ed3080c159febe7f23975a8e1e09dcf0d790bc76957488cb0ca3aec", "lines": 371, "unique": 371 },
+    "ar_hijazi.txt": {"bytes": 3704, "sha256": "2b217c3a5c7e87a0d53401ac72f3878a527de0972cff395555f44b083056a674", "lines": 370, "unique": 370 },
+    "ar_najdi.txt": {"bytes": 3623, "sha256": "685d98a2aee1ec5c18ced07db11e9b624d8023abcce1bf49c56f9f7a8a9761d9", "lines": 361, "unique": 361 },
+    "bigram_ar_base.txt": {"bytes": 1395646, "sha256": "e0146d4b4a47b36eb9e9cfa2f68a5aa998c917f54e3640e9e060bc0ae7292ee7", "lines": 28485, "unique": 28485 },
+    "emoji_kw.txt": {"bytes": 208850, "sha256": "17cae4caf3e2e1a7a80caeb15f7ec7fda66bb736f5ee7ede2f84fcdd1958ee0c", "lines": 1836, "unique": 1836 },
+    "en.txt": {"bytes": 645341, "sha256": "92c4bb208a83ecee687447f3a62d28d003f03cf2c41005bd59d9df31b886dda3", "lines": 80000, "unique": 80000 },
+    "founders_catalog.json": {"bytes": 22499, "sha256": "556edee4c02a187485861a4086c9580433cebef70bb5a490e7c07f12a578f4da" },
+    "nnet_ar.nqf": {"bytes": 3004240, "sha256": "7100f5d45ad0cdc0ffbfb41e1cdb7d403ea190a0057c62c3c4a35ccc7c46ac08" },
+    "testset_ar.txt": {"bytes": 2330, "sha256": "2f86ca82c0017cff8878a11da6c457623d6563ea35cfdf4f00901a02cdfc0d46", "lines": 50, "unique": 50 },
+    "testset_dialects.txt": {"bytes": 3185, "sha256": "7d9eff437b77af50b7924ed52033f056132c0323e4d4a1dfd57b1de2f35386c9", "lines": 69, "unique": 69 },
+    "testset_en.txt": {"bytes": 838, "sha256": "65db9e55dc89f217b83bb66ed0321a8f8bbbe49356040161dc33da73e6c0ed27", "lines": 30, "unique": 30 },
+    "testset_switch.txt": {"bytes": 7103, "sha256": "c2a5fe6ab1dadef1c831c0a9d50984a7add7393c773f8356552c6cf344fd14e7", "lines": 59, "unique": 59 },
+    "ui_en.txt": {"bytes": 49106, "sha256": "fdafff3469dd86c01fb735898d3b66c459cd2d31e1efa405bb52ceb4a60cd9d1", "lines": 902, "unique": 901 }
+  },
+  "model": {
+    "file": "nnet_ar.nqf",
+    "bytes": 3004240,
+    "tensorCount": 8,
+    "metaLen": 307,
+    "dirBytes": 246,
+    "paramsQ8": 2963583,
+    "tensors": [
+      {"name": "emb", "dtype": 1, "dims": [9300,64], "scaleBits": 1000430812, "crc32": 1099306456, "sha256": "75d5d685077574da3444b46b653e7886f684debc0b3826db58ea6862ac923f51", "deqSha256": "0b45c27096ffb7c0e0c7a88a336af4d4f82709b0e6ceacfd2719d1daa69fd5cd"},
+      {"name": "fc0.b", "dtype": 2, "dims": [240], "scaleBits": 1065353216, "crc32": 1986717340, "sha256": "8707fd4c084a320700d24ffa6de1b501075a18f36f3b68208747600c283c33df", "deqSha256": "93b4ba0071ea7db6b5035ebd6ca7171c0e724368371fa6656cea663b07218fe4"},
+      {"name": "fc0.w", "dtype": 1, "dims": [240,128], "scaleBits": 1005594274, "crc32": 2976084075, "sha256": "8a0d3e21b57dad8f9b1b96484f5a6424e8c771cdb87488c39087683b1aa22564", "deqSha256": "c193e46211fd33819666c1b838ca26d93f35d4bb8ad8424d2dcf91168d9f533f"},
+      {"name": "ln.b", "dtype": 2, "dims": [240], "scaleBits": 1065353216, "crc32": 2868959307, "sha256": "7c5baf0211492181540d02c03b98131dac2ea103f3b7b203e77db7ca3d127a87", "deqSha256": "7d1f05e9fb98e3de11378796c92b397b19091a5715894c8fe2c3118495d9d583"},
+      {"name": "ln.g", "dtype": 2, "dims": [240], "scaleBits": 1065353216, "crc32": 129744162, "sha256": "0a3f1380773146d247769307bf33ceed8630947e1bde87c0900a73c9c710e34f", "deqSha256": "0c36e6f19956a128b0961c5bdb7f7f7a90d56ba2e38dde3b716fab350f456bd2"},
+      {"name": "out.b", "dtype": 2, "dims": [9300], "scaleBits": 1065353216, "crc32": 563847194, "sha256": "439801a3d51ef4a931540951e9d017834533cab3f94605d77f9739f62b944e77", "deqSha256": "5b0d20d50d3a42e92c3704a19c395ba78f7aaefdb8505101e053400f74c7845b"},
+      {"name": "out.w", "dtype": 1, "dims": [9300,240], "scaleBits": 1013826804, "crc32": 3550325765, "sha256": "dfbadab8aad0c4f910eb65fedf941e8ce5acd79ae5186b4966b361b418d4d55a", "deqSha256": "8d9635a11a2bd5a62f32e778843171463b4d05ae4bdf6b849c0f927ddbcd3414"},
+      {"name": "vocab.words", "dtype": 1, "dims": [105663], "scaleBits": 841731191, "crc32": 3795239909, "sha256": "fdeab1a0c881d656056f3e95f3aea99c19db88a8303f8484f85b8211ea61d2bd", "deqSha256": "b0b80f648eac72da3386483e95faa7455d58a3b50e71c4e51a87642b2a008c14"}
+    ]
+  }
+}

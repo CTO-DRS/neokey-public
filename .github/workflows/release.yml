@@ -1,0 +1,163 @@
+name: release
+# Roadmap Phase 0 item B — signed release + STAGED ROLLOUT as the default procedure:
+#   tag v*  ->  gates -> signed APK+AAB -> Play internal -> production @ 10%
+#   promote ->  manual approval (the halt-gate review) -> 50%, then 100%
+#
+# Required GitHub secrets:
+#   ANDROID_KEYSTORE_B64        base64 of neokey.keystore   (base64 -w0 < .secrets/neokey.keystore)
+#   NEOKEY_KS_PASS              keystore + key password (the rotated 40-char one)
+#   PLAY_SERVICE_ACCOUNT_JSON   Play Console service account with release rights
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      promote_fraction:
+        description: 'Rollout fraction to promote to (0.5 / 1.0) — only after the halt-gate review'
+        required: false
+        default: ''
+
+jobs:
+  # ---------- gates BEFORE anything is signed ----------
+  gates:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - name: Fetch JVM test dependencies
+        run: |
+          mkdir -p tools
+          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
+          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
+      - run: ci/pipeline.sh   # audit + 455 tests + perf budgets (no SDK here: build stage skips itself)
+
+  # ---------- build, sign, publish internal + production @ 10% ----------
+  release:
+    if: github.event_name == 'push'
+    needs: gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+      - name: Install SDK pieces
+        run: |
+          sdkmanager --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
+          ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
+          curl -fsSLo "$SDK/bundletool.jar" https://github.com/google/bundletool/releases/download/1.17.0/bundletool-all-1.17.0.jar
+          curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar
+
+      - name: Restore signing secrets into the vault layout
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.NEOKEY_KS_PASS }}
+        run: |
+          mkdir -p .secrets && chmod 700 .secrets
+          echo "$KEYSTORE_B64" | base64 -d > .secrets/neokey.keystore
+          printf 'NEOKEY_KS_PASS=%s\n' "$KS_PASS" > .secrets/neokey.env
+          chmod 600 .secrets/neokey.keystore .secrets/neokey.env
+          # fingerprint must match the one on record — update continuity depends on it
+          keytool -list -v -keystore .secrets/neokey.keystore -storepass "$KS_PASS" \
+            | awk '/Certificate fingerprint \(SHA-256\)/{print $NF}' > .secrets/KEY_FINGERPRINT.txt
+          cat .secrets/KEY_FINGERPRINT.txt
+
+      - name: Pipeline gates with SDK (adds the unsigned compile gate + R8 shrink gate)
+        run: ci/pipeline.sh   # audit + tests + perf + build_unsigned + R8 full mode + manifest (gates.env survives build.sh)
+
+      - name: Build SIGNED APK + AAB on the R8 Full Mode line (mapping.txt archived)
+        run: |
+          bash ci/build_r8.sh      # aapt2 -> javac -> R8 (shrink+obfuscate+dex) -> zipalign -> apksigner
+          bash build_aab.sh        # same R8 dex -> AAB for Play
+
+      - name: Refresh release manifest with real artifacts
+        run: bash ci/release.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: neokey-release
+          path: |
+            build/NeoKey-2036.apk
+            build/NeoKey.aab
+            build/release/mapping.txt
+            build/release/release-manifest.json
+            build/release/rollout-plan.json
+
+      - name: Upload to Play — internal track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.hark.neokey
+          releaseFiles: build/NeoKey.aab
+          deobfuscationFile: build/release/mapping.txt
+          track: internal
+          status: completed
+
+      - name: Production staged rollout — 10%
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.hark.neokey
+          releaseFiles: build/NeoKey.aab
+          deobfuscationFile: build/release/mapping.txt
+          track: production
+          status: inProgress
+          rolloutFraction: 0.1
+
+  # ---------- promotion 50% -> 100%: environment approval IS the halt-gate review ----------
+  promote:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.promote_fraction != ''
+    runs-on: ubuntu-latest
+    environment: production-rollout   # configure "required reviewers" on this environment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+      - name: Install SDK pieces + bundletool (promotion rebuilds the same-tag AAB deterministically)
+        run: |
+          sdkmanager --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
+          ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
+          curl -fsSLo "$SDK/bundletool.jar" https://github.com/google/bundletool/releases/download/1.17.0/bundletool-all-1.17.0.jar
+
+      - name: Restore signing secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.NEOKEY_KS_PASS }}
+        run: |
+          mkdir -p .secrets && chmod 700 .secrets
+          echo "$KEYSTORE_B64" | base64 -d > .secrets/neokey.keystore
+          printf 'NEOKEY_KS_PASS=%s\n' "$KS_PASS" > .secrets/neokey.env
+          chmod 600 .secrets/neokey.keystore .secrets/neokey.env
+
+      - name: Halt-gate checklist
+        env:
+          FRACTION: ${{ github.event.inputs.promote_fraction }}
+        run: |
+          echo "This run only proceeds if the environment reviewer confirms:"
+          echo "  [ ] >=48h stable at the previous fraction"
+          echo "  [ ] crash rate < 1% and ANR rate < 0.47% (Play vitals)"
+          echo "  [ ] no new top crash cluster vs the previous release"
+          test "$FRACTION" = "0.5" -o "$FRACTION" = "1.0"
+
+      - name: Rebuild the same-tag AAB on the R8 line (same versionCode — Play matches and raises the fraction)
+        run: |
+          curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar
+          bash ci/build_r8.sh
+          bash build_aab.sh
+
+      - name: Promote rollout to ${{ github.event.inputs.promote_fraction }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.hark.neokey
+          releaseFiles: build/NeoKey.aab
+          track: production
+          status: inProgress
+          rolloutFraction: ${{ github.event.inputs.promote_fraction }}

@@ -1,0 +1,87 @@
+════════════════════════════════════════════════════════════════════
+Play Console — حزمة قائمة المتجر الكاملة (الأسبوع 7 — البند D)
+الأصل الحقيقي للحقول: انسخ والصق حرفياً في Play Console.
+الحدود: الاسم ≤30 حرفاً · الوصف المختصر ≤80 · الوصف الكامل ≤4000 (مُتحقَّق آلياً في ci/play_gate.sh)
+════════════════════════════════════════════════════════════════════
+
+──────────────────────────── العربية (ar-SA الافتراضية) ────────────────────────────
+اسم التطبيق (28/30):
+نيو كيبورد - كيبورد عربي ذكي
+
+الوصف المختصر (66/80):
+كيبورد عربي وإنجليزي ذكي، سمات زجاجية، تنبؤ وتصحيح، وخصوصية كاملة.
+
+الوصف الكامل:
+نيو كيبورد: لوحة مفاتيح عربية وإنجليزية سريعة، كل شيء فيها يعمل على جهازك.
+كتب بالعربي بلا عناء: تنبؤ بالكلمة التالية، تصحيح ذكي يفهم أخطاء الهمزات والتاء المربوطة،
+وتبديل فوري بين العربية والإنجليزية بسحبة على المسافة.
+
+لماذا يختار الناس نيو كيبورد؟
+
+• تنبؤ وتصحيح عربي ذكي — قاموس ضخم يتعلّم من كتابتك، واحترام كامل للهمزات (أ إ آ) والة/ه وي/ى
+• كتابة بالسحب — اسحب إصبعك على الحروف وأكمل الكلمة بلا رفع الإصبع
+• سمات زجاج نيون — هوية «زجاج 2036» بمؤثرات توهج، ومحرر سمات، وخلفية من صورك
+• خلفيات متحركة — 30 خلفية حية (شهب، ثلوج، مجرات، جمر) و30 سمة متحركة
+• أصوات ضغط ومؤثرات — 27 حزمة أصوات مُخلَّقة (مطر، ماريمبا، عود، أجراس) و24 مؤثر ضغط
+• حافظة ذكية — مثبّتات، مفضلة، تصنيفات، قوالب، بحث يتجاهل التشكيل، وتصدير واستيراد
+• مساعد مراسلات — قوالب جاهزة بالعربي والإنجليزي للردود المهنية
+• أدوات فوق الكيبورد — ترجمة، حاسبة، زخرفة نصوص، كتابة صوتية، عبارات وأذكار
+• تخطيطات ذكية — رموز ★ بأكثر من 800 رمز، أرقام عربية وهندية، وتخطيط للبرمجة
+• إمكانية وصول — TalkBack، تباين عالٍ، مفاتيح كبيرة، ووضع اليد الواحدة
+• قاموسك الشخصي — شوف كلماتك المحفوظة واحذفها متى ما تبي
+
+خصوصيتك أولاً — بلا استثناءات:
+لا إعلانات. لا حسابات. لا نرسل ما تكتبه لأي مكان. كل شيء محلي على جهازك،
+وبإمكانك تصدير كل بياناتك أو حذفها بضغطة واحدة.
+
+نيو كيبورد — اكتب عربي بثقة.
+
+──────────────────────────── الإنجليزية (en-US) ────────────────────────────
+App name (24/30):
+NeoKey — Arabic Keyboard
+
+Short description (77/80):
+Smart Arabic & English keyboard: neon glass themes, prediction, full privacy.
+
+Full description:
+NeoKey is a fast Arabic & English keyboard that keeps everything on your device.
+Type Arabic effortlessly: next-word prediction, smart correction that understands
+hamza and taa-marbuta mistakes, and instant Arabic-English switching with a swipe
+on the space bar.
+
+Why people pick NeoKey:
+
+• Smart Arabic prediction & correction — a large dictionary that learns from you
+• Glide typing — swipe across letters and finish the word in one stroke
+• Neon glass themes — the "Glass 2036" identity with glow effects and a theme editor
+• Animated wallpapers — 30 live backgrounds (meteors, snow, galaxies, embers)
+• Key sounds & press effects — 27 synthesized sound packs and 24 press effects
+• Smart clipboard — pins, favorites, categories, templates, tashkeel-free search
+• Correspondence assistant — ready-made professional replies in Arabic and English
+• Built-in tools — translation, calculator, text decoration, voice typing
+• Symbols tab with 800+ symbols, Arabic-Indic digits, and a coding layout
+• Accessibility — TalkBack, high contrast, large keys, one-handed mode
+• Your personal dictionary — view and delete every saved word anytime
+
+Your privacy first — no exceptions:
+No ads. No accounts. Nothing you type ever leaves your device. Export or erase
+all your data with one tap.
+
+NeoKey — type Arabic with confidence.
+
+──────────────────────────── حقول ثابتة ────────────────────────────
+الفئة: أدوات (Tools) · الوسوم: keyboard, arabic, productivity
+نوع المحتوى: Everyone / للجميع · الجمهور: 13+ · إعلانات: لا · مشتريات داخل التطبيق: لا (v1.0)
+البريد: cto.drs@gmail.com · الموقع: https://cto-drs.com · سياسة الخصوصية: privacy.html (ارفعه على cto-drs.com/neokey/)
+
+إجابات Data safety (حسب العقد المعلن في التطبيق):
+- هل يجمع أو يشارك بيانات؟ لا (Data collected: None, Data shared: None)
+- التشفير أثناء النقل: نعم · طلب حذف البيانات: البيانات محلية وتُحذف بإلغاء التثبيت
+- ملاحظة: تحسين الذكاء الاصطناعي يُرسل لمزوّد AI فقط بمفتاح المستخدم وبطلبه (لا خوادم لنا)
+
+ملاحظات مختبري بيتا (100 مستخدم — play/beta-program.md):
+- القناة الداخلية في التطبيق: الإعدادات ← تواصل ومختبر بيتا (Feedback.java)
+- مقياس نجاح الحلقة الأولى: رد على كل تقييم خلال 48 ساعة (play/reviews.md)
+
+لقطات الشاشة: 8 لقطات جاهزة في play/screens/ (1080×1920، هوية الزجاج النيون).
+فيديو ترويجي 30 ثانية: play/promo/neokey-promo-30s.mp4 (ارفعه على YouTube واربطه في القائمة).

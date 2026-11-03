@@ -1,0 +1,25 @@
+# --- NeoKey: secrets & build artifacts (Roadmap Phase 0, Week 1) ---
+# Signing secrets: never in git. Incident NK-SEC-001 (password was hardcoded
+# in build.sh) — see docs/SECURITY.md
+.secrets/
+neokey.keystore
+*.keystore
+*.jks
+
+# build outputs
+build/
+*.apk
+*.aab
+!play/*.apk
+
+# local env dumps
+*.env
+!.env.example
+# downloadable tool jars (sqlite-jdbc, ecj, r8, android.jar) — see docs/R8.md and tests/run.sh header
+tools/*.jar
+
+# transient sandbox artifacts
+__pycache__/
+*.pyc
+.DS_Store
+tool-results/

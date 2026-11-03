@@ -1,0 +1,246 @@
+{
+ "schema": "neokey-founders-1",
+ "seed": 20261103,
+ "generated": "2026-11-03",
+ "split": {
+  "creator_pct": 70,
+  "platform_pct": 30
+ },
+ "founders": [
+  {
+   "id": "f01",
+   "name": "استوديو نيون",
+   "packs": [
+    {
+     "id": "f01-p01",
+     "price_cents": 149,
+     "spec_json": "{\"app\":\"NeoKey\",\"bg\":\"#0E190D\",\"bg2\":\"#221121\",\"border\":\"#66A947EB\",\"borderW\":1.0,\"enter\":\"#A02BEE\",\"enterText\":\"#F5F2F7\",\"font\":0,\"glass\":true,\"glow\":\"#AC38FA\",\"glow2\":\"#FA429B\",\"hint\":\"#A190AD\",\"icon\":\"#C9BCD2\",\"key\":\"#E62B2032\",\"keyPressed\":\"#E6412B50\",\"layout\":{\"hpct\":92,\"keygap\":1,\"keyshape\":0,\"keysize\":0,\"pressglow\":true,\"radius\":18,\"wpct\":100},\"name\":\"زجاج نيون بنفسجي\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1B2E1A\",\"popupText\":\"#EBE7EF\",\"shadow\":\"#66000000\",\"special\":\"#E61D1523\",\"specialText\":\"#CEC2D6\",\"text\":\"#EEE9F2\",\"vendor\":\"f01\"}",
+     "sha256": "82f91adc614add8da502b3d3db63c6c9c963a38fcc4e515c4995cb85e7a8520b",
+     "bytes": 569
+    },
+    {
+     "id": "f01-p02",
+     "price_cents": 199,
+     "spec_json": "{\"anim\":0,\"app\":\"NeoKey\",\"bg\":\"#19130D\",\"bg2\":\"#111722\",\"border\":\"#6647CFEB\",\"borderW\":1.5,\"enter\":\"#2BCDEE\",\"enterText\":\"#121F21\",\"font\":1,\"glass\":true,\"glow\":\"#38DAFA\",\"glow2\":\"#5142FA\",\"hint\":\"#90A8AD\",\"icon\":\"#BCCED2\",\"key\":\"#E6202F32\",\"keyPressed\":\"#E62B4950\",\"layout\":{\"hpct\":98,\"keygap\":2,\"keyshape\":1,\"keysize\":1,\"pressglow\":true,\"radius\":24,\"wpct\":100},\"name\":\"أورورا سيان\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2E241A\",\"popupText\":\"#E7EDEF\",\"shadow\":\"#66000000\",\"special\":\"#E6152123\",\"specialText\":\"#C2D3D6\",\"text\":\"#E9F0F2\",\"vendor\":\"f01\"}",
+     "sha256": "04dfa20687bd1aac79c1abe66d8825e924ab293d63d706efdc3c0d81845b3b9a",
+     "bytes": 569
+    },
+    {
+     "id": "f01-p03",
+     "price_cents": 249,
+     "spec_json": "{\"anim\":1,\"app\":\"NeoKey\",\"bg\":\"#10190D\",\"bg2\":\"#211122\",\"border\":\"#668B47EB\",\"borderW\":2.0,\"enter\":\"#7C2BEE\",\"enterText\":\"#F4F2F7\",\"font\":2,\"glass\":true,\"glow\":\"#8938FA\",\"glow2\":\"#FA42BD\",\"hint\":\"#9C90AD\",\"icon\":\"#C5BCD2\",\"key\":\"#E6272032\",\"keyPressed\":\"#E63A2B50\",\"layout\":{\"hpct\":104,\"keygap\":3,\"keyshape\":2,\"keysize\":2,\"pressglow\":true,\"radius\":30,\"wpct\":100},\"name\":\"حافة بنفسجية\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1F2E1A\",\"popupText\":\"#EAE7EF\",\"shadow\":\"#66000000\",\"special\":\"#E61B1523\",\"specialText\":\"#CAC2D6\",\"text\":\"#ECE9F2\",\"vendor\":\"f01\"}",
+     "sha256": "d03511ac59e4115be8d7c1e78f1dc9ab56c41051fe94f41699fef8db2a64544a",
+     "bytes": 572
+    }
+   ]
+  },
+  {
+   "id": "f02",
+   "name": "زجاج الرياض",
+   "packs": [
+    {
+     "id": "f02-p01",
+     "price_cents": 349,
+     "spec_json": "{\"anim\":2,\"app\":\"NeoKey\",\"bg\":\"#0D1911\",\"bg2\":\"#22111A\",\"border\":\"#66EB47EB\",\"borderW\":1.0,\"enter\":\"#EE2BEE\",\"enterText\":\"#211221\",\"font\":3,\"glass\":true,\"glow\":\"#FA38FA\",\"glow2\":\"#FA4251\",\"hint\":\"#AD90AD\",\"icon\":\"#D2BCD2\",\"key\":\"#E6322032\",\"keyPressed\":\"#E6502B50\",\"layout\":{\"hpct\":92,\"keygap\":1,\"keyshape\":3,\"keysize\":0,\"pressglow\":true,\"radius\":36,\"wpct\":100},\"name\":\"نيون الجدوال\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1A2E20\",\"popupText\":\"#EFE7EF\",\"shadow\":\"#66000000\",\"special\":\"#E6231523\",\"specialText\":\"#D6C2D6\",\"text\":\"#F2E9F2\",\"vendor\":\"f02\"}",
+     "sha256": "c1f92e10e7959a268980990529e8171b354e03f7284e4bc274648c6f0af624c5",
+     "bytes": 571
+    },
+    {
+     "id": "f02-p02",
+     "price_cents": 399,
+     "spec_json": "{\"anim\":3,\"app\":\"NeoKey\",\"bg\":\"#13190D\",\"bg2\":\"#1C1122\",\"border\":\"#666347EB\",\"borderW\":1.5,\"enter\":\"#4B2BEE\",\"enterText\":\"#F3F2F7\",\"font\":4,\"glass\":true,\"glow\":\"#5838FA\",\"glow2\":\"#FA42EB\",\"hint\":\"#9490AD\",\"icon\":\"#BFBCD2\",\"key\":\"#E6232032\",\"keyPressed\":\"#E6312B50\",\"layout\":{\"hpct\":98,\"keygap\":2,\"keyshape\":0,\"keysize\":1,\"pressglow\":true,\"radius\":18,\"wpct\":100},\"name\":\"زجاج ملكي داكن\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#242E1A\",\"popupText\":\"#E8E7EF\",\"shadow\":\"#66000000\",\"special\":\"#E6171523\",\"specialText\":\"#C5C2D6\",\"text\":\"#EAE9F2\",\"vendor\":\"f02\"}",
+     "sha256": "172767655e6a177a2a504067381a2e3f4d5cae930c1412d7e44141720e525460",
+     "bytes": 574
+    },
+    {
+     "id": "f02-p03",
+     "price_cents": 449,
+     "spec_json": "{\"anim\":4,\"app\":\"NeoKey\",\"bg\":\"#19170D\",\"bg2\":\"#111122\",\"border\":\"#664799EB\",\"borderW\":2.0,\"enter\":\"#2B8CEE\",\"enterText\":\"#121A21\",\"font\":5,\"glass\":true,\"glow\":\"#3899FA\",\"glow2\":\"#8F42FA\",\"hint\":\"#909EAD\",\"icon\":\"#BCC7D2\",\"key\":\"#E6202932\",\"keyPressed\":\"#E62B3D50\",\"layout\":{\"hpct\":104,\"keygap\":3,\"keyshape\":1,\"keysize\":2,\"pressglow\":true,\"radius\":24,\"wpct\":100},\"name\":\"أزرق عميق\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2E2A1A\",\"popupText\":\"#E7EBEF\",\"shadow\":\"#66000000\",\"special\":\"#E6151C23\",\"specialText\":\"#C2CCD6\",\"text\":\"#E9EDF2\",\"vendor\":\"f02\"}",
+     "sha256": "d117961ac9f605e4926a90641eedfba2801325c4e182ffbaaba1163acab7cce1",
+     "bytes": 566
+    }
+   ]
+  },
+  {
+   "id": "f03",
+   "name": "أورورا العربية",
+   "packs": [
+    {
+     "id": "f03-p01",
+     "price_cents": 149,
+     "spec_json": "{\"anim\":5,\"app\":\"NeoKey\",\"bg\":\"#0D1019\",\"bg2\":\"#222211\",\"border\":\"#66EB9447\",\"borderW\":1.0,\"enter\":\"#EE862B\",\"enterText\":\"#211912\",\"font\":0,\"glass\":true,\"glow\":\"#FA9338\",\"glow2\":\"#B4FA42\",\"hint\":\"#AD9D90\",\"icon\":\"#D2C6BC\",\"key\":\"#E6322820\",\"keyPressed\":\"#E6503C2B\",\"layout\":{\"hpct\":92,\"keygap\":1,\"keyshape\":2,\"keysize\":0,\"pressglow\":true,\"radius\":30,\"wpct\":100},\"name\":\"بنفسج الرمال\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1A1E2E\",\"popupText\":\"#EFEAE7\",\"shadow\":\"#66000000\",\"special\":\"#E6231C15\",\"specialText\":\"#D6CBC2\",\"text\":\"#F2EDE9\",\"vendor\":\"f03\"}",
+     "sha256": "76697b547bdc4838744633d886355587853fac750f40f747078a0f72bba0104c",
+     "bytes": 571
+    },
+    {
+     "id": "f03-p02",
+     "price_cents": 199,
+     "spec_json": "{\"anim\":6,\"app\":\"NeoKey\",\"bg\":\"#19120D\",\"bg2\":\"#111822\",\"border\":\"#6647DDEB\",\"borderW\":1.5,\"enter\":\"#2BDEEE\",\"enterText\":\"#122021\",\"font\":1,\"glass\":true,\"glow\":\"#38EAFA\",\"glow2\":\"#4242FA\",\"hint\":\"#90AAAD\",\"icon\":\"#BCD0D2\",\"key\":\"#E6203032\",\"keyPressed\":\"#E62B4C50\",\"layout\":{\"hpct\":98,\"keygap\":2,\"keyshape\":3,\"keysize\":1,\"pressglow\":true,\"radius\":36,\"wpct\":100},\"name\":\"سيان الشبكة\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2E221A\",\"popupText\":\"#E7EEEF\",\"shadow\":\"#66000000\",\"special\":\"#E6152223\",\"specialText\":\"#C2D4D6\",\"text\":\"#E9F1F2\",\"vendor\":\"f03\"}",
+     "sha256": "cdeb86b6cd5e90c0f05044daef3951cd40ccc16b6785c2fab56b3e039c117f40",
+     "bytes": 569
+    },
+    {
+     "id": "f03-p03",
+     "price_cents": 249,
+     "spec_json": "{\"anim\":7,\"app\":\"NeoKey\",\"bg\":\"#0D1915\",\"bg2\":\"#221114\",\"border\":\"#66EB47B4\",\"borderW\":2.0,\"enter\":\"#EE2BAD\",\"enterText\":\"#21121C\",\"font\":2,\"glass\":true,\"glow\":\"#FA38B9\",\"glow2\":\"#FA7042\",\"hint\":\"#AD90A3\",\"icon\":\"#D2BCCB\",\"key\":\"#E632202C\",\"keyPressed\":\"#E6502B43\",\"layout\":{\"hpct\":104,\"keygap\":3,\"keyshape\":0,\"keysize\":2,\"pressglow\":true,\"radius\":18,\"wpct\":100},\"name\":\"مدينة نيون ليلية\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1A2E27\",\"popupText\":\"#EFE7EC\",\"shadow\":\"#66000000\",\"special\":\"#E623151E\",\"specialText\":\"#D6C2CF\",\"text\":\"#F2E9EF\",\"vendor\":\"f03\"}",
+     "sha256": "401d6ebd4c725429ecb9654e0e3aa1c06fe18d9afdd97ac44addb949fd09c9b8",
+     "bytes": 579
+    }
+   ]
+  },
+  {
+   "id": "f04",
+   "name": "حافات داكنة",
+   "packs": [
+    {
+     "id": "f04-p01",
+     "price_cents": 349,
+     "spec_json": "{\"anim\":8,\"app\":\"NeoKey\",\"bg\":\"#15190D\",\"bg2\":\"#1A1122\",\"border\":\"#664747EB\",\"borderW\":1.0,\"enter\":\"#2B2BEE\",\"enterText\":\"#F2F2F7\",\"font\":3,\"glass\":true,\"glow\":\"#3838FA\",\"glow2\":\"#EB42FA\",\"hint\":\"#9090AD\",\"icon\":\"#BCBCD2\",\"key\":\"#E6202032\",\"keyPressed\":\"#E62B2B50\",\"layout\":{\"hpct\":92,\"keygap\":1,\"keyshape\":1,\"keysize\":0,\"pressglow\":true,\"radius\":24,\"wpct\":100},\"name\":\"زجاج غامق\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#272E1A\",\"popupText\":\"#E7E7EF\",\"shadow\":\"#66000000\",\"special\":\"#E6151523\",\"specialText\":\"#C2C2D6\",\"text\":\"#E9E9F2\",\"vendor\":\"f04\"}",
+     "sha256": "28518308a57f479423091773940a546b577ca56fbacd365263bfbb92ea56dd23",
+     "bytes": 565
+    },
+    {
+     "id": "f04-p02",
+     "price_cents": 399,
+     "spec_json": "{\"anim\":9,\"app\":\"NeoKey\",\"bg\":\"#190D0E\",\"bg2\":\"#112122\",\"border\":\"#6647EBA7\",\"borderW\":1.5,\"enter\":\"#2BEE9D\",\"enterText\":\"#12211B\",\"font\":4,\"glass\":true,\"glow\":\"#38FAA9\",\"glow2\":\"#429EFA\",\"hint\":\"#90ADA1\",\"icon\":\"#BCD2C9\",\"key\":\"#E620322A\",\"keyPressed\":\"#E62B5040\",\"layout\":{\"hpct\":98,\"keygap\":2,\"keyshape\":2,\"keysize\":1,\"pressglow\":true,\"radius\":30,\"wpct\":100},\"name\":\"توهج مزدوج\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2E1A1B\",\"popupText\":\"#E7EFEB\",\"shadow\":\"#66000000\",\"special\":\"#E615231D\",\"specialText\":\"#C2D6CE\",\"text\":\"#E9F2EE\",\"vendor\":\"f04\"}",
+     "sha256": "159ff9ce3d16d766f9f228c52d47553c8b4ee9de41e49a3e92a530a4f3de2b85",
+     "bytes": 567
+    },
+    {
+     "id": "f04-p03",
+     "price_cents": 449,
+     "spec_json": "{\"anim\":10,\"app\":\"NeoKey\",\"bg\":\"#17190D\",\"bg2\":\"#171122\",\"border\":\"#66475DEB\",\"borderW\":2.0,\"enter\":\"#2B45EE\",\"enterText\":\"#F2F3F7\",\"font\":5,\"glass\":true,\"glow\":\"#3852FA\",\"glow2\":\"#D242FA\",\"hint\":\"#9093AD\",\"icon\":\"#BCBFD2\",\"key\":\"#E6202232\",\"keyPressed\":\"#E62B3050\",\"layout\":{\"hpct\":104,\"keygap\":3,\"keyshape\":3,\"keysize\":2,\"pressglow\":true,\"radius\":36,\"wpct\":100},\"name\":\"نيلي كوني\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2A2E1A\",\"popupText\":\"#E7E8EF\",\"shadow\":\"#66000000\",\"special\":\"#E6151723\",\"specialText\":\"#C2C5D6\",\"text\":\"#E9EAF2\",\"vendor\":\"f04\"}",
+     "sha256": "b771f59165ec58b64e614ced5c971d95b446293120d493f347a7fafee8aed9b4",
+     "bytes": 567
+    }
+   ]
+  },
+  {
+   "id": "f05",
+   "name": "مدينة النيون",
+   "packs": [
+    {
+     "id": "f05-p01",
+     "price_cents": 149,
+     "spec_json": "{\"anim\":11,\"app\":\"NeoKey\",\"bg\":\"#0D190E\",\"bg2\":\"#22111E\",\"border\":\"#66C247EB\",\"borderW\":1.0,\"enter\":\"#BD2BEE\",\"enterText\":\"#1D1221\",\"font\":0,\"glass\":true,\"glow\":\"#C938FA\",\"glow2\":\"#FA427F\",\"hint\":\"#A590AD\",\"icon\":\"#CDBCD2\",\"key\":\"#E62D2032\",\"keyPressed\":\"#E6462B50\",\"layout\":{\"hpct\":92,\"keygap\":1,\"keyshape\":0,\"keysize\":0,\"pressglow\":true,\"radius\":18,\"wpct\":100},\"name\":\"أرجواني هادئ\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1A2E1B\",\"popupText\":\"#EDE7EF\",\"shadow\":\"#66000000\",\"special\":\"#E6201523\",\"specialText\":\"#D1C2D6\",\"text\":\"#EFE9F2\",\"vendor\":\"f05\"}",
+     "sha256": "1874d7b6bf27f82ab8486f22ead438eb2db740a63f4e1865708214d2d56d5dbe",
+     "bytes": 572
+    },
+    {
+     "id": "f05-p02",
+     "price_cents": 199,
+     "spec_json": "{\"anim\":12,\"app\":\"NeoKey\",\"bg\":\"#19150D\",\"bg2\":\"#111422\",\"border\":\"#6647B4EB\",\"borderW\":1.5,\"enter\":\"#2BADEE\",\"enterText\":\"#121C21\",\"font\":1,\"glass\":true,\"glow\":\"#38B9FA\",\"glow2\":\"#7042FA\",\"hint\":\"#90A3AD\",\"icon\":\"#BCCBD2\",\"key\":\"#E6202C32\",\"keyPressed\":\"#E62B4350\",\"layout\":{\"hpct\":98,\"keygap\":2,\"keyshape\":1,\"keysize\":1,\"pressglow\":true,\"radius\":24,\"wpct\":100},\"name\":\"زجاج الشتاء\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2E271A\",\"popupText\":\"#E7ECEF\",\"shadow\":\"#66000000\",\"special\":\"#E6151E23\",\"specialText\":\"#C2CFD6\",\"text\":\"#E9EFF2\",\"vendor\":\"f05\"}",
+     "sha256": "21cea7ea43503678faefe234d9892b4f85cb6c96f11b91a12d9a690b322e880d",
+     "bytes": 570
+    },
+    {
+     "id": "f05-p03",
+     "price_cents": 249,
+     "spec_json": "{\"anim\":13,\"app\":\"NeoKey\",\"bg\":\"#0D1319\",\"bg2\":\"#221D11\",\"border\":\"#66EB6847\",\"borderW\":2.0,\"enter\":\"#EE522B\",\"enterText\":\"#211512\",\"font\":2,\"glass\":true,\"glow\":\"#FA5F38\",\"glow2\":\"#E5FA42\",\"hint\":\"#AD9590\",\"icon\":\"#D2C0BC\",\"key\":\"#E6322320\",\"keyPressed\":\"#E650322B\",\"layout\":{\"hpct\":104,\"keygap\":3,\"keyshape\":2,\"keysize\":2,\"pressglow\":true,\"radius\":30,\"wpct\":100},\"name\":\"نيون مغربي\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1A232E\",\"popupText\":\"#EFE8E7\",\"shadow\":\"#66000000\",\"special\":\"#E6231815\",\"specialText\":\"#D6C6C2\",\"text\":\"#F2EAE9\",\"vendor\":\"f05\"}",
+     "sha256": "8b7a97224b472180830ed8ac81b49336bde98a208d6560b7584c87d22c812508",
+     "bytes": 569
+    }
+   ]
+  },
+  {
+   "id": "f06",
+   "name": "قطرة قمر",
+   "packs": [
+    {
+     "id": "f06-p01",
+     "price_cents": 349,
+     "spec_json": "{\"anim\":14,\"app\":\"NeoKey\",\"bg\":\"#19160D\",\"bg2\":\"#111222\",\"border\":\"#6647A7EB\",\"borderW\":1.0,\"enter\":\"#2B9DEE\",\"enterText\":\"#121B21\",\"font\":3,\"glass\":true,\"glow\":\"#38A9FA\",\"glow2\":\"#7F42FA\",\"hint\":\"#90A1AD\",\"icon\":\"#BCC9D2\",\"key\":\"#E6202A32\",\"keyPressed\":\"#E62B4050\",\"layout\":{\"hpct\":92,\"keygap\":1,\"keyshape\":3,\"keysize\":0,\"pressglow\":true,\"radius\":36,\"wpct\":100},\"name\":\"سماء نيون\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2E291A\",\"popupText\":\"#E7EBEF\",\"shadow\":\"#66000000\",\"special\":\"#E6151D23\",\"specialText\":\"#C2CED6\",\"text\":\"#E9EEF2\",\"vendor\":\"f06\"}",
+     "sha256": "315401444577abd573535c6ecb40b3ad1d0bf46dcb90249ce6c264283296bc73",
+     "bytes": 566
+    },
+    {
+     "id": "f06-p02",
+     "price_cents": 399,
+     "spec_json": "{\"anim\":15,\"app\":\"NeoKey\",\"bg\":\"#0D190D\",\"bg2\":\"#22111F\",\"border\":\"#66B447EB\",\"borderW\":1.5,\"enter\":\"#AD2BEE\",\"enterText\":\"#F6F2F7\",\"font\":4,\"glass\":true,\"glow\":\"#B938FA\",\"glow2\":\"#FA428F\",\"hint\":\"#A390AD\",\"icon\":\"#CBBCD2\",\"key\":\"#E62C2032\",\"keyPressed\":\"#E6432B50\",\"layout\":{\"hpct\":98,\"keygap\":2,\"keyshape\":0,\"keysize\":1,\"pressglow\":true,\"radius\":18,\"wpct\":100},\"name\":\"بنفسجي نيون\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1A2E1A\",\"popupText\":\"#ECE7EF\",\"shadow\":\"#66000000\",\"special\":\"#E61E1523\",\"specialText\":\"#CFC2D6\",\"text\":\"#EFE9F2\",\"vendor\":\"f06\"}",
+     "sha256": "b455deabaa3efd61e5b2301c320d1e41ed3fe836eb327b9175a9292c549d1127",
+     "bytes": 570
+    }
+   ]
+  },
+  {
+   "id": "f07",
+   "name": "سديم بارد",
+   "packs": [
+    {
+     "id": "f07-p01",
+     "price_cents": 499,
+     "spec_json": "{\"anim\":16,\"app\":\"NeoKey\",\"bg\":\"#18190D\",\"bg2\":\"#151122\",\"border\":\"#664770EB\",\"borderW\":2.0,\"enter\":\"#2B5BEE\",\"enterText\":\"#F2F4F7\",\"font\":5,\"glass\":true,\"glow\":\"#3869FA\",\"glow2\":\"#BD42FA\",\"hint\":\"#9097AD\",\"icon\":\"#BCC1D2\",\"key\":\"#E6202432\",\"keyPressed\":\"#E62B3450\",\"layout\":{\"hpct\":104,\"keygap\":3,\"keyshape\":1,\"keysize\":2,\"pressglow\":true,\"radius\":24,\"wpct\":100},\"name\":\"أزرق نيون\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2C2E1A\",\"popupText\":\"#E7E9EF\",\"shadow\":\"#66000000\",\"special\":\"#E6151923\",\"specialText\":\"#C2C7D6\",\"text\":\"#E9EBF2\",\"vendor\":\"f07\"}",
+     "sha256": "6703fd9a8d5eb6314750fc91a09fe7db60a4b0bf906c06bcac514cd92becbb23",
+     "bytes": 567
+    },
+    {
+     "id": "f07-p02",
+     "price_cents": 149,
+     "spec_json": "{\"anim\":17,\"app\":\"NeoKey\",\"bg\":\"#11190D\",\"bg2\":\"#1F1122\",\"border\":\"#667E47EB\",\"borderW\":1.0,\"enter\":\"#6C2BEE\",\"enterText\":\"#F4F2F7\",\"font\":0,\"glass\":true,\"glow\":\"#7938FA\",\"glow2\":\"#FA42CC\",\"hint\":\"#9990AD\",\"icon\":\"#C3BCD2\",\"key\":\"#E6262032\",\"keyPressed\":\"#E6372B50\",\"layout\":{\"hpct\":92,\"keygap\":1,\"keyshape\":2,\"keysize\":0,\"pressglow\":true,\"radius\":30,\"wpct\":100},\"name\":\"زجاج مصمت\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#202E1A\",\"popupText\":\"#E9E7EF\",\"shadow\":\"#66000000\",\"special\":\"#E61A1523\",\"specialText\":\"#C9C2D6\",\"text\":\"#ECE9F2\",\"vendor\":\"f07\"}",
+     "sha256": "9db456b9a29cb5f44f1c784fcebbde906842305bf009b377369f0ea3e0500ce1",
+     "bytes": 566
+    }
+   ]
+  },
+  {
+   "id": "f08",
+   "name": "درجات الشام",
+   "packs": [
+    {
+     "id": "f08-p01",
+     "price_cents": 249,
+     "spec_json": "{\"anim\":18,\"app\":\"NeoKey\",\"bg\":\"#13190D\",\"bg2\":\"#1C1122\",\"border\":\"#666347EB\",\"borderW\":1.5,\"enter\":\"#4B2BEE\",\"enterText\":\"#F3F2F7\",\"font\":1,\"glass\":true,\"glow\":\"#5838FA\",\"glow2\":\"#FA42EB\",\"hint\":\"#9490AD\",\"icon\":\"#BFBCD2\",\"key\":\"#E6232032\",\"keyPressed\":\"#E6312B50\",\"layout\":{\"hpct\":98,\"keygap\":2,\"keyshape\":3,\"keysize\":1,\"pressglow\":true,\"radius\":36,\"wpct\":100},\"name\":\"ليل سديم\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#242E1A\",\"popupText\":\"#E8E7EF\",\"shadow\":\"#66000000\",\"special\":\"#E6171523\",\"specialText\":\"#C5C2D6\",\"text\":\"#EAE9F2\",\"vendor\":\"f08\"}",
+     "sha256": "4e1a8b12cca604b87b32dfe0e88157b8d286437b569c67da8808a65dcbda7b8c",
+     "bytes": 564
+    },
+    {
+     "id": "f08-p02",
+     "price_cents": 299,
+     "spec_json": "{\"anim\":19,\"app\":\"NeoKey\",\"bg\":\"#0D0E19\",\"bg2\":\"#202211\",\"border\":\"#66EBAF47\",\"borderW\":2.0,\"enter\":\"#EEA62B\",\"enterText\":\"#211C12\",\"font\":2,\"glass\":true,\"glow\":\"#FAB338\",\"glow2\":\"#95FA42\",\"hint\":\"#ADA290\",\"icon\":\"#D2CABC\",\"key\":\"#E6322B20\",\"keyPressed\":\"#E650422B\",\"layout\":{\"hpct\":104,\"keygap\":3,\"keyshape\":0,\"keysize\":2,\"pressglow\":true,\"radius\":18,\"wpct\":100},\"name\":\"كهرمان داكن\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1A1A2E\",\"popupText\":\"#EFECE7\",\"shadow\":\"#66000000\",\"special\":\"#E6231E15\",\"specialText\":\"#D6CFC2\",\"text\":\"#F2EEE9\",\"vendor\":\"f08\"}",
+     "sha256": "9cb40095019f4cda157fda0071427a068bc93ce7a505a23821d4f5d3b558aa59",
+     "bytes": 571
+    }
+   ]
+  },
+  {
+   "id": "f09",
+   "name": "ريشة نيون",
+   "packs": [
+    {
+     "id": "f09-p01",
+     "price_cents": 399,
+     "spec_json": "{\"anim\":20,\"app\":\"NeoKey\",\"bg\":\"#19140D\",\"bg2\":\"#111522\",\"border\":\"#6647C2EB\",\"borderW\":1.0,\"enter\":\"#2BBDEE\",\"enterText\":\"#121D21\",\"font\":3,\"glass\":true,\"glow\":\"#38C9FA\",\"glow2\":\"#6142FA\",\"hint\":\"#90A5AD\",\"icon\":\"#BCCDD2\",\"key\":\"#E6202D32\",\"keyPressed\":\"#E62B4650\",\"layout\":{\"hpct\":92,\"keygap\":1,\"keyshape\":1,\"keysize\":0,\"pressglow\":true,\"radius\":24,\"wpct\":100},\"name\":\"زجاج المحيط\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2E251A\",\"popupText\":\"#E7EDEF\",\"shadow\":\"#66000000\",\"special\":\"#E6152023\",\"specialText\":\"#C2D1D6\",\"text\":\"#E9EFF2\",\"vendor\":\"f09\"}",
+     "sha256": "8cfb907ca7797371a87113349735c365ab15364b02555e6f2364a6709697c4e8",
+     "bytes": 570
+    },
+    {
+     "id": "f09-p02",
+     "price_cents": 449,
+     "spec_json": "{\"anim\":21,\"app\":\"NeoKey\",\"bg\":\"#0D1219\",\"bg2\":\"#221E11\",\"border\":\"#66EB7047\",\"borderW\":1.5,\"enter\":\"#EE5B2B\",\"enterText\":\"#211612\",\"font\":4,\"glass\":true,\"glow\":\"#FA6938\",\"glow2\":\"#DBFA42\",\"hint\":\"#AD9790\",\"icon\":\"#D2C1BC\",\"key\":\"#E6322420\",\"keyPressed\":\"#E650342B\",\"layout\":{\"hpct\":98,\"keygap\":2,\"keyshape\":2,\"keysize\":1,\"pressglow\":true,\"radius\":30,\"wpct\":100},\"name\":\"نيون الفجر\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#1A222E\",\"popupText\":\"#EFE9E7\",\"shadow\":\"#66000000\",\"special\":\"#E6231915\",\"specialText\":\"#D6C7C2\",\"text\":\"#F2EBE9\",\"vendor\":\"f09\"}",
+     "sha256": "f1f60198b5b55177926c0a45d45e8bee065494cc4cd34878c1c8881398f49b36",
+     "bytes": 568
+    }
+   ]
+  },
+  {
+   "id": "f10",
+   "name": "لؤلؤة الخليج",
+   "packs": [
+    {
+     "id": "f10-p01",
+     "price_cents": 149,
+     "spec_json": "{\"anim\":22,\"app\":\"NeoKey\",\"bg\":\"#14190D\",\"bg2\":\"#1C1122\",\"border\":\"#665D47EB\",\"borderW\":2.0,\"enter\":\"#452BEE\",\"enterText\":\"#F3F2F7\",\"font\":5,\"glass\":true,\"glow\":\"#5238FA\",\"glow2\":\"#FA42F1\",\"hint\":\"#9390AD\",\"icon\":\"#BFBCD2\",\"key\":\"#E6222032\",\"keyPressed\":\"#E6302B50\",\"layout\":{\"hpct\":104,\"keygap\":3,\"keyshape\":3,\"keysize\":2,\"pressglow\":true,\"radius\":36,\"wpct\":100},\"name\":\"إندغو عميق\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#242E1A\",\"popupText\":\"#E8E7EF\",\"shadow\":\"#66000000\",\"special\":\"#E6171523\",\"specialText\":\"#C5C2D6\",\"text\":\"#EAE9F2\",\"vendor\":\"f10\"}",
+     "sha256": "46854ab7807cc188404c12249307fe5c0e902b97a503a7663aa8bdb85549d545",
+     "bytes": 569
+    },
+    {
+     "id": "f10-p02",
+     "price_cents": 199,
+     "spec_json": "{\"anim\":23,\"app\":\"NeoKey\",\"bg\":\"#19110D\",\"bg2\":\"#111A22\",\"border\":\"#6647EBEB\",\"borderW\":1.0,\"enter\":\"#2BEEEE\",\"enterText\":\"#122121\",\"font\":0,\"glass\":true,\"glow\":\"#38FAFA\",\"glow2\":\"#4251FA\",\"hint\":\"#90ADAD\",\"icon\":\"#BCD2D2\",\"key\":\"#E6203232\",\"keyPressed\":\"#E62B5050\",\"layout\":{\"hpct\":92,\"keygap\":1,\"keyshape\":0,\"keysize\":0,\"pressglow\":true,\"radius\":18,\"wpct\":100},\"name\":\"زجاج اللؤلؤ\",\"neokey\":1,\"neon\":true,\"photo\":false,\"popup\":\"#2E201A\",\"popupText\":\"#E7EFEF\",\"shadow\":\"#66000000\",\"special\":\"#E6152323\",\"specialText\":\"#C2D6D6\",\"text\":\"#E9F2F2\",\"vendor\":\"f10\"}",
+     "sha256": "18ee861c76a9f6b7c8fb22adec48b6fac64a8832606e9dbdc9767c081d9eb1db",
+     "bytes": 570
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "seed": 20261102,
+ "epochs": 2,
+ "news_per_epoch": 900000,
+ "params": 2867940,
+ "vocab": 9300,
+ "emb": 64,
+ "hidden": 240,
+ "ctx": 2,
+ "file_bytes": 3004240,
+ "testset_top3_fp32_pct": 24.0,
+ "testset_top3_q8_pct": 24.5,
+ "testset_top3_q8_hits": 47,
+ "traditional_top3_pct": 27.6,
+ "roadmap_bar_pct": 45.0,
+ "dev_top3_fp32_pct": 27.55,
+ "dev_pairs": 65299
+}

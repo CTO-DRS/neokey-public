@@ -1,0 +1,64 @@
+// NeoKey — standard Gradle scaffold (roadmap Phase 0 item B: migration target).
+// PREPARED but NOT the default build: the manual chain (build.sh / build_aab.sh +
+// ci/pipeline.sh) remains canonical until the activation steps in README.md are done.
+// This file wraps the SAME sources — no logic change, no file moves:
+//   java -> src/   res -> res/   assets -> assets/   manifest -> AndroidManifest.xml
+buildscript {
+    repositories { google(); mavenCentral() }
+    dependencies { classpath 'com.android.tools.build:gradle:8.7.3' }
+}
+apply plugin: 'com.android.application'
+
+def manifest = file('../AndroidManifest.xml').text
+def vc = (manifest =~ /versionCode="(\d+)"/)[0][1] as Integer
+def vn = (manifest =~ /versionName="([^"]+)"/)[0][1]
+
+android {
+    namespace 'com.hark.neokey'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.hark.neokey'
+        minSdk 21
+        targetSdk 35
+        versionCode vc          // single source of truth stays AndroidManifest.xml
+        versionName vn
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile '../AndroidManifest.xml'
+            java.srcDirs = ['../src']      // NOTE: AGP 8 rejects package= in the manifest — see README step 2
+            res.srcDirs = ['../res']
+            assets.srcDirs = ['../assets']
+        }
+    }
+
+    signingConfigs {
+        release {
+            // secrets come from the vault layout only — never committed
+            def envFile = rootProject.file('../.secrets/neokey.env')
+            def ksFile = rootProject.file('../.secrets/neokey.keystore')
+            if (envFile.exists() && ksFile.exists()) {
+                def props = new Properties()
+                envFile.withInputStream { props.load(it) }
+                storeFile = ksFile
+                storePassword = props.getProperty('NEOKEY_KS_PASS')
+                keyAlias = 'neokey'
+                keyPassword = props.getProperty('NEOKEY_KS_PASS')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false          // R8 Full Mode lands in the next roadmap step
+            signingConfig signingConfigs.release
+        }
+        debug {
+            applicationIdSuffix '.debug'
+        }
+    }
+
+    lint { abortOnError false }
+}

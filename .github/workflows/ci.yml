@@ -1,0 +1,63 @@
+name: ci
+# Roadmap Phase 0 item B — quality gates on every push/PR:
+#   job "gates":   secrets audit + 455 tests + performance budgets (pure JVM, fast)
+#   job "compile": full unsigned Android build (aapt2 -> javac -> d8 -> zipalign)
+# Signing NEVER happens here — that is release.yml with real secrets only.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+
+      - name: Fetch JVM test dependencies
+        run: |
+          mkdir -p tools
+          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
+          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
+
+      - name: Pipeline gates (audit + 455 tests + perf budgets)
+        run: ci/pipeline.sh
+
+      - name: Upload pipeline log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: pipeline-log, path: build/pipeline.log }
+
+  compile:
+    needs: gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install SDK pieces expected by the build scripts
+        run: |
+          sdkmanager --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
+          ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
+
+      - name: Unsigned compile gate
+        run: ci/build_unsigned.sh
+
+      - name: R8 Full Mode shrink gate (roadmap item C)
+        run: |
+          curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          R8_ANDROID_JAR="$SDK/platforms/android-35/android.jar" ci/build_r8.sh
+
+      - name: Upload unsigned APK
+        uses: actions/upload-artifact@v4
+        with: { name: neokey-unsigned, path: build/NeoKey-unsigned-aligned.apk }

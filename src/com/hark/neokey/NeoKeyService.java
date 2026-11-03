@@ -1,0 +1,1742 @@
+package com.hark.neokey;
+
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.ColorDrawable;
+import android.inputmethodservice.InputMethodService;
+import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
+import java.util.Locale;
+import android.os.SystemClock;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.widget.Toast;
+import android.content.pm.PackageManager;
+import java.util.HashSet;
+import java.util.Set;
+import android.text.InputType;
+import android.text.TextUtils;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.Window;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.ExtractedText;
+import android.view.inputmethod.ExtractedTextRequest;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public class NeoKeyService extends InputMethodService implements KeyboardView.Listener {
+
+    private static final String SEP = "\u0001";
+    private KeyboardView view;
+    private boolean arabic = true;
+    private int mode = Layouts.AR;
+    private int shift = KeyboardView.SHIFT_OFF;
+    private long lastShiftTap, lastSpaceAt;
+    private List<ClipItem> clipList = new ArrayList<>();
+    private ClipStore clipStore;
+    private int clipTab = 0, clipPins = 0, clipSearchSeq = 0, clipSearchHits = -1;
+    private String clipQuery;
+    private boolean clipSearch, clipMore;
+    private long clipCat = 0;
+    private int clipLimit = 60;
+    private List<ClipRepo.Cat> clipCats = new ArrayList<>();
+    private final StringBuilder clipBuf = new StringBuilder();
+    private final List<String> recents = new ArrayList<>();
+    private boolean emojiSearch;
+    private final StringBuilder emojiQuery = new StringBuilder();
+    private ClipboardManager cm;
+    private Dictionary dictAr, dictEn;
+    // C2 (الأسبوع 6): قواميس اللهجات تُبنى عند أول حاجة فقط (تحميلها خلفي داخلي)،
+    // والمبدّل الذكي يقرر من السياق مع احترام pref dialect_mode (الافتراضي تلقائي).
+    private Dictionary dictHijazi, dictNajdi, dictGulf;
+    private String dialectMode = SmartSwitch.AUTO;
+    private volatile Predictor predictor;   // A2 neural next-word model (async load, fail-open)
+    private boolean suggest = true, dblSpace = true, sensitive, selecting, pickedSuggestion;
+    private Bitmap photo;
+    private long photoStamp = -1;
+    private Bitmap avatarBmp;
+    private long avatarStamp = -1;
+    private int words, chars;
+    private long forgetSeen = -1;
+    private boolean autocorrect, learnOn = true;
+    private final java.util.HashSet<String> noCorrect = new java.util.HashSet<>();
+    private boolean noCorrectLoaded;
+    /** Corrections applied in the current field — the «ماذا كتبت فعلاً مقابل ما سيُرسل» feed (item B, week 2). */
+    private final java.util.ArrayList<SendPreview.Edit> sentEdits = new java.util.ArrayList<>();
+    private int kbLayout;
+    private int decor = Decor.OFF;
+    private String lastWord, corrOriginal, corrApplied;
+    private SpeechRecognizer recognizer;
+    private boolean listening;
+    private String glideWord;
+    private List<String> glideAlts;
+    private TextToSpeech tts;
+    private boolean incognito;
+    private int fieldKind;  // 1 email, 2 url
+    private static final List<String> EMAIL_CHIPS = Arrays.asList("@gmail.com", "@hotmail.com", "@outlook.com", "@icloud.com", ".com", ".sa");
+    private static final List<String> URL_CHIPS = Arrays.asList("https://", "www.", ".com", ".sa", ".net", "/");
+    private String freshClip, clipChip, undoBefore, undoAfter, lastCaptured;
+    private long freshTime;
+    private boolean ttsReady;
+    private final android.os.Handler main = new android.os.Handler(android.os.Looper.getMainLooper());
+
+    private final ClipboardManager.OnPrimaryClipChangedListener clipListener =
+            new ClipboardManager.OnPrimaryClipChangedListener() {
+                @Override public void onPrimaryClipChanged() { captureClip(); }
+            };
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        L.init(this);
+        Perf.installCrashHandler(this);
+        Shield.ensure(this); // integrity shield, cached (same process as the settings UI)
+        SharedPreferences p = Theme.prefs(this);
+        String rec = p.getString("recent_emoji", "");
+        if (!rec.isEmpty()) recents.addAll(Arrays.asList(rec.split(" ")));
+        clipStore = ClipStore.get(this);
+        clipStore.migrateIfNeeded();
+        reloadClips();
+        cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        if (cm != null) cm.addPrimaryClipChangedListener(clipListener);
+        dictAr = new Dictionary(this, "ar");
+        dictEn = new Dictionary(this, "en");
+        // A2: the neural next-word model (assets/nnet_ar.nqf — 2.9M params, NQF
+        // int8) loads in the background; the keyboard never waits for it. Until
+        // it is ready — or forever, if the load ever fails — the traditional
+        // dictionary+bigram path answers alone (fail-open by design).
+        new Thread(new Runnable() { public void run() {
+            try {
+                java.io.InputStream in = getAssets().open("nnet_ar.nqf");
+                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[65536];
+                int n;
+                while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                in.close();
+                predictor = Predictor.load(bo.toByteArray());
+            } catch (Throwable t) {
+                predictor = null; // fail-open: typing is never disrupted by the model
+            }
+        }}, "nnet-load").start();
+    }
+
+    @Override
+    public void onDestroy() {
+        if (cm != null) cm.removePrimaryClipChangedListener(clipListener);
+        flushStats();
+        stopVoice();
+        if (tts != null) tts.shutdown();
+        super.onDestroy();
+    }
+
+    @Override
+    public View onCreateInputView() {
+        long perf0 = SystemClock.uptimeMillis();
+        // transparent window so the rounded top corners show the app behind
+        Window w = getWindow().getWindow();
+        if (w != null) {
+            w.setBackgroundDrawable(new ColorDrawable(0));
+            w.setFormat(PixelFormat.TRANSLUCENT);
+        }
+        view = new KeyboardView(this);
+        view.setListener(this);
+        arabic = Theme.prefs(this).getBoolean("arabic", true);
+        mode = arabic ? Layouts.AR : Layouts.EN;
+        applyPrefs();
+        applyLayout();
+        view.setClips(clipList, clipTab, clipQuery, clipPins, clipCats, clipCat, clipMore);
+        view.setRecents(recents);
+        view.setDecor(decor);
+        Perf.record("create", SystemClock.uptimeMillis() - perf0);
+        return view;
+    }
+
+    @Override
+    public boolean onEvaluateFullscreenMode() {
+        return false; // keep the app visible in landscape too
+    }
+
+    @Override
+    public void onComputeInsets(Insets out) {
+        super.onComputeInsets(out);
+        if (view != null && view.isShown() && !isFullscreenMode()) {
+            int[] loc = new int[2];
+            view.getLocationInWindow(loc);
+            int top = loc[1] + view.cornerInset();
+            out.contentTopInsets = top;
+            out.visibleTopInsets = top;
+            out.touchableInsets = Insets.TOUCHABLE_INSETS_REGION;
+            out.touchableRegion.set(0, loc[1], view.getWidth(), loc[1] + view.getHeight());
+        }
+    }
+
+    @Override
+    public void onStartInputView(EditorInfo info, boolean restarting) {
+        super.onStartInputView(info, restarting);
+        if (!restarting) reloadClips();   // picks up edits / imports made in the app screens
+        boolean wasEn = L.en;
+        L.init(this);
+        if (wasEn != L.en) setInputView(onCreateInputView());
+        if (view != null && !restarting) view.collapseArrows();
+        emojiSearch = false;
+        clipSearch = false;
+        emojiQuery.setLength(0);
+        if (view == null) return;
+        Perf.session();
+        view.markShow();
+        applyPrefs();
+        SharedPreferences sp = Theme.prefs(this);
+        if (sp.getBoolean("dict_reload", false)) {
+            sp.edit().remove("dict_reload").apply();
+            dictAr = new Dictionary(this, "ar");
+            dictEn = new Dictionary(this, "en");
+        }
+        insertPendingDraft(info);
+        incognito = sp.getBoolean("incognito", false);
+        view.setIncognito(incognito);
+        if (sp.getBoolean("reset_learn", false)) {
+            dictAr.clearUser();
+            dictEn.clearUser();
+            sp.edit().remove("reset_learn").apply();
+        }
+        captureClip();
+        int cls = info.inputType & InputType.TYPE_MASK_CLASS;
+        int var = info.inputType & InputType.TYPE_MASK_VARIATION;
+        fieldKind = cls != InputType.TYPE_CLASS_TEXT ? 0
+                : (var == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS || var == InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS) ? 1
+                : var == InputType.TYPE_TEXT_VARIATION_URI ? 2 : 0;
+        sensitive = cls == InputType.TYPE_CLASS_TEXT && (var == InputType.TYPE_TEXT_VARIATION_PASSWORD
+                || var == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                || var == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
+                || var == InputType.TYPE_TEXT_VARIATION_URI
+                || var == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+                || var == InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS
+                || (info.inputType & InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0);
+        if (cls == InputType.TYPE_CLASS_NUMBER || cls == InputType.TYPE_CLASS_PHONE
+                || cls == InputType.TYPE_CLASS_DATETIME) {
+            mode = Theme.prefs(this).getBoolean("numpad", true) ? Layouts.NUM : Layouts.SYM;
+        } else {
+            mode = arabic ? Layouts.AR : Layouts.EN;
+        }
+        shift = KeyboardView.SHIFT_OFF;
+        selecting = false;
+        view.setSelecting(false);
+        lastWord = null;
+        corrApplied = null;
+        sentEdits.clear();
+        applyLayout();
+        updateEnter(info);
+        updateAutoCaps();
+        updateSuggestions();
+    }
+
+    @Override
+    public void onFinishInputView(boolean finishing) {
+        super.onFinishInputView(finishing);
+        stopVoice();
+        flushStats();
+        Perf.sampleMemory(this);
+        Perf.flush();
+        dictAr.save();
+        dictEn.save();
+    }
+
+    @Override
+    public void onUpdateSelection(int os, int oe, int ns, int ne, int cs, int ce) {
+        super.onUpdateSelection(os, oe, ns, ne, cs, ce);
+        updateAutoCaps();
+        updateSuggestions();
+    }
+
+    private void applyPrefs() {
+        File f = new File(getFilesDir(), "bg.jpg");
+        long stamp = f.exists() ? f.lastModified() : 0;
+        if (stamp != photoStamp) {
+            photoStamp = stamp;
+            photo = stamp == 0 ? null : BitmapFactory.decodeFile(f.getAbsolutePath());
+        }
+        view.setTheme(Theme.current(this), photo, Theme.photoDim(this));
+        view.setAnimBg(Theme.prefs(this).getInt("anim_bg", -1));
+        view.setSoundStyle(Theme.prefs(this).getInt("sound_pack", 0), Theme.prefs(this).getInt("sound_vol", 50));
+        view.setPressFx(Theme.prefs(this).getInt("press_fx", -1));
+        File af = new File(getFilesDir(), "avatar.png");
+        long ast = af.exists() ? af.lastModified() : 0;
+        if (ast != avatarStamp) {
+            avatarStamp = ast;
+            try { avatarBmp = ast == 0 ? null : BitmapFactory.decodeFile(af.getAbsolutePath()); } catch (Throwable e) { avatarBmp = null; }
+        }
+        view.setAvatar(Theme.prefs(this).getBoolean("avatar_show", true) ? avatarBmp : null);
+        view.setArrows(Features.on(this), Features.right(this), Features.left(this));
+        view.setPrefs(Theme.haptics(this), Theme.popups(this), Theme.heightPct(this),
+                Theme.sound(this), Theme.swipeCursor(this), Theme.oneHand(this));
+        view.setPhrases(Theme.allPhrases(this));
+        view.setFeel(Theme.prefs(this).getInt("vib", 0), Theme.prefs(this).getInt("lpdelay", 1));
+        long forget = Theme.prefs(this).getLong("forget_at", 0);
+        if (forget > forgetSeen) {
+            if (forgetSeen != -1) { dictAr.forgetAll(); dictEn.forgetAll(); }
+            forgetSeen = forget;
+        }
+        suggest = Theme.suggestions(this);
+        dialectMode = Theme.prefs(this).getString("dialect_mode", SmartSwitch.AUTO);
+        if (!SmartSwitch.validMode(dialectMode)) dialectMode = SmartSwitch.AUTO;
+        SharedPreferences lp = Theme.prefs(this);
+        kbLayout = lp.getInt("kblayout", 0);
+        boolean gaming = kbLayout == Layouts.L_GAME;
+        autocorrect = !gaming && lp.getBoolean("autocorrect", false);
+        learnOn = lp.getBoolean("learn", true);
+        if (!noCorrectLoaded) {
+            noCorrectLoaded = true;
+            noCorrect.addAll(Exceptions.parse(lp.getString("nocorrect", "")));
+        }
+        view.setGlide(!gaming && lp.getBoolean("glide", true));
+        view.setKeyShape(lp.getInt("keyshape", 0));
+        view.setLook(lp.getBoolean("pressglow", true), lp.getBoolean("anims", true),
+                lp.getInt("keygap", 1), lp.getInt("radius", 0), lp.getInt("wpct", 100));
+        int ks = Theme.prefs(this).getInt("keysize", 1);
+        boolean big = lp.getBoolean("bigkeys", false), reduce = Theme.reduceMotion(this);
+        view.setKeyScale(big ? 1.3f : ks == 0 ? 0.88f : ks == 2 ? 1.14f : ks == 3 ? 1.3f : 1f);
+        view.setAccess(lp.getBoolean("cues", true), lp.getInt("onehandw", 82), lp.getInt("vibms", 20), lp.getInt("vibamp", 160),
+                big, lp.getBoolean("contrast", false), reduce);
+        if (reduce) view.setLook(false, false, lp.getInt("keygap", 1), lp.getInt("radius", 0), lp.getInt("wpct", 100));
+        if (big && Theme.heightPct(this) < 122)
+            view.setPrefs(Theme.haptics(this), Theme.popups(this), 122, Theme.sound(this), Theme.swipeCursor(this), Theme.oneHand(this));
+        dblSpace = Theme.doubleSpace(this);
+    }
+
+    private void applyLayout() {
+        boolean num = Theme.numberRow(this);
+        view.setKeys(Layouts.build(mode, arabic, num, Theme.arabicDigits(this), kbLayout), num, mode != Layouts.EN && mode != Layouts.NUM);
+        view.setShiftState(mode == Layouts.EN ? shift : KeyboardView.SHIFT_OFF);
+    }
+
+    private void updateEnter(EditorInfo info) {
+        int k = KeyboardView.ENTER_NEWLINE;
+        if ((info.imeOptions & EditorInfo.IME_FLAG_NO_ENTER_ACTION) == 0) {
+            switch (info.imeOptions & EditorInfo.IME_MASK_ACTION) {
+                case EditorInfo.IME_ACTION_SEARCH: k = KeyboardView.ENTER_SEARCH; break;
+                case EditorInfo.IME_ACTION_SEND: k = KeyboardView.ENTER_SEND; break;
+                case EditorInfo.IME_ACTION_GO:
+                case EditorInfo.IME_ACTION_NEXT: k = KeyboardView.ENTER_GO; break;
+                case EditorInfo.IME_ACTION_DONE: k = KeyboardView.ENTER_DONE; break;
+                default: break;
+            }
+        }
+        view.setEnterKind(k);
+    }
+
+    private void updateAutoCaps() {
+        if (view == null || mode != Layouts.EN || shift == KeyboardView.SHIFT_LOCK) return;
+        EditorInfo info = getCurrentInputEditorInfo();
+        InputConnection ic = getCurrentInputConnection();
+        int caps = 0;
+        if (ic != null && info != null && info.inputType != InputType.TYPE_NULL) {
+            caps = ic.getCursorCapsMode(info.inputType);
+        }
+        shift = caps != 0 ? KeyboardView.SHIFT_ON : KeyboardView.SHIFT_OFF;
+        view.setShiftState(shift);
+    }
+
+    // ------------------------------------------------------------ suggestions
+
+    private static boolean isWordChar(char c) {
+        return Character.isLetter(c) || c == '\'' || (c >= 0x064B && c <= 0x0652);
+    }
+
+    private String currentWord() {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return "";
+        CharSequence sel = ic.getSelectedText(0);
+        if (!TextUtils.isEmpty(sel)) return "";
+        CharSequence after = ic.getTextAfterCursor(1, 0);
+        if (after != null && after.length() > 0 && isWordChar(after.charAt(0))) return "";
+        CharSequence b = ic.getTextBeforeCursor(40, 0);
+        if (b == null) return "";
+        int i = b.length();
+        while (i > 0 && isWordChar(b.charAt(i - 1))) i--;
+        return b.subSequence(i, b.length()).toString();
+    }
+
+    private Dictionary dictFor(String w) {
+        if (w.isEmpty()) return arabic ? dictAr : dictEn;
+        char c = w.charAt(0);
+        return (c >= 0x0600 && c <= 0x06FF) ? dictAr : dictEn;
+    }
+
+    // ---- C2 (الأسبوع 6): التبديل الذكي فصحى/لهجة --------------------------------
+
+    /** قاموس لهجة بالمعرّف — يُبنى مرة واحدة عند أول حاجة (تحميله خلفي داخله). */
+    private Dictionary dialectDict(String id) {
+        if ("ar_hijazi".equals(id)) {
+            if (dictHijazi == null) dictHijazi = new Dictionary(this, "ar_hijazi");
+            return dictHijazi;
+        }
+        if ("ar_najdi".equals(id)) {
+            if (dictNajdi == null) dictNajdi = new Dictionary(this, "ar_najdi");
+            return dictNajdi;
+        }
+        if ("ar_gulf".equals(id)) {
+            if (dictGulf == null) dictGulf = new Dictionary(this, "ar_gulf");
+            return dictGulf;
+        }
+        return null;
+    }
+
+    /**
+     * معرّف قاموس اللهجة النشط للسياق الحالي، أو null للفصحى الصرفة.
+     * الكشف لحظي على نافذة النص الظاهر فقط — لا يُخزن شيء عن المستخدم،
+     * ويتوقف في الحقول الحساسة وعند إيقاف الاقتراحات.
+     */
+    private String activeDialectId() {
+        if (!suggest || sensitive) return null;
+        if (SmartSwitch.OFF.equals(dialectMode) || SmartSwitch.MSA.equals(dialectMode)) return null;
+        if (!SmartSwitch.AUTO.equals(dialectMode)) return SmartSwitch.dictFor(dialectMode);
+        InputConnection ic = getCurrentInputConnection();
+        CharSequence b = ic == null ? null : ic.getTextBeforeCursor(120, 0);
+        SmartSwitch.Decision d = SmartSwitch.decide(
+                b == null ? null : Dialect.tokenize(b.toString()), dialectMode);
+        return d.dialectActive() ? d.dictId : null;
+    }
+
+    /** ترشيحات مدمجة: كلمات اللهجة النشطة أولاً ثم سدادة الفصحى (حد cap، بلا تكرار). */
+    private List<String> mergedSuggest(String w, String dictId, int cap) {
+        List<String> out = new ArrayList<>();
+        Dictionary dd = dictId == null ? null : dialectDict(dictId);
+        if (dd != null && dd.isLoaded()) out.addAll(dd.suggest(w, cap));
+        for (String x : dictFor(w).suggest(w, cap)) {
+            if (out.size() >= cap) break;
+            if (!out.contains(x)) out.add(x);
+        }
+        return out;
+    }
+
+    @Override
+    public void onEmojiSearch() {
+        emojiSearch = true;
+        emojiQuery.setLength(0);
+        new Thread(new Runnable() { @Override public void run() { EmojiSearch.load(NeoKeyService.this); } }).start();
+        updateSuggestions();
+    }
+
+    private void exitEmojiSearch() {
+        emojiSearch = false;
+        emojiQuery.setLength(0);
+        updateSuggestions();
+    }
+
+    private void updateSuggestions() {
+        long n0 = System.nanoTime();
+        updateSuggestions0();
+        if (suggest && !sensitive) Perf.record("sugg", (System.nanoTime() - n0) / 1e6);
+    }
+
+    /** A draft reviewed in the writing assistant waits here until the user is back in a text field. */
+    private void insertPendingDraft(EditorInfo info) {
+        SharedPreferences p = Theme.prefs(this);
+        String d = p.getString("w_insert", null);
+        if (d == null) return;
+        if (info != null && getPackageName().equals(info.packageName)) return;
+        long at = p.getLong("w_insert_at", 0);
+        p.edit().remove("w_insert").remove("w_insert_at").apply();
+        if (System.currentTimeMillis() - at > 180000) return;
+        InputConnection ic = getCurrentInputConnection();
+        if (ic != null) ic.commitText(d, 1);
+    }
+
+    private void openWriter() {
+        InputConnection ic = getCurrentInputConnection();
+        CharSequence sel = ic == null ? null : ic.getSelectedText(0);
+        Intent i = new Intent(this, WriterActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        i.putExtra(WriterActivity.EXTRA_FROM_KB, true);
+        if (sel != null && sel.length() > 0 && !sensitive) i.putExtra(WriterActivity.EXTRA_CTX, sel.toString());
+        requestHideSelf(0);
+        startActivity(i);
+    }
+
+    private void updateSuggestions0() {
+        if (view == null) return;
+        if (clipSearch) {
+            String q = clipBuf.toString();
+            List<String> chips = new ArrayList<>();
+            chips.add("✕  " + (q.isEmpty() ? L.t("ابحث في الحافظة…") : q + "|"));
+            if (!q.trim().isEmpty() && clipSearchHits >= 0)
+                chips.add(clipSearchHits == 0 ? L.t("لا نتائج") : "🔎 " + L.t("عرض") + " " + clipSearchHits);
+            view.setSuggestions(chips);
+            return;
+        }
+        if (emojiSearch) {
+            String q = emojiQuery.toString();
+            List<String> res = q.trim().isEmpty()
+                    ? new ArrayList<>(recents.subList(0, Math.min(6, recents.size())))
+                    : EmojiSearch.search(this, q, 6);
+            String chip = "✕  " + (q.isEmpty() ? (arabic ? "ابحث عن إيموجي…" : "Search emoji…") : q + "|");
+            view.setEmojiResults(chip, res);
+            return;
+        }
+        if (fieldKind != 0 && decor == Decor.OFF) {
+            view.setSuggestions(new ArrayList<>(fieldKind == 1 ? EMAIL_CHIPS.subList(0, 4) : URL_CHIPS.subList(0, 4)));
+            return;
+        }
+        if (!suggest || sensitive || decor != Decor.OFF || mode == Layouts.SYM || mode == Layouts.SYM2 || mode == Layouts.NUM) {
+            view.setSuggestions(Collections.<String>emptyList());
+            return;
+        }
+        if (glideWord != null && glideAlts != null && endsWithBefore(glideWord)) {
+            view.setSuggestions(glideAlts);
+            return;
+        }
+        String w = currentWord();
+        if (w.isEmpty()) {
+            List<String> p = predictions();
+            if (freshClip != null && SystemClock.elapsedRealtime() - freshTime < 120000) {
+                String one = freshClip.replace('\n', ' ').trim();
+                clipChip = KeyboardView.CLIP_MARK + (one.length() > 22 ? one.substring(0, 22) + "…" : one);
+                p.add(0, clipChip);
+                while (p.size() > 3) p.remove(p.size() - 1);
+            } else {
+                freshClip = null;
+            }
+            view.setSuggestions(p);
+            return;
+        }
+        List<String> s = mergedSuggest(w, activeDialectId(), 3);
+        String fx = ArabicFixes.fix(w);
+        if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > 3) s.remove(s.size() - 1); }
+        String sc = Theme.shortcuts(this).get(w.toLowerCase());
+        if (sc != null) { s.remove(sc); s.add(0, sc); while (s.size() > 3) s.remove(s.size() - 1); }
+        String emo = EmojiHints.forWord(w);
+        if (emo != null) {
+            if (s.size() >= 3) s.set(2, emo); else s.add(emo);
+        }
+        boolean upperFirst = Character.isUpperCase(w.charAt(0));
+        if (upperFirst) {
+            for (int i = 0; i < s.size(); i++) {
+                String x = s.get(i);
+                if (Character.isLetter(x.charAt(0))) s.set(i, Character.toUpperCase(x.charAt(0)) + x.substring(1));
+            }
+        }
+        view.setSuggestions(s);
+    }
+
+    /** Next-word predictions after "word ". */
+    private List<String> predictions() {
+        InputConnection ic = getCurrentInputConnection();
+        List<String> out = new ArrayList<>();
+        if (ic == null) return out;
+        CharSequence b = ic.getTextBeforeCursor(40, 0);
+        if (b == null || b.length() < 2 || b.charAt(b.length() - 1) != ' ') return out;
+        int end = b.length() - 1, i = end;
+        while (i > 0 && isWordChar(b.charAt(i - 1))) i--;
+        if (i == end) {
+            // "word 😂 " — offer nothing, but after an emoji-suggestion just stop
+            return out;
+        }
+        String prev = b.subSequence(i, end).toString();
+        out.addAll(dictFor(prev).predict(prev, 3));
+        // C2: التبديل الذكي — تنبؤات قاموس اللهجة النشط تُدمج في المسار المعجمي
+        // (قبل السدادة العصبية — النموذج يكمل ما تركه المعجم لا ما تركته اللهجة)
+        String did = activeDialectId();
+        if (did != null) {
+            Dictionary dd = dialectDict(did);
+            if (dd != null && dd.isLoaded())
+                for (String x : dd.predict(prev, 3)) {
+                    if (out.size() >= 3) break;
+                    if (!out.contains(x)) out.add(x);
+                }
+        }
+        // A2: neural top-3 completes the strip — it never displaces the
+        // dictionary path, it only fills what the bigram table left empty
+        // (the model's measured top-3 is the NNETGATE2 section of the gate).
+        Predictor np = predictor;
+        if (np != null && out.size() < 3) {
+            String before = null;
+            if (i > 0) {
+                int j = i;
+                while (j > 0 && isWordChar(b.charAt(j - 1))) j--;
+                if (j < i) before = b.subSequence(j, i).toString();
+            }
+            for (String w : np.top3(before, prev)) {
+                if (out.size() >= 3) break;
+                if (!out.contains(w)) out.add(w);
+            }
+        }
+        String emo = EmojiHints.forWord(prev);
+        if (emo != null && out.size() < 3 && !out.contains(emo)) out.add(emo);
+        return out;
+    }
+
+    /** The user undid a correction: never correct this word again, and teach it to the dictionary. */
+    private void rememberNoCorrect(String w) {
+        if (w == null || w.isEmpty() || sensitive || incognito) return;
+        // item B week 2: the exceptions list is a real data type — dedup by norm
+        // spelling («مشكله» و«مشكلة» entry واحدة), cap 300 keeping the latest.
+        java.util.List<String> l = Exceptions.add(new java.util.ArrayList<>(noCorrect), w);
+        noCorrect.clear();
+        noCorrect.addAll(l);
+        if (learnOn) { Dictionary d = dictFor(w); d.learn(w); d.learn(w); }
+        Theme.prefs(this).edit().putString("nocorrect", Exceptions.serialize(l)).apply();
+    }
+
+    private void finishWord(String w) {
+        if (w.isEmpty() || sensitive) return;
+        if (incognito) { lastWord = null; words++; return; }
+        if (w.indexOf(' ') >= 0) { lastWord = null; words++; return; }
+        if (!learnOn) { lastWord = w; words++; return; }
+        Dictionary d = dictFor(w);
+        d.learn(w);
+        if (lastWord != null && dictFor(lastWord) == d) d.learnPair(lastWord, w);
+        lastWord = w;
+        words++;
+    }
+
+    @Override
+    public void onSuggestion(String word) {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+        if (clipSearch) {
+            if (word.startsWith("✕")) { clipSearch = false; view.showPanel(KeyboardView.PANEL_CLIP); updateSuggestions(); return; }
+            if (word.startsWith("🔎")) finishClipSearch();
+            return;
+        }
+        if (emojiSearch) {
+            if (word.startsWith("✕")) { exitEmojiSearch(); return; }
+            onEmoji(word);
+            exitEmojiSearch();
+            return;
+        }
+        if (fieldKind != 0 && (EMAIL_CHIPS.contains(word) || URL_CHIPS.contains(word))) {
+            CharSequence b = ic.getTextBeforeCursor(1, 0);
+            String w = word;
+            if (w.startsWith("@") && b != null && b.length() == 1 && b.charAt(0) == '@') w = w.substring(1);
+            ic.commitText(w, 1);
+            return;
+        }
+        if (clipChip != null && word.equals(clipChip) && freshClip != null) {
+            ic.commitText(freshClip, 1);
+            freshClip = null;
+            clipChip = null;
+            updateSuggestions();
+            return;
+        }
+        if (!Character.isLetter(word.charAt(0))) {
+            // emoji suggestion: keep the word, add the emoji
+            finishWord(currentWord());
+            CharSequence b = ic.getTextBeforeCursor(1, 0);
+            boolean spaced = b == null || b.length() == 0 || b.charAt(0) == ' ' || b.charAt(0) == '\n';
+            ic.commitText((spaced ? "" : " ") + word + " ", 1);
+            pickedSuggestion = false;
+            return;
+        }
+        if (glideWord != null && endsWithBefore(glideWord)) {
+            ic.deleteSurroundingText(glideWord.length(), 0);
+            String w2 = word + " ";
+            ic.commitText(w2, 1);
+            dictFor(word).learn(word);
+            glideAlts.remove(word);
+            glideAlts.add(0, glideWord.trim());
+            glideWord = w2;
+            return;
+        }
+        String cur = currentWord();
+        ic.beginBatchEdit();
+        if (!cur.isEmpty()) ic.deleteSurroundingText(cur.length(), 0);
+        ic.commitText(word + " ", 1);
+        ic.endBatchEdit();
+        finishWord(word);
+        chars += word.length() + 1;
+        corrApplied = null;
+        pickedSuggestion = true;
+        if (mode == Layouts.EN && shift == KeyboardView.SHIFT_ON) shift = KeyboardView.SHIFT_OFF;
+        updateAutoCaps();
+    }
+
+    // ------------------------------------------------------------ clipboard
+
+    private void captureClip() {
+        try {
+            if (cm == null || !cm.hasPrimaryClip()) return;
+            ClipData d = cm.getPrimaryClip();
+            if (d == null || d.getItemCount() == 0) return;
+            CharSequence t = d.getItemAt(0).coerceToText(this);
+            if (TextUtils.isEmpty(t)) return;
+            final String s = t.toString();
+            if (s.equals(lastCaptured)) return;
+            lastCaptured = s;
+            boolean secret = sensitive || isSensitiveClip(d);
+            if (secret && !Theme.prefs(this).getBoolean("clip_sensitive", false)) return;
+            freshClip = s;
+            freshTime = SystemClock.elapsedRealtime();
+            if (incognito) return;
+            if (s.length() > ClipRepo.MAX_LEN) {
+                Toast.makeText(this, L.t("النص المنسوخ أطول من ٥٠٠ ألف حرف، فما انحفظ في السجل"), Toast.LENGTH_LONG).show();
+                return;
+            }
+            final int max = Theme.prefs(this).getInt("clip_max", 50);
+            final long days = Theme.prefs(this).getInt("clip_days", 0);
+            clipStore.run(new ClipStore.Job<Integer>() {
+                @Override public Integer run(ClipRepo r) {
+                    long now = System.currentTimeMillis();
+                    int res = r.add(s, now, null);
+                    r.prune(max, days * 86400000L, now);
+                    return res;
+                }
+            }, new ClipStore.Done<Integer>() {
+                @Override public void done(Integer res) {
+                    if (res == null || res == ClipRepo.VERIFY_FAIL || res == ClipRepo.ERROR)
+                        Toast.makeText(NeoKeyService.this, L.t("تعذّر حفظ النص في الحافظة"), Toast.LENGTH_SHORT).show();
+                    reloadClips();
+                }
+            });
+        } catch (Exception ignored) {
+            // clipboard can be restricted while the keyboard is not focused
+        }
+    }
+
+    /** Android 13+: apps mark passwords / OTPs as sensitive when copying. */
+    private static boolean isSensitiveClip(ClipData d) {
+        if (android.os.Build.VERSION.SDK_INT < 24) return false;
+        try {
+            android.os.PersistableBundle x = d.getDescription().getExtras();
+            return x != null && (x.getBoolean("android.content.extra.IS_SENSITIVE", false));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    void reloadClips() {
+        final int tab = clipTab;
+        final String q = clipQuery;
+        final long cat = clipCat;
+        final int limit = clipLimit;
+        final int[] pins = new int[1];
+        final List<List<ClipRepo.Cat>> cats = new ArrayList<>();
+        clipStore.run(new ClipStore.Job<List<ClipItem>>() {
+            @Override public List<ClipItem> run(ClipRepo r) {
+                List<ClipItem> l = tab == ClipRepo.TAB_CATS && cat == 0 ? new ArrayList<ClipItem>()
+                        : q == null ? r.list(tab, cat, limit) : r.search(tab, cat, q, limit);
+                pins[0] = r.pinCount();
+                cats.add(tab == ClipRepo.TAB_CATS ? r.categories() : new ArrayList<ClipRepo.Cat>());
+                return l;
+            }
+        }, new ClipStore.Done<List<ClipItem>>() {
+            @Override public void done(List<ClipItem> l) {
+                if (l == null) return;
+                clipList = l;
+                clipPins = pins[0];
+                clipCats = cats.isEmpty() ? new ArrayList<ClipRepo.Cat>() : cats.get(0);
+                clipMore = l.size() >= limit;
+                if (view != null) view.setClips(clipList, clipTab, clipQuery, clipPins, clipCats, clipCat, clipMore);
+            }
+        });
+    }
+
+    // ------------------------------------------------------------ listener
+
+    @Override
+    public void onText(String text) {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+        if (clipSearch) {
+            if (!(" ".equals(text) && clipBuf.length() == 0) && clipBuf.length() < 60) clipBuf.append(text);
+            countClipSearch();
+            return;
+        }
+        if (emojiSearch) {
+            if (!(" ".equals(text) && emojiQuery.length() == 0) && emojiQuery.length() < 30) emojiQuery.append(text.toLowerCase());
+            updateSuggestions();
+            return;
+        }
+        if (mode == Layouts.EN && shift != KeyboardView.SHIFT_OFF
+                && view.getPanel() == KeyboardView.PANEL_KEYS) text = text.toUpperCase();
+
+        // item B week 2: الفاصلة المنقوطة والأرقام العربية — the layout/script
+        // mismatch classes. NEVER in sensitive fields: what you type is what is sent.
+        if (!sensitive && text.length() == 1 && Theme.prefs(this).getBoolean("ar_punct", true)) {
+            char ch = text.charAt(0);
+            String p = Correction2.punctFor(text, arabic);
+            if (p != null) text = p;
+            else if (Correction2.isDigitChar(ch)) {
+                CharSequence pb = getCurrentInputConnection() != null
+                        ? getCurrentInputConnection().getTextBeforeCursor(1, 0) : null;
+                char nb = pb == null || pb.length() == 0 ? 0 : pb.charAt(pb.length() - 1);
+                char d = Correction2.digitFor(ch, nb, Theme.arabicDigits(this));
+                if (d != ch) text = String.valueOf(d);
+            }
+        }
+
+        boolean isSpace = " ".equals(text);
+        boolean isPunct = text.length() == 1 && ".,،؟?!:;؛".indexOf(text.charAt(0)) >= 0;
+        corrApplied = null;
+        glideWord = null;
+
+        if (decor != Decor.OFF && text.length() == 1 && !isSpace) text = Decor.apply(text, decor);
+
+        // finishing a word: autocorrect (optional) then learn it
+        if (isSpace || isPunct) {
+            String w = currentWord();
+            // item B week 2: الحقول الحرجة — the no-silent-correction policy as code.
+            if (!w.isEmpty() && Correction2.silentCorrectionAllowed(sensitive, autocorrect)
+                    && decor == Decor.OFF && !pickedSuggestion
+                    && !Exceptions.shouldSkip(w, noCorrect)) {
+                String c = ArabicFixes.fix(w);
+                if (c == null && (w.charAt(0) >= 0x0600 && w.charAt(0) <= 0x06FF)) {
+                    // Phase 1 item B: correction v2 — confusion table + FULL sentence
+                    // context (week 2): the word before AND the word after the cursor.
+                    CharSequence b = getCurrentInputConnection() != null
+                            ? getCurrentInputConnection().getTextBeforeCursor(40, 0) : null;
+                    CharSequence a = getCurrentInputConnection() != null
+                            ? getCurrentInputConnection().getTextAfterCursor(40, 0) : null;
+                    String prev = Correction2.previousWord(b == null ? "" : b.toString(), w.length());
+                    String next = Correction2.nextWord(a == null ? "" : a.toString());
+                    c = Correction2.fix(w, prev, next, dictFor(w), noCorrect);
+                }
+                if (c == null) c = dictFor(w).correction(w);
+                if (c != null && !c.equals(w)) {
+                    if (Character.isUpperCase(w.charAt(0))) c = Character.toUpperCase(c.charAt(0)) + c.substring(1);
+                    ic.deleteSurroundingText(w.length(), 0);
+                    ic.commitText(c, 1);
+                    corrOriginal = w;
+                    corrApplied = c + text;
+                    if (sentEdits.size() < 50) sentEdits.add(new SendPreview.Edit(w, c));
+                    w = c;
+                }
+            }
+            finishWord(w);
+            if (isPunct) lastWord = null;
+        }
+
+        // smart punctuation after a picked suggestion: "word ." -> "word."
+        if (isPunct && pickedSuggestion) {
+            CharSequence b = ic.getTextBeforeCursor(1, 0);
+            if (b != null && b.length() == 1 && b.charAt(0) == ' ') {
+                ic.deleteSurroundingText(1, 0);
+                text = text + " ";
+            }
+        }
+
+        // double space -> period
+        if (isSpace && dblSpace && SystemClock.uptimeMillis() - lastSpaceAt < 450) {
+            CharSequence b = ic.getTextBeforeCursor(2, 0);
+            if (b != null && b.length() == 2 && b.charAt(1) == ' ' && Character.isLetterOrDigit(b.charAt(0))) {
+                ic.deleteSurroundingText(1, 0);
+                text = ". ";
+                lastSpaceAt = 0;
+            } else {
+                lastSpaceAt = SystemClock.uptimeMillis();
+            }
+        } else {
+            lastSpaceAt = isSpace ? SystemClock.uptimeMillis() : 0;
+        }
+
+        ic.commitText(text, 1);
+        if (corrApplied != null && !corrApplied.endsWith(text)) corrApplied = null;
+        chars += text.length();
+        pickedSuggestion = false;
+        if (mode == Layouts.EN && shift == KeyboardView.SHIFT_ON) {
+            shift = KeyboardView.SHIFT_OFF;
+            view.setShiftState(shift);
+        }
+        if ((mode == Layouts.SYM || mode == Layouts.SYM2) && isSpace) {
+            EditorInfo info = getCurrentInputEditorInfo();
+            int cls = info == null ? 0 : info.inputType & InputType.TYPE_MASK_CLASS;
+            if (cls == InputType.TYPE_CLASS_TEXT) {
+                mode = arabic ? Layouts.AR : Layouts.EN;
+                applyLayout();
+            }
+        }
+        updateAutoCaps();
+    }
+
+    @Override
+    public void onEmoji(String emoji) {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+        ic.commitText(emoji, 1);
+        chars++;
+        recents.remove(emoji);
+        recents.add(0, emoji);
+        while (recents.size() > 36) recents.remove(recents.size() - 1);
+        Theme.prefs(this).edit().putString("recent_emoji", TextUtils.join(" ", recents)).apply();
+    }
+
+    @Override
+    public void onDelete() {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+        if (clipSearch) {
+            if (clipBuf.length() > 0) { clipBuf.setLength(clipBuf.length() - 1); countClipSearch(); }
+            else { clipSearch = false; view.showPanel(KeyboardView.PANEL_CLIP); updateSuggestions(); }
+            return;
+        }
+        if (emojiSearch) {
+            if (emojiQuery.length() > 0) { emojiQuery.setLength(emojiQuery.length() - 1); updateSuggestions(); }
+            else exitEmojiSearch();
+            return;
+        }
+        pickedSuggestion = false;
+        if (glideWord != null) {
+            String g = glideWord;
+            glideWord = null;
+            if (endsWithBefore(g)) {
+                ic.deleteSurroundingText(g.length(), 0);
+                updateAutoCaps();
+                return;
+            }
+        }
+        if (corrApplied != null) {
+            CharSequence b = ic.getTextBeforeCursor(corrApplied.length(), 0);
+            String undo = corrApplied;
+            corrApplied = null;
+            if (b != null && b.toString().equals(undo)) {
+                ic.deleteSurroundingText(undo.length(), 0);
+                ic.commitText(corrOriginal, 1);
+                rememberNoCorrect(corrOriginal);
+                for (int i = sentEdits.size() - 1; i >= 0; i--)
+                    if (sentEdits.get(i).typed.equals(corrOriginal)) { sentEdits.remove(i); break; }
+                updateAutoCaps();
+                return;
+            }
+        }
+        CharSequence sel = ic.getSelectedText(0);
+        if (!TextUtils.isEmpty(sel)) {
+            ic.commitText("", 1);
+        } else {
+            CharSequence before = ic.getTextBeforeCursor(32, 0);
+            if (TextUtils.isEmpty(before)) {
+                sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL);
+            } else {
+                String t = before.toString();
+                int start;
+                if (android.os.Build.VERSION.SDK_INT >= 24) {
+                    android.icu.text.BreakIterator bi = android.icu.text.BreakIterator.getCharacterInstance();
+                    bi.setText(t);
+                    start = bi.preceding(t.length());
+                    if (start == android.icu.text.BreakIterator.DONE) start = -1;
+                } else {
+                    java.text.BreakIterator bi = java.text.BreakIterator.getCharacterInstance();
+                    bi.setText(t);
+                    start = bi.preceding(t.length());
+                    if (start == java.text.BreakIterator.DONE) start = -1;
+                }
+                int n = start < 0 ? 1 : t.length() - start;
+                ic.deleteSurroundingText(Math.max(1, n), 0);
+            }
+        }
+        updateAutoCaps();
+    }
+
+    @Override
+    public void onEnter() {
+        InputConnection ic = getCurrentInputConnection();
+        EditorInfo info = getCurrentInputEditorInfo();
+        if (ic == null) return;
+        if (clipSearch) { finishClipSearch(); return; }
+        if (emojiSearch) {
+            List<String> res = EmojiSearch.search(this, emojiQuery.toString(), 1);
+            if (!res.isEmpty()) onEmoji(res.get(0));
+            exitEmojiSearch();
+            return;
+        }
+        finishWord(currentWord());
+        lastWord = null;
+        corrApplied = null;
+        int action = info == null ? 0 : info.imeOptions & EditorInfo.IME_MASK_ACTION;
+        boolean noAction = info == null || (info.imeOptions & EditorInfo.IME_FLAG_NO_ENTER_ACTION) != 0;
+        // item B week 2: «ماذا كتبت فعلاً مقابل ما سيُرسل» — the small window before
+        // the send action when corrections are pending. Sensitive fields never get
+        // here with pending edits (the engine is never consulted there).
+        if (SendPreview.shouldShow(sentEdits, sensitive)) {
+            showSendPreview(action, noAction);
+            return;
+        }
+        sendIt(ic, action, noAction);
+    }
+
+    /** The send decision split out so the preview window can reuse it. */
+    private void sendIt(InputConnection ic, int action, boolean noAction) {
+        if (!noAction && action != EditorInfo.IME_ACTION_NONE && action != EditorInfo.IME_ACTION_UNSPECIFIED) {
+            ic.performEditorAction(action);
+        } else {
+            sendDownUpKeyEvents(KeyEvent.KEYCODE_ENTER);
+        }
+    }
+
+    /** «ماذا كتبت فعلاً مقابل ما سيُرسل» — the small window (item B, week 2). */
+    private void showSendPreview(final int action, final boolean noAction) {
+        String body = SendPreview.build(sentEdits);
+        if (body == null) { sendIt(getCurrentInputConnection(), action, noAction); return; }
+        android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(L.t("ماذا كتبت فعلاً مقابل ما سيُرسل؟"))
+                .setMessage(L.t(body))
+                .setPositiveButton(L.t("إرسال"), (d, w) -> {
+                    sentEdits.clear();
+                    InputConnection ic2 = getCurrentInputConnection();
+                    if (ic2 != null) sendIt(ic2, action, noAction);
+                })
+                .setNegativeButton(L.t("تعديل"), null)
+                .create();
+        android.view.Window win = dlg.getWindow();
+        if (win != null) {
+            android.view.WindowManager.LayoutParams lp = win.getAttributes();
+            lp.token = view.getWindowToken();
+            lp.type = android.view.WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;
+            win.setAttributes(lp);
+            win.addFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        }
+        try { dlg.show(); } catch (Exception e) {
+            // the window could not attach — never block the send behind a UI failure
+            sentEdits.clear();
+            InputConnection ic2 = getCurrentInputConnection();
+            if (ic2 != null) sendIt(ic2, action, noAction);
+        }
+    }
+
+    @Override
+    public void onShift() {
+        if (mode != Layouts.EN) return;
+        long now = SystemClock.uptimeMillis();
+        if (shift == KeyboardView.SHIFT_LOCK) shift = KeyboardView.SHIFT_OFF;
+        else if (now - lastShiftTap < 350) shift = KeyboardView.SHIFT_LOCK;
+        else shift = shift == KeyboardView.SHIFT_ON ? KeyboardView.SHIFT_OFF : KeyboardView.SHIFT_ON;
+        lastShiftTap = now;
+        view.setShiftState(shift);
+    }
+
+    @Override
+    public void onModeChange(int type) {
+        if (type == Key.TO_SYM) mode = Layouts.SYM;
+        else if (type == Key.TO_SYM2) mode = Layouts.SYM2;
+        else mode = arabic ? Layouts.AR : Layouts.EN;
+        applyLayout();
+        updateAutoCaps();
+        updateSuggestions();
+    }
+
+    @Override
+    public void onLanguageToggle() {
+        arabic = !arabic;
+        Theme.prefs(this).edit().putBoolean("arabic", arabic).apply();
+        if (mode == Layouts.AR || mode == Layouts.EN) mode = arabic ? Layouts.AR : Layouts.EN;
+        shift = KeyboardView.SHIFT_OFF;
+        applyLayout();
+        updateAutoCaps();
+    }
+
+    @Override
+    public void onPicker() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        if (imm != null) imm.showInputMethodPicker();
+    }
+
+    @Override
+    public void onSettings() {
+        Intent i = new Intent(this, SetupActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(i);
+    }
+
+    @Override
+    public void onResize() {
+        int lvl = (Theme.heightLevel(this) + 1) % 3;
+        Theme.prefs(this).edit().putInt("height", lvl).apply();
+        applyPrefs();
+    }
+
+    @Override
+    public void onClearClips() {
+        clipStore.run(new ClipStore.Job<Integer>() {
+            @Override public Integer run(ClipRepo r) { return r.clearTemporary(); }
+        }, new ClipStore.Done<Integer>() {
+            @Override public void done(Integer n) {
+                Toast.makeText(NeoKeyService.this, L.t("انمسح السجل، والمثبّتة والمحفوظة باقية"), Toast.LENGTH_SHORT).show();
+                reloadClips();
+            }
+        });
+    }
+
+    @Override
+    public void onClipInsert(final long id) {
+        clipStore.run(new ClipStore.Job<String>() {
+            @Override public String run(ClipRepo r) {
+                String t = r.getText(id);
+                if (t != null) r.markUsed(id, System.currentTimeMillis());
+                return t;
+            }
+        }, new ClipStore.Done<String>() {
+            @Override public void done(String t) {
+                if (t == null) return;
+                InputConnection ic = getCurrentInputConnection();
+                if (ic == null) return;
+                ic.finishComposingText();
+                ic.commitText(t, 1);
+                reloadClips();
+            }
+        });
+    }
+
+    @Override
+    public void onCursor(int dir) {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+        // in Arabic text the visual direction is reversed
+        int code = (dir > 0) ? KeyEvent.KEYCODE_DPAD_RIGHT : KeyEvent.KEYCODE_DPAD_LEFT;
+        sendDownUpKeyEvents(code);
+    }
+
+    @Override
+    public void onEdit(int action) {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+        switch (action) {
+            case KeyboardView.E_SELALL: ic.performContextMenuAction(android.R.id.selectAll); break;
+            case KeyboardView.E_COPY: ic.performContextMenuAction(android.R.id.copy); break;
+            case KeyboardView.E_CUT: ic.performContextMenuAction(android.R.id.cut); break;
+            case KeyboardView.E_PASTE: ic.performContextMenuAction(android.R.id.paste); break;
+            case KeyboardView.E_UNDO: sendMeta(ic, KeyEvent.KEYCODE_Z, KeyEvent.META_CTRL_ON); break;
+            case KeyboardView.E_REDO: sendMeta(ic, KeyEvent.KEYCODE_Z, KeyEvent.META_CTRL_ON | KeyEvent.META_SHIFT_ON); break;
+            case KeyboardView.E_SELECT:
+                selecting = !selecting;
+                view.setSelecting(selecting);
+                break;
+            case KeyboardView.E_LEFT: move(ic, KeyEvent.KEYCODE_DPAD_LEFT); break;
+            case KeyboardView.E_RIGHT: move(ic, KeyEvent.KEYCODE_DPAD_RIGHT); break;
+            case KeyboardView.E_UP: move(ic, KeyEvent.KEYCODE_DPAD_UP); break;
+            case KeyboardView.E_DOWN: move(ic, KeyEvent.KEYCODE_DPAD_DOWN); break;
+            case KeyboardView.E_HOME: homeEnd(ic, true); break;
+            case KeyboardView.E_END: homeEnd(ic, false); break;
+            case KeyboardView.E_DELWORD: {
+                CharSequence b = ic.getTextBeforeCursor(64, 0);
+                if (TextUtils.isEmpty(b)) break;
+                int i = b.length();
+                while (i > 0 && Character.isWhitespace(b.charAt(i - 1))) i--;
+                while (i > 0 && !Character.isWhitespace(b.charAt(i - 1))) i--;
+                ic.deleteSurroundingText(b.length() - i, 0);
+                break;
+            }
+            case KeyboardView.E_NEWLINE: ic.commitText("\n", 1); break;
+            default: break;
+        }
+    }
+
+    private void move(InputConnection ic, int code) {
+        sendMeta(ic, code, selecting ? KeyEvent.META_SHIFT_ON : 0);
+    }
+
+    private void homeEnd(InputConnection ic, boolean home) {
+        ExtractedText et = ic.getExtractedText(new ExtractedTextRequest(), 0);
+        if (et == null || et.text == null) {
+            sendMeta(ic, home ? KeyEvent.KEYCODE_MOVE_HOME : KeyEvent.KEYCODE_MOVE_END, KeyEvent.META_CTRL_ON);
+            return;
+        }
+        int len = et.startOffset + et.text.length();
+        int s0 = et.startOffset + Math.min(et.selectionStart, et.selectionEnd);
+        int s1 = et.startOffset + Math.max(et.selectionStart, et.selectionEnd);
+        if (!selecting) { int p = home ? 0 : len; ic.setSelection(p, p); }
+        else if (home) ic.setSelection(0, s1);
+        else ic.setSelection(s0, len);
+    }
+
+    private void sendMeta(InputConnection ic, int code, int meta) {
+        long t = SystemClock.uptimeMillis();
+        ic.sendKeyEvent(new KeyEvent(t, t, KeyEvent.ACTION_DOWN, code, 0, meta));
+        ic.sendKeyEvent(new KeyEvent(t, t, KeyEvent.ACTION_UP, code, 0, meta));
+    }
+
+    @Override
+    public void onOneHand(int m) {
+        Theme.prefs(this).edit().putInt("onehand", m).apply();
+        applyPrefs();
+    }
+
+    @Override
+    public void onHide() {
+        requestHideSelf(0);
+    }
+
+    private boolean endsWithBefore(String t) {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return false;
+        CharSequence b = ic.getTextBeforeCursor(t.length(), 0);
+        return b != null && b.toString().equals(t);
+    }
+
+    @Override
+    public void onGlide(String keys) {
+        if (emojiSearch || clipSearch) return;
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+        Dictionary d = mode == Layouts.AR ? dictAr : dictEn;
+        List<String> found = d.glide(keys, 4);
+        if (found.isEmpty()) return;
+        String best = found.get(0);
+        if (mode == Layouts.EN && shift != KeyboardView.SHIFT_OFF)
+            best = shift == KeyboardView.SHIFT_LOCK ? best.toUpperCase() : Character.toUpperCase(best.charAt(0)) + best.substring(1);
+        CharSequence b = ic.getTextBeforeCursor(1, 0);
+        boolean needSpace = b != null && b.length() == 1 && !Character.isWhitespace(b.charAt(0));
+        if (decor != Decor.OFF) best = Decor.apply(best, decor);
+        ic.commitText((needSpace ? " " : "") + best + " ", 1);
+        finishWord(best);
+        chars += best.length() + 1;
+        glideWord = best + " ";
+        glideAlts = new ArrayList<>(found.subList(1, found.size()));
+        if (shift == KeyboardView.SHIFT_ON) shift = KeyboardView.SHIFT_OFF;
+        updateAutoCaps();
+        updateSuggestions();
+    }
+
+    @Override
+    public void onTool(int id) {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null) return;
+        boolean ad = Theme.arabicDigits(this);
+        if (id == KeyboardView.TOOL_HIJRI) {
+            onText(TextTools.todayArabic(ad));
+            return;
+        }
+        CharSequence sel = ic.getSelectedText(0);
+        if (id == KeyboardView.TOOL_INCOGNITO) {
+            incognito = !incognito;
+            Theme.prefs(this).edit().putBoolean("incognito", incognito).apply();
+            view.setIncognito(incognito);
+            Toast.makeText(this, incognito ? "وضع التخفي: ما راح أحفظ كلماتك ولا الحافظة"
+                    : "تم إيقاف وضع التخفي", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (id == KeyboardView.TOOL_WRITER) { openWriter(); return; }
+        if (id >= KeyboardView.TOOL_BIGKEYS && id <= KeyboardView.TOOL_MOTION) {
+            String key = id == KeyboardView.TOOL_BIGKEYS ? "bigkeys" : id == KeyboardView.TOOL_CONTRAST ? "contrast" : "reducemotion";
+            boolean on = !Theme.prefs(this).getBoolean(key, false);
+            Theme.prefs(this).edit().putBoolean(key, on).apply();
+            applyPrefs();
+            applyLayout();
+            String[] names = {"تكبير المفاتيح", "التباين العالي", "تقليل الحركة"};
+            Toast.makeText(this, names[id - KeyboardView.TOOL_BIGKEYS] + (on ? ": مفعّل" : ": متوقف"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (id == KeyboardView.TOOL_UNDO) {
+            CharSequence b = undoAfter == null ? null : ic.getTextBeforeCursor(undoAfter.length(), 0);
+            if (b == null || !b.toString().equals(undoAfter)) {
+                Toast.makeText(this, "ما فيه شي أتراجع عنه", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            ic.beginBatchEdit();
+            ic.deleteSurroundingText(undoAfter.length(), 0);
+            ic.commitText(undoBefore, 1);
+            ic.endBatchEdit();
+            undoAfter = null;
+            return;
+        }
+        if (id == KeyboardView.TOOL_CASE || id == KeyboardView.TOOL_SEARCH || id == KeyboardView.TOOL_SHARE) {
+            boolean selected = !TextUtils.isEmpty(sel);
+            String src = selected ? sel.toString()
+                    : id == KeyboardView.TOOL_CASE ? currentWord() : currentLine(ic);
+            if (src == null || src.trim().isEmpty()) {
+                Toast.makeText(this, "اكتب نص أو حدّده أول", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (id == KeyboardView.TOOL_CASE) {
+                replaceText(ic, src, selected, TextTools.cycleCase(src));
+                return;
+            }
+            try {
+                Intent it;
+                if (id == KeyboardView.TOOL_SEARCH) {
+                    it = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.google.com/search?q="
+                            + java.net.URLEncoder.encode(src.trim(), "UTF-8")));
+                } else {
+                    it = Intent.createChooser(new Intent(Intent.ACTION_SEND).setType("text/plain")
+                            .putExtra(Intent.EXTRA_TEXT, src.trim()), "مشاركة النص");
+                }
+                it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(it);
+                requestHideSelf(0);
+            } catch (Exception e) {
+                Toast.makeText(this, "ما قدرت أفتحها", Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+        if (id == KeyboardView.TOOL_TRANSLATE || id == KeyboardView.TOOL_SPEAK || id == KeyboardView.TOOL_DIGITS) {
+            boolean selected = !TextUtils.isEmpty(sel);
+            String src = selected ? sel.toString() : currentLine(ic);
+            if (src == null || src.trim().isEmpty()) {
+                Toast.makeText(this, "اكتب نص أو حدّده أول", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (id == KeyboardView.TOOL_SPEAK) speak(src);
+            else if (id == KeyboardView.TOOL_DIGITS) replaceText(ic, src, selected, TextTools.swapDigits(src));
+            else translate(src, selected);
+            return;
+        }
+        if (id == KeyboardView.TOOL_FIXLANG) {
+            String src;
+            boolean selected = !TextUtils.isEmpty(sel);
+            if (selected) src = sel.toString();
+            else {
+                CharSequence b = ic.getTextBeforeCursor(120, 0);
+                if (b == null || b.length() == 0) return;
+                String t = b.toString();
+                int nl = t.lastIndexOf('\n');
+                src = t.substring(nl + 1);
+                if (src.trim().isEmpty()) return;
+            }
+            String fixed = TextTools.fixLayout(src);
+            boolean toArabic = TextTools.isMostlyLatin(src);
+            replaceText(ic, src, selected, fixed);
+            if (toArabic != arabic) onLanguageToggle();
+            return;
+        }
+        if (id == KeyboardView.TOOL_CALC) {
+            String src = !TextUtils.isEmpty(sel) ? sel.toString() : String.valueOf(ic.getTextBeforeCursor(80, 0));
+            String expr = TextTools.trailingExpr(src);
+            String res = expr == null ? null : TextTools.evaluate(expr, ad);
+            if (res == null) {
+                Toast.makeText(this, "اكتب عملية مثل ‎12*3+4‎ ثم اضغط احسب", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!TextUtils.isEmpty(sel)) {
+                ic.commitText(sel + " = " + res, 1);
+            } else {
+                CharSequence b = ic.getTextBeforeCursor(1, 0);
+                boolean endsEq = src.trim().endsWith("=");
+                ic.commitText(endsEq ? (b != null && b.toString().equals(" ") ? "" : " ") + res : " = " + res, 1);
+            }
+        }
+    }
+
+    private String currentLine(InputConnection ic) {
+        CharSequence b = ic.getTextBeforeCursor(400, 0);
+        if (b == null) return null;
+        String t = b.toString();
+        return t.substring(t.lastIndexOf('\n') + 1);
+    }
+
+    private void replaceText(InputConnection ic, String src, boolean selected, String out) {
+        undoBefore = src;
+        undoAfter = out;
+        ic.beginBatchEdit();
+        if (!selected) ic.deleteSurroundingText(src.length(), 0);
+        ic.commitText(out, 1);
+        ic.endBatchEdit();
+    }
+
+    private void translate(final String src, final boolean selected) {
+        final boolean toEn = !TextTools.isMostlyLatin(src);
+        Toast.makeText(this, toEn ? "جاري الترجمة للإنجليزي…" : "جاري الترجمة للعربي…", Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            String out = null;
+            try {
+                String url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
+                        + (toEn ? "en" : "ar") + "&dt=t&q=" + java.net.URLEncoder.encode(src.trim(), "UTF-8");
+                java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                c.setConnectTimeout(6000);
+                c.setReadTimeout(8000);
+                c.setRequestProperty("User-Agent", "Mozilla/5.0");
+                java.io.InputStream in = c.getInputStream();
+                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[4096];
+                int n;
+                while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                in.close();
+                org.json.JSONArray parts = new org.json.JSONArray(bo.toString("UTF-8")).getJSONArray(0);
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < parts.length(); i++) sb.append(parts.getJSONArray(i).optString(0, ""));
+                out = sb.toString();
+            } catch (Exception ignored) { }
+            final String result = out;
+            main.post(() -> {
+                InputConnection ic = getCurrentInputConnection();
+                if (result == null || result.isEmpty() || ic == null) {
+                    Toast.makeText(this, "الترجمة تحتاج إنترنت، جرّب مرة ثانية", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (selected) {
+                    CharSequence cur = ic.getSelectedText(0);
+                    if (cur == null || !cur.toString().equals(src)) return;
+                    undoBefore = src;
+                    undoAfter = result;
+                    ic.commitText(result, 1);
+                } else {
+                    CharSequence b = ic.getTextBeforeCursor(src.length(), 0);
+                    if (b == null || !b.toString().equals(src)) return;
+                    replaceText(ic, src, false, result);
+                }
+            });
+        }).start();
+    }
+
+    private void speak(final String text) {
+        final Locale loc = TextTools.isMostlyLatin(text) ? Locale.US : new Locale("ar");
+        if (tts == null) {
+            tts = new TextToSpeech(this, status -> {
+                ttsReady = status == TextToSpeech.SUCCESS;
+                if (ttsReady) doSpeak(text, loc);
+                else Toast.makeText(this, "محرك النطق غير متوفر", Toast.LENGTH_SHORT).show();
+            });
+        } else if (ttsReady) doSpeak(text, loc);
+    }
+
+    private void doSpeak(String text, Locale loc) {
+        int r = tts.setLanguage(loc);
+        if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
+            Toast.makeText(this, "حمّل صوت اللغة من إعدادات النطق في جوالك", Toast.LENGTH_LONG).show();
+            return;
+        }
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "neokey");
+    }
+
+    @Override
+    public void onClipChipMenu() {
+        final String t = freshClip;
+        if (t == null || clipStore == null) { view.showPanel(KeyboardView.PANEL_CLIP); return; }
+        clipStore.run(new ClipStore.Job<ClipItem>() {
+            @Override public ClipItem run(ClipRepo r) {
+                long id = r.findSame(t, ClipRepo.hash(t));
+                return id < 0 ? null : r.item(id);
+            }
+        }, new ClipStore.Done<ClipItem>() {
+            @Override public void done(ClipItem it) {
+                if (view == null) return;
+                if (it == null) view.showPanel(KeyboardView.PANEL_CLIP);
+                else view.openClipMenu(it);
+            }
+        });
+    }
+
+    @Override
+    public void onClipTab(int tab) {
+        clipTab = tab;
+        clipCat = 0;
+        clipLimit = 60;
+        reloadClips();
+    }
+
+    @Override
+    public void onClipCategory(long cat) {
+        clipCat = cat;
+        clipLimit = 60;
+        reloadClips();
+    }
+
+    @Override
+    public void onClipMore() {
+        if (!clipMore) return;
+        clipLimit += 60;
+        reloadClips();
+    }
+
+    @Override
+    public void onClipMovePin(final long id, final int index) {
+        clipStore.run(new ClipStore.Job<Boolean>() {
+            @Override public Boolean run(ClipRepo r) { r.movePin(id, index); return true; }
+        }, new ClipStore.Done<Boolean>() {
+            @Override public void done(Boolean b) { reloadClips(); }
+        });
+    }
+
+    @Override
+    public void onClipSearch() {
+        clipSearch = true;
+        clipBuf.setLength(0);
+        if (clipQuery != null) clipBuf.append(clipQuery);
+        clipSearchHits = -1;
+        countClipSearch();
+    }
+
+    @Override
+    public void onClipClearSearch() {
+        clipQuery = null;
+        clipLimit = 60;
+        reloadClips();
+    }
+
+    /** Live result count while typing; only the newest query's answer is shown. */
+    private void countClipSearch() {
+        final String q = clipBuf.toString();
+        final int seq = ++clipSearchSeq;
+        final int tab = clipTab;
+        final long cat = clipCat;
+        updateSuggestions();
+        if (q.trim().isEmpty()) return;
+        clipStore.run(new ClipStore.Job<Integer>() {
+            @Override public Integer run(ClipRepo r) { return seq != clipSearchSeq ? null : r.searchCount(tab, cat, q); }
+        }, new ClipStore.Done<Integer>() {
+            @Override public void done(Integer n) {
+                if (n == null || seq != clipSearchSeq || !clipSearch) return;
+                clipSearchHits = n;
+                updateSuggestions();
+            }
+        });
+    }
+
+    private void finishClipSearch() {
+        String q = clipBuf.toString().trim();
+        clipSearch = false;
+        clipQuery = q.isEmpty() ? null : q;
+        clipLimit = 60;
+        view.showPanel(KeyboardView.PANEL_CLIP);
+        updateSuggestions();
+        reloadClips();
+    }
+
+    @Override
+    public void onClipAction(final long id, int action) {
+        switch (action) {
+            case KeyboardView.CA_INSERT: onClipInsert(id); return;
+            case KeyboardView.CA_PIN: onPinClip(id); return;
+            case KeyboardView.CA_EXPORT: {
+                Intent i = new Intent(this, ClipIOActivity.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                i.putExtra(ClipIOActivity.EXTRA_MODE, ClipIOActivity.MODE_EXPORT);
+                i.putExtra(ClipIOActivity.EXTRA_IDS, new long[]{id});
+                requestHideSelf(0);
+                startActivity(i);
+                return;
+            }
+            case KeyboardView.CA_EDIT: {
+                Intent i = new Intent(this, ClipEditActivity.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                i.putExtra(ClipEditActivity.EXTRA_ID, id);
+                requestHideSelf(0);
+                startActivity(i);
+                return;
+            }
+            case KeyboardView.CA_COPY:
+            case KeyboardView.CA_SHARE: {
+                final boolean share = action == KeyboardView.CA_SHARE;
+                clipStore.run(new ClipStore.Job<String>() {
+                    @Override public String run(ClipRepo r) {
+                        String t = r.getText(id);
+                        if (t != null) r.markUsed(id, System.currentTimeMillis());
+                        return t;
+                    }
+                }, new ClipStore.Done<String>() {
+                    @Override public void done(String t) {
+                        if (t == null) return;
+                        if (share) shareText(t);
+                        else {
+                            lastCaptured = t;
+                            if (cm != null) cm.setPrimaryClip(ClipData.newPlainText("NeoKey", t));
+                            if (android.os.Build.VERSION.SDK_INT < 33) Toast.makeText(NeoKeyService.this, L.t("انسخ"), Toast.LENGTH_SHORT).show();
+                        }
+                        reloadClips();
+                    }
+                });
+                return;
+            }
+            default: break;
+        }
+        final int a = action;
+        clipStore.run(new ClipStore.Job<String>() {
+            @Override public String run(ClipRepo r) {
+                ClipItem it = r.item(id);
+                if (it == null) return null;
+                switch (a) {
+                    case KeyboardView.CA_FAV: r.setFav(id, !it.fav); return it.fav ? "أُزيل من المفضلة" : "أُضيف للمفضلة";
+                    case KeyboardView.CA_ARCHIVE: r.setArchived(id, !it.archived); return it.archived ? "رجع من الأرشيف" : "انتقل للأرشيف";
+                    case KeyboardView.CA_DELETE: r.delete(id); return "انحذف";
+                    case KeyboardView.CA_TEMPLATE: return r.makeTemplate(id, System.currentTimeMillis()) > 0 ? "انحفظ كقالب في تبويب القوالب" : "";
+                    case KeyboardView.CA_UP: r.movePinBy(id, -1); return "";
+                    case KeyboardView.CA_DOWN: r.movePinBy(id, 1); return "";
+                    default: return "";
+                }
+            }
+        }, new ClipStore.Done<String>() {
+            @Override public void done(String msg) {
+                if (msg != null && !msg.isEmpty()) Toast.makeText(NeoKeyService.this, L.t(msg), Toast.LENGTH_SHORT).show();
+                reloadClips();
+            }
+        });
+    }
+
+    private void shareText(String t) {
+        if (t.length() > 100_000) {
+            // binder transactions cap around 1 MB; very long texts are copied or exported instead
+            Toast.makeText(this, L.t("النص كبير للمشاركة المباشرة، انسخه أو صدّره"), Toast.LENGTH_LONG).show();
+            return;
+        }
+        Intent send = new Intent(Intent.ACTION_SEND);
+        send.setType("text/plain");
+        send.putExtra(Intent.EXTRA_TEXT, t);
+        Intent ch = Intent.createChooser(send, L.t("مشاركة النص"));
+        ch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try { startActivity(ch); } catch (Exception e) {
+            Toast.makeText(this, L.t("ما فيه تطبيق للمشاركة"), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onPinClip(final long id) {
+        clipStore.run(new ClipStore.Job<Integer>() {
+            @Override public Integer run(ClipRepo r) {
+                ClipItem it = r.item(id);
+                if (it == null) return ClipRepo.PIN_MISSING;
+                if (it.pinned) { r.unpin(id); return -1; }
+                return r.pin(id);
+            }
+        }, new ClipStore.Done<Integer>() {
+            @Override public void done(Integer res) {
+                if (res == null) return;
+                if (res == ClipRepo.PIN_FULL) { askReplacePin(id); return; }
+                if (res == ClipRepo.PIN_OK) Toast.makeText(NeoKeyService.this, L.t("تم التثبيت"), Toast.LENGTH_SHORT).show();
+                else if (res == -1) Toast.makeText(NeoKeyService.this, L.t("أُلغي التثبيت"), Toast.LENGTH_SHORT).show();
+                reloadClips();
+            }
+        });
+    }
+
+    /** 101st pin: offer to give up the last pinned item, or cancel. */
+    private void askReplacePin(final long id) {
+        if (view == null || view.getWindowToken() == null) {
+            Toast.makeText(this, L.t("وصلت للحد الأقصى ١٠٠ مثبّت"), Toast.LENGTH_LONG).show();
+            return;
+        }
+        android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(L.t("المثبّتات ممتلئة ١٠٠/١٠٠"))
+                .setMessage(L.t("ألغِ تثبيت آخر عنصر في قائمة المثبّتات وثبّت هذا مكانه؟"))
+                .setPositiveButton(L.t("استبدال"), new android.content.DialogInterface.OnClickListener() {
+                    @Override public void onClick(android.content.DialogInterface d, int w) {
+                        clipStore.run(new ClipStore.Job<Integer>() {
+                            @Override public Integer run(ClipRepo r) { return r.replacePin(r.lastPin(), id); }
+                        }, new ClipStore.Done<Integer>() {
+                            @Override public void done(Integer x) { reloadClips(); }
+                        });
+                    }
+                })
+                .setNegativeButton(L.t("إلغاء"), null)
+                .create();
+        android.view.Window win = dlg.getWindow();
+        if (win != null) {
+            android.view.WindowManager.LayoutParams lp = win.getAttributes();
+            lp.token = view.getWindowToken();
+            lp.type = android.view.WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;
+            win.setAttributes(lp);
+            win.addFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        }
+        try { dlg.show(); } catch (Exception e) {
+            Toast.makeText(this, L.t("وصلت للحد الأقصى ١٠٠ مثبّت"), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onDecor(int style) {
+        if (style >= Decor.COUNT) {
+            InputConnection ic = getCurrentInputConnection();
+            if (ic == null) return;
+            String[] f = Decor.FRAMES[style - Decor.COUNT];
+            ic.beginBatchEdit();
+            ic.finishComposingText();
+            CharSequence sel = ic.getSelectedText(0);
+            if (sel != null && sel.length() > 0) ic.commitText(f[0] + sel + f[1], 1);
+            else { ic.commitText(f[0], 1); ic.commitText(f[1], 0); }
+            ic.endBatchEdit();
+            updateSuggestions();
+            return;
+        }
+        decor = style;
+        view.setDecor(style);
+        updateSuggestions();
+    }
+
+    // ------------------------------------------------------------ voice typing
+
+    @Override
+    public void onVoice() {
+        if (listening) { stopVoice(); return; }
+        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            Intent i = new Intent(this, SetupActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            i.putExtra("mic", true);
+            startActivity(i);
+            return;
+        }
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            Toast.makeText(this, "الكتابة بالصوت تحتاج تطبيق Google على جهازك", Toast.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            recognizer = SpeechRecognizer.createSpeechRecognizer(this);
+            recognizer.setRecognitionListener(voiceListener);
+            Intent it = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            it.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            it.putExtra(RecognizerIntent.EXTRA_LANGUAGE, arabic ? "ar-SA" : "en-US");
+            it.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+            it.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
+            recognizer.startListening(it);
+            listening = true;
+            view.setVoice(1, "");
+        } catch (Exception e) {
+            stopVoice();
+        }
+    }
+
+    private void stopVoice() {
+        listening = false;
+        if (recognizer != null) {
+            try { recognizer.cancel(); recognizer.destroy(); } catch (Exception ignored) { }
+            recognizer = null;
+        }
+        if (view != null) view.setVoice(0, "");
+    }
+
+    private void commitVoice(String text) {
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null || text == null || text.trim().isEmpty()) return;
+        CharSequence b = ic.getTextBeforeCursor(1, 0);
+        boolean needSpace = b != null && b.length() == 1 && !Character.isWhitespace(b.charAt(0));
+        ic.commitText((needSpace ? " " : "") + text.trim() + " ", 1);
+        chars += text.length();
+        words += text.trim().split("\\s+").length;
+    }
+
+    private final RecognitionListener voiceListener = new RecognitionListener() {
+        @Override public void onReadyForSpeech(Bundle b) { if (view != null) view.setVoice(1, ""); }
+        @Override public void onBeginningOfSpeech() { }
+        @Override public void onRmsChanged(float v) { }
+        @Override public void onBufferReceived(byte[] bytes) { }
+        @Override public void onEndOfSpeech() { if (view != null) view.setVoice(2, ""); }
+        @Override public void onError(int error) {
+            String msg;
+            switch (error) {
+                case SpeechRecognizer.ERROR_NO_MATCH:
+                case SpeechRecognizer.ERROR_SPEECH_TIMEOUT: msg = "ما سمعت شي، جرّب مرة ثانية"; break;
+                case SpeechRecognizer.ERROR_NETWORK:
+                case SpeechRecognizer.ERROR_NETWORK_TIMEOUT: msg = "الكتابة بالصوت تحتاج إنترنت"; break;
+                case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS: msg = "اسمح بالمايك من التطبيق"; break;
+                default: msg = null;
+            }
+            if (msg != null) Toast.makeText(NeoKeyService.this, msg, Toast.LENGTH_SHORT).show();
+            stopVoice();
+        }
+        @Override public void onResults(Bundle b) {
+            List<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            if (r != null && !r.isEmpty()) commitVoice(r.get(0));
+            stopVoice();
+        }
+        @Override public void onPartialResults(Bundle b) {
+            List<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            if (r != null && !r.isEmpty() && view != null) view.setVoice(1, r.get(0));
+        }
+        @Override public void onEvent(int t, Bundle b) { }
+    };
+
+    private void flushStats() {
+        if (words == 0 && chars == 0) return;
+        SharedPreferences p = Theme.prefs(this);
+        p.edit().putInt("stat_words", p.getInt("stat_words", 0) + words)
+                .putInt("stat_chars", p.getInt("stat_chars", 0) + chars).apply();
+        words = chars = 0;
+    }
+}

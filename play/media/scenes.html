@@ -1,0 +1,213 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:'Cairo';src:url('file:///home/z/.fonts/Cairo-VF.ttf') format('truetype');
+  font-weight:200 1000;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+:root{
+  --bg:#05061A; --bg2:#0E0A2E; --purple:#A855F7; --cyan:#22D3EE;
+  --gp:#8E5BD0; --gi:#5558C2; --gc:#2FA9C0;
+  --keytext:#F5F3FF; --sub:#B8B4D9; --rim:rgba(159,140,255,.30);
+}
+body{background:#000;font-family:'Cairo','Noto Sans Arabic',sans-serif;color:var(--keytext);}
+.scene{width:1080px;height:1920px;position:absolute;top:0;left:0;overflow:hidden;
+  display:none;direction:rtl;
+  background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);}
+.scene.active{display:block;}
+/* aurora — same three glows as Glass.Bg */
+.aurora,.aurora::before,.aurora::after{position:absolute;inset:0;pointer-events:none;}
+.aurora::before{content:'';background:radial-gradient(810px 810px at 85% 6%,rgba(124,58,237,.23),transparent 70%);}
+.aurora::after{content:'';background:radial-gradient(756px 756px at 10% 55%,rgba(6,182,212,.13),transparent 70%);}
+.aurb{position:absolute;inset:0;background:radial-gradient(756px 756px at 60% 95%,rgba(192,38,211,.09),transparent 70%);}
+.wrap{position:relative;z-index:3;height:100%;display:flex;flex-direction:column;
+  padding:76px 64px 56px;}
+/* headline block */
+.kicker{display:inline-flex;align-items:center;gap:14px;align-self:flex-start;
+  font-weight:700;font-size:30px;color:#CFC8F2;letter-spacing:.5px;
+  padding:10px 26px;border-radius:999px;margin-bottom:30px;
+  background:rgba(11,12,36,.72);border:1.5px solid var(--rim);}
+.kicker .dot{width:14px;height:14px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  box-shadow:0 0 18px rgba(168,85,247,.8);}
+h1{font-weight:900;font-size:88px;line-height:1.22;letter-spacing:-.5px;}
+h1 .grad{background:linear-gradient(100deg,#C084FC 0%,#A855F7 38%,#22D3EE 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+.sub{font-weight:500;font-size:40px;line-height:1.55;color:var(--sub);margin-top:18px;}
+.chips{display:flex;gap:16px;flex-wrap:wrap;margin-top:34px;}
+.chip{display:inline-flex;align-items:center;gap:12px;font-weight:700;font-size:30px;
+  color:#E4DFF9;padding:14px 28px;border-radius:999px;
+  background:rgba(11,12,36,.72);border:1.5px solid var(--rim);}
+.chip .dot{width:12px;height:12px;border-radius:50%;background:var(--cyan);
+  box-shadow:0 0 12px var(--cyan);}
+/* glass stage (mock area) */
+.stage{margin-top:44px;flex:1 0 auto;border-radius:52px;padding:34px;
+  background:rgba(11,12,36,.72);
+  box-shadow:0 0 0 3.5px var(--rim),0 30px 80px rgba(0,0,0,.55),
+   0 0 90px rgba(124,58,237,.16);}
+.brandrow{margin-top:auto;display:flex;align-items:center;gap:22px;padding-top:36px;}
+.orb{width:64px;height:64px;border-radius:50%;flex:0 0 auto;position:relative;
+  background:radial-gradient(circle at 32% 28%,#C084FC,#8E5BD0 52%,#2FA9C0 130%);
+  box-shadow:0 0 34px rgba(168,85,247,.65);}
+.orb::after{content:'';position:absolute;inset:-7px;border-radius:50%;
+  border:2px solid rgba(168,85,247,.55);}
+.brandrow .bt{font-weight:900;font-size:44px;line-height:1.1;}
+.brandrow .bs{font-weight:600;font-size:26px;color:var(--sub);letter-spacing:2.5px;}
+.brandrow .line{flex:1;height:3px;border-radius:3px;
+  background:linear-gradient(90deg,var(--purple),var(--gi),transparent);}
+/* ——— keyboard mock (Layouts.java AR rows, drawHyper style) ——— */
+.kb{background:rgba(5,6,26,.88);border-radius:38px;padding:22px 20px 24px;
+  border:1.5px solid rgba(159,140,255,.22);}
+.toolbar{display:flex;align-items:center;gap:14px;height:92px;margin-bottom:18px;
+  border-radius:999px;padding:0 20px;
+  background:rgba(255,255,255,.055);
+  background-image:linear-gradient(0deg,rgba(168,85,247,.05),rgba(168,85,247,.05));
+  border:1.5px solid var(--rim);box-shadow:0 0 26px rgba(168,85,247,.12);}
+.tool{width:58px;height:58px;border-radius:50%;flex:0 0 auto;display:flex;
+  align-items:center;justify-content:center;font-size:30px;color:#D9D2F5;
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(159,140,255,.25);}
+.avatar{width:62px;height:62px;border-radius:50%;flex:0 0 auto;
+  background:radial-gradient(circle at 32% 28%,#C084FC,#8E5BD0 55%,#2FA9C0 135%);
+  border:2.5px solid rgba(192,132,252,.75);box-shadow:0 0 20px rgba(168,85,247,.55);}
+.sugg{flex:1;display:flex;gap:12px;justify-content:center;min-width:0;}
+.sug{font-weight:700;font-size:34px;color:#D9D2F5;padding:12px 30px;border-radius:999px;
+  background:rgba(255,255,255,.05);border:1.5px solid rgba(159,140,255,.20);white-space:nowrap;}
+.sug.lit{color:#fff;border:1.8px solid transparent;
+  background:linear-gradient(rgba(11,12,36,.9),rgba(11,12,36,.9)) padding-box,
+   linear-gradient(100deg,var(--purple),var(--gc)) border-box;
+  box-shadow:0 0 24px rgba(168,85,247,.35);}
+.row{display:flex;gap:12px;margin-bottom:12px;}
+.row:last-child{margin-bottom:0;}
+.key{flex:1;height:96px;border-radius:18px;display:flex;align-items:center;
+  justify-content:center;font-weight:600;font-size:46px;color:var(--keytext);
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035));
+  border:1.5px solid var(--rim);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);}
+.key.fn{font-size:32px;font-weight:700;color:#CFC8F2;}
+.key.w12{flex:1.2;} .key.w14{flex:1.4;} .key.w18{flex:1.8;} .key.w38{flex:3.8;}
+.key.enter{border:none;font-size:40px;color:#fff;
+  background:linear-gradient(135deg,var(--gp),var(--gi),var(--gc));
+  box-shadow:0 0 42px rgba(168,85,247,.45),inset 0 1px 0 rgba(255,255,255,.25);}
+.key.space{font-size:30px;font-weight:700;color:#CFC8F2;}
+.key.tash{font-size:52px;}
+/* misc widgets */
+.field{display:flex;align-items:center;gap:16px;border-radius:26px;padding:26px 30px;
+  font-size:42px;font-weight:600;color:var(--keytext);margin-bottom:20px;
+  background:rgba(255,255,255,.05);border:1.5px solid var(--rim);}
+.field .cur{width:3px;height:52px;border-radius:3px;background:var(--cyan);
+  box-shadow:0 0 12px var(--cyan);}
+.tcard{border-radius:28px;padding:26px 30px;background:rgba(255,255,255,.05);
+  border:1.5px solid var(--rim);}
+.tcard.lit{border:2px solid transparent;
+  background:linear-gradient(rgba(11,12,36,.85),rgba(11,12,36,.85)) padding-box,
+   linear-gradient(100deg,var(--purple),var(--gc)) border-box;
+  box-shadow:0 0 34px rgba(168,85,247,.30);}
+.tcard .tt{font-weight:800;font-size:36px;color:#fff;}
+.tcard .ts{font-weight:500;font-size:28px;color:var(--sub);line-height:1.5;}
+.gradbtn{display:inline-flex;align-items:center;justify-content:center;gap:14px;
+  border-radius:999px;padding:18px 42px;font-weight:800;font-size:34px;color:#fff;
+  background:linear-gradient(100deg,var(--gp),var(--gi),var(--gc));
+  box-shadow:0 0 36px rgba(168,85,247,.4);}
+.ghostbtn{display:inline-flex;align-items:center;justify-content:center;gap:12px;
+  border-radius:999px;padding:18px 42px;font-weight:700;font-size:34px;color:#E4DFF9;
+  background:rgba(255,255,255,.05);border:1.5px solid var(--rim);}
+.feature-graphic{width:1024px;height:500px;position:absolute;top:0;left:0;overflow:hidden;
+  display:none;direction:rtl;background:linear-gradient(135deg,var(--bg) 0%,var(--bg2) 100%);}
+.feature-graphic.active{display:block;}
+</style></head><body><div class="scene" id="s1"><div class="aurora"></div><div class="aurb"></div><div class="wrap"><div class="kicker"><span class="dot"></span>نيو كيبورد · كيبورد عربي ذكي</div>
+<h1>اكتب عربي <span class="grad">بثقة</span></h1>
+<div class="sub">تنبؤ وتصحيح يفهم الهمزات والتاء المربوطة، وتبديل عربي-إنجليزي بسحبة على المسافة — وكل شيء يعمل على جهازك.</div>
+<div class="chips"><div class="chip"><span class="dot"></span>تنبؤ ذكي</div><div class="chip"><span class="dot"></span>كتابة بالسحب</div><div class="chip"><span class="dot"></span>خصوصية كاملة</div></div><div class="stage"><div class="field">صباح الخير يا أحمد، <span class="cur"></span></div><div class="kb">
+  <div class="toolbar">
+    <div class="tool">‹</div>
+    <div class="sugg"><div class="sug">صباح</div><div class="sug lit">صباح الخير</div><div class="sug">صباحات</div></div>
+    <div class="tool">✦</div><div class="avatar"></div>
+  </div>
+  <div class="row"><div class="key ">ض</div><div class="key ">ص</div><div class="key ">ث</div><div class="key ">ق</div><div class="key ">ف</div><div class="key ">غ</div><div class="key ">ع</div><div class="key ">ه</div><div class="key ">خ</div><div class="key ">ح</div><div class="key ">ج</div></div><div class="row"><div class="key ">ش</div><div class="key ">س</div><div class="key ">ي</div><div class="key ">ب</div><div class="key ">ل</div><div class="key ">ا</div><div class="key ">ت</div><div class="key ">ن</div><div class="key ">م</div><div class="key ">ك</div><div class="key ">ط</div></div><div class="row"><div class="key ">ذ</div><div class="key ">ء</div><div class="key ">ؤ</div><div class="key ">ر</div><div class="key ">ى</div><div class="key ">ة</div><div class="key ">و</div><div class="key ">ز</div><div class="key ">ظ</div><div class="key ">د</div><div class="key fn w12">⌫</div></div><div class="row"><div class="key fn w14">?123</div><div class="key ">،</div><div class="key ">☺</div><div class="key space w38">العربية</div><div class="key ">.</div><div class="key tash">َ</div><div class="key enter w18">⏎</div></div>
+</div><div style="display:flex;gap:16px;justify-content:center;margin-top:22px"><div class="gradbtn">✦ اقتراحات تتعلّم منك</div><div class="ghostbtn">سحب على الحروف للكتابة</div></div></div><div class="brandrow"><div class="orb"></div>
+<div><div class="bt">نيو كيبورد</div><div class="bs">NEOKEY</div></div>
+<div class="line"></div></div></div></div><div class="scene" id="s2"><div class="aurora"></div><div class="aurb"></div><div class="wrap"><div class="kicker"><span class="dot"></span>محرر السمات</div>
+<h1>سمات <span class="grad">زجاج نيون</span></h1>
+<div class="sub">هوية «زجاج 2036» بمؤثرات توهج، ومحرر سمات كامل، وخلفية من صورك الشخصية.</div>
+<div class="chips"><div class="chip"><span class="dot"></span>30 سمة متحركة</div><div class="chip"><span class="dot"></span>محرر كامل</div><div class="chip"><span class="dot"></span>خلفية من صورك</div></div><div class="stage"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px"><div class="tcard lit" style="padding:0;overflow:hidden"><div style="height:210px;background:linear-gradient(160deg,#0A0730,#3B0E7A 60%,#0E7490);position:relative"><div style="position:absolute;inset:auto 18px 18px 18px;height:74px;border-radius:16px;background:rgba(5,6,26,.75);border:1.5px solid rgba(168,85,247,.55);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;letter-spacing:2px">ض ص ث ق</div></div><div class="tt" style="padding:20px 24px">زجاج نيون 2036</div></div><div class="tcard" style="padding:0;overflow:hidden"><div style="height:210px;background:linear-gradient(160deg,#02121B,#083344 60%,#02121B);position:relative"><div style="position:absolute;inset:auto 18px 18px 18px;height:74px;border-radius:16px;background:rgba(2,18,27,.8);border:1.5px solid rgba(34,211,238,.5);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;letter-spacing:2px">ض ص ث ق</div></div><div class="tt" style="padding:20px 24px">محيط عميق</div></div><div class="tcard" style="padding:0;overflow:hidden"><div style="height:210px;background:linear-gradient(160deg,#1A0A0A,#7C2D12 60%,#1A0A0A);position:relative"><div style="position:absolute;inset:auto 18px 18px 18px;height:74px;border-radius:16px;background:rgba(26,10,10,.8);border:1.5px solid rgba(251,146,60,.5);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;letter-spacing:2px">ض ص ث ق</div></div><div class="tt" style="padding:20px 24px">غروب الحجاز</div></div></div><div style="display:flex;gap:16px;justify-content:center;margin-top:24px"><div class="gradbtn">🎨 افتح محرر السمات</div><div class="ghostbtn">خلفيات متحركة</div></div></div><div class="brandrow"><div class="orb"></div>
+<div><div class="bt">نيو كيبورد</div><div class="bs">NEOKEY</div></div>
+<div class="line"></div></div></div></div><div class="scene" id="s3"><div class="aurora"></div><div class="aurb"></div><div class="wrap"><div class="kicker"><span class="dot"></span>الحافظة الذكية</div>
+<h1>حافظة <span class="grad">ذكية منظمة</span></h1>
+<div class="sub">مثبّتات ومفضلة وتصنيفات وقوالب — وبحث يتجاهل التشكيل والهمزات والألف.</div>
+<div class="chips"><div class="chip"><span class="dot"></span>حتى 500 ألف حرف</div><div class="chip"><span class="dot"></span>تصدير واستيراد</div><div class="chip"><span class="dot"></span>بحث بلا تشكيل</div></div><div class="stage"><div style="display:flex;gap:14px;margin-bottom:20px"><div class="sug lit">الكل</div><div class="sug">📌 المثبتة 3</div><div class="sug">★ المفضلة</div><div class="sug">تصنيفات</div></div><div class="tcard lit" style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center"><div class="tt">📌 بيانات الحساب البنكي</div><div style="font-size:30px">⋮</div></div><div class="ts">SA03 8000 0000 6080 1016 7519 · IBAN جاهز للنسخ</div></div><div class="tcard" style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center"><div class="tt">عنوان الشقة</div><div style="font-size:30px">★</div></div><div class="ts">حي الياسمين، الرياض 12333 — شقة 12، الدور الثاني</div></div><div class="tcard"><div style="display:flex;justify-content:space-between;align-items:center"><div class="tt">قالب رد الاجتماعات</div><div style="font-size:30px">★</div></div><div class="ts">شكراً لكم، أؤكد حضور الاجتماع يوم الأحد الساعة العاشرة…</div></div><div style="display:flex;gap:16px;justify-content:center;margin-top:24px"><div class="gradbtn">📋 الصق بضغطة</div><div class="ghostbtn">تصدير JSON/TXT/CSV</div></div></div><div class="brandrow"><div class="orb"></div>
+<div><div class="bt">نيو كيبورد</div><div class="bs">NEOKEY</div></div>
+<div class="line"></div></div></div></div><div class="scene" id="s4"><div class="aurora"></div><div class="aurb"></div><div class="wrap"><div class="kicker"><span class="dot"></span>مساعد المراسلات</div>
+<h1>ردود بثلاث <span class="grad">نبرات</span></h1>
+<div class="sub">قوالب مهنية بالعربي والإنجليزي: رسمي، ودّي، وقصير — بلا مغادرة الكيبورد.</div>
+<div class="chips"><div class="chip"><span class="dot"></span>عربي وإنجليزي</div><div class="chip"><span class="dot"></span>قوالب جاهزة</div><div class="chip"><span class="dot"></span>تحسين الصياغة</div></div><div class="stage"><div class="tcard" style="margin-bottom:16px"><div class="tt">📨 الموقف: اعتذار عن تأخر موعد تسليم</div><div class="ts">اكتب رد من ثلاث نبرات واختر الأنسب…</div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px"><div class="tcard lit" style="text-align:center"><div class="tt">رسمي</div><div class="ts">نحيطكم علماً بأن التسليم سيتم الخميس القادم.</div></div><div class="tcard" style="text-align:center"><div class="tt">ودّي</div><div class="ts">التسليم بيكون الخميس إن شاء الله، اعتذر عن التأخير 🙏</div></div><div class="tcard" style="text-align:center"><div class="tt">قصير</div><div class="ts">التسليم: الخميس القادم.</div></div></div><div style="display:flex;gap:16px;justify-content:center"><div class="gradbtn">✦ حسّن الصياغة</div><div class="ghostbtn">أدخل في الحقل</div></div></div><div class="brandrow"><div class="orb"></div>
+<div><div class="bt">نيو كيبورد</div><div class="bs">NEOKEY</div></div>
+<div class="line"></div></div></div></div><div class="scene" id="s5"><div class="aurora"></div><div class="aurb"></div><div class="wrap"><div class="kicker"><span class="dot"></span>لوحة الأدوات</div>
+<h1>أدوات فوق <span class="grad">الكيبورد</span></h1>
+<div class="sub">ترجمة وحاسبة وزخرفة نصوص وكتابة صوتية وعبارات وأذكار — بضغطة واحدة وأنت تكتب.</div>
+<div class="chips"><div class="chip"><span class="dot"></span>ترجمة فورية</div><div class="chip"><span class="dot"></span>حاسبة</div><div class="chip"><span class="dot"></span>زخرفة نصوص</div><div class="chip"><span class="dot"></span>كتابة صوتية</div></div><div class="stage"><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px"><div class="tcard" style="display:flex;align-items:center;gap:20px"><div style="width:74px;height:74px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:38px;background:linear-gradient(135deg,#8E5BD0,#2FA9C0);box-shadow:0 0 24px rgba(168,85,247,.4)">🌐</div><div><div class="tt">ترجمة</div><div class="ts">عربي ↔ إنجليزي</div></div></div><div class="tcard" style="display:flex;align-items:center;gap:20px"><div style="width:74px;height:74px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:38px;background:linear-gradient(135deg,#8E5BD0,#2FA9C0);box-shadow:0 0 24px rgba(168,85,247,.4)">🧮</div><div><div class="tt">حاسبة</div><div class="ts">تحسب أثناء الكتابة</div></div></div><div class="tcard" style="display:flex;align-items:center;gap:20px"><div style="width:74px;height:74px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:38px;background:linear-gradient(135deg,#8E5BD0,#2FA9C0);box-shadow:0 0 24px rgba(168,85,247,.4)">✨</div><div><div class="tt">زخرفة النصوص</div><div class="ts">أكثر من 30 نمطاً</div></div></div><div class="tcard" style="display:flex;align-items:center;gap:20px"><div style="width:74px;height:74px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:38px;background:linear-gradient(135deg,#8E5BD0,#2FA9C0);box-shadow:0 0 24px rgba(168,85,247,.4)">🎙️</div><div><div class="tt">كتابة صوتية</div><div class="ts">عربي وإنجليزي</div></div></div><div class="tcard" style="display:flex;align-items:center;gap:20px"><div style="width:74px;height:74px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:38px;background:linear-gradient(135deg,#8E5BD0,#2FA9C0);box-shadow:0 0 24px rgba(168,85,247,.4)">📜</div><div><div class="tt">عبارات جاهزة</div><div class="ts">لأي موقف</div></div></div><div class="tcard" style="display:flex;align-items:center;gap:20px"><div style="width:74px;height:74px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:38px;background:linear-gradient(135deg,#8E5BD0,#2FA9C0);box-shadow:0 0 24px rgba(168,85,247,.4)">🕌</div><div><div class="tt">أذكار</div><div class="ts">الصباح والمساء</div></div></div></div></div><div class="brandrow"><div class="orb"></div>
+<div><div class="bt">نيو كيبورد</div><div class="bs">NEOKEY</div></div>
+<div class="line"></div></div></div></div><div class="scene" id="s6"><div class="aurora"></div><div class="aurb"></div><div class="wrap"><div class="kicker"><span class="dot"></span>الخلفيات المتحركة</div>
+<h1>خلفيات <span class="grad">تتنفس</span></h1>
+<div class="sub">30 خلفية حية و30 سمة متحركة: شهب وثلوج ومجرات وجمر — بخفوت بطارية.</div>
+<div class="chips"><div class="chip"><span class="dot"></span>30 خلفية متحركة</div><div class="chip"><span class="dot"></span>بدون بطارية</div><div class="chip"><span class="dot"></span>من صورك أيضاً</div></div><style>
+.meteor{height:100%;border-radius:34px;position:relative;overflow:hidden;
+  background:radial-gradient(2px 2px at 12% 20%,#fff8,transparent 60%),
+   radial-gradient(2px 2px at 78% 12%,#fff6,transparent 60%),
+   radial-gradient(1.5px 1.5px at 30% 68%,#fff5,transparent 60%),
+   radial-gradient(2px 2px at 88% 55%,#fff7,transparent 60%),
+   radial-gradient(1.5px 1.5px at 55% 32%,#fff4,transparent 60%),
+   radial-gradient(2px 2px at 42% 85%,#fff6,transparent 60%),
+   radial-gradient(1.5px 1.5px at 66% 74%,#fff5,transparent 60%),
+   radial-gradient(2px 2px at 8% 48%,#fff5,transparent 60%),
+   linear-gradient(160deg,#0A0730 0%,#1B0B45 55%,#05061A 100%);}
+.meteor .streak{position:absolute;width:220px;height:2.5px;border-radius:3px;
+  background:linear-gradient(90deg,transparent,#C084FC,#fff);transform:rotate(-24deg);
+  box-shadow:0 0 14px rgba(192,132,252,.8);}
+.meteor .moon{position:absolute;top:70px;left:90px;width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#F1E9FF,#B9A8E8 60%,#6D3FC9 130%);
+  box-shadow:0 0 60px rgba(192,132,252,.55);}
+.meteor .cap{position:absolute;bottom:28px;right:30px;font-weight:800;font-size:30px;
+  color:#fff;padding:12px 28px;border-radius:999px;background:rgba(5,6,26,.55);
+  border:1.5px solid rgba(159,140,255,.4);}
+</style><div class="stage"><div class="meteor" style="height:520px"><div class="moon"></div><div class="streak" style="top:120px;right:160px"></div><div class="streak" style="top:230px;right:420px;width:150px"></div><div class="streak" style="top:90px;right:640px;width:180px"></div><div class="cap">شهب — خلفية متحركة رقم 1 من 30</div></div><div style="display:flex;gap:14px;justify-content:center;margin-top:24px;flex-wrap:wrap"><div class="sug lit">شهب</div><div class="sug">ثلوج</div><div class="sug">مجرة</div><div class="sug">جمر</div><div class="sug">شفق</div><div class="sug">موج</div></div></div><div class="brandrow"><div class="orb"></div>
+<div><div class="bt">نيو كيبورد</div><div class="bs">NEOKEY</div></div>
+<div class="line"></div></div></div></div><div class="scene" id="s7"><div class="aurora"></div><div class="aurb"></div><div class="wrap"><div class="kicker"><span class="dot"></span>الأصوات والمؤثرات</div>
+<h1>27 حزمة <span class="grad">أصوات ضغط</span></h1>
+<div class="sub">أصوات مُخلَّقة على جهازك: مطر وماريمبا وعود وأجراس — و24 مؤثر ضغط مرسوم.</div>
+<div class="chips"><div class="chip"><span class="dot"></span>مخلَّقة محلياً</div><div class="chip"><span class="dot"></span>24 مؤثر ضغط</div><div class="chip"><span class="dot"></span>تحكم بالصوت</div></div><style>.wavebar{display:flex;align-items:flex-end;gap:6px;height:64px}.wavebar i{width:7px;border-radius:4px;display:block;background:linear-gradient(180deg,#A855F7,#22D3EE);opacity:.9}</style><div class="stage"><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div class="tcard" style="padding:22px 26px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="tt" style="font-size:32px">مطر</div>
+    <div class="wavebar" style="display:flex;align-items:flex-end;gap:6px;height:64px"><i style="height:14px"></i><i style="height:30px"></i><i style="height:52px"></i><i style="height:34px"></i><i style="height:20px"></i><i style="height:44px"></i><i style="height:26px"></i><i style="height:12px"></i></div>
+  </div></div><div class="tcard" style="padding:22px 26px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="tt" style="font-size:32px">ماريمبا</div>
+    <div class="wavebar" style="display:flex;align-items:flex-end;gap:6px;height:64px"><i style="height:20px"></i><i style="height:44px"></i><i style="height:26px"></i><i style="height:56px"></i><i style="height:30px"></i><i style="height:16px"></i><i style="height:40px"></i><i style="height:22px"></i></div>
+  </div></div><div class="tcard" style="padding:22px 26px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="tt" style="font-size:32px">عود</div>
+    <div class="wavebar" style="display:flex;align-items:flex-end;gap:6px;height:64px"><i style="height:30px"></i><i style="height:18px"></i><i style="height:48px"></i><i style="height:26px"></i><i style="height:60px"></i><i style="height:34px"></i><i style="height:18px"></i><i style="height:28px"></i></div>
+  </div></div><div class="tcard" style="padding:22px 26px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="tt" style="font-size:32px">أجراس</div>
+    <div class="wavebar" style="display:flex;align-items:flex-end;gap:6px;height:64px"><i style="height:12px"></i><i style="height:26px"></i><i style="height:18px"></i><i style="height:40px"></i><i style="height:22px"></i><i style="height:50px"></i><i style="height:24px"></i><i style="height:14px"></i></div>
+  </div></div><div class="tcard" style="padding:22px 26px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="tt" style="font-size:32px">نقر</div>
+    <div class="wavebar" style="display:flex;align-items:flex-end;gap:6px;height:64px"><i style="height:24px"></i><i style="height:16px"></i><i style="height:34px"></i><i style="height:20px"></i><i style="height:46px"></i><i style="height:18px"></i><i style="height:30px"></i><i style="height:12px"></i></div>
+  </div></div><div class="tcard" style="padding:22px 26px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="tt" style="font-size:32px">ساعة</div>
+    <div class="wavebar" style="display:flex;align-items:flex-end;gap:6px;height:64px"><i style="height:16px"></i><i style="height:22px"></i><i style="height:14px"></i><i style="height:26px"></i><i style="height:16px"></i><i style="height:22px"></i><i style="height:14px"></i><i style="height:26px"></i></div>
+  </div></div><div class="tcard" style="padding:22px 26px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="tt" style="font-size:32px">فضاء</div>
+    <div class="wavebar" style="display:flex;align-items:flex-end;gap:6px;height:64px"><i style="height:10px"></i><i style="height:34px"></i><i style="height:22px"></i><i style="height:48px"></i><i style="height:28px"></i><i style="height:40px"></i><i style="height:16px"></i><i style="height:30px"></i></div>
+  </div></div><div class="tcard" style="padding:22px 26px">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="tt" style="font-size:32px">سينثويف</div>
+    <div class="wavebar" style="display:flex;align-items:flex-end;gap:6px;height:64px"><i style="height:28px"></i><i style="height:50px"></i><i style="height:36px"></i><i style="height:62px"></i><i style="height:40px"></i><i style="height:54px"></i><i style="height:30px"></i><i style="height:44px"></i></div>
+  </div></div></div><div style="display:flex;gap:16px;justify-content:center;margin-top:24px"><div class="gradbtn">🔊 جرّب الحزم</div><div class="ghostbtn">+19 حزمة أخرى</div></div></div><div class="brandrow"><div class="orb"></div>
+<div><div class="bt">نيو كيبورد</div><div class="bs">NEOKEY</div></div>
+<div class="line"></div></div></div></div><div class="scene" id="s8"><div class="aurora"></div><div class="aurb"></div><div class="wrap"><div class="kicker"><span class="dot"></span>الخصوصية والدروع</div>
+<h1>خصوصيتك <span class="grad">أولاً</span></h1>
+<div class="sub">لا إعلانات، لا حسابات، ولا يخرج ما تكتبه من جهازك — مع درع تحقق يحمي التطبيق من إعادة التجميع.</div>
+<div class="chips"><div class="chip"><span class="dot"></span>صفر جمع بيانات</div><div class="chip"><span class="dot"></span>درع تحقق</div><div class="chip"><span class="dot"></span>تصدير وحذف فوري</div></div><div class="stage"><div class="tcard lit" style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:20px"><div style="width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;background:linear-gradient(135deg,#8E5BD0,#2FA9C0);box-shadow:0 0 30px rgba(168,85,247,.5)">🛡️</div><div><div class="tt">درع التحقق — الحالة سليمة ✓</div><div class="ts">5 فحوصات دورية: التوقيع، البيئة، مصدر التثبيت — بلا جمع أي معرفات</div></div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px"><div class="tcard"><div class="tt">🚫 لا إعلانات</div><div class="ts">ولا متتبعات</div></div><div class="tcard"><div class="tt">👤 لا حسابات</div><div class="ts">ولا تسجيل دخول</div></div><div class="tcard"><div class="tt">📱 بياناتك على جهازك</div><div class="ts">قاموسك وحافظتك محلية</div></div><div class="tcard"><div class="tt">📤 تصدير وحذف</div><div class="ts">نسخة احتياطية بملف واحد</div></div></div><div style="display:flex;gap:16px;justify-content:center"><div class="gradbtn">🛡️ شاهد تقرير الفحص المجهول</div></div></div><div class="brandrow"><div class="orb"></div>
+<div><div class="bt">نيو كيبورد</div><div class="bs">NEOKEY</div></div>
+<div class="line"></div></div></div></div><div class="feature-graphic" id="fg"><div class="aurora"></div><div class="aurb"></div><div style="position:relative;z-index:3;height:100%;display:flex;align-items:center;gap:40px;padding:0 60px;direction:rtl"><div style="flex:1.15"><div style="display:flex;align-items:center;gap:20px;margin-bottom:16px"><div class="orb" style="width:78px;height:78px"></div><div><div style="font-weight:900;font-size:60px;line-height:1.05">نيو كيبورد</div><div style="font-weight:600;font-size:20px;color:#B8B4D9;letter-spacing:4px">NEOKEY</div></div></div><div style="font-weight:800;font-size:40px;line-height:1.3">كيبورد عربي وإنجليزي ذكي</div><div class="grad" style="font-weight:800;font-size:40px;line-height:1.3;background:linear-gradient(100deg,#C084FC,#A855F7 40%,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent">سمات زجاجية · تنبؤ · خصوصية كاملة</div></div><div style="flex:1;display:flex;flex-direction:column;gap:16px"><div class="chip" style="font-size:28px"><span class="dot"></span>تنبؤ وتصحيح عربي ذكي</div><div class="chip" style="font-size:28px"><span class="dot"></span>سمات وخلفيات متحركة</div><div class="chip" style="font-size:28px"><span class="dot"></span>حافظة ذكية وأدوات</div><div class="chip" style="font-size:28px"><span class="dot"></span>صفر جمع بيانات — درع تحقق</div></div></div></div></body></html>

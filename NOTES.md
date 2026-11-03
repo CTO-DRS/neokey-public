@@ -1,0 +1,4 @@
+## v17.1 (2026-10-31, versionCode 23)
+User reported crash «نيو كيبورد يستمر في التوقف» after tapping settings on v17.0. Cause not found yet (static review found nothing; Robolectric attempt failed, sandbox reset wiped ~/.m2).
+Added diagnostics: Perf crash handler writes full stack to filesDir/last_crash.txt (also installed in SetupActivity.onCreate); SetupActivity.showLastCrash() shows it once as errorCard with copy button; showTab() wraps tab builders in try/catch → errorCard. Waiting for the user's copied stack trace.
+- Clipboard overhaul requested (big spec). Phase 1 audit done: docs/clipboard-audit.md. Phases 2-4 done (v20.1). Next: phase 5 import/export (SAF, TXT/JSON/CSV, preview, duplicates), phase 6 library (categories, tags, templates tab, shortcuts, text tools), drag reorder (now ▲▼).

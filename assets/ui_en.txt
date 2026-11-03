@@ -1,0 +1,902 @@
+أهلاً في نيو كيبورد	Welcome to NeoKey
+كيبورد عربي وإنجليزي بقاموس ضخم، سمات كثيرة، وكل شي يشتغل على جوالك بدون ما ترسل كلماتك لأي مكان.	An Arabic & English keyboard with a huge dictionary and many themes. Everything runs on your phone and your words never leave it.
+فعّله بخطوتين	Enable it in two steps
+من تبويب «التفعيل»: شغّل نيو كيبورد في إعدادات الجوال، وبعدين اختره ككيبورد أساسي.	From the "Setup" tab: turn on NeoKey in phone settings, then pick it as your default keyboard.
+اكتب أسرع	Type faster
+اسحب إصبعك على الحروف لكتابة الكلمة كاملة، واسحب على المسافة لتبديل اللغة، وعلى زر الحذف لمسح كلمات.	Glide over letters to type whole words, swipe the space bar to switch language, and swipe delete to erase words.
+كل الأدوات في •••	All tools in •••
+زر ••• فيه مساعد المراسلات، الترجمة، الحاسبة، الزخرفة، العبارات والأذكار، ووضع اليد الواحدة.	The ••• button has the message assistant, translate, calculator, fancy text, phrases & adhkar, and one-handed mode.
+خلّه على ذوقك	Make it yours
+اختر سمة جاهزة أو صمّم سمتك من تبويب «الثيمات»، وغيّر الحجم والشكل من «الإعدادات».	Pick a theme or design your own in "Themes", and change size and shape in "Settings".
+ابدأ	Start
+التالي	Next
+تخطي	Skip
+جرّب NeoKey — كيبورد عربي بتصميم حديث	Try NeoKey — a modern Arabic keyboard
+مشاركة	Share
+نيو كيبورد	NeoKey
+كيبوردك العربي، أناقة تبدأ من هنا	Your Arabic keyboard, elegance starts here
+جديد	New
+اكتب بالسحب	Glide typing
+مرّر إصبعك على الحروف بدون ما ترفعه، والكلمة تطلع كاملة. وزر الحذف بالسحب يمسح كلمات.	Slide your finger over the letters without lifting and the whole word appears. Swipe delete to erase words.
+قاموس ضخم	Huge dictionary
+١٥٠ ألف كلمة عربية	150K Arabic words
+اقتراحات وتصحيح تلقائي، ويتوقع كلمتك الجاية، ويتعلّم أسلوبك مع الوقت.	Suggestions, autocorrect, next-word prediction, and it learns your style over time.
+كتابة صوتية	Voice typing
+تكلّم وهو يكتب	Speak and it types
+اضغط المايك في الشريط العلوي وتكلّم بالعربي أو الإنجليزي.	Tap the mic in the top bar and speak Arabic or English.
+إيموجي	Emoji
+ابحث عن أي إيموجي	Search any emoji
+افتح الإيموجي واضغط زر البحث واكتب «قلب» أو «ضحك»، وأكثر من ١٣٠٠ رمز تحت يدك.	Open emoji, tap search and type "heart" or "laugh". Over 1,300 emoji at hand.
+أدوات ذكية	Smart tools
+كل شي من زر •••	Everything from •••
+ترجمة، حاسبة، تاريخ هجري، زخرفة، تصحيح اللغة الغلط، ويد واحدة.	Translate, calculator, Hijri date, fancy text, wrong-layout fix, and one-handed mode.
+تخصيص	Customize
+٢٢ ثيم + ثيمك الخاص	22 themes + your own
+اختر ألوانك وشكل الأزرار، أو حط صورتك خلفية للكيبورد.	Choose colors and key shapes, or set your photo as background.
+اختر ثيم	Choose theme
+خصوصية	Privacy
+كل شي على جوالك	Everything stays on your phone
+كلماتك تُحفظ محلياً بس، ووضع التخفي يوقف الحفظ تماماً.	Your words are stored locally only, and incognito stops saving completely.
+التفعيل	Setup
+شغّله في ٣ خطوات	Turn it on in 3 steps
+١ فعّل نيو كيبورد  ٢ اختره كيبورد أساسي  ٣ اسمح بالمايك.	1 Enable NeoKey  2 Set it as default  3 Allow the mic.
+ابدأ التفعيل	Start setup
+صُنع بحب	Made with love
+مطوّر نيو كيبورد. تابعني واطلب استشارتك التقنية.	NeoKey developer. Follow me and book a tech consultation.
+تواصل معي	Contact me
+الثيمات	Themes
+الإعدادات	Settings
+العبارات	Phrases
+صار خطأ أثناء عرض هذا القسم، والتطبيق ما توقف. انسخ التفاصيل وأرسلها للمطوّر:	An error occurred showing this section, but the app kept running. Copy the details and send them to the developer:
+نسخ التفاصيل	Copy details
+تم النسخ	Copied
+توقف التطبيق في المرة السابقة. انسخ التفاصيل وأرسلها للمطوّر عشان نصلحه:	The app stopped last time. Copy the details and send them to the developer so we can fix it:
+سمة جديدة	New theme
+استيراد	Import
+تصدير	Export
+التبديل التلقائي نهاري/ليلي شغّال — السمة المعروضة على الكيبورد تتبع الوقت. غيّره من الإعدادات.	Auto day/night switching is on — the keyboard theme follows the time. Change it in Settings.
+مكتبة السمات · 	Theme library · 
+مكتبتي · 	My library · 
+اضغط مطولاً على أي سمة لتعديلها أو تصديرها أو حذفها.	Long-press any theme to edit, export or delete it.
+محرر السمات	Theme editor
+» أو «سمة جديدة» لفتح المحرر وتصميم سمتك من الصفر.	" or "New theme" to open the editor and design your own.
+تعتيم الصورة	Photo dimming
+＋ اختر صورة	＋ Choose photo
+تغيير الصورة	Change photo
+محرر	Editor
+مكتبتي	My library
+سمة 	Theme 
+، محددة	, selected
+. اضغط مطولاً للخيارات	. Long-press for options
+تعديل في المحرر	Edit in editor
+حذف من مكتبتي	Delete from my library
+تعديل نسخة منها في المحرر	Edit a copy in the editor
+انحذفت السمة	Theme deleted
+سمتي	My theme
+ابدأ التصميم من المحرر تحت	Start designing in the editor below
+اسم السمة	Theme name
+الخلفية	Background
+تدرّج الخلفية	Background gradient
+أزرار الحروف	Letter keys
+الأزرار الخاصة (شفت، حذف، رموز)	Special keys (shift, delete, symbols)
+زر المسافة	Space bar
+زر الإدخال	Enter key
+لون الخط	Text color
+الحدود	Borders
+سماكة الحدود	Border width
+رفيع جداً	Very thin
+رفيع	Thin
+متوسط	Medium
+سميك	Thick
+الخط	Font
+زجاج ثلاثي الأبعاد (خفيف)	3D glass (light)
+توهّج نيون	Neon glow
+صورة مخصصة كخلفية	Custom photo background
+حفظ في مكتبتي	Save to my library
+انحفظت في مكتبتك وصارت السمة الحالية	Saved to your library and set as current theme
+بدون	None
+بدون لون	No color
+لون 	Color 
+، محدد	, selected
+اللون	Hue
+التشبّع	Saturation
+السطوع	Brightness
+الشفافية	Opacity
+تم	Done
+إلغاء	Cancel
+حفظ كملف (.neokey)	Save as file (.neokey)
+نسخ	Copy
+تصدير «	Export "
+سمة NeoKey: 	NeoKey theme: 
+مشاركة السمة	Share theme
+انسخت حزمة السمة	Theme package copied
+من ملف	From file
+من الحافظة (نص منسوخ)	From clipboard (copied text)
+استيراد حزمة تصميم	Import theme package
+ما في مدير ملفات	No file manager found
+تم استيراد «	Imported "
+» وتفعيلها	" and applied it
+الملف مو حزمة سمة صالحة	Not a valid theme file
+انحفظ ملف السمة	Theme file saved
+تعذر الوصول للملف	Couldn't access the file
+اختر صورة الخلفية	Choose background photo
+ما في تطبيق صور	No gallery app found
+تم تعيين الخلفية	Background set
+تعذر فتح الصورة	Couldn't open the photo
+كلمة كتبتها	words typed
+حرف	characters
+كلمة تعلّمها	words learned
+الكتابة الذكية	Smart typing
+اقتراح الكلمات	Word suggestions
+تعلّم كلماتي الجديدة من كتابتي	Learn new words from my typing
+مسافتين = نقطة	Double space = period
+التصحيح التلقائي (زر الحذف يتراجع عنه ولا يصحح الكلمة مرة ثانية)	Autocorrect (delete undoes it and the word won't be corrected again)
+الكتابة بالسحب على الحروف	Glide typing
+الإحساس	Feel
+الاهتزاز عند الكتابة	Vibrate on keypress
+صوت الأزرار	Key sounds
+معاينة الحرف عند الضغط	Key preview popup
+صف الأرقام	Number row
+لوحة أرقام كبيرة لخانات الأرقام والجوال	Big number pad for number and phone fields
+المظهر والحركة	Look & motion
+تأثير إضاءة عند الضغط	Glow on press
+حركات انتقال سلسة	Smooth animations
+تخطيط الكيبورد	Keyboard layout
+قياسي	Standard
+برمجة	Coding
+ألعاب	Gaming
+مراسلات	Messaging
+التخطيط العادي.	The normal layout.
+صف رموز للأكواد: Tab { } [ ] ( ) ; = < > / مع بدائل بالضغط المطوّل.	A code symbols row: Tab { } [ ] ( ) ; = < > / with long-press alternates.
+صف اختصارات للعب (gg, wp, brb…) والتصحيح التلقائي والسحب مقفلة لسرعة أعلى.	A gaming shortcuts row (gg, wp, brb…); autocorrect and glide are off for speed.
+صف إيموجي سريع فوق الحروف للمحادثات.	A quick emoji row above the letters for chats.
+سمات نهارية وليلية تلقائية	Automatic day & night themes
+تبديل السمة تلقائياً	Switch theme automatically
+حسب وضع الجوال	Follow system
+حسب الوقت	By time
+يبدأ النهار الساعة	Day starts at
+يبدأ الليل الساعة	Night starts at
+سمة النهار	Day theme
+سمة الليل	Night theme
+قوة الاهتزاز	Vibration strength
+ناعم	Soft
+قوي	Strong
+مخصص	Custom
+مدة الاهتزاز	Vibration duration
+شدة الاهتزاز	Vibration intensity
+سرعة الضغط المطوّل	Long-press delay
+سريع	Fast
+عادي	Normal
+بطيء	Slow
+الحجم والمقاسات	Size & spacing
+ارتفاع الكيبورد	Keyboard height
+عرض الكيبورد	Keyboard width
+استدارة الأزرار (0 = حسب الشكل)	Key corner radius (0 = by shape)
+المسافة بين الأزرار	Key spacing
+ملتصقة	None
+عادية	Normal
+واسعة	Wide
+أوسع	Wider
+اللون المميز	Accent color
+حجم خط الأزرار	Key font size
+صغير	Small
+كبير	Large
+كبير جداً	Extra large
+شكل الأزرار	Key shape
+دائري	Round
+مربع	Square
+كبسولة	Pill
+السحب على المسافة	Space bar swipe
+تغيير اللغة	Switch language
+تحريك المؤشر	Move cursor
+شكل الأرقام	Digits style
+وضع اليد الواحدة	One-handed mode
+إيقاف	Off
+يمين	Right
+يسار	Left
+عرض وضع اليد الواحدة	One-handed width
+إمكانية الوصول	Accessibility
+تباين عالٍ (يتجاوز السمة الحالية)	High contrast (overrides current theme)
+مفاتيح كبيرة	Large keys
+تقليل الحركة والمؤثرات	Reduce motion & effects
+علامات للحالة لا تعتمد على اللون وحده	State marks that don't rely on color alone
+تباين داكن	Dark contrast
+تباين فاتح	Light contrast
+قارئ الشاشة (TalkBack): المس واسحب إصبعك لسماع اسم كل زر، وارفع إصبعك للكتابة، أو اضغط مرتين على الزر المحدد. كل الأزرار الخاصة لها أسماء مسموعة.	Screen reader (TalkBack): touch and drag to hear each key, lift to type, or double-tap the focused key. All special keys have spoken names.
+مسح الكلمات المتعلّمة	Clear learned words
+تم مسح الكلمات المتعلّمة	Learned words cleared
+نصائح: اضغط مطولاً على أي حرف لبدائله، ومطولاً على المسافة لتبديل الكيبورد. اسحب إصبعك على الحروف لكتابة الكلمة كاملة، واسحب على زر الحذف لمسح كلمات. زر «تصحيح اللغة» في ••• يصحح النص المكتوب بلغة غلط. زر ••• فيه تحرير النص والعبارات والزخرفة واليد الواحدة، واضغط مطولاً على أي نص في الحافظة لتثبيته. لما تنسخ نص يطلع لك فوق الكيبورد للصق بضغطة، ووضع التخفي يوقف حفظ كلماتك.	Tips: long-press a letter for alternates and the space bar to switch keyboards. Glide over letters to type words and swipe delete to erase words. "Fix layout" in ••• converts text typed in the wrong language. ••• also has text editing, phrases, fancy text and one-handed mode; long-press a clipboard item to pin it. Copied text appears above the keyboard for one-tap paste, and incognito stops saving your words.
+الخصوصية	Privacy
+كل شي يبقى على جوالك: الإعدادات، الكلمات المتعلّمة، الحافظة، والعبارات. ما فيه إعلانات ولا حسابات ولا تتبع. 	Everything stays on your phone: settings, learned words, clipboard and phrases. No ads, accounts or tracking. 
+ما يتعلّم الكيبورد من حقول كلمات المرور ولا في الوضع الخفي. تقارير الأداء ما فيها أي نص. 	Nothing is learned in password fields or incognito. Performance reports contain no text. 
+الإنترنت يُستخدم فقط إذا فعّلت تحسين النص بالذكاء الاصطناعي بمفتاحك، ووقتها يُرسل النص اللي تطلب تحسينه فقط.	The internet is used only if you enable AI rewriting with your own key, and then only the text you ask to improve is sent.
+الوضع الخفي دائماً (لا تعلّم ولا حافظة)	Always incognito (no learning, no clipboard)
+قياس الأداء والأعطال محلياً	Local performance & crash metrics
+مسح الكلمات المتعلّمة وسجل التصحيح	Clear learned words and correction history
+أكيد؟ بتنحذف كل الكلمات اللي تعلّمها الكيبورد بالعربي والإنجليزي.	Sure? All words learned in Arabic and English will be deleted.
+مسح	Clear
+تم المسح	Cleared
+قاموسي والنسخ الاحتياطي	My dictionary & backup
+قاموسي الشخصي	My dictionary
+النسخ الاحتياطي	Backup
+أذكار وأدعية في لوحة العبارات	Adhkar & duas in the phrases panel
+للمطورين	Developers
+مركز قياس الأداء	Performance center
+عن المطوّر	About the developer
+مطوّر نيو كيبورد • استشارات تقنية	NeoKey developer • Tech consulting
+واتساب	WhatsApp
+تيليجرام	Telegram
+تيك توك	TikTok
+إنستغرام	Instagram
+يوتيوب	YouTube
+الموقع	Website
+نيو كيبورد • الإصدار 	NeoKey • Version 
+فتح تلقائي	Open automatically
+مسح باركود	Scan QR
+نسخ الرابط	Copy link
+تم نسخ الرابط	Link copied
+وجّه الكاميرا على الباركود	Point the camera at the QR code
+ما لقيت تطبيق كاميرا	No camera app found
+مطوّر نيو كيبورد	NeoKey developer
+تلقائي	Auto
+مساعد المراسلات	Message assistant
+رسائل رسمية، ردود خدمة العملاء، رسائل عمل، طلبات توظيف، ردود مختصرة، اعتذار وشكر. تراجع وتعدّل كل مسودة قبل إدراجها. من الكيبورد: ••• ← مساعد المراسلات.	Formal letters, customer service replies, work messages, job applications, quick replies, apologies and thanks. Review and edit every draft before inserting. From the keyboard: ••• → Message assistant.
+افتح المساعد	Open assistant
+أضف عبارتك	Add your phrase
+مثال: أنا مشغول، أكلمك بعد شوي	Example: I'm busy, I'll call you later
+إضافة	Add
+عباراتي	My phrases
+الاختصارات	Shortcuts
+اكتب الاختصار في أي مكان ويطلع لك النص الكامل أول اقتراح.	Type the shortcut anywhere and the full text appears as the first suggestion.
+الاختصار كلمة وحدة بدون مسافات	A shortcut is one word without spaces
+العبارات الجاهزة	Ready phrases
+تلقاها كلها في الكيبورد من زر ••• ثم «عبارات جاهزة».	Find them all in the keyboard under ••• then "Phrases".
+فعّل نيو كيبورد	Enable NeoKey
+شغّل المفتاح جنب NeoKey 2036 في الإعدادات.	Turn on the switch next to NeoKey 2036 in settings.
+افتح الإعدادات	Open settings
+اختره كيبورد أساسي	Set as default keyboard
+اختر NeoKey 2036 من القائمة.	Choose NeoKey 2036 from the list.
+اختيار الكيبورد	Choose keyboard
+الكتابة بالصوت (اختياري)	Voice typing (optional)
+اسمح بالمايك عشان تكتب بصوتك عربي وإنجليزي.	Allow the mic to type by voice in Arabic and English.
+السماح بالمايك	Allow mic
+كل شي جاهز، جرّب الكتابة تحت.	All set, try typing below.
+تم، ارجع واضغط المايك في الكيبورد	Done, go back and tap the mic in the keyboard
+بدون المايك ما تشتغل الكتابة بالصوت	Voice typing needs the mic
+الكيبورد غير مفعّل بعد	Keyboard not enabled yet
+فعّله	Enable
+اكتب هنا للتجربة...	Type here to test...
+رجوع	Back
+الكلمات اللي تعلّمها الكيبورد من كتابتك	Words the keyboard learned from your typing
+أضف كلمة جديدة	Add a new word
+اكتب كلمة واحدة بدون مسافات	Type one word without spaces
+ابحث في كلماتك	Search your words
+حذف كل كلمات هذه اللغة	Delete all words in this language
+أكيد تبي تحذف كل الكلمات المتعلّمة لهذه اللغة؟	Delete all learned words for this language?
+حذف	Delete
+العربية	Arabic
+حذف 	Delete 
+ما فيه كلمات متعلّمة لهذه اللغة للحين. اكتب بالكيبورد وبتتجمع هنا.	No learned words in this language yet. Type with the keyboard and they'll collect here.
+ما فيه نتائج.	No results.
+ كلمة	 words
+ (يظهر أول 300، استخدم البحث)	 (showing first 300, use search)
+انقل إعداداتك وكلماتك لجوال جديد	Move your settings and words to a new phone
+الملف يحتوي: الإعدادات، السمات المحفوظة، العبارات والاختصارات، والكلمات المتعلّمة. ما يحتوي الحافظة ولا مفتاح الذكاء الاصطناعي ولا صورة الخلفية. احفظه بمكان آمن لأنه فيه كلماتك.	The file holds settings, saved themes, phrases, shortcuts and learned words. It excludes the clipboard, AI key and background photo. Keep it somewhere safe since it contains your words.
+حفظ نسخة احتياطية	Save backup
+استعادة من ملف	Restore from file
+تم حفظ النسخة الاحتياطية	Backup saved
+تمت الاستعادة. افتح الكيبورد وبتشوف إعداداتك	Restored. Open the keyboard to see your settings
+الملف غير صالح أو تالف	Invalid or damaged file
+تعذّر الحفظ	Couldn't save
+للمطورين · كل القياسات تُحفظ على جهازك فقط	Developers · all metrics stay on your device
+الخصوصية: نجمع أرقاماً تقنية فقط (أزمنة، ذاكرة، أعطال) على جهازك. لا تُحفظ ولا تُرسل أي نصوص تكتبها، والتقرير لا يخرج إلا إذا صدّرته أنت.	Privacy: only technical numbers (timings, memory, crashes) are kept on your device. No typed text is saved or sent, and the report leaves only if you export it.
+جمع القياسات محلياً	Collect metrics locally
+القياسات الحية	Live metrics
+تتجمع تلقائياً أثناء استخدامك للكيبورد. p95 = أسوأ 5٪ من الحالات.	Collected automatically while you type. p95 = the slowest 5% of cases.
+الثبات	Stability
+مرات فتح الكيبورد	Keyboard opens
+عدد الانهيارات	Crashes
+معدل الانهيار	Crash rate
+ممتاز	Excellent
+مقبول	OK
+يحتاج إصلاح	Needs fixing
+آخر انهيار	Last crash
+اختبار الأداء والبطارية	Performance & battery test
+عمليات اقتراح في الثانية	Suggestions per second
+متوسط زمن الاقتراح	Average suggestion time
+p95 زمن الاقتراح	p95 suggestion time
+تحميل القاموس	Dictionary load
+الذاكرة بعد الاختبار	Memory after test
+البطارية المستهلكة	Battery used
+متوسط التيار	Average current
+ملاحظة البطارية	Battery note
+تشغيل الاختبار (30 ثانية)	Run test (30 seconds)
+للحصول على قراءة بطارية دقيقة افصل الشاحن وأبقِ الشاشة مفتوحة.	For an accurate battery reading, unplug the charger and keep the screen on.
+دقة التنبؤ بالكلمات	Prediction accuracy
+عربي: إكمال من حرفين (أعلى 3)	Arabic: complete from 2 letters (top 3)
+عربي: إكمال من 3 أحرف (أعلى 3)	Arabic: complete from 3 letters (top 3)
+عربي: الكلمة التالية (أعلى 3)	Arabic: next word (top 3)
+عدد حالات الاختبار	Test cases
+تشغيل اختبار الدقة	Run accuracy test
+يقيس القاموس الأساسي فقط (بدون كلماتك المتعلّمة) على مجموعة جمل ثابتة داخل التطبيق، عشان تكون النتائج قابلة للمقارنة بين الإصدارات.	Measures the base dictionary only (without your learned words) on a fixed sentence set, so results compare across versions.
+تصدير التقرير	Export report
+مسح القياسات	Clear metrics
+انمسحت القياسات	Metrics cleared
+لا توجد بيانات بعد	No data yet
+ما تم تشغيله بعد.	Not run yet.
+آخر تشغيل	Last run
+جاري اختبار الأداء والبطارية… 30 ثانية	Running performance & battery test… 30 seconds
+الشاحن موصول، القراءة غير دقيقة	Charger connected, reading not accurate
+قراءة تقريبية لفترة الاختبار (الجهاز كامل)	Approximate reading for the test period (whole device)
+الجهاز ما يوفر قراءة البطارية	This device doesn't report battery current
+تعذر إكمال الاختبار	Couldn't finish the test
+جاري اختبار دقة التنبؤ…	Testing prediction accuracy…
+تقرير الأداء (أرقام فقط)	Performance report (numbers only)
+مشاركة التقرير	Share report
+انسخ التقرير	Copy report
+اكتب رسالتك المهنية، راجعها وعدّلها ثم أدرجها	Write your professional message, review and edit, then insert
+المستلم (اختياري)	Recipient (optional)
+اسمك / التوقيع (اختياري)	Your name / signature (optional)
+الموضوع أو التفاصيل	Subject or details
+المسودة تظهر هنا…	The draft appears here…
+ حرف · قابل للتعديل	 characters · editable
+نوع الرسالة	Message type
+الأسلوب	Tone
+اللغة	Language
+اختر رداً	Choose a reply
+التفاصيل	Details
+إنشاء المسودة	Create draft
+صيغة أخرى	Another version
+المسودة — راجعها وعدّل عليها قبل الإدراج	Draft — review and edit before inserting
+إدراج في الحقل	Insert into field
+تحسين بالذكاء الاصطناعي (اختياري)	AI improvement (optional)
+يرسل المسودة الحالية فقط لمزود الذكاء الاصطناعي عند ضغطك الزر، ويرجع لك نسخة محسّنة تراجعها قبل الإدراج.	Sends only the current draft to the AI provider when you tap, and returns an improved version to review before inserting.
+المساعد يشتغل بدون إنترنت بالقوالب. لو تبي صياغة أذكى، أضف مفتاح OpenRouter الخاص فيك (يُحفظ على جهازك فقط).	The assistant works offline with templates. For smarter wording, add your own OpenRouter key (stored on your device only).
+حسّن الصياغة	Improve wording
+تغيير المفتاح أو النموذج	Change key or model
+إضافة مفتاح	Add key
+رجعناك للحقل، النص بيندرج الحين	Back to the field, inserting the text now
+انسخ النص	Copy text
+مشاركة الرسالة	Share message
+النموذج	Model
+محرك الذكاء الاصطناعي	AI engine
+حفظ	Save
+حذف المفتاح	Delete key
+، بأسلوب 	, tone 
+جاري التحسين…	Improving…
+خطأ 	Error 
+تعذر الاتصال بالمحرك	Couldn't reach the AI engine
+جاهزة. راجعها وعدّل قبل الإدراج	Ready. Review and edit before inserting
+ما رجع نص	No text returned
+تحرير	Edit
+عبارات	Phrases
+زخرفة	Fancy
+يد واحدة	One hand
+الحجم	Size
+الحافظة	Clipboard
+تبديل	Switch
+إخفاء	Hide
+تصحيح اللغة	Fix layout
+احسب	Calc
+هجري	Hijri
+ترجمة	Translate
+استمع	Listen
+الأرقام	Numbers
+إيقاف التخفي	Incognito off
+وضع التخفي	Incognito
+حالة الأحرف	Case
+تراجع	Undo
+بحث	Search
+حجم عادي	Normal size
+تكبير المفاتيح	Large keys
+إلغاء التباين	Contrast off
+تباين عالٍ	High contrast
+تشغيل الحركة	Motion on
+تقليل الحركة	Reduce motion
+رجوع للكيبورد	Back to keyboard
+تحديد الكل	Select all
+قص	Cut
+لصق	Paste
+⇤ البداية	⇤ Start
+النهاية ⇥	End ⇥
+↶ تراجع	↶ Undo
+تحديد	Select
+إعادة ↷	Redo ↷
+حذف كلمة	Delete word
+سطر جديد ↵	New line ↵
+مسح الكل	Clear all
+تكلّم الآن…	Speak now…
+لحظة…	One moment…
+الحافظة فارغة — انسخ أي نص ويظهر هنا	Clipboard is empty — copy any text and it shows here
+اضغط مطولاً على أي نص لتثبيته	Long-press any item to pin it
+مسافة	Space
+إدخال	Enter
+تكبير الحروف	Shift
+، مقفل	, locked
+، مفعّل	, on
+الرموز	Symbols
+الحروف	Letters
+تبديل اللغة	Switch language
+الإيموجي	Emoji
+بحث الإيموجي	Emoji search
+قسم إيموجي 	Emoji section 
+الكتابة بالصوت	Voice typing
+المزيد	More
+أداة	Tool
+مسح الحافظة	Clear clipboard
+لصق: 	Paste: 
+اقتراح: 	Suggestion: 
+نص منسوخ: 	Copied text: 
+الصفحة السابقة	Previous page
+الصفحة التالية	Next page
+إلغاء وضع اليد الواحدة	Exit one-handed mode
+نقل الكيبورد للجهة الأخرى	Move keyboard to other side
+المؤشر يسار	Cursor left
+المؤشر يمين	Cursor right
+المؤشر أعلى	Cursor up
+المؤشر أسفل	Cursor down
+وضع التحديد	Selection mode
+زخرفة: 	Fancy: 
+زر	key
+لوحة مفاتيح NeoKey	NeoKey keyboard
+بدون زخرفة	No style
+عريض	Bold
+مزخرف	Script
+مزدوج	Double-struck
+دوائر	Circled
+مربعات	Squared
+مشطوب	Strikethrough
+تحته خط	Underline
+تطويل عربي	Arabic kashida
+قلوب	Hearts
+موجة	Wave
+مائل	Italic
+عريض مائل	Bold italic
+خط يد	Handwriting
+قوطي	Gothic
+قوطي عريض	Bold gothic
+بسيط	Sans
+بسيط عريض	Sans bold
+بسيط مائل	Sans italic
+بسيط عريض مائل	Sans bold italic
+آلة كاتبة	Typewriter
+عريض واسع	Wide
+أقواس	Parentheses
+دوائر سوداء	Dark circles
+مربعات سوداء	Dark squares
+علوي صغير	Superscript
+مقلوب	Upside down
+خط مائل عليه	Slashed
+خطين تحته	Double underline
+خط فوقه	Overline
+نجوم	Stars
+نقاط	Dots
+لمعة	Sparkle
+إطارات	Brackets
+زخرفة عربية ١	Arabic style 1
+شدّة عربية	Arabic shadda
+زخرفة عربية ٢	Arabic style 2
+تطويل طويل	Long kashida
+لمعة عربية	Arabic sparkle
+ورود	Flowers
+صورتك الشخصية	Your profile photo
+بصمتك الرقمية	Your digital signature
+أضف صورتك	Add your photo
+تظهر بإطار دائري في بداية شريط الكيبورد كعلامة تميّزك. الضغط عليها يفتح الإعدادات.	Shown in a round frame at the start of the keyboard toolbar as your personal mark. Tap it to open settings.
+اختيار صورة	Choose photo
+إزالة	Remove
+اختر صورتك الشخصية	Choose your profile photo
+تمت إزالة الصورة	Photo removed
+تم تعيين صورتك	Photo set
+إظهار صورتي في شريط الكيبورد	Show my photo in the keyboard toolbar
+الأسهم والصورة الرقمية	Arrows & digital avatar
+إظهار السهمين في شريط الكيبورد	Show the two arrows in the keyboard toolbar
+السهمان ثابتان على طرفي الشريط حتى وقت الكتابة. اضغط سهماً تطلع مميزاته الخمس مكان الاقتراحات، واضغطه مرة ثانية يرجع كل شي مكانه. اضغط أي خانة تحت لتغيير الميزة.	The two arrows stay at the toolbar edges even while typing. Tap one to show its five features in place of suggestions; tap it again to go back. Tap any slot below to change its feature.
+استرجاع المميزات الافتراضية	Restore default features
+السهم الأيمن ‹	Right arrow ‹
+السهم الأيسر ›	Left arrow ›
+اختر الميزة للخانة 	Choose a feature for slot 
+كل الأدوات	All tools
+تبديل الكيبورد	Switch keyboard
+النص المنسوخ أطول من ٥٠٠ ألف حرف، فما انحفظ في السجل	Copied text is over 500,000 characters, so it wasn't saved
+تعذّر حفظ النص في الحافظة	Couldn't save the text to the clipboard
+انمسح السجل، والمثبّتة والمحفوظة باقية	History cleared. Pinned and saved items kept
+تم التثبيت	Pinned
+أُلغي التثبيت	Unpinned
+وصلت للحد الأقصى ١٠٠ مثبّت	You've reached the 100 pin limit
+المثبّتات ممتلئة ١٠٠/١٠٠	Pins full 100/100
+ألغِ تثبيت آخر عنصر في قائمة المثبّتات وثبّت هذا مكانه؟	Unpin the last pinned item and pin this one instead?
+استبدال	Replace
+العناصر: 	Items: 
+المثبّتة: 	Pinned: 
+عدد العناصر المؤقتة المحفوظة	Temporary items to keep
+مدة الاحتفاظ بالعناصر المؤقتة	Keep temporary items for
+بدون حد	No limit
+يوم	1 day
+أسبوع	1 week
+شهر	1 month
+٣ أشهر	3 months
+المثبّتة والمفضلة والمؤرشفة ما ينطبق عليها الحذف التلقائي. يحفظ الكيبورد النسخ وقت ما يكون هو الكيبورد الافتراضي فقط، هذا من قيود أندرويد.	Pinned, favourite and archived items are never auto-deleted. The keyboard only sees copies while it is the default keyboard (an Android limit).
+حفظ النصوص الحساسة (كلمات المرور ورموز التحقق)	Save sensitive text (passwords and codes)
+مسح السجل المؤقت	Clear temporary history
+حذف كل الحافظة مع المثبّتة	Delete whole clipboard incl. pinned
+حذف كل الحافظة؟	Delete the whole clipboard?
+بينحذف كل نص محفوظ، ومعه المثبّتة والمفضلة والمؤرشفة. ما تقدر تتراجع عن هذا.	Every saved text will be deleted, including pinned, favourite and archived. This can't be undone.
+احذف الكل	Delete all
+انحذفت الحافظة كاملة	Clipboard deleted
+الكل	All
+المفضلة	Favourites
+الأرشيف	Archive
+مسح السجل	Clear history
+إدراج	Insert
+تعديل	Edit
+تثبيت	Pin
+إلغاء التثبيت	Unpin
+للمفضلة	Favourite
+إزالة من المفضلة	Unfavourite
+أرشفة	Archive
+استعادة	Restore
+اضغط للتأكيد	Tap to confirm
+▲ تقديم	▲ Move up
+▼ تأخير	▼ Move down
+ما فيه نصوص مثبّتة	No pinned texts
+المفضلة فاضية	No favourites yet
+الأرشيف فاضي	Archive is empty
+اضغط مطولاً على أي نص لخياراته	Long-press any text for options
+عُدّل	edited
+كلمة	words
+سطر	lines
+ابحث في الحافظة…	Search clipboard…
+لا نتائج	No results
+عرض	Show
+انسخ	Copied
+أُزيل من المفضلة	Removed from favourites
+أُضيف للمفضلة	Added to favourites
+رجع من الأرشيف	Restored from archive
+انتقل للأرشيف	Moved to archive
+انحذف	Deleted
+النص كبير للمشاركة المباشرة، انسخه أو صدّره	Text too large to share directly; copy or export it
+مشاركة النص	Share text
+ما فيه تطبيق للمشاركة	No app to share with
+تعديل النص	Edit text
+بحث واستبدال	Find and replace
+عنوان اختياري (مثل: رسالة ترحيب للعملاء)	Optional title (e.g. Customer welcome)
+ابحث في النص	Find in text
+النتيجة السابقة	Previous result
+النتيجة التالية	Next result
+استبدل بـ	Replace with
+حساس لحالة الأحرف	Match case
+كلمة كاملة	Whole word
+تجاهل التشكيل	Ignore tashkeel
+النص	Text
+جاري التحميل…	Loading…
+إعادة	Redo
+البداية	Start
+النهاية	End
+نسخ الكل للحافظة	Copy all
+حفظ كنص جديد	Save as new
+النسخة السابقة	Previous version
+النص غير موجود، يمكن انحذف	Text not found, it may have been deleted
+ما ينفع تحفظ نص فاضي	Can't save empty text
+النص أطول من ٥٠٠ ألف حرف	Text is over 500,000 characters
+انحفظ كنص جديد	Saved as a new text
+انحفظت التعديلات	Changes saved
+تعذّر الحفظ، النص الأصلي ما تغيّر	Couldn't save; the original is unchanged
+ما فيه نسخة سابقة لهذا النص	No previous version
+استعادة النسخة السابقة؟	Restore previous version?
+النص الحالي ينحفظ كنسخة، فتقدر ترجع له.	The current text is kept as a version, so you can go back.
+تعذّرت الاستعادة	Couldn't restore
+فيه تعديلات ما انحفظت	You have unsaved changes
+تجاهل التعديلات	Discard
+متابعة التحرير	Keep editing
+حدّد نص أول	Select some text first
+انسخ النص كامل	Whole text copied
+غير محفوظ	unsaved
+تم استبدال 	Replaced 
+ نتيجة	 matches
+تصنيفات	Categories
+قوالب	Templates
+أرشيف	Archive
+‹ التصنيفات	‹ Categories
+حفظ كقالب	Save as template
+مفضلة	Favourite
+إلغاء المفضلة	Unfavourite
+انحفظ كقالب في تبويب القوالب	Saved to Templates
+ما فيه قوالب — من خيارات أي نص اختر «حفظ كقالب»	No templates — choose “Save as template” on any text
+ما فيه تصنيفات — أنشئها من «تعديل» أي نص	No categories — create them from “Edit” on any text
+ما فيه نصوص في هذا التصنيف	No texts in this category
+التصنيف:	Category:
++ تصنيف جديد	+ New category
+تصنيف جديد	New category
+الاسم	Name
+إعادة تسمية	Rename
+حذف التصنيف (النصوص تبقى)	Delete category (texts stay)
+الاسم مستخدم	Name already used
+تصدير الحافظة	Export clipboard
+استيراد إلى الحافظة	Import to clipboard
+وش تبي تصدّر؟	What to export?
+هذا النص	This text
+المثبّتة	Pinned
+القوالب	Templates
+اختيار عناصر…	Choose items…
+الصيغة	Format
+JSON (نسخة كاملة)	JSON (full backup)
+TXT (نص فقط)	TXT (text only)
+CSV (جدول)	CSV (table)
+اختر مكان الحفظ وصدّر	Choose where to save & export
+اختر العناصر	Choose items
+ما فيه عناصر في هذا الاختيار	No items in this selection
+بيتصدّر 	Will export 
+ عنصر	 items
+تم التصدير ✓	Exported ✓
+ما تم التصدير	Export failed
+الملف: 	File: 
+الحجم: 	Size: 
+اختر ملف (JSON أو TXT أو CSV)	Choose a file (JSON, TXT or CSV)
+جاري فحص الملف…	Checking file…
+جاري الفحص والمقارنة مع الحافظة…	Checking for duplicates…
+جديد: 	New: 
+مكرر: 	Duplicates: 
+غير صالح: 	Invalid: 
+المكرر	Duplicates
+تجاهله وأبقِ الموجود	Skip, keep existing
+استورده كنسخ مستقلة	Import as copies
+حدّث خصائص الموجود	Update existing
+الجديدة فقط	New only
+إلغاء التحديد	Select none
+موجود في الحافظة	Already in clipboard
+مكرر داخل الملف	Repeated in file
+قالب	Template
+استيراد 	Import 
+جاري الاستيراد…	Importing…
+تم الاستيراد ✓	Imported ✓
+ما تم الاستيراد	Import failed
+انضاف: 	Added: 
+تحدّث: 	Updated: 
+تجاهلنا المكرر: 	Skipped duplicates: 
+الملف كامل نص واحد	Whole file = one text
+كل سطر نص مستقل	One text per line
+استورد	Import
+حدّث	Update
+استيراد المكرر كنسخ؟	Import duplicates as copies?
+تحديث النصوص الموجودة؟	Update existing texts?
+ما قدرنا نقرأ الملف	Couldn't read the file
+الملف ما ينفع للاستيراد	File can't be imported
+لون الكيبورد	Keyboard colour
+جرّب	Try
+جرّب الكيبورد	Try the keyboard
+المساعد الذكي	Smart assistant
+الأداء	Performance
+القاموس	Dictionary
+الكتابة الصوتية	Voice typing
+إعدادات لوحات المفاتيح	Keyboard settings
+لون	Colour
+المساعد	Assistant
+محرر الخلفيات	Backgrounds
+خلفية	backgrounds
+سمة	themes
+صورتك	Your photo
+تعتيم الخلفية	Background dim
+اضغط على أي خلفية وتتطبّق على الكيبورد مباشرة.	Tap any background to apply it to the keyboard.
+＋ صورة من جهازك	+ Photo from your phone
+تغيير	Change
+محددة	selected
+تعذر تعيين الخلفية	Couldn't set the background
+شفق بنفسجي	Violet aurora
+شفق سماوي	Cyan aurora
+سديم	Nebula
+ليل النجوم	Starry night
+غروب	Sunset
+محيط	Ocean
+غابة	Forest
+وردي ناعم	Soft pink
+ذهبي	Gold
+خطوط نيون	Neon grid
+موجات	Waves
+فقاعات ضوء	Bokeh
+زجاج متدرج	Gradient glass
+مثلثات	Triangles
+نقش إسلامي	Islamic pattern
+كربون	Carbon
+كثبان	Dunes
+حرير	Silk
+منتصف الليل	Midnight
+شمس 2036	Sun 2036
+الخلفيات المتحركة · 	Animated backgrounds · 
+الخلفيات الثابتة · 	Static backgrounds · 
+السمات المتحركة · 	Animated themes · 
+السمات الثابتة · 	Static themes · 
+متحركة	animated
+شفق متحرك	Moving aurora
+سديم نابض	Pulsing nebula
+نجوم متلألئة	Twinkling stars
+موج البحر	Sea waves
+سينث ويف	Synthwave
+فقاعات طافية	Floating bokeh
+RGB حي	Live RGB
+مطر رقمي	Digital rain
+غروب 2036	Sunset 2036
+حرير متموّج	Flowing silk
+شفق حي	Live aurora
+نجوم الليل	Night stars
+فقاعات	Bubbles
+ماتريكس حي	Live matrix
+الثابتة	Static
+المتحركة	Animated
+شهب	Meteors
+جمر متصاعد	Rising embers
+ثلج	Snow
+مجرة دوّارة	Spinning galaxy
+نبض	Pulse
+قوس قزح	Rainbow
+تموّجات	Ripples
+لافا	Lava
+شبكة سيبرانية	Cyber grid
+عاصفة وبرق	Thunderstorm
+جمر	Embers
+ثلج الليل	Night snow
+مجرة	Galaxy
+سيبراني	Cyber
+عاصفة	Storm
+ألعاب نارية	Fireworks
+يراعات	Fireflies
+معادل صوت	Equalizer
+أوراق الخريف	Autumn leaves
+كوكبة	Constellation
+نفق دوّار	Spinning tunnel
+إطارات نيون	Neon frames
+ضباب	Fog
+كثبان الصحراء	Desert dunes
+هلال ونجوم	Crescent & stars
+خريف	Autumn
+نفق	Tunnel
+صحراء	Desert
+هلال	Crescent
+الأصوات	Sounds
+تأثيرات الضغط	Press effects
+بدون صوت	No sound
+مستوى الصوت	Volume
+اضغط على أي صوت تسمعه ويتطبّق على الأزرار مباشرة.	Tap any sound to hear it; it applies to the keys right away.
+أصوات الأزرار	Key sounds
+الأزرار صامتة	Keys are silent
+بدون تأثير	No effect
+التأثيرات	Effects
+تأثير	effects
+حركة تطلع مكان إصبعك كل ما تضغط زر. اختر واحدة وجرّبها من زر «جرّب».	An animation where your finger taps a key. Pick one and try it with the Try button.
+«تقليل الحركة» مفعّل، فالتأثيرات ما تظهر على الكيبورد.	Reduce motion is on, so effects won't show on the keyboard.
+صوت النظام	System sound
+نقرة ناعمة	Soft click
+ميكانيكي أزرق	Blue mechanical
+ميكانيكي بني	Brown mechanical
+فقاعة	Bubble
+قطرة ماء	Water drop
+خشب	Wood
+زجاج	Glass
+ليزر 2036	Laser 2036
+بيانو	Piano
+ألعاب 8-بت	8-bit
+طبل	Drum
+نقرة عميقة	Deep click
+كريستال	Crystal
+نبضة نيون	Neon pulse
+الصوت الافتراضي للجوال	Phone default
+خفيفة وهادئة	Light and quiet
+طقطقة عالية	Loud clicky
+صوت مكتوم	Muted thock
+مع جرس عند الإدخال	Bell on enter
+بوب لطيف	Soft pop
+قطرات متساقطة	Falling drops
+دافئ وقصير	Warm and short
+رنين صافٍ	Clear ring
+مستقبلي	Futuristic
+نغمات مختلفة	Different notes
+ريترو	Retro
+إيقاعي	Rhythmic
+منخفض وقوي	Low and punchy
+رنّان	Ringing
+إلكتروني	Electronic
+تموّج	Ripple
+شرارات	Sparks
+قصاصات ملوّنة	Confetti
+حرف طائر	Flying letter
+برق	Lightning
+حلقات	Rings
+زهور	Flowers
+مطر	Rain
+ماريمبا	Marimba
+جرس صغير	Small bell
+قيثارة	Harp
+ورق	Paper
+نقر أصابع	Finger tap
+روبوت	Robot
+سحري	Magic
+سنث ويف	Synthwave
+عود	Oud
+فضاء	Space
+ساعة	Clock
+قطرات خفيفة	Light drops
+خشبي موسيقي	Musical wood
+رنّة لطيفة	Gentle chime
+أوتار ناعمة	Soft strings
+حفيف	Rustle
+هادئ جدًا	Very quiet
+آلي	Robotic
+ثمانينات	80s
+وتر شرقي	Eastern string
+صدى بعيد	Distant echo
+تك تك	Tick tock
+دوّامة	Swirl
+وجوه ضاحكة	Laughing faces
+مربع نابض	Pulsing square
+قطرات مطر	Raindrops
+شهاب	Shooting star
+حلقة قوس قزح	Rainbow ring
+أوراق شجر	Leaves
+هالة ذهبية	Golden halo
+أسهم نيون	Neon arrows
+الإصدار	Version
+وش الجديد؟	What's new?
+٢٤ تأثير ضغط	24 press effects
+٢٧ صوت	27 sounds
+خلفيات حيّة	Live backgrounds
+سمات متحركة	Animated themes
+حافظة ذكية	Smart clipboard
+استيراد وتصدير	Import & export
+٢٤ تأثير عند الضغط	24 key-press effects
+ألعاب نارية، شهاب، قوس قزح، ثلج، قلوب وأكثر. كل ضغطة على الزر لها شكل.	Fireworks, shooting stars, rainbows, snow, hearts and more. Every key press gets a look.
+جرّب التأثيرات	Try the effects
+٢٧ صوت للأزرار	27 key sounds
+ماريمبا، عود، مطر، آلة كاتبة، سنث ويف... اختر صوتك وتحكم بمستواه.	Marimba, oud, rain, typewriter, synthwave... pick your sound and set its volume.
+اسمع الأصوات	Hear the sounds
+خلفيات وسمات متحركة	Animated backgrounds & themes
+٣٠ خلفية متحركة و٣٠ سمة حيّة: مجرة، شفق، مطر رقمي، شهب وغيرها.	30 animated backgrounds and 30 live themes: galaxy, aurora, digital rain, meteors and more.
+شوف الخلفيات	See backgrounds
+حافظتك صارت مكتبة	Your clipboard is now a library
+تبويبات وبحث، تثبيت وتصنيفات وقوالب، ومحرر عائم مع تراجع. اضغط ⋮ على أي نص.	Tabs, search, pins, categories, templates and a floating editor with undo. Tap ⋮ on any clip.
+إعدادات الحافظة	Clipboard settings
+نقل	Transfer
+صدّر واستورد حافظتك	Export & import your clipboard
+احفظ نسخة بصيغة JSON أو CSV أو نص، وارجعها لأي جوال بدون تكرار.	Save a copy as JSON, CSV or text and restore it on any phone without duplicates.
+تصدير الآن	Export now
+رموز وزخرفة	Symbols & decor
++٨٠٠ رمز و١٥٠ إطار	800+ symbols, 150 frames
+رموز إسلامية ونجوم وأسهم، ٤١ نمط زخرفة، وإطارات تلف نصك كامل. وتقدر تبحث عنها.	Islamic symbols, stars and arrows, 41 decor styles, and frames around your whole text. All searchable.
+سرعة	Speed
+ترجمة، حاسبة، تاريخ هجري، زخرفة، مايك، بحث إيموجي، ويد واحدة.	Translate, calculator, Hijri date, decor, mic, emoji search and one-hand mode.
++٦٠ سمة + سمتك الخاصة	60+ themes + your own
+صمّم سمتك من الصفر، أو حط صورتك خلفية، وغيّر شكل الأزرار والخط.	Design a theme from scratch or use your photo, and change key shapes and font.
+اختر سمة	Pick a theme
+بدون إعلانات ولا حسابات. كلماتك تُحفظ محلياً، ووضع التخفي يوقف الحفظ تماماً.	No ads, no accounts. Your words stay on the phone, and incognito stops saving entirely.
+١ فعّل نيو كيبورد  ٢ اختره كيبورد أساسي  ٣ اسمح بالمايك. يشتغل من أندرويد ٥.	1 Enable NeoKey  2 Set it as default  3 Allow the mic. Works from Android 5.
+اليوم	today
+حسناً	OK
+سليم	OK
+توقيع غير رسمي	Unofficial signature
+بناء تطوير	Dev build
+لم يُفحص	Not checked
+حالة الدرع	Shield status
+عمر آخر عطل	Last crash age
+تقرير الأعطال المجهول	Anonymous crash report
+خط الأساس المرجعي (P50/P95)	Perf baseline (P50/P95)
+تصفير عداد الأعطال	Reset crash counter
+تقرير الاستقرار المجهول	Anonymous stability report
+خط الأساس المرجعي	Perf baseline
+تصفير عدد الانهيارات وآخر عطل؟	Reset the crash counter and last crash?
+سيُصفَّر العدّاد فقط؛ تاريخ الإصدارات على Play لا يتأثر.	Only the local counter resets; the Play history is untouched.
+تقرير الأعطال أرقام فقط ويبقى على جهازك حتى تشاركه أنت.	The crash report is numbers-only and stays on your device until you share it.
+نسخ بريد الدعم وفتح الرسالة	Copy the support email and open the message
+نسخ التقرير المجهول جاهز الإرسال	Copy the anonymous report, ready to send
+كيف تنضم لمختبر البيتا؟	How to join the beta program?
+تواصل ومختبر بيتا	Contact & beta program
+إرسال	Send
+تعديل	Edit
+ماذا كتبت فعلاً مقابل ما سيُرسل؟	What you typed vs what will be sent?
+كتبت فعلاً	You typed
+سيُرسل	will be sent
+تصحيحات أخرى:	Other corrections:
+تراجع عن أي تصحيح بالمسافة للخلف قبل الإرسال.	Any correction can be undone with backspace before sending.
+الفاصلة المنقوطة والأرقام العربية تلقائياً	Arabic semicolon & numerals automatically
+كلمات لا تُصحح	Words never corrected
+اضغط على كلمة لإزالتها من الاستثناءات؛ تُعاد للتصحيح التلقائي.	Tap a word to remove it from the exceptions; it gets corrected again.
+أُزيلت من الاستثناءات	Removed from the exceptions
+القائمة فاضية — تراجع عن أي تصحيح بزر الحذف وتُضاف هنا	The list is empty — undo any correction with backspace and it lands here.

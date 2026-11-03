@@ -1,0 +1,216 @@
+package com.hark.neokey;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * كشف اللهجة من الكتابة — المرحلة 1، البند C1 (الأسبوع 5). نقي JVM: صفر android.*
+ *
+ * الخارطة: «كشف تلقائي للهجة المستخدم من كتابته … كشف لهجة بدقة 85%+».
+ * المخرجات: أربع فئات — hijazi (حجازي) / najdi (نجدي) / gulf (خليجي عام:
+ * الكويت، الإمارات، قطر، البحرين، عمان) / msa (فصحى أو لا دليل).
+ *
+ * الطريقة: جدول علامات موزون (dictsrc/dialect_markers.tsv هو مصدر الحقيقة،
+ * والجدول هنا مرآة تتحقق منها البوابة حرفياً — أي انحراف = بناء أحمر):
+ *   • علامة مميزة (وزن 3 أو 2 ولها صفر في العمودين الآخرين) تدفع لهجتها وحدها.
+ *   • كلمة ميل (وزنان غير صفرين) تدفع لهجتها الأقوى وتلمّح للجار.
+ *   • كلمة عائلة (1,1,1) تدفع للعائلة الخليجية بلا تخصيص.
+ * القرار (حتمي بالكامل، نفس المدخل = نفس النتيجة على أي جهاز):
+ *   1. لا دليل خليجي إطلاقاً  → msa.
+ *   2. هامش الأعلى على الثاني ≥ 2 → اللهجة الأعلى.
+ *   3. دليل خليجي والهامش أقل → gulf («خليجي عام» — إجابة العائلة الصادقة:
+ *      الكتابة خليجية لكن لا يكفي لإسنادها لهجة بعينها).
+ * الثقة = الأعلى ÷ مجموع الدليل (0..1)، وللفصحى 1.0 عند صفر دليل.
+ *
+ * المطابقة على الكلمة الكاملة بعد normAr فقط — بلا stemming؛ الفجوة (الصيغ
+ * المرفومة غير الموجودة في الجدول) موثقة في تقرير الأسبوع لضبط الأسبوع 6.
+ */
+public final class Dialect {
+
+    public static final String HIJAZI = "hijazi";
+    public static final String NAJDI = "najdi";
+    public static final String GULF = "gulf";
+    public static final String MSA = "msa";
+
+    /** نتيجة الكشف: اللهجة، الثقة 0..1، عدد الكلمات الدالة. */
+    public static final class Result {
+        public final String dialect;
+        public final double confidence;
+        public final int hits;
+
+        Result(String dialect, double confidence, int hits) {
+            this.dialect = dialect;
+            this.confidence = confidence;
+            this.hits = hits;
+        }
+
+        @Override public boolean equals(Object o) {
+            if (!(o instanceof Result)) return false;
+            Result r = (Result) o;
+            return dialect.equals(r.dialect)
+                    && Double.doubleToLongBits(confidence) == Double.doubleToLongBits(r.confidence)
+                    && hits == r.hits;
+        }
+
+        @Override public int hashCode() {
+            return dialect.hashCode() * 31 + (int) (confidence * 1000) * 7 + hits;
+        }
+
+        @Override public String toString() {
+            return dialect + String.format("(%.2f,h%d)", confidence, hits);
+        }
+    }
+
+    /** نوافذ الفحص: آخر كلمات الجلسة — الكشف يعتمد الحديث، لا كامل الرسالة. */
+    private static final int WINDOW = 12;
+    /** هامش الحسم: أقل من هذا = إجابة العائلة gulf. */
+    private static final int DECIDE_MARGIN = 2;
+
+    // ---- جدول العلامات: normAr(كلمة) → {hijazi, najdi, gulf} --------------------
+    // مرآة حرفية لـ dictsrc/dialect_markers.tsv — ci/dialect_gate.sh يفحص التطابق خلية-خلية.
+    private static final String[] M_W = {
+            // مميزة حجازي
+            "دحين", "دحينه", "يبه", "يمه", "ايش", "ايشو", "ايشك",
+            "مليح", "مليحه", "هين", "هينه", "منوره", "مين",
+            // مميزة خليجي عام
+            "وايد", "خوش", "شخبارك", "شخبارج", "شخباركم",
+            "حيل", "شنو", "منو", "بعدني", "عيل", "تدرين", "تدريين",
+            // مميزة نجدي
+            "ذلحين",
+            // ميل نجدي
+            "كذا", "كذي", "تري", "تراه", "ترانا", "تراني", "مب",
+            "وش", "وشو", "زين", "زينه", "علومك", "وشلون", "طاري", "عقب", "اللحين",
+            // عائلة خليجية
+            "الحين", "وين", "وينك", "وينكم", "شلون", "شلونك", "شلونكم",
+            "ابغي", "ابغاك", "ابي", "ابيك", "تبغي", "تبي", "يبي", "يبغي", "نبي",
+            "عيال", "عيالي", "لين", "عشان", "علشان", "شوي", "مو",
+            "ادري", "مدري", "ماادري", "دريت", "ديره", "الديره",
+            "سالفه", "السالفه", "فديتك", "خوي", "اخوي", "تكفي",
+            "هلا", "ياهلا", "كفو", "معليش",
+    };
+    private static final int[][] M_V = {
+            //        h  n  g
+            new int[]{3, 0, 0}, new int[]{3, 0, 0}, new int[]{3, 0, 0}, new int[]{3, 0, 0},
+            new int[]{3, 0, 0}, new int[]{3, 0, 0}, new int[]{3, 0, 0},
+            new int[]{2, 0, 0}, new int[]{2, 0, 0}, new int[]{2, 0, 0}, new int[]{2, 0, 0},
+            new int[]{2, 0, 0}, new int[]{2, 0, 0},
+            new int[]{0, 0, 3}, new int[]{0, 0, 3}, new int[]{0, 0, 3}, new int[]{0, 0, 3},
+            new int[]{0, 0, 3},
+            new int[]{0, 0, 2}, new int[]{0, 0, 2}, new int[]{0, 0, 2}, new int[]{0, 0, 2},
+            new int[]{0, 0, 2}, new int[]{0, 0, 2}, new int[]{0, 0, 2},
+            new int[]{0, 3, 0},
+            new int[]{0, 3, 1}, new int[]{0, 3, 1}, new int[]{0, 3, 1}, new int[]{0, 3, 1},
+            new int[]{0, 3, 1}, new int[]{0, 3, 1}, new int[]{0, 3, 1},
+            new int[]{0, 3, 2}, new int[]{0, 2, 2}, new int[]{0, 2, 2}, new int[]{0, 2, 2},
+            new int[]{0, 2, 1}, new int[]{0, 2, 1}, new int[]{0, 2, 1}, new int[]{0, 2, 1},
+            new int[]{0, 2, 1},
+            new int[]{1, 2, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+            new int[]{1, 1, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+            new int[]{1, 1, 1}, new int[]{1, 1, 1}, new int[]{1, 1, 1},
+    };
+    // فهرس المفاتيح المبنى مرة واحدة (ثابت، بلا تخصيص وقت كشف)
+    private static final Map<String, int[]> MARKERS = new HashMap<>();
+    /** ترتيب الفئات الثابت — كسر التعادل حتمي: الأسبق في هذا الترتيب يفوز. */
+    private static final String[] ORDER = {HIJAZI, NAJDI, GULF};
+
+    static {
+        if (M_W.length != M_V.length) throw new IllegalStateException("marker table mismatch");
+        for (int i = 0; i < M_W.length; i++) MARKERS.put(normAr(M_W[i]), M_V[i]);
+    }
+
+    /** مرآة غير قابلة للتعديل — للبوابة والاختبارات. */
+    public static Map<String, int[]> markers() {
+        return Collections.unmodifiableMap(MARKERS);
+    }
+
+    private Dialect() { }
+
+    /**
+     * التطبيع العربي الموحد للمفاتيح: بلا تشكيل/تطويل، أإآ→ا، ة→ه، ى→ي، ؤ→و، ئ→ي.
+     * أقسو من norm الفصحى عمداً: كتابة اللهجات تهمل الهمزات والتاء المربوطة.
+     */
+    public static String normAr(String w) {
+        if (w == null) return "";
+        StringBuilder b = new StringBuilder(w.length());
+        for (int i = 0; i < w.length(); i++) {
+            char c = w.charAt(i);
+            if ((c >= 0x064B && c <= 0x0652) || c == 0x0640) continue; // تشكيل + تطويل
+            switch (c) {
+                case 'أ': case 'إ': case 'آ': case 'ٱ': c = 'ا'; break;
+                case 'ة': c = 'ه'; break;
+                case 'ى': c = 'ي'; break;
+                case 'ؤ': c = 'و'; break;
+                case 'ئ': c = 'ي'; break;
+                default: break;
+            }
+            b.append(c);
+        }
+        return b.toString();
+    }
+
+    /** تقطيع نص حر: كلمات عربية متتالية (الترقيم/اللاتيني/الأرقام فواصل). */
+    public static List<String> tokenize(String text) {
+        List<String> out = new ArrayList<>();
+        if (text == null || text.isEmpty()) return out;
+        StringBuilder cur = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            boolean arabic = (c >= 0x0621 && c <= 0x063A) || (c >= 0x0641 && c <= 0x064A)
+                    || (c >= 0x064B && c <= 0x0652) || c == 0x0640 || c == 0x0671;
+            if (arabic) {
+                cur.append(c);
+            } else if (cur.length() > 0) {
+                out.add(cur.toString());
+                cur.setLength(0);
+            }
+        }
+        if (cur.length() > 0) out.add(cur.toString());
+        return out;
+    }
+
+    /** الكشف من نص حر (آخر WINDOW كلمة فقط). */
+    public static Result detect(String text) {
+        List<String> w = tokenize(text);
+        int from = Math.max(0, w.size() - WINDOW);
+        return detectWords(w.subList(from, w.size()));
+    }
+
+    /** الكشف من كلمات مكتوبة (مسار الخدمة مستقبلاً — الأسبوع 6). */
+    public static Result detectWords(List<String> words) {
+        int h = 0, n = 0, g = 0, hits = 0;
+        if (words != null) {
+            int from = Math.max(0, words.size() - WINDOW);
+            for (int i = from; i < words.size(); i++) {
+                int[] v = MARKERS.get(normAr(words.get(i)));
+                if (v == null) continue;
+                h += v[0]; n += v[1]; g += v[2];
+                hits++;
+            }
+        }
+        int total = h + n + g;
+        if (total == 0) return new Result(MSA, 1.0, 0);
+        int[] sc = {h, n, g};
+        int top = 0;
+        for (int i = 1; i < 3; i++) if (sc[i] > sc[top]) top = i;   // حتمي: التعادل يبقى بالأسبق
+        int second = -1;
+        for (int i = 0; i < 3; i++) if (i != top && (second < 0 || sc[i] > sc[second])) second = i;
+        if (sc[top] - sc[second] < DECIDE_MARGIN) {
+            // دليل خليجي بلا حسم — «خليجي عام» هي الإجابة الصادقة للعائلة
+            return new Result(GULF, (double) sc[top] / total, hits);
+        }
+        String d = ORDER[top];
+        return new Result(d, (double) sc[top] / total, hits);
+    }
+}

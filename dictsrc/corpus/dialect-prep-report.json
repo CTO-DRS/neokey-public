@@ -1,0 +1,32 @@
+{
+ "tool": "dictsrc/build_dialect.py",
+ "core_source": "dictsrc/gulf.txt",
+ "markers_source": "dictsrc/dialect_markers.tsv",
+ "markers_total": 81,
+ "core_raw_tokens": 396,
+ "core_unique": 360,
+ "core_dups_removed": 36,
+ "dialects": {
+  "hijazi": {
+   "asset": "assets/ar_hijazi.txt",
+   "distinctive_words": 13,
+   "core_words_added": 357,
+   "total_words": 370,
+   "markers_covered": 52
+  },
+  "najdi": {
+   "asset": "assets/ar_najdi.txt",
+   "distinctive_words": 1,
+   "core_words_added": 360,
+   "total_words": 361,
+   "markers_covered": 56
+  },
+  "gulf": {
+   "asset": "assets/ar_gulf.txt",
+   "distinctive_words": 12,
+   "core_words_added": 359,
+   "total_words": 371,
+   "markers_covered": 67
+  }
+ }
+}
