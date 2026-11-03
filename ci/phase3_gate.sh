@@ -12,7 +12,7 @@
 #        negatives, checks, entropy — only p50 latencies get an upper bound).
 #     2. fresh verdict lines == pipeline-log verdict lines == gates.env values.
 #     3. Whole-pipeline state: every previous gate key still OK, tests >=
-#        shipped total with 0 failures, R8 dex under the 520,000B ceiling with
+#        shipped total with 0 failures, R8 dex under the 512,000B ceiling (lowered by the W22 real trim) with
 #        all manifest components kept, versionCode bumped.
 #
 #   Verdict: PHASE3_OK … (exit 0, keys appended to gates.env for the release
@@ -21,7 +21,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-DEX_CEILING=520000   # R8 budget — must NOT be raised by the closing week
+DEX_CEILING=512000   # R8 budget — LOWERED by the week-22 real trim (was 520,000); overflow means trim, never raise
 VC_MIN=62            # closing week must bump the manifest (61 was week 20)
 TESTS_MIN=1251       # shipped test total at phase-3 close
 STATE=build/release/gates.env

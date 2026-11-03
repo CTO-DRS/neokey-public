@@ -42,7 +42,7 @@ public class WriterActivity extends Screen {
         tone = p.getInt("w_tone", 1);
         lang = p.getInt("w_lang", 0);
         fromKeyboard = getIntent() != null && getIntent().getBooleanExtra(EXTRA_FROM_KB, false);
-        header("مساعد المراسلات", "اكتب رسالتك المهنية، راجعها وعدّلها ثم أدرجها", "edit_note");
+        header("مساعد المراسلات", getString(R.string.nk_writeractivity_oncreate_1), "edit_note");
         body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
         root.addView(body);
@@ -110,7 +110,7 @@ public class WriterActivity extends Screen {
             body.addView(row, top(12));
         }
 
-        sectionIn("المسودة — راجعها وعدّل عليها قبل الإدراج");
+        sectionIn(getString(R.string.nk_writeractivity_detach_1));
         detach(result);
         body.addView(result, new LinearLayout.LayoutParams(-1, -2));
         detach(count);
@@ -129,12 +129,12 @@ public class WriterActivity extends Screen {
         acts.addView(button("مشاركة", "share", false, v -> share()), new LinearLayout.LayoutParams(0, -2, 1f));
         body.addView(acts, top(12));
 
-        sectionIn("تحسين بالذكاء الاصطناعي (اختياري)");
+        sectionIn(getString(R.string.nk_writeractivity_detach_2));
         LinearLayout ai = card();
         boolean hasKey = !Theme.prefs(this).getString("ai_key", "").isEmpty();
         TextView note = text(hasKey
-                ? "يرسل المسودة الحالية فقط لمزود الذكاء الاصطناعي عند ضغطك الزر، ويرجع لك نسخة محسّنة تراجعها قبل الإدراج."
-                : "المساعد يشتغل بدون إنترنت بالقوالب. لو تبي صياغة أذكى، أضف مفتاح OpenRouter الخاص فيك (يُحفظ على جهازك فقط).",
+                ? getString(R.string.nk_writeractivity_sectionin_1)
+                : getString(R.string.nk_writeractivity_sectionin_2),
                 13, Typeface.NORMAL, 0xFFB9BECA);
         ai.addView(note);
         if (hasKey) {
@@ -154,7 +154,7 @@ public class WriterActivity extends Screen {
         ai.addView(netRow("إذن تحسين الصياغة سحابياً", NetGate.capPref(NetGate.CAP_WRITER_AI),
                 new String[]{"off", "ask", "on"}, new String[]{"مغلق", "اسأل قبل كل إرسال", "مفتوح"}, "off"));
         ai.addView(divider());
-        TextView audit = text("كل إرسال يُسجل في سجل تدقيق محلي (القدرة والقرار والزمن — بلا أي نص) وأول ما يُطابَق نطاق openrouter فقط", 12, Typeface.NORMAL, 0xFF8A8FA3);
+        TextView audit = text(getString(R.string.nk_writeractivity_sectionin_3), 12, Typeface.NORMAL, 0xFF8A8FA3);
         audit.setPadding(0, (int) (6 * dp), 0, 0);
         ai.addView(audit);
         body.addView(ai);
@@ -169,8 +169,8 @@ public class WriterActivity extends Screen {
         row1.addView(button("أبسط", "edit_note", false, v -> localRephrase(Assistant.SIMPLE)), b1);
         row1.addView(button("أرقى", "edit_note", false, v -> localRephrase(Assistant.RESPECTFUL)), new LinearLayout.LayoutParams(0, -2, 1f));
         local.addView(row1, top(8));
-        local.addView(button("صيغ رداً بثلاث نبرات (رسمي، ودّي، قصير)", "refresh", false, v -> localTones()), top(10));
-        TextView ln = text("تلخيص استخلاصي وإعادة صياغة بقواعد جاهزة وصياغة رد بثلاث نبرات — كلها على جهازك، حتمية وبلا إرسال أي شيء", 12, Typeface.NORMAL, 0xFF8A8FA3);
+        local.addView(button(getString(R.string.nk_writeractivity_sectionin_4), "refresh", false, v -> localTones()), top(10));
+        TextView ln = text(getString(R.string.nk_writeractivity_sectionin_5), 12, Typeface.NORMAL, 0xFF8A8FA3);
         ln.setPadding(0, (int) (6 * dp), 0, 0);
         local.addView(ln);
         body.addView(local);
@@ -211,21 +211,21 @@ public class WriterActivity extends Screen {
     private void localSummarize() {
         String src = result.getText().toString().trim();
         if (src.isEmpty()) src = clipText();
-        if (src.trim().isEmpty()) { Toast.makeText(this, L.t("لا يوجد نص — اكتب مسودة أو انسخ نصاً أولاً"), Toast.LENGTH_SHORT).show(); return; }
+        if (src.trim().isEmpty()) { Toast.makeText(this, L.t(getString(R.string.nk_writeractivity_localsummarize_1)), Toast.LENGTH_SHORT).show(); return; }
         String out = Assistant.summarize(src, 3);
         if (out.trim().isEmpty()) { Toast.makeText(this, L.t("ما قدرت ألخص هذا النص"), Toast.LENGTH_SHORT).show(); return; }
         result.setText(out);
         result.setTextDirection(View.TEXT_DIRECTION_RTL);
-        Toast.makeText(this, L.t("ملخص محلي — قارنه بالنص الأصلي قبل الإرسال"), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, L.t(getString(R.string.nk_writeractivity_localsummarize_2)), Toast.LENGTH_SHORT).show();
     }
 
     private void localRephrase(String mode) {
         String src = result.getText().toString().trim();
         if (src.isEmpty()) src = clipText();
-        if (src.trim().isEmpty()) { Toast.makeText(this, L.t("لا يوجد نص — اكتب مسودة أو انسخ نصاً أولاً"), Toast.LENGTH_SHORT).show(); return; }
+        if (src.trim().isEmpty()) { Toast.makeText(this, L.t(getString(R.string.nk_writeractivity_localrephrase_1)), Toast.LENGTH_SHORT).show(); return; }
         result.setText(Assistant.rephrase(src, mode));
         result.setTextDirection(View.TEXT_DIRECTION_RTL);
-        Toast.makeText(this, L.t("إعادة صياغة محلية بقواعد جاهزة — راجعها قبل الإرسال"), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, L.t(getString(R.string.nk_writeractivity_localrephrase_2)), Toast.LENGTH_SHORT).show();
     }
 
     private void localTones() {
@@ -349,7 +349,7 @@ public class WriterActivity extends Screen {
         if (gd.ask) {
             new android.app.AlertDialog.Builder(this)
                     .setTitle(L.t("إذن اتصال خارجي"))
-                    .setMessage(L.t("يرسل المسودة الحالية فقط إلى openrouter.ai بمفتاحك الخاص، ولا يُخزن أي شيء عندنا. تسمح بهذا الإرسال؟"))
+                    .setMessage(L.t(getString(R.string.nk_writeractivity_audit_1)))
                     .setPositiveButton(L.t("أسمح بهذا الإرسال"), (d, w) -> {
                         audit(NetGate.ALLOW_ASK);
                         doImprove();
@@ -359,7 +359,7 @@ public class WriterActivity extends Screen {
             return;
         }
         if (!gd.allowed) {
-            Toast.makeText(this, L.t("الاتصال الخارجي مغلق — فعّله من إعدادات المساعد أدناه. المساعد يشتغل محلياً بلا إنترنت"), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, L.t(getString(R.string.nk_writeractivity_doimprove_1)), Toast.LENGTH_LONG).show();
             return;
         }
         doImprove();

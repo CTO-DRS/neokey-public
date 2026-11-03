@@ -106,6 +106,7 @@ stage_entitlement() { ci/entitlement_gate.sh; }
 
 # ---- 3q: phase-3 CLOSING gate (roadmap phase 3, week 4) -----------------------
 stage_phase3() { ci/phase3_gate.sh; }
+stage_trim() { ci/trim_gate.sh; }   # phase 4 W1: the real dex trim, enforced (after r8)
 
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
@@ -267,6 +268,14 @@ collect_gates() {
   echo "ENTGATE_P50_APPLY_US=$(echo "$EN_LINE" | sed -E 's/.*p50_apply_us=([0-9]+).*/\1/')" >> "$GATES"
   echo "ENTGATE_ENTROPY=$(echo "$EN_LINE" | sed -E 's/.*entropy_x100=([0-9]+).*/\1/')" >> "$GATES"
   echo "ENTGATE_CHECKS=$(echo "$EN_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  # real-dex-trim gate numbers (phase 4, week 22)
+  echo "TRIM_GATE=$(grep -q '^TRIM_GATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  TR_LINE=$(grep '^TRIM_GATE_OK' "$LOG" | tail -1)
+  echo "TRIM_ENTRIES=$(echo "$TR_LINE" | sed -E 's/.*entries=([0-9]+).*/\1/')" >> "$GATES"
+  echo "TRIM_SAVED=$(echo "$TR_LINE" | sed -E 's/.*saved=([0-9]+).*/\1/')" >> "$GATES"
+  echo "TRIM_DEX_BYTES=$(echo "$TR_LINE" | sed -E 's/.*dex=([0-9]+)\/[0-9]+.*/\1/')" >> "$GATES"
+  echo "TRIM_CEILING=$(echo "$TR_LINE" | sed -E 's/.*dex=[0-9]+\/([0-9]+).*/\1/')" >> "$GATES"
+  echo "TRIM_UI_EN_COUPLED=$(echo "$TR_LINE" | sed -E 's/.*ui_en_coupled=([0-9]+).*/\1/')" >> "$GATES"
 }
 
 # ---- run the line -------------------------------------------------------------
@@ -301,6 +310,11 @@ if [ -f tools/r8.jar ] && [ -f tools/android.jar ]; then
   run_stage "r8" stage_r8
 else
   skip_stage "r8" "tools/r8.jar or tools/android.jar missing (see docs/R8.md) — shrink proof runs where they exist"
+fi
+if [ -f tools/r8.jar ] && [ -f tools/android.jar ]; then
+  run_stage "trim" stage_trim   # phase 4 W1 (week 22): rides r8's dex artifact
+else
+  skip_stage "trim" "no r8 tools — the trim gate measures the r8 dex artifact"
 fi
 collect_gates   # BEFORE the release stage — the manifest must carry the real gate numbers
 run_stage "phase3"   stage_phase3   # closing gate reads THIS run's gates.env

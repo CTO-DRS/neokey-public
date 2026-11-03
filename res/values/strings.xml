@@ -1,5 +1,247 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- week 22 (phase 4 W1): the real dex trim — static Arabic UI copy
+     relocated byte-identically out of the dex. Each entry keeps its
+     origin (file:line at move time) in the comment above it. -->
 <resources>
-    <string name="app_name">نيو كيبورد</string>
-    <string name="ime_name">NeoKey 2036</string>
+    <!-- origin: SetupActivity.java:212 -->
+    <string name="nk_setupactivity_buildheader_1">جرّب NeoKey — كيبورد عربي بتصميم حديث</string>
+    <!-- origin: SetupActivity.java:387 -->
+    <string name="nk_setupactivity_bngo_1">كيبوردك العربي، أناقة تبدأ من هنا</string>
+    <!-- origin: SetupActivity.java:414 -->
+    <string name="nk_setupactivity_addslide_1">ألعاب نارية، شهاب، قوس قزح، ثلج، قلوب وأكثر. كل ضغطة على الزر لها شكل.</string>
+    <!-- origin: SetupActivity.java:417 -->
+    <string name="nk_setupactivity_addslide_2">ماريمبا، عود، مطر، آلة كاتبة، سنث ويف... اختر صوتك وتحكم بمستواه.</string>
+    <!-- origin: SetupActivity.java:421 -->
+    <string name="nk_setupactivity_addslide_3">٣٠ خلفية متحركة و٣٠ سمة حيّة: مجرة، شفق، مطر رقمي، شهب وغيرها.</string>
+    <!-- origin: SetupActivity.java:424 -->
+    <string name="nk_setupactivity_addslide_4">تبويبات وبحث، تثبيت وتصنيفات وقوالب، ومحرر عائم مع تراجع. اضغط ⋮ على أي نص.</string>
+    <!-- origin: SetupActivity.java:427 -->
+    <string name="nk_setupactivity_addslide_5">احفظ نسخة بصيغة JSON أو CSV أو نص، وارجعها لأي جوال بدون تكرار.</string>
+    <!-- origin: SetupActivity.java:430 -->
+    <string name="nk_setupactivity_addslide_6">رموز إسلامية ونجوم وأسهم، ٤١ نمط زخرفة، وإطارات تلف نصك كامل. وتقدر تبحث عنها.</string>
+    <!-- origin: SetupActivity.java:432 -->
+    <string name="nk_setupactivity_addslide_7">مرّر إصبعك على الحروف بدون ما ترفعه، والكلمة تطلع كاملة. وزر الحذف بالسحب يمسح كلمات.</string>
+    <!-- origin: SetupActivity.java:434 -->
+    <string name="nk_setupactivity_addslide_8">اقتراحات وتصحيح تلقائي، ويتوقع كلمتك الجاية، ويتعلّم أسلوبك مع الوقت.</string>
+    <!-- origin: SetupActivity.java:436 -->
+    <string name="nk_setupactivity_addslide_9">ترجمة، حاسبة، تاريخ هجري، زخرفة، مايك، بحث إيموجي، ويد واحدة.</string>
+    <!-- origin: SetupActivity.java:438 -->
+    <string name="nk_setupactivity_addslide_10">صمّم سمتك من الصفر، أو حط صورتك خلفية، وغيّر شكل الأزرار والخط.</string>
+    <!-- origin: SetupActivity.java:440 -->
+    <string name="nk_setupactivity_addslide_11">بدون إعلانات ولا حسابات. كلماتك تُحفظ محلياً، ووضع التخفي يوقف الحفظ تماماً.</string>
+    <!-- origin: SetupActivity.java:442 -->
+    <string name="nk_setupactivity_addslide_12">١ فعّل نيو كيبورد  ٢ اختره كيبورد أساسي  ٣ اسمح بالمايك. يشتغل من أندرويد ٥.</string>
+    <!-- origin: SetupActivity.java:608 -->
+    <string name="nk_setupactivity_devslide_1">مطوّر نيو كيبورد. تابعني واطلب استشارتك التقنية.</string>
+    <!-- origin: SetupActivity.java:762 -->
+    <string name="nk_setupactivity_buildactivation_1">صار خطأ أثناء عرض هذا القسم، والتطبيق ما توقف. انسخ التفاصيل وأرسلها للمطوّر:</string>
+    <!-- origin: SetupActivity.java:814 -->
+    <string name="nk_setupactivity_showlastcrash_1">توقف التطبيق في المرة السابقة. انسخ التفاصيل وأرسلها للمطوّر عشان نصلحه:</string>
+    <!-- origin: SetupActivity.java:873 -->
+    <string name="nk_setupactivity_buildthemes_1">التبديل التلقائي نهاري/ليلي شغّال — السمة المعروضة على الكيبورد تتبع الوقت. غيّره من الإعدادات.</string>
+    <!-- origin: SetupActivity.java:904 -->
+    <string name="nk_setupactivity_themegrid_1">اضغط مطولاً على أي سمة لتعديلها أو تصديرها أو حذفها.</string>
+    <!-- origin: SetupActivity.java:915 -->
+    <string name="nk_setupactivity_themegrid_2">» أو «سمة جديدة» لفتح المحرر وتصميم سمتك من الصفر.</string>
+    <!-- origin: SetupActivity.java:1085 -->
+    <string name="nk_setupactivity_section_1">اضغط على أي صوت تسمعه ويتطبّق على الأزرار مباشرة.</string>
+    <!-- origin: SetupActivity.java:1132 -->
+    <string name="nk_setupactivity_buildpressfx_1">حركة تطلع مكان إصبعك كل ما تضغط زر. اختر واحدة وجرّبها من زر «جرّب».</string>
+    <!-- origin: SetupActivity.java:1136 -->
+    <string name="nk_setupactivity_buildpressfx_2">«تقليل الحركة» مفعّل، فالتأثيرات ما تظهر على الكيبورد.</string>
+    <!-- origin: SetupActivity.java:1225 -->
+    <string name="nk_setupactivity_section_2">اضغط على أي خلفية وتتطبّق على الكيبورد مباشرة.</string>
+    <!-- origin: SetupActivity.java:1637 -->
+    <string name="nk_setupactivity_selecttheme_1">انحفظت في مكتبتك وصارت السمة الحالية</string>
+    <!-- origin: SetupActivity.java:2058 -->
+    <string name="nk_setupactivity_section_3">تظهر بإطار دائري في بداية شريط الكيبورد كعلامة تميّزك. الضغط عليها يفتح الإعدادات.</string>
+    <!-- origin: SetupActivity.java:2118 -->
+    <string name="nk_setupactivity_buildclipcard_1">المثبّتة والمفضلة والمؤرشفة ما ينطبق عليها الحذف التلقائي. يحفظ الكيبورد النسخ وقت ما يكون هو الكيبورد الافتراضي فقط، هذا من قيود أندرويد.</string>
+    <!-- origin: SetupActivity.java:2122 -->
+    <string name="nk_setupactivity_buildclipcard_2">حفظ النصوص الحساسة (كلمات المرور ورموز التحقق)</string>
+    <!-- origin: SetupActivity.java:2141 -->
+    <string name="nk_setupactivity_buildclipcard_3">JSON نسخة كاملة تقدر تسترجعها، وTXT وCSV للنص والخصائص الأساسية.</string>
+    <!-- origin: SetupActivity.java:2149 -->
+    <string name="nk_setupactivity_buildclipcard_4">انمسح السجل، والمثبّتة والمحفوظة باقية</string>
+    <!-- origin: SetupActivity.java:2158 -->
+    <string name="nk_setupactivity_refresh_1">بينحذف كل نص محفوظ، ومعه المثبّتة والمفضلة والمؤرشفة. ما تقدر تتراجع عن هذا.</string>
+    <!-- origin: SetupActivity.java:2176 -->
+    <string name="nk_setupactivity_buildarrowscard_1">السهمان ثابتان على طرفي الشريط حتى وقت الكتابة. اضغط سهماً تطلع مميزاته الخمس مكان الاقتراحات، واضغطه مرة ثانية يرجع كل شي مكانه. اضغط أي خانة تحت لتغيير الميزة.</string>
+    <!-- origin: SetupActivity.java:2325 -->
+    <string name="nk_setupactivity_section_4">التصحيح التلقائي (زر الحذف يتراجع عنه ولا يصحح الكلمة مرة ثانية)</string>
+    <!-- origin: SetupActivity.java:2329 -->
+    <string name="nk_setupactivity_section_5">الفاصلة المنقوطة والأرقام العربية تلقائياً</string>
+    <!-- origin: SetupActivity.java:2336 -->
+    <string name="nk_setupactivity_section_6">كل الذكاء يعمل على جهازك — لا يُدخل نصك في أي نموذج بلا موافقة صريحة تظهر عند أول اتصال خارجي</string>
+    <!-- origin: SetupActivity.java:2351 -->
+    <string name="nk_setupactivity_section_7">لوحة أرقام كبيرة لخانات الأرقام والجوال</string>
+    <!-- origin: SetupActivity.java:2363 -->
+    <string name="nk_setupactivity_section_8">صف رموز للأكواد: Tab { } [ ] ( ) ; = &lt; &gt; / مع بدائل بالضغط المطوّل.</string>
+    <!-- origin: SetupActivity.java:2364 -->
+    <string name="nk_setupactivity_section_9">صف اختصارات للعب (gg, wp, brb…) والتصحيح التلقائي والسحب مقفلة لسرعة أعلى.</string>
+    <!-- origin: SetupActivity.java:2365 -->
+    <string name="nk_setupactivity_section_10">صف إيموجي سريع فوق الحروف للمحادثات.</string>
+    <!-- origin: SetupActivity.java:2428 -->
+    <string name="nk_setupactivity_section_11">تباين عالٍ (يتجاوز السمة الحالية)</string>
+    <!-- origin: SetupActivity.java:2436 -->
+    <string name="nk_setupactivity_section_12">علامات للحالة لا تعتمد على اللون وحده</string>
+    <!-- origin: SetupActivity.java:2441 -->
+    <string name="nk_setupactivity_section_13">قارئ الشاشة (TalkBack): المس واسحب إصبعك لسماع اسم كل زر، وارفع إصبعك للكتابة، أو اضغط مرتين على الزر المحدد. كل الأزرار الخاصة لها أسماء مسموعة.</string>
+    <!-- origin: SetupActivity.java:2463 -->
+    <string name="nk_setupactivity_showtab_1">نصائح: اضغط مطولاً على أي حرف لبدائله، ومطولاً على المسافة لتبديل الكيبورد. اسحب إصبعك على الحروف لكتابة الكلمة كاملة، واسحب على زر الحذف لمسح كلمات. زر «تصحيح اللغة» في ••• يصحح النص المكتوب بلغة غلط. زر ••• فيه تحرير النص والعبارات والزخرفة واليد الواحدة، واضغط مطولاً على أي نص في الحافظة لتثبيته. لما تنسخ نص يطلع لك فوق الكيبورد للصق بضغطة، ووضع التخفي يوقف حفظ كلماتك.</string>
+    <!-- origin: SetupActivity.java:2472 -->
+    <string name="nk_setupactivity_section_14">حسابي المشفر والمزامنة بين الأجهزة</string>
+    <!-- origin: SetupActivity.java:2478 -->
+    <string name="nk_setupactivity_section_15">تُشفَّر حالتك على جوالك قبل مغادرتها — مغلقة افتراضياً وتُفعّل بإذن صريح.</string>
+    <!-- origin: SetupActivity.java:2487 -->
+    <string name="nk_setupactivity_section_16">"كل شي يبقى على جوالك: الإعدادات، الكلمات المتعلّمة، الحافظة، والعبارات. ما فيه إعلانات ولا حسابات ولا تتبع. "</string>
+    <!-- origin: SetupActivity.java:2488 -->
+    <string name="nk_setupactivity_section_17">"ما يتعلّم الكيبورد من حقول كلمات المرور ولا في الوضع الخفي. تقارير الأداء ما فيها أي نص. "</string>
+    <!-- origin: SetupActivity.java:2489 -->
+    <string name="nk_setupactivity_section_18">الإنترنت يُستخدم فقط إذا فعّلت تحسين النص بالذكاء الاصطناعي بمفتاحك، ووقتها يُرسل النص اللي تطلب تحسينه فقط.</string>
+    <!-- origin: SetupActivity.java:2507 -->
+    <string name="nk_setupactivity_section_19">الوضع الخفي دائماً (لا تعلّم ولا حافظة)</string>
+    <!-- origin: SetupActivity.java:2519 -->
+    <string name="nk_setupactivity_section_20">مسح الكلمات المتعلّمة وسجل التصحيح</string>
+    <!-- origin: SetupActivity.java:2523 -->
+    <string name="nk_setupactivity_section_21">أكيد؟ بتنحذف كل الكلمات اللي تعلّمها الكيبورد بالعربي والإنجليزي.</string>
+    <!-- origin: SetupActivity.java:2572 -->
+    <string name="nk_setupactivity_section_22">"مختبر البيتا هو الحلقة الأولى قبل التوسع: 100 مقعد، وملاحظاتك تصنع "</string>
+    <!-- origin: SetupActivity.java:2573 -->
+    <string name="nk_setupactivity_section_23">التحديث القادم. أي تقرير ترسله مجهول بالكامل (أرقام فقط بلا أي بيانات شخصية).</string>
+    <!-- origin: SetupActivity.java:2596 -->
+    <string name="nk_setupactivity_startactivity_1">نسخ التقرير المجهول جاهز الإرسال</string>
+    <!-- origin: SetupActivity.java:2681 -->
+    <string name="nk_setupactivity_developercard_1">مطوّر نيو كيبورد • استشارات تقنية</string>
+    <!-- origin: SetupActivity.java:2818 -->
+    <string name="nk_setupactivity_showqr_1">طريقة المسح:
+١. افتح كاميرا الجوال أو تطبيق قارئ الباركود من جهاز ثاني.
+٢. وجّه الكاميرا على الرمز وخلّه داخل الإطار.
+٣. اضغط على الرابط اللي يطلع لك، ويفتح الحساب مباشرة.</string>
+    <!-- origin: SetupActivity.java:3081 -->
+    <string name="nk_setupactivity_buildphrases_1">رسائل رسمية، ردود خدمة العملاء، رسائل عمل، طلبات توظيف، ردود مختصرة، اعتذار وشكر. تراجع وتعدّل كل مسودة قبل إدراجها. من الكيبورد: ••• ← مساعد المراسلات.</string>
+    <!-- origin: SetupActivity.java:3145 -->
+    <string name="nk_setupactivity_section_24">اكتب الاختصار في أي مكان ويطلع لك النص الكامل أول اقتراح.</string>
+    <!-- origin: SetupActivity.java:3225 -->
+    <string name="nk_setupactivity_section_25">تلقاها كلها في الكيبورد من زر ••• ثم «عبارات جاهزة».</string>
+    <!-- origin: SetupActivity.java:3233 -->
+    <string name="nk_setupactivity_section_26">شغّل المفتاح جنب NeoKey 2036 في الإعدادات.</string>
+    <!-- origin: SetupActivity.java:3237 -->
+    <string name="nk_setupactivity_section_27">اسمح بالمايك عشان تكتب بصوتك عربي وإنجليزي.</string>
+    <!-- origin: SetupActivity.java:3259 -->
+    <string name="nk_setupactivity_onrequestpermissionsresult_1">تم، ارجع واضغط المايك في الكيبورد</string>
+    <!-- origin: SetupActivity.java:3259 -->
+    <string name="nk_setupactivity_onrequestpermissionsresult_2">بدون المايك ما تشتغل الكتابة بالصوت</string>
+    <!-- origin: SetupActivity.java:3354 -->
+    <string name="nk_setupactivity_dialectrow_1">كلمات اللهجة تظهر أولاً في الاقتراحات وسدادة الفصحى تكملها. الكشف لحظي على جهازك — لا يُخزن شيء ولا يُرسل.</string>
+    <!-- origin: SetupActivity.java:3378 -->
+    <string name="nk_setupactivity_showexceptionsdialog_1">القائمة فاضية — تراجع عن أي تصحيح بزر الحذف وتُضاف هنا</string>
+    <!-- origin: SetupActivity.java:3384 -->
+    <string name="nk_setupactivity_showexceptionsdialog_2">اضغط على كلمة لإزالتها من الاستثناءات؛ تُعاد للتصحيح التلقائي.</string>
+    <!-- origin: ClipIOActivity.java:176 -->
+    <string name="nk_clipioactivity_updatecount_1">الصيغة الوحيدة اللي تحفظ كل شي وتسترجعه: النص والعنوان والتثبيت وترتيبه والمفضلة والأرشيف والقوالب والتصنيفات والتواريخ. فيها رقم إصدار المخطط (1).</string>
+    <!-- origin: ClipIOActivity.java:178 -->
+    <string name="nk_clipioactivity_updatecount_2">النصوص فقط بترميز UTF-8، والعربي والأسطر والفقرات تبقى كما هي، وبين كل نص والثاني سطر فاصل. ما يحفظ التثبيت ولا التصنيفات ولا أي خاصية ثانية.</string>
+    <!-- origin: ClipIOActivity.java:179 -->
+    <string name="nk_clipioactivity_updatecount_3">جدول يفتح في Excel وGoogle Sheets: النص والعنوان والتثبيت والمفضلة والأرشيف والقالب والتواريخ وأسماء التصنيفات. الفواصل وعلامات الاقتباس والأسطر محفوظة صح. للنسخة الكاملة استخدم JSON.</string>
+    <!-- origin: ClipIOActivity.java:237 -->
+    <string name="nk_clipioactivity_startexport_1">جهازك ما فيه منتقي ملفات يدعم الحفظ.</string>
+    <!-- origin: ClipIOActivity.java:268 -->
+    <string name="nk_clipioactivity_doexport_1">صار خطأ أثناء الكتابة، وما تغيّر شي في الحافظة.</string>
+    <!-- origin: ClipIOActivity.java:274 -->
+    <string name="nk_clipioactivity_alert_1">تذكير: هذي الصيغة ما تحفظ كل الخصائص. للنسخة الكاملة استخدم JSON.</string>
+    <!-- origin: ClipIOActivity.java:294 -->
+    <string name="nk_clipioactivity_buildimport_1">نفحص الملف ونعرض لك معاينة قبل ما نضيف أي شي. البيانات الحالية ما تتغيّر إلا بموافقتك، ولو فشل الاستيراد يرجع كل شي مثل ما كان.</string>
+    <!-- origin: ClipIOActivity.java:328 -->
+    <string name="nk_clipioactivity_thread_1">الملف مو بترميز UTF-8. احفظه بترميز UTF-8 وجرّب مرة ثانية.</string>
+    <!-- origin: ClipIOActivity.java:345 -->
+    <string name="nk_clipioactivity_analyse_1">جاري الفحص والمقارنة مع الحافظة…</string>
+    <!-- origin: ClipIOActivity.java:384 -->
+    <string name="nk_clipioactivity_showpreview_1">ملف TXT فيه النصوص بس، فما فيه تثبيت ولا تصنيفات ولا تواريخ.</string>
+    <!-- origin: ClipIOActivity.java:385 -->
+    <string name="nk_clipioactivity_showpreview_2">ملف CSV يحفظ النص وخصائص أساسية بس، مو كل شي.</string>
+    <!-- origin: ClipIOActivity.java:385 -->
+    <string name="nk_clipioactivity_showpreview_3">ملف JSON عام بدون مخطط NeoKey: نستورد النصوص وأي خصائص معروفة فيه.</string>
+    <!-- origin: ClipIOActivity.java:499 -->
+    <string name="nk_clipioactivity_confirmimport_1">" نص موجود أصلًا بينضاف مرة ثانية كنسخة مستقلة."</string>
+    <!-- origin: ClipIOActivity.java:505 -->
+    <string name="nk_clipioactivity_confirmimport_2">" نص موجود بنفس المحتوى بالضبط بتتحدّث خصائصه من الملف (العنوان والمفضلة والأرشيف والتثبيت والتصنيفات). النص نفسه ما يتغيّر."</string>
+    <!-- origin: ClipIOActivity.java:520 -->
+    <string name="nk_clipioactivity_refreshbutton_1">صار خطأ، ورجعنا الحافظة مثل ما كانت بالضبط. ما انضاف ولا تغيّر شي.</string>
+    <!-- origin: ClipIOActivity.java:529 -->
+    <string name="nk_clipioactivity_alert_2">" نص انضاف بدون تثبيت لأن المثبّتة وصلت 100"</string>
+    <!-- origin: WriterActivity.java:45 -->
+    <string name="nk_writeractivity_oncreate_1">اكتب رسالتك المهنية، راجعها وعدّلها ثم أدرجها</string>
+    <!-- origin: WriterActivity.java:113 -->
+    <string name="nk_writeractivity_detach_1">المسودة — راجعها وعدّل عليها قبل الإدراج</string>
+    <!-- origin: WriterActivity.java:132 -->
+    <string name="nk_writeractivity_detach_2">تحسين بالذكاء الاصطناعي (اختياري)</string>
+    <!-- origin: WriterActivity.java:136 -->
+    <string name="nk_writeractivity_sectionin_1">يرسل المسودة الحالية فقط لمزود الذكاء الاصطناعي عند ضغطك الزر، ويرجع لك نسخة محسّنة تراجعها قبل الإدراج.</string>
+    <!-- origin: WriterActivity.java:137 -->
+    <string name="nk_writeractivity_sectionin_2">المساعد يشتغل بدون إنترنت بالقوالب. لو تبي صياغة أذكى، أضف مفتاح OpenRouter الخاص فيك (يُحفظ على جهازك فقط).</string>
+    <!-- origin: WriterActivity.java:157 -->
+    <string name="nk_writeractivity_sectionin_3">كل إرسال يُسجل في سجل تدقيق محلي (القدرة والقرار والزمن — بلا أي نص) وأول ما يُطابَق نطاق openrouter فقط</string>
+    <!-- origin: WriterActivity.java:172 -->
+    <string name="nk_writeractivity_sectionin_4">صيغ رداً بثلاث نبرات (رسمي، ودّي، قصير)</string>
+    <!-- origin: WriterActivity.java:173 -->
+    <string name="nk_writeractivity_sectionin_5">تلخيص استخلاصي وإعادة صياغة بقواعد جاهزة وصياغة رد بثلاث نبرات — كلها على جهازك، حتمية وبلا إرسال أي شيء</string>
+    <!-- origin: WriterActivity.java:214 -->
+    <string name="nk_writeractivity_localsummarize_1">لا يوجد نص — اكتب مسودة أو انسخ نصاً أولاً</string>
+    <!-- origin: WriterActivity.java:219 -->
+    <string name="nk_writeractivity_localsummarize_2">ملخص محلي — قارنه بالنص الأصلي قبل الإرسال</string>
+    <!-- origin: WriterActivity.java:225 -->
+    <string name="nk_writeractivity_localrephrase_1">لا يوجد نص — اكتب مسودة أو انسخ نصاً أولاً</string>
+    <!-- origin: WriterActivity.java:228 -->
+    <string name="nk_writeractivity_localrephrase_2">إعادة صياغة محلية بقواعد جاهزة — راجعها قبل الإرسال</string>
+    <!-- origin: WriterActivity.java:352 -->
+    <string name="nk_writeractivity_audit_1">يرسل المسودة الحالية فقط إلى openrouter.ai بمفتاحك الخاص، ولا يُخزن أي شيء عندنا. تسمح بهذا الإرسال؟</string>
+    <!-- origin: WriterActivity.java:362 -->
+    <string name="nk_writeractivity_doimprove_1">الاتصال الخارجي مغلق — فعّله من إعدادات المساعد أدناه. المساعد يشتغل محلياً بلا إنترنت</string>
+    <!-- origin: PerfActivity.java:36 -->
+    <string name="nk_perfactivity_oncreate_1">للمطورين · كل القياسات تُحفظ على جهازك فقط</string>
+    <!-- origin: PerfActivity.java:54 -->
+    <string name="nk_perfactivity_build_1">الخصوصية: نجمع أرقاماً تقنية فقط (أزمنة، ذاكرة، أعطال) على جهازك. لا تُحفظ ولا تُرسل أي نصوص تكتبها، والتقرير لا يخرج إلا إذا صدّرته أنت.</string>
+    <!-- origin: PerfActivity.java:75 -->
+    <string name="nk_perfactivity_sectionin_1">تتجمع تلقائياً أثناء استخدامك للكيبورد. p95 = أسوأ 5٪ من الحالات.</string>
+    <!-- origin: PerfActivity.java:101 -->
+    <string name="nk_perfactivity_sectionin_2">تقرير الأعطال أرقام فقط ويبقى على جهازك حتى تشاركه أنت.</string>
+    <!-- origin: PerfActivity.java:121 -->
+    <string name="nk_perfactivity_sectionin_3">للحصول على قراءة بطارية دقيقة افصل الشاحن وأبقِ الشاشة مفتوحة.</string>
+    <!-- origin: PerfActivity.java:134 -->
+    <string name="nk_perfactivity_sectionin_4">يقيس القاموس الأساسي فقط (بدون كلماتك المتعلّمة) على مجموعة جمل ثابتة داخل التطبيق، عشان تكون النتائج قابلة للمقارنة بين الإصدارات.</string>
+    <!-- origin: PerfActivity.java:260 -->
+    <string name="nk_perfactivity_runbench_1">جاري اختبار الأداء والبطارية… 30 ثانية</string>
+    <!-- origin: PerfActivity.java:319 -->
+    <string name="nk_perfactivity_thread_1">قراءة تقريبية لفترة الاختبار (الجهاز كامل)</string>
+    <!-- origin: BackupActivity.java:22 -->
+    <string name="nk_backupactivity_oncreate_1">انقل إعداداتك وكلماتك لجوال جديد</string>
+    <!-- origin: BackupActivity.java:23 -->
+    <string name="nk_backupactivity_header_1">الملف يحتوي: الإعدادات، السمات المحفوظة، العبارات والاختصارات، والكلمات المتعلّمة. ما يحتوي الحافظة ولا مفتاح الذكاء الاصطناعي ولا صورة الخلفية. احفظه بمكان آمن لأنه فيه كلماتك.</string>
+    <!-- origin: BackupActivity.java:117 -->
+    <string name="nk_backupactivity_restore_1">تمت الاستعادة. افتح الكيبورد وبتشوف إعداداتك</string>
+    <!-- origin: DictActivity.java:30 -->
+    <string name="nk_dictactivity_oncreate_1">الكلمات اللي تعلّمها الكيبورد من كتابتك</string>
+    <!-- origin: DictActivity.java:62 -->
+    <string name="nk_dictactivity_aftertextchanged_1">أكيد تبي تحذف كل الكلمات المتعلّمة لهذه اللغة؟</string>
+    <!-- origin: DictActivity.java:123 -->
+    <string name="nk_dictactivity_render_1">ما فيه كلمات متعلّمة لهذه اللغة للحين. اكتب بالكيبورد وبتتجمع هنا.</string>
+    <!-- origin: NeoKeyService.java:684 -->
+    <string name="nk_neokeyservice_captureclip_1">النص المنسوخ أطول من ٥٠٠ ألف حرف، فما انحفظ في السجل</string>
+    <!-- origin: NeoKeyService.java:1064 -->
+    <string name="nk_neokeyservice_onclearclips_1">انمسح السجل، والمثبّتة والمحفوظة باقية</string>
+    <!-- origin: NeoKeyService.java:1214 -->
+    <string name="nk_neokeyservice_ontext_1">وضع التخفي: ما راح أحفظ كلماتك ولا الحافظة</string>
+    <!-- origin: NeoKeyService.java:1306 -->
+    <string name="nk_neokeyservice_replacetext_1">اكتب عملية مثل ‎12*3+4‎ ثم اضغط احسب</string>
+    <!-- origin: NeoKeyService.java:1362 -->
+    <string name="nk_neokeyservice_thread_1">الترجمة تحتاج إنترنت، جرّب مرة ثانية</string>
+    <!-- origin: NeoKeyService.java:1394 -->
+    <string name="nk_neokeyservice_dospeak_1">حمّل صوت اللغة من إعدادات النطق في جوالك</string>
+    <!-- origin: NeoKeyService.java:1567 -->
+    <string name="nk_neokeyservice_sharetext_1">النص كبير للمشاركة المباشرة، انسخه أو صدّره</string>
+    <!-- origin: NeoKeyService.java:1608 -->
+    <string name="nk_neokeyservice_askreplacepin_1">ألغِ تثبيت آخر عنصر في قائمة المثبّتات وثبّت هذا مكانه؟</string>
+    <!-- origin: NeoKeyService.java:1666 -->
+    <string name="nk_neokeyservice_startactivity_1">الكتابة بالصوت تحتاج تطبيق Google على جهازك</string>
 </resources>

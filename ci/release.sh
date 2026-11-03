@@ -81,6 +81,12 @@ if [ "${PHASE3_GATE:-}" = "OK" ]; then
   PHASE3_BLOCK=$',\n    "phase3Close": { "verifiedBy": "ci/phase3_gate.sh", "contract": "docs/PHASE3-W4-REPORT.md", "phaseGatesGreen": "'"${PHASE3_GATES:-0/0}"'", "regressions": "'"${PHASE3_REGRESSIONS:-?}"'", "dexBytes": '"${PHASE3_DEX:-0}"', "dexCeiling": '"${PHASE3_CEILING:-520000}"', "versionCode": '"$VC"', "tests": "'"${PHASE3_TESTS:-0/0}"'", "negatives": "'"${PHASE3_NEGATIVES:-?}"'", "exitCriteria": "all phase-3 gates re-run green + zero pinned regressions + dex under ceiling + versionCode bumped" }'
 fi
 
+# Real-dex-trim gate (phase 4, week 22) — present when the trim gate ran
+TRIM_BLOCK=""
+if [ "${TRIM_GATE:-}" = "OK" ]; then
+  TRIM_BLOCK=$',\n    "trim": { "verifiedBy": "ci/trim_gate.sh", "contract": "docs/PHASE4-W1-REPORT.md", "lever": "119 static Arabic UI-copy literals relocated byte-identically to res/values/strings.xml (resources ride in the APK, not the dex; purity untouched)", "entries": '"${TRIM_ENTRIES:-0}"', "bytesSavedFromDex": '"${TRIM_SAVED:-0}"', "dexBytes": '"${TRIM_DEX_BYTES:-0}"', "dexCeilingLoweredTo": '"${TRIM_CEILING:-0}"', "uiEnCoupledKeys": '"${TRIM_UI_EN_COUPLED:-0}"', "doctrine": "overflow means trim, never raise" }'
+fi
+
 cat > "$OUT/release-manifest.json" <<EOF
 {
   "app": "com.hark.neokey",
@@ -91,7 +97,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$PHASE3_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$PHASE3_BLOCK$TRIM_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
   "signedBy": "release workflow only — signing secrets never leave the vault"

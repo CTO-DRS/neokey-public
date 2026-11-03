@@ -173,10 +173,10 @@ public class ClipIOActivity extends Activity {
             fmtRow.removeAllViews();
             for (int i = 0; i < 3; i++) { final int f = i; fmtRow.addView(chip(fl[i], f == format, () -> { format = f; fp[0].run(); })); }
             formatNote.setText(L.t(format == ClipIO.F_JSON
-                    ? "الصيغة الوحيدة اللي تحفظ كل شي وتسترجعه: النص والعنوان والتثبيت وترتيبه والمفضلة والأرشيف والقوالب والتصنيفات والتواريخ. فيها رقم إصدار المخطط (1)."
+                    ? getString(R.string.nk_clipioactivity_updatecount_1)
                     : format == ClipIO.F_TXT
-                    ? "النصوص فقط بترميز UTF-8، والعربي والأسطر والفقرات تبقى كما هي، وبين كل نص والثاني سطر فاصل. ما يحفظ التثبيت ولا التصنيفات ولا أي خاصية ثانية."
-                    : "جدول يفتح في Excel وGoogle Sheets: النص والعنوان والتثبيت والمفضلة والأرشيف والقالب والتواريخ وأسماء التصنيفات. الفواصل وعلامات الاقتباس والأسطر محفوظة صح. للنسخة الكاملة استخدم JSON."));
+                    ? getString(R.string.nk_clipioactivity_updatecount_2)
+                    : getString(R.string.nk_clipioactivity_updatecount_3)));
         };
         fp[0].run();
 
@@ -234,7 +234,7 @@ public class ClipIOActivity extends Activity {
         i.setType(mime);
         i.putExtra(Intent.EXTRA_TITLE, "neokey-clipboard-" + day + "." + ext);
         try { startActivityForResult(i, REQ_CREATE); }
-        catch (RuntimeException e) { alert("ما لقينا تطبيق ملفات", "جهازك ما فيه منتقي ملفات يدعم الحفظ."); }
+        catch (RuntimeException e) { alert("ما لقينا تطبيق ملفات", getString(R.string.nk_clipioactivity_startexport_1)); }
     }
 
     private static final class Counting extends FilterOutputStream {
@@ -265,13 +265,13 @@ public class ClipIOActivity extends Activity {
         }, res -> {
             if (res == null || res[2] != null) {
                 try { DocumentsContract.deleteDocument(cr, uri); } catch (Exception ignored) { }
-                alert("ما تم التصدير", L.t("صار خطأ أثناء الكتابة، وما تغيّر شي في الحافظة.") + "\n\n" + (res == null ? "" : res[2]));
+                alert("ما تم التصدير", L.t(getString(R.string.nk_clipioactivity_doexport_1)) + "\n\n" + (res == null ? "" : res[2]));
                 return;
             }
             long bytes = (Long) res[1];
             String size = bytes < 1024 ? bytes + " B" : bytes < 1048576 ? (bytes / 1024) + " KB" : String.format(java.util.Locale.US, "%.1f MB", bytes / 1048576.0);
             alert("تم التصدير ✓", L.t("العناصر: ") + res[0] + "\n" + L.t("الملف: ") + name + "\n" + L.t("الحجم: ") + size
-                    + (f == ClipIO.F_JSON ? "" : "\n\n" + L.t("تذكير: هذي الصيغة ما تحفظ كل الخصائص. للنسخة الكاملة استخدم JSON.")));
+                    + (f == ClipIO.F_JSON ? "" : "\n\n" + L.t(getString(R.string.nk_clipioactivity_alert_1))));
         });
     }
 
@@ -291,7 +291,7 @@ public class ClipIOActivity extends Activity {
         LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(-1, (int) (50 * dp));
         pl.topMargin = (int) (10 * dp);
         root.addView(pick, pl);
-        TextView note = text("نفحص الملف ونعرض لك معاينة قبل ما نضيف أي شي. البيانات الحالية ما تتغيّر إلا بموافقتك، ولو فشل الاستيراد يرجع كل شي مثل ما كان.", 12, Typeface.NORMAL, MUTED);
+        TextView note = text(getString(R.string.nk_clipioactivity_buildimport_1), 12, Typeface.NORMAL, MUTED);
         note.setPadding(0, (int) (8 * dp), 0, (int) (4 * dp));
         root.addView(note);
         importBox = new LinearLayout(this);
@@ -325,7 +325,7 @@ public class ClipIOActivity extends Activity {
                 content = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
                         .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bo.toByteArray())).toString();
             } catch (CharacterCodingException e) {
-                err = "الملف مو بترميز UTF-8. احفظه بترميز UTF-8 وجرّب مرة ثانية.";
+                err = getString(R.string.nk_clipioactivity_thread_1);
             } catch (IOException | RuntimeException e) {
                 err = e.getMessage() == null ? "تعذّرت قراءة الملف" : e.getMessage();
             }
@@ -342,7 +342,7 @@ public class ClipIOActivity extends Activity {
     private void analyse() {
         final String c = rawContent, n = fileName;
         final boolean lines = txtLines;
-        showBusy("جاري الفحص والمقارنة مع الحافظة…");
+        showBusy(getString(R.string.nk_clipioactivity_analyse_1));
         ClipStore.get(this).run(r -> {
             ClipIO.Parsed p = ClipIO.parse(c, n, lines);
             if (p.error == null) ClipIO.markDuplicates(r, p);
@@ -381,8 +381,8 @@ public class ClipIOActivity extends Activity {
         info.setPadding(0, (int) (8 * dp), 0, (int) (4 * dp));
         importBox.addView(info);
         if (p.format != ClipIO.F_JSON || p.schema == 0) {
-            TextView w = text(p.format == ClipIO.F_TXT ? "ملف TXT فيه النصوص بس، فما فيه تثبيت ولا تصنيفات ولا تواريخ."
-                    : p.format == ClipIO.F_CSV ? "ملف CSV يحفظ النص وخصائص أساسية بس، مو كل شي." : "ملف JSON عام بدون مخطط NeoKey: نستورد النصوص وأي خصائص معروفة فيه.", 12, Typeface.NORMAL, 0xFFFBBF24);
+            TextView w = text(p.format == ClipIO.F_TXT ? getString(R.string.nk_clipioactivity_showpreview_1)
+                    : p.format == ClipIO.F_CSV ? getString(R.string.nk_clipioactivity_showpreview_2) : getString(R.string.nk_clipioactivity_showpreview_3), 12, Typeface.NORMAL, 0xFFFBBF24);
             importBox.addView(w);
         }
         if (p.format == ClipIO.F_TXT && rawContent != null && !rawContent.contains(ClipIO.TXT_SEP)) {
@@ -496,13 +496,13 @@ public class ClipIOActivity extends Activity {
         if (dupSel > 0 && dupMode == ClipIO.DUP_COPY) {
             new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                     .setTitle(L.t("استيراد المكرر كنسخ؟"))
-                    .setMessage(dupSel + L.t(" نص موجود أصلًا بينضاف مرة ثانية كنسخة مستقلة."))
+                    .setMessage(dupSel + L.t(getString(R.string.nk_clipioactivity_confirmimport_1)))
                     .setPositiveButton(L.t("استورد"), (d, w) -> runImport())
                     .setNegativeButton(L.t("إلغاء"), null).show();
         } else if (dupSel > 0 && dupMode == ClipIO.DUP_REPLACE) {
             new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                     .setTitle(L.t("تحديث النصوص الموجودة؟"))
-                    .setMessage(dupSel + L.t(" نص موجود بنفس المحتوى بالضبط بتتحدّث خصائصه من الملف (العنوان والمفضلة والأرشيف والتثبيت والتصنيفات). النص نفسه ما يتغيّر."))
+                    .setMessage(dupSel + L.t(getString(R.string.nk_clipioactivity_confirmimport_2)))
                     .setPositiveButton(L.t("حدّث"), (d, w) -> runImport())
                     .setNegativeButton(L.t("إلغاء"), null).show();
         } else runImport();
@@ -517,7 +517,7 @@ public class ClipIOActivity extends Activity {
             importBtn.setEnabled(true);
             refreshButton();
             if (rep == null || rep.failed) {
-                alert("ما تم الاستيراد", L.t("صار خطأ، ورجعنا الحافظة مثل ما كانت بالضبط. ما انضاف ولا تغيّر شي.")
+                alert("ما تم الاستيراد", L.t(getString(R.string.nk_clipioactivity_refreshbutton_1))
                         + (rep != null && rep.error != null ? "\n\n" + rep.error : ""));
                 return;
             }
@@ -526,7 +526,7 @@ public class ClipIOActivity extends Activity {
             if (rep.replaced > 0) b.append("\n").append(L.t("تحدّث: ")).append(rep.replaced);
             if (rep.skipped > 0) b.append("\n").append(L.t("تجاهلنا المكرر: ")).append(rep.skipped);
             if (rep.invalid > 0) b.append("\n").append(L.t("غير صالح: ")).append(rep.invalid);
-            if (rep.unpinned > 0) b.append("\n").append(rep.unpinned).append(L.t(" نص انضاف بدون تثبيت لأن المثبّتة وصلت 100"));
+            if (rep.unpinned > 0) b.append("\n").append(rep.unpinned).append(L.t(getString(R.string.nk_clipioactivity_alert_2)));
             new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                     .setTitle(L.t("تم الاستيراد ✓"))
                     .setMessage(b.toString())

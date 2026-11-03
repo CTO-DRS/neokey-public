@@ -681,7 +681,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             freshTime = SystemClock.elapsedRealtime();
             if (incognito) return;
             if (s.length() > ClipRepo.MAX_LEN) {
-                Toast.makeText(this, L.t("النص المنسوخ أطول من ٥٠٠ ألف حرف، فما انحفظ في السجل"), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, L.t(getString(R.string.nk_neokeyservice_captureclip_1)), Toast.LENGTH_LONG).show();
                 return;
             }
             final int max = Theme.prefs(this).getInt("clip_max", 50);
@@ -1061,7 +1061,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             @Override public Integer run(ClipRepo r) { return r.clearTemporary(); }
         }, new ClipStore.Done<Integer>() {
             @Override public void done(Integer n) {
-                Toast.makeText(NeoKeyService.this, L.t("انمسح السجل، والمثبّتة والمحفوظة باقية"), Toast.LENGTH_SHORT).show();
+                Toast.makeText(NeoKeyService.this, L.t(getString(R.string.nk_neokeyservice_onclearclips_1)), Toast.LENGTH_SHORT).show();
                 reloadClips();
             }
         });
@@ -1211,7 +1211,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             incognito = !incognito;
             Theme.prefs(this).edit().putBoolean("incognito", incognito).apply();
             view.setIncognito(incognito);
-            Toast.makeText(this, incognito ? "وضع التخفي: ما راح أحفظ كلماتك ولا الحافظة"
+            Toast.makeText(this, incognito ? getString(R.string.nk_neokeyservice_ontext_1)
                     : "تم إيقاف وضع التخفي", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -1303,7 +1303,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             String expr = TextTools.trailingExpr(src);
             String res = expr == null ? null : TextTools.evaluate(expr, ad);
             if (res == null) {
-                Toast.makeText(this, "اكتب عملية مثل ‎12*3+4‎ ثم اضغط احسب", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.nk_neokeyservice_replacetext_1), Toast.LENGTH_SHORT).show();
                 return;
             }
             if (!TextUtils.isEmpty(sel)) {
@@ -1359,7 +1359,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             main.post(() -> {
                 InputConnection ic = getCurrentInputConnection();
                 if (result == null || result.isEmpty() || ic == null) {
-                    Toast.makeText(this, "الترجمة تحتاج إنترنت، جرّب مرة ثانية", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.nk_neokeyservice_thread_1), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (selected) {
@@ -1391,7 +1391,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private void doSpeak(String text, Locale loc) {
         int r = tts.setLanguage(loc);
         if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
-            Toast.makeText(this, "حمّل صوت اللغة من إعدادات النطق في جوالك", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.nk_neokeyservice_dospeak_1), Toast.LENGTH_LONG).show();
             return;
         }
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "neokey");
@@ -1564,7 +1564,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private void shareText(String t) {
         if (t.length() > 100_000) {
             // binder transactions cap around 1 MB; very long texts are copied or exported instead
-            Toast.makeText(this, L.t("النص كبير للمشاركة المباشرة، انسخه أو صدّره"), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, L.t(getString(R.string.nk_neokeyservice_sharetext_1)), Toast.LENGTH_LONG).show();
             return;
         }
         Intent send = new Intent(Intent.ACTION_SEND);
@@ -1605,7 +1605,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         }
         android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle(L.t("المثبّتات ممتلئة ١٠٠/١٠٠"))
-                .setMessage(L.t("ألغِ تثبيت آخر عنصر في قائمة المثبّتات وثبّت هذا مكانه؟"))
+                .setMessage(L.t(getString(R.string.nk_neokeyservice_askreplacepin_1)))
                 .setPositiveButton(L.t("استبدال"), new android.content.DialogInterface.OnClickListener() {
                     @Override public void onClick(android.content.DialogInterface d, int w) {
                         clipStore.run(new ClipStore.Job<Integer>() {
@@ -1663,7 +1663,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             return;
         }
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            Toast.makeText(this, "الكتابة بالصوت تحتاج تطبيق Google على جهازك", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.nk_neokeyservice_startactivity_1), Toast.LENGTH_LONG).show();
             return;
         }
         try {

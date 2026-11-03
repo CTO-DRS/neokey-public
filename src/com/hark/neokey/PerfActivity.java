@@ -33,7 +33,7 @@ public class PerfActivity extends Screen {
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         Shield.ensure(this); // cheap after first call (process-wide cache)
-        header("مركز قياس الأداء", "للمطورين · كل القياسات تُحفظ على جهازك فقط", "monitoring");
+        header("مركز قياس الأداء", getString(R.string.nk_perfactivity_oncreate_1), "monitoring");
         body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
         root.addView(body);
@@ -51,7 +51,7 @@ public class PerfActivity extends Screen {
         body.removeAllViews();
 
         LinearLayout priv = card();
-        TextView pt = text("الخصوصية: نجمع أرقاماً تقنية فقط (أزمنة، ذاكرة، أعطال) على جهازك. لا تُحفظ ولا تُرسل أي نصوص تكتبها، والتقرير لا يخرج إلا إذا صدّرته أنت.",
+        TextView pt = text(getString(R.string.nk_perfactivity_build_1),
                 13, Typeface.NORMAL, 0xFFCFE3FF);
         Icons.withIcon(pt, "shield", 0xFF93B4FF, (int) (20 * dp), false, (int) (8 * dp));
         priv.addView(pt);
@@ -72,7 +72,7 @@ public class PerfActivity extends Screen {
             m.addView(metricRow(i));
         }
         body.addView(m);
-        TextView hint = text("تتجمع تلقائياً أثناء استخدامك للكيبورد. p95 = أسوأ 5٪ من الحالات.", 12, Typeface.NORMAL, MUTED);
+        TextView hint = text(getString(R.string.nk_perfactivity_sectionin_1), 12, Typeface.NORMAL, MUTED);
         hint.setPadding((int) (4 * dp), (int) (6 * dp), 0, 0);
         body.addView(hint);
 
@@ -98,7 +98,7 @@ public class PerfActivity extends Screen {
         srow.addView(button(L.t("خط الأساس المرجعي (P50/P95)"), "speed", false, v -> showBaseline()),
                 new LinearLayout.LayoutParams(0, -2, 1f));
         st.addView(srow, top(10));
-        TextView sn = text(L.t("تقرير الأعطال أرقام فقط ويبقى على جهازك حتى تشاركه أنت."), 12, Typeface.NORMAL, MUTED);
+        TextView sn = text(L.t(getString(R.string.nk_perfactivity_sectionin_2)), 12, Typeface.NORMAL, MUTED);
         sn.setPadding(0, (int) (8 * dp), 0, 0);
         st.addView(sn);
         st.addView(button(L.t("تصفير عداد الأعطال"), "delete", false, v -> {
@@ -118,7 +118,7 @@ public class PerfActivity extends Screen {
                 {"avg_current_ma", "متوسط التيار", " mA"}, {"battery_note", "ملاحظة البطارية", ""}}));
         TextView bb = button("تشغيل الاختبار (30 ثانية)", "speed", true, v -> runBench());
         bench.addView(bb, top(10));
-        TextView bh = text("للحصول على قراءة بطارية دقيقة افصل الشاحن وأبقِ الشاشة مفتوحة.", 12, Typeface.NORMAL, MUTED);
+        TextView bh = text(getString(R.string.nk_perfactivity_sectionin_3), 12, Typeface.NORMAL, MUTED);
         bh.setPadding(0, (int) (8 * dp), 0, 0);
         bench.addView(bh);
         body.addView(bench);
@@ -131,7 +131,7 @@ public class PerfActivity extends Screen {
                 {"en_c3", "English: 3-letter completion (top 3)", "٪"}, {"en_next", "English: next word (top 3)", "٪"},
                 {"cases", "عدد حالات الاختبار", ""}}));
         acc.addView(button("تشغيل اختبار الدقة", "target", true, v -> runAccuracy()), top(10));
-        TextView ah = text("يقيس القاموس الأساسي فقط (بدون كلماتك المتعلّمة) على مجموعة جمل ثابتة داخل التطبيق، عشان تكون النتائج قابلة للمقارنة بين الإصدارات.",
+        TextView ah = text(getString(R.string.nk_perfactivity_sectionin_4),
                 12, Typeface.NORMAL, MUTED);
         ah.setPadding(0, (int) (8 * dp), 0, 0);
         acc.addView(ah);
@@ -257,7 +257,7 @@ public class PerfActivity extends Screen {
 
     private void runBench() {
         if (running) return;
-        busy("جاري اختبار الأداء والبطارية… 30 ثانية");
+        busy(getString(R.string.nk_perfactivity_runbench_1));
         new Thread(() -> {
             org.json.JSONObject o = new org.json.JSONObject();
             try {
@@ -316,7 +316,7 @@ public class PerfActivity extends Screen {
                     o.put("avg_current_ma", Perf.round(ma));
                 }
                 o.put("battery_note", plug != 0 ? "الشاحن موصول، القراءة غير دقيقة"
-                        : chargeOk || curN > 0 ? "قراءة تقريبية لفترة الاختبار (الجهاز كامل)" : "الجهاز ما يوفر قراءة البطارية");
+                        : chargeOk || curN > 0 ? getString(R.string.nk_perfactivity_thread_1) : "الجهاز ما يوفر قراءة البطارية");
                 Perf.putResult("bench", o.toString());
             } catch (Exception e) {
                 runOnUiThread(() -> Toast.makeText(this, L.t("تعذر إكمال الاختبار"), Toast.LENGTH_SHORT).show());

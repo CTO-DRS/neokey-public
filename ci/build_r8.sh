@@ -26,18 +26,29 @@ rm -rf build/r8-classes && mkdir -p build/r8-classes build/release
 if [ -f build/gen/com/hark/neokey/R.java ]; then
   SRCS="$(find src build/gen -name '*.java')"   # aapt2 R already generated (build machine)
 else
-  # offline proof path: generate a compile-time-only R for the two drawables the
-  # code references — real builds get the authoritative R from aapt2 instead
+  # offline proof path: generate a compile-time-only R — real builds get the
+  # authoritative R from aapt2 instead. String names are DERIVED from
+  # res/values/strings.xml (week 22 trim: the relocated nk_* copy) so the stub
+  # can never drift from the resource file; values are irrelevant here (aapt2
+  # assigns the real ones on the build machine).
   mkdir -p build/r8-gen/com/hark/neokey
-  cat > build/r8-gen/com/hark/neokey/R.java <<'EOF'
-package com.hark.neokey;
-/** Compile-time-only R (offline R8 proof, no aapt2 here). Values never reach a real APK. */
-public final class R {
-  public static final class drawable { public static final int dev_full = 1; public static final int dev_photo = 2; }
-}
-EOF
+  {
+    echo 'package com.hark.neokey;'
+    echo '/** Compile-time-only R (offline R8 proof, no aapt2 here). Values never reach a real APK. */'
+    echo 'public final class R {'
+    echo '  public static final class drawable { public static final int dev_full = 1; public static final int dev_photo = 2; }'
+    echo '  public static final class string {'
+    i=0
+    while read -r nm; do
+      [ -n "$nm" ] || continue
+      i=$((i+1))
+      echo "    public static final int $nm = $i;"
+    done < <(grep -o 'name="nk_[a-z0-9_]*"' res/values/strings.xml 2>/dev/null | sed 's/name="//;s/"$//' | sort -u)
+    echo '  }'
+    echo '}'
+  } > build/r8-gen/com/hark/neokey/R.java
   SRCS="$(find src build/r8-gen -name '*.java')"
-  echo "NOTE: no aapt2 R (no SDK) — compile-time stub R generated for the shrink proof"
+  echo "NOTE: no aapt2 R (no SDK) — compile-time stub R generated ($(grep -c 'public static final int nk_' build/r8-gen/com/hark/neokey/R.java) nk_ strings) for the shrink proof"
 fi
 if command -v javac >/dev/null 2>&1; then
   javac -nowarn -Xlint:-options --release 8 -encoding UTF-8 -classpath "$AJAR" -d build/r8-classes $SRCS
@@ -87,7 +98,15 @@ TOTAL=$(grep -o 'android:name="[^"]*"' AndroidManifest.xml | cut -d'"' -f2 | gre
 # prediction said it would not fit — it did, so NO raise and the trim lever was
 # still pulled: isHex64 deduplicated to one reference). W4 close-out gate: no
 # regression under the same ceiling with all features reachable.
-[ "$R8D" -le 520000 ] || { echo "R8_GATE_FAILED: dex $R8D > 520000 budget — trim before shipping" >&2; exit 1; }
+# Phase 4 W1 (vc 63, the REAL trim promised twice and deferred twice): the
+# promised lever finally pulled — 119 static Arabic UI-copy literals (15,008B
+# raw content) relocated byte-identically out of 7 android-shell classes into
+# res/values/strings.xml (resources live in the APK, not the dex; round-trip
+# verified, purity untouched, static initializers and protocol strings stayed).
+# Measured: 518,688 -> 504,476B (-14,212B). The ceiling is LOWERED 520,000 ->
+# 512,000 (not merely kept): 7,524B margin restored — ~5.7x the W3 margin —
+# and the next ceiling raise is again forbidden: overflow means trim.
+[ "$R8D" -le 512000 ] || { echo "R8_GATE_FAILED: dex $R8D > 512000 budget — trim before shipping" >&2; exit 1; }
 echo "R8_OK dex=$R8D bytes, mapping=$MAPPED program classes, manifest components kept=$KEPT/$TOTAL"
 [ "$FAILS" = "0" ] || exit 1
 [ -s build/release/mapping.txt ] || { echo "R8_GATE_FAILED: mapping.txt empty" >&2; exit 1; }

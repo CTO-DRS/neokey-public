@@ -27,7 +27,7 @@ public class DictActivity extends Screen {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
-        header("قاموسي الشخصي", "الكلمات اللي تعلّمها الكيبورد من كتابتك", "book");
+        header("قاموسي الشخصي", getString(R.string.nk_dictactivity_oncreate_1), "book");
         chipsHolder = new View0();
         buildChips();
         LinearLayout add = new LinearLayout(this);
@@ -59,7 +59,7 @@ public class DictActivity extends Screen {
         list = card();
         root.addView(list, top(6));
         TextView clear = button("حذف كل كلمات هذه اللغة", "delete", false, v -> new android.app.AlertDialog.Builder(this)
-                .setMessage(L.t("أكيد تبي تحذف كل الكلمات المتعلّمة لهذه اللغة؟"))
+                .setMessage(L.t(getString(R.string.nk_dictactivity_aftertextchanged_1)))
                 .setPositiveButton(L.t("حذف"), (d, w) -> { words.clear(); save(); render(); })
                 .setNegativeButton(L.t("إلغاء"), null).show());
         clear.setTextColor(0xFFF87171);
@@ -120,7 +120,7 @@ public class DictActivity extends Screen {
             row.addView(del, new LinearLayout.LayoutParams((int) (40 * dp), (int) (40 * dp)));
             list.addView(row);
         }
-        if (shown == 0) list.addView(text(words.isEmpty() ? "ما فيه كلمات متعلّمة لهذه اللغة للحين. اكتب بالكيبورد وبتتجمع هنا." : "ما فيه نتائج.", 13, Typeface.NORMAL, MUTED));
+        if (shown == 0) list.addView(text(words.isEmpty() ? getString(R.string.nk_dictactivity_render_1) : "ما فيه نتائج.", 13, Typeface.NORMAL, MUTED));
         count.setText(words.size() + " كلمة" + (shown >= 300 ? " (يظهر أول 300، استخدم البحث)" : ""));
     }
 }

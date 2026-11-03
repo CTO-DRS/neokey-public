@@ -1,0 +1,22 @@
+== trim negative proof — 2026-11-03T22:18:42Z ==
+
+--- attack: missing resource (delete nk_setupactivity_buildheader_1) (expect: missing resource R.string.nk_setupactivity_buildheader_1)
+rc=1
+verdict: TRIM_GATE_FAILED missing resource R.string.nk_setupactivity_buildheader_1 — runtime crash on the build machine
+tag: OK
+restored: rc=0 TRIM_GATE_OK entries=119 saved=14212 dex=504476/512000 regrown=0 purity=34 ui_en_coupled=80
+
+--- attack: regrown long Arabic literal in shell class (DictActivity) (expect: long Arabic literals back in shell classes)
+rc=1
+verdict: TRIM_GATE_FAILED long Arabic literals back in shell classes: [src/com/hark/neokey/DictActivity.java line 70 (316B)]
+tag: OK
+restored: rc=0 TRIM_GATE_OK entries=119 saved=14212 dex=504476/512000 regrown=0 purity=34 ui_en_coupled=80
+
+--- attack: purity broken (android.webkit.WebView in pure Writer) (expect: purity broken (android import without a stub class)
+rc=1
+verdict: TRIM_GATE_FAILED purity broken (android import without a stub class — tests stage would fail): [src/com/hark/neokey/Writer.java -> android.webkit.WebView]
+tag: OK
+restored: rc=0 TRIM_GATE_OK entries=119 saved=14212 dex=504476/512000 regrown=0 purity=34 ui_en_coupled=80
+
+== PROOF PASSED: all three attacks bit with their own tags, all files restored, final gate green ==
+TRIM_GATE_OK entries=119 saved=14212 dex=504476/512000 regrown=0 purity=34 ui_en_coupled=80

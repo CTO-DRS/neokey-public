@@ -209,7 +209,7 @@ public class SetupActivity extends Activity {
                 else {
                     Intent it = new Intent(Intent.ACTION_SEND);
                     it.setType("text/plain");
-                    it.putExtra(Intent.EXTRA_TEXT, "جرّب NeoKey — كيبورد عربي بتصميم حديث");
+                    it.putExtra(Intent.EXTRA_TEXT, getString(R.string.nk_setupactivity_buildheader_1));
                     startActivity(Intent.createChooser(it, "مشاركة"));
                 }
             });
@@ -384,7 +384,7 @@ public class SetupActivity extends Activity {
 
         // slide 0: themes
         LinearLayout s0 = slideBase(new int[]{0xFF6E3BAE, 0xFF4B4DAE, 0xFF1F7EA6});
-        TextView t = text("كيبوردك العربي، أناقة تبدأ من هنا", 19, Typeface.BOLD, Color.WHITE);
+        TextView t = text(getString(R.string.nk_setupactivity_bngo_1), 19, Typeface.BOLD, Color.WHITE);
         t.setGravity(Gravity.CENTER);
         s0.addView(t, new LinearLayout.LayoutParams(-1, -2));
         final HorizontalScrollView hs = new HorizontalScrollView(this);
@@ -411,35 +411,35 @@ public class SetupActivity extends Activity {
 
         addSlide(newsSlide());
         addSlide(feature(new int[]{0xFF7A2E9E, 0xFF4B3AAE, 0xFF1F5FA6}, null, "جديد",
-                "٢٤ تأثير عند الضغط", "ألعاب نارية، شهاب، قوس قزح، ثلج، قلوب وأكثر. كل ضغطة على الزر لها شكل.",
+                "٢٤ تأثير عند الضغط", getString(R.string.nk_setupactivity_addslide_1),
                 "جرّب التأثيرات", () -> openThemes(4), new PressFx.Demo(this, -1)));
         addSlide(feature(new int[]{0xFF5E35B0, 0xFF3F3AA8, 0xFF135A70}, "volume", "جديد",
-                "٢٧ صوت للأزرار", "ماريمبا، عود، مطر، آلة كاتبة، سنث ويف... اختر صوتك وتحكم بمستواه.",
+                "٢٧ صوت للأزرار", getString(R.string.nk_setupactivity_addslide_2),
                 "اسمع الأصوات", () -> openThemes(3), null));
         Backdrops.AnimView av = new Backdrops.AnimView(this, -1);
         addSlide(feature(new int[]{0xFF6E3BAE, 0xFF43217E, 0xFF191848}, null, "جديد",
-                "خلفيات وسمات متحركة", "٣٠ خلفية متحركة و٣٠ سمة حيّة: مجرة، شفق، مطر رقمي، شهب وغيرها.",
+                "خلفيات وسمات متحركة", getString(R.string.nk_setupactivity_addslide_3),
                 "شوف الخلفيات", () -> openThemes(1), av));
         addSlide(feature(new int[]{0xFF7A48B8, 0xFF4B4DAE, 0xFF2A4FA8}, "paste", "حافظة ذكية",
-                "حافظتك صارت مكتبة", "تبويبات وبحث، تثبيت وتصنيفات وقوالب، ومحرر عائم مع تراجع. اضغط ⋮ على أي نص.",
+                "حافظتك صارت مكتبة", getString(R.string.nk_setupactivity_addslide_4),
                 "إعدادات الحافظة", () -> { tab = 1; showTab(); }, null));
         addSlide(feature(new int[]{0xFF5E35B0, 0xFF3F3AA8, 0xFF135A70}, "upload", "نقل",
-                "صدّر واستورد حافظتك", "احفظ نسخة بصيغة JSON أو CSV أو نص، وارجعها لأي جوال بدون تكرار.",
+                "صدّر واستورد حافظتك", getString(R.string.nk_setupactivity_addslide_5),
                 "تصدير الآن", () -> startActivity(new Intent(this, ClipIOActivity.class).putExtra(ClipIOActivity.EXTRA_MODE, 0)), null));
         addSlide(feature(new int[]{0xFF6E3BAE, 0xFF43217E, 0xFF191848}, "star", "رموز وزخرفة",
-                "+٨٠٠ رمز و١٥٠ إطار", "رموز إسلامية ونجوم وأسهم، ٤١ نمط زخرفة، وإطارات تلف نصك كامل. وتقدر تبحث عنها.", null, null, null));
+                "+٨٠٠ رمز و١٥٠ إطار", getString(R.string.nk_setupactivity_addslide_6), null, null, null));
         addSlide(feature(new int[]{0xFF7A48B8, 0xFF4B4DAE, 0xFF2A4FA8}, "gesture", "سرعة",
-                "اكتب بالسحب", "مرّر إصبعك على الحروف بدون ما ترفعه، والكلمة تطلع كاملة. وزر الحذف بالسحب يمسح كلمات.", null, null, null));
+                "اكتب بالسحب", getString(R.string.nk_setupactivity_addslide_7), null, null, null));
         addSlide(feature(new int[]{0xFF5E35B0, 0xFF3F3AA8, 0xFF135A70}, "book", "قاموس ضخم",
-                "١٥٠ ألف كلمة عربية", "اقتراحات وتصحيح تلقائي، ويتوقع كلمتك الجاية، ويتعلّم أسلوبك مع الوقت.", null, null, null));
+                "١٥٠ ألف كلمة عربية", getString(R.string.nk_setupactivity_addslide_8), null, null, null));
         addSlide(feature(new int[]{0xFF6E3BAE, 0xFF43217E, 0xFF191848}, "tools", "أدوات ذكية",
-                "كل شي من زر •••", "ترجمة، حاسبة، تاريخ هجري، زخرفة، مايك، بحث إيموجي، ويد واحدة.", null, null, null));
+                "كل شي من زر •••", getString(R.string.nk_setupactivity_addslide_9), null, null, null));
         addSlide(feature(new int[]{0xFF7A48B8, 0xFF4B4DAE, 0xFF2A4FA8}, "palette", "تخصيص",
-                "+٦٠ سمة + سمتك الخاصة", "صمّم سمتك من الصفر، أو حط صورتك خلفية، وغيّر شكل الأزرار والخط.", "اختر سمة", () -> openThemes(2), null));
+                "+٦٠ سمة + سمتك الخاصة", getString(R.string.nk_setupactivity_addslide_10), "اختر سمة", () -> openThemes(2), null));
         addSlide(feature(new int[]{0xFF5E35B0, 0xFF3F3AA8, 0xFF135A70}, "shield", "خصوصية",
-                "كل شي على جوالك", "بدون إعلانات ولا حسابات. كلماتك تُحفظ محلياً، ووضع التخفي يوقف الحفظ تماماً.", null, null, null));
+                "كل شي على جوالك", getString(R.string.nk_setupactivity_addslide_11), null, null, null));
         addSlide(feature(new int[]{0xFF6E3BAE, 0xFF43217E, 0xFF191848}, "bolt", "التفعيل",
-                "شغّله في ٣ خطوات", "١ فعّل نيو كيبورد  ٢ اختره كيبورد أساسي  ٣ اسمح بالمايك. يشتغل من أندرويد ٥.", "ابدأ التفعيل", () -> { tab = 3; showTab(); }, null));
+                "شغّله في ٣ خطوات", getString(R.string.nk_setupactivity_addslide_12), "ابدأ التفعيل", () -> { tab = 3; showTab(); }, null));
         addSlide(devSlide());
 
         H = Math.max(H, (int) (cw * 0.78f + 84 * dp));
@@ -605,7 +605,7 @@ public class SetupActivity extends Activity {
         Icons.withIcon(tt, "verified", 0xFFFFFFFF, (int) (20 * dp), true, (int) (6 * dp));
         tt.setPadding(0, (int) (8 * dp), 0, (int) (4 * dp));
         col.addView(tt);
-        col.addView(text("مطوّر نيو كيبورد. تابعني واطلب استشارتك التقنية.", 13, Typeface.NORMAL, 0xE6FFFFFF));
+        col.addView(text(getString(R.string.nk_setupactivity_devslide_1), 13, Typeface.NORMAL, 0xE6FFFFFF));
         TextView b = text("تواصل معي", 13, Typeface.BOLD, 0xFF4338CA);
         Icons.withIcon(b, "arrow", 0xFF4338CA, (int) (16 * dp), true, (int) (6 * dp));
         b.setGravity(Gravity.CENTER_VERTICAL);
@@ -759,7 +759,7 @@ public class SetupActivity extends Activity {
         } catch (Throwable e) {
             java.io.StringWriter sw = new java.io.StringWriter();
             e.printStackTrace(new java.io.PrintWriter(sw));
-            content.addView(errorCard("صار خطأ أثناء عرض هذا القسم، والتطبيق ما توقف. انسخ التفاصيل وأرسلها للمطوّر:", sw.toString()));
+            content.addView(errorCard(getString(R.string.nk_setupactivity_buildactivation_1), sw.toString()));
         }
     }
 
@@ -811,7 +811,7 @@ public class SetupActivity extends Activity {
         } catch (Exception e) { s = ""; }
         f.delete();
         if (s.isEmpty()) return;
-        root.addView(errorCard("توقف التطبيق في المرة السابقة. انسخ التفاصيل وأرسلها للمطوّر عشان نصلحه:", s), 1);
+        root.addView(errorCard(getString(R.string.nk_setupactivity_showlastcrash_1), s), 1);
     }
 
     private void section(String name) {
@@ -870,7 +870,7 @@ public class SetupActivity extends Activity {
         content.addView(actions, alp);
 
         if (Theme.prefs(this).getBoolean("autotheme", false)) {
-            TextView note = text("التبديل التلقائي نهاري/ليلي شغّال — السمة المعروضة على الكيبورد تتبع الوقت. غيّره من الإعدادات.",
+            TextView note = text(getString(R.string.nk_setupactivity_buildthemes_1),
                     12, Typeface.NORMAL, 0xFFFBBF24);
             note.setPadding((int) (12 * dp), (int) (10 * dp), (int) (12 * dp), (int) (10 * dp));
             note.setBackground(round(0xFF2A2210, 14, 0xFF4A3B10));
@@ -901,7 +901,7 @@ public class SetupActivity extends Activity {
             java.util.List<Integer> mine = new java.util.ArrayList<>();
             for (int i = 0; i < lib.length(); i++) mine.add(Theme.LIB_BASE + i);
             themeGrid(mine, cur);
-            TextView h = text("اضغط مطولاً على أي سمة لتعديلها أو تصديرها أو حذفها.", 12, Typeface.NORMAL, 0xFF8A90A0);
+            TextView h = text(getString(R.string.nk_setupactivity_themegrid_1), 12, Typeface.NORMAL, 0xFF8A90A0);
             h.setPadding((int) (6 * dp), (int) (4 * dp), 0, 0);
             content.addView(h);
         }
@@ -912,7 +912,7 @@ public class SetupActivity extends Activity {
         one.add(Theme.CUSTOM_INDEX);
         if (cur != Theme.CUSTOM_INDEX) {
             themeGrid(one, cur);
-            TextView h = text("اختر «" + Theme.custom(this).name + "» أو «سمة جديدة» لفتح المحرر وتصميم سمتك من الصفر.", 12, Typeface.NORMAL, 0xFF8A90A0);
+            TextView h = text("اختر «" + Theme.custom(this).name + getString(R.string.nk_setupactivity_themegrid_2), 12, Typeface.NORMAL, 0xFF8A90A0);
             h.setPadding((int) (6 * dp), (int) (4 * dp), 0, 0);
             content.addView(h);
         } else {
@@ -1082,7 +1082,7 @@ public class SetupActivity extends Activity {
             @Override public void onStopTrackingTouch(SeekBar b) { previewSound(Math.max(0, Theme.prefs(SetupActivity.this).getInt("sound_pack", 0))); }
         });
         content.addView(sb);
-        TextView hint = text("اضغط على أي صوت تسمعه ويتطبّق على الأزرار مباشرة.", 12, Typeface.NORMAL, 0xFF8F8AB8);
+        TextView hint = text(getString(R.string.nk_setupactivity_section_1), 12, Typeface.NORMAL, 0xFF8F8AB8);
         hint.setPadding((int) (6 * dp), (int) (8 * dp), 0, (int) (4 * dp));
         content.addView(hint);
         section(L.t("أصوات الأزرار") + " · " + Sounds.count());
@@ -1129,11 +1129,11 @@ public class SetupActivity extends Activity {
     private void buildPressFx() {
         content.addView(backRow("تأثيرات الضغط"));
         int sel = Theme.prefs(this).getInt("press_fx", -1);
-        TextView hint = text("حركة تطلع مكان إصبعك كل ما تضغط زر. اختر واحدة وجرّبها من زر «جرّب».", 12, Typeface.NORMAL, 0xFF8F8AB8);
+        TextView hint = text(getString(R.string.nk_setupactivity_buildpressfx_1), 12, Typeface.NORMAL, 0xFF8F8AB8);
         hint.setPadding((int) (6 * dp), (int) (8 * dp), 0, (int) (4 * dp));
         content.addView(hint);
         if (Theme.reduceMotion(this)) {
-            TextView w = text("«تقليل الحركة» مفعّل، فالتأثيرات ما تظهر على الكيبورد.", 12, Typeface.BOLD, 0xFFFBBF24);
+            TextView w = text(getString(R.string.nk_setupactivity_buildpressfx_2), 12, Typeface.BOLD, 0xFFFBBF24);
             w.setPadding((int) (6 * dp), (int) (4 * dp), 0, (int) (4 * dp));
             content.addView(w);
         }
@@ -1222,7 +1222,7 @@ public class SetupActivity extends Activity {
             });
             content.addView(sb);
         }
-        TextView hint = text("اضغط على أي خلفية وتتطبّق على الكيبورد مباشرة.", 12, Typeface.NORMAL, 0xFF8F8AB8);
+        TextView hint = text(getString(R.string.nk_setupactivity_section_2), 12, Typeface.NORMAL, 0xFF8F8AB8);
         hint.setPadding((int) (6 * dp), (int) (8 * dp), 0, (int) (4 * dp));
         content.addView(hint);
 
@@ -1634,7 +1634,7 @@ public class SetupActivity extends Activity {
         save.setOnClickListener(v -> {
             int idx = Theme.addToLibrary(this, Theme.toSpec(Theme.fromSpec(spec)));
             selectTheme(idx);
-            Toast.makeText(this, L.t("انحفظت في مكتبتك وصارت السمة الحالية"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, L.t(getString(R.string.nk_setupactivity_selecttheme_1)), Toast.LENGTH_SHORT).show();
             refresh();
         });
         TextView exp = text("تصدير", 14, Typeface.BOLD, Color.WHITE);
@@ -2055,7 +2055,7 @@ public class SetupActivity extends Activity {
         txt.setOrientation(LinearLayout.VERTICAL);
         txt.setPadding((int) (14 * dp), 0, (int) (14 * dp), 0);
         txt.addView(text(cur != null ? "بصمتك الرقمية" : "أضف صورتك", 16, Typeface.BOLD, Color.WHITE));
-        TextView sub = text("تظهر بإطار دائري في بداية شريط الكيبورد كعلامة تميّزك. الضغط عليها يفتح الإعدادات.", 12, Typeface.NORMAL, 0xFF8A90A0);
+        TextView sub = text(getString(R.string.nk_setupactivity_section_3), 12, Typeface.NORMAL, 0xFF8A90A0);
         sub.setPadding(0, (int) (3 * dp), 0, 0);
         txt.addView(sub);
         row.addView(txt, new LinearLayout.LayoutParams(0, -2, 1f));
@@ -2115,11 +2115,11 @@ public class SetupActivity extends Activity {
         for (int i = 0; i < CLIP_DAYS.length; i++) if (CLIP_DAYS[i] == curDays) selDays = i;
         card.addView(chips(new String[]{L.t("بدون حد"), L.t("يوم"), L.t("أسبوع"), L.t("شهر"), L.t("٣ أشهر")}, selDays,
                 i -> { Theme.prefs(this).edit().putInt("clip_days", CLIP_DAYS[i]).apply(); refresh(); }));
-        TextView hint = text("المثبّتة والمفضلة والمؤرشفة ما ينطبق عليها الحذف التلقائي. يحفظ الكيبورد النسخ وقت ما يكون هو الكيبورد الافتراضي فقط، هذا من قيود أندرويد.", 12, Typeface.NORMAL, 0xFF8A90A0);
+        TextView hint = text(getString(R.string.nk_setupactivity_buildclipcard_1), 12, Typeface.NORMAL, 0xFF8A90A0);
         hint.setPadding(0, (int) (4 * dp), 0, (int) (8 * dp));
         card.addView(hint);
         card.addView(divider());
-        card.addView(toggle("حفظ النصوص الحساسة (كلمات المرور ورموز التحقق)", "clip_sensitive", false));
+        card.addView(toggle(getString(R.string.nk_setupactivity_buildclipcard_2), "clip_sensitive", false));
         card.addView(divider());
         LinearLayout io = new LinearLayout(this);
         io.setPadding(0, (int) (10 * dp), 0, (int) (4 * dp));
@@ -2138,7 +2138,7 @@ public class SetupActivity extends Activity {
             io.addView(b, bl);
         }
         card.addView(io);
-        TextView ioHint = text("JSON نسخة كاملة تقدر تسترجعها، وTXT وCSV للنص والخصائص الأساسية.", 12, Typeface.NORMAL, 0xFF8A90A0);
+        TextView ioHint = text(getString(R.string.nk_setupactivity_buildclipcard_3), 12, Typeface.NORMAL, 0xFF8A90A0);
         ioHint.setPadding(0, (int) (2 * dp), 0, (int) (6 * dp));
         card.addView(ioHint);
         card.addView(divider());
@@ -2146,7 +2146,7 @@ public class SetupActivity extends Activity {
         clearTemp.setPadding(0, (int) (12 * dp), 0, (int) (12 * dp));
         clearTemp.setGravity(Gravity.CENTER);
         clearTemp.setOnClickListener(v -> ClipStore.get(this).run(r -> r.clearTemporary(), n -> {
-            Toast.makeText(this, L.t("انمسح السجل، والمثبّتة والمحفوظة باقية"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, L.t(getString(R.string.nk_setupactivity_buildclipcard_4)), Toast.LENGTH_SHORT).show();
             refresh();
         }));
         card.addView(clearTemp);
@@ -2155,7 +2155,7 @@ public class SetupActivity extends Activity {
         clearAll.setGravity(Gravity.CENTER);
         clearAll.setOnClickListener(v -> new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle(L.t("حذف كل الحافظة؟"))
-                .setMessage(L.t("بينحذف كل نص محفوظ، ومعه المثبّتة والمفضلة والمؤرشفة. ما تقدر تتراجع عن هذا."))
+                .setMessage(L.t(getString(R.string.nk_setupactivity_refresh_1)))
                 .setPositiveButton(L.t("احذف الكل"), (d, w) -> ClipStore.get(this).run(r -> r.clearAllClips(), n -> {
                     Toast.makeText(this, L.t("انحذفت الحافظة كاملة"), Toast.LENGTH_SHORT).show();
                     refresh();
@@ -2173,7 +2173,7 @@ public class SetupActivity extends Activity {
         Switch on = (Switch) toggle("إظهار السهمين في شريط الكيبورد", "arrows", true);
         on.setOnCheckedChangeListener((b, v) -> { Theme.prefs(this).edit().putBoolean("arrows", v).apply(); refresh(); });
         card.addView(on);
-        TextView hint = text("السهمان ثابتان على طرفي الشريط حتى وقت الكتابة. اضغط سهماً تطلع مميزاته الخمس مكان الاقتراحات، واضغطه مرة ثانية يرجع كل شي مكانه. اضغط أي خانة تحت لتغيير الميزة.", 12, Typeface.NORMAL, 0xFF8A90A0);
+        TextView hint = text(getString(R.string.nk_setupactivity_buildarrowscard_1), 12, Typeface.NORMAL, 0xFF8A90A0);
         hint.setPadding(0, 0, 0, (int) (8 * dp));
         card.addView(hint);
         if (Features.on(this)) {
@@ -2322,18 +2322,18 @@ public class SetupActivity extends Activity {
         card.addView(divider());
         card.addView(toggle("مسافتين = نقطة", "dblspace", true));
         card.addView(divider());
-        card.addView(toggle("التصحيح التلقائي (زر الحذف يتراجع عنه ولا يصحح الكلمة مرة ثانية)", "autocorrect", false));
+        card.addView(toggle(getString(R.string.nk_setupactivity_section_4), "autocorrect", false));
         card.addView(divider());
         // item B week 2: الفاصلة المنقوطة والأرقام العربية — one pref for both
         // layout/script mismatch classes (semicolon + script-adjacent numerals).
-        card.addView(toggle("الفاصلة المنقوطة والأرقام العربية تلقائياً", "ar_punct", true));
+        card.addView(toggle(getString(R.string.nk_setupactivity_section_5), "ar_punct", true));
         card.addView(divider());
         card.addView(toggle("الكتابة بالسحب على الحروف", "glide", true));
         card.addView(divider());
         // C2 (الأسبوع 6): التبديل الذكي فصحى/لهجة — افتراضي تلقائي، الكشف لحظي بلا تخزين
         card.addView(dialectRow());
         card.addView(divider());
-        TextView privNote = text("كل الذكاء يعمل على جهازك — لا يُدخل نصك في أي نموذج بلا موافقة صريحة تظهر عند أول اتصال خارجي", 13, Typeface.NORMAL, 0xFF8A8FA3);
+        TextView privNote = text(getString(R.string.nk_setupactivity_section_6), 13, Typeface.NORMAL, 0xFF8A8FA3);
         privNote.setPadding(0, (int) (8 * dp), 0, (int) (8 * dp));
         card.addView(privNote);
         content.addView(card);
@@ -2348,7 +2348,7 @@ public class SetupActivity extends Activity {
         card2.addView(divider());
         card2.addView(toggle("صف الأرقام", "numrow", true));
         card2.addView(divider());
-        card2.addView(toggle("لوحة أرقام كبيرة لخانات الأرقام والجوال", "numpad", true));
+        card2.addView(toggle(getString(R.string.nk_setupactivity_section_7), "numpad", true));
         content.addView(card2);
 
         section("المظهر والحركة");
@@ -2360,9 +2360,9 @@ public class SetupActivity extends Activity {
 
         section("تخطيط الكيبورد");
         content.addView(seg(new String[]{"قياسي", "برمجة", "ألعاب", "مراسلات"}, pr.getInt("kblayout", 0), "kblayout"));
-        TextView lh = text(new String[]{"التخطيط العادي.", "صف رموز للأكواد: Tab { } [ ] ( ) ; = < > / مع بدائل بالضغط المطوّل.",
-                "صف اختصارات للعب (gg, wp, brb…) والتصحيح التلقائي والسحب مقفلة لسرعة أعلى.",
-                "صف إيموجي سريع فوق الحروف للمحادثات."}[Math.max(0, Math.min(3, pr.getInt("kblayout", 0)))],
+        TextView lh = text(new String[]{"التخطيط العادي.", getString(R.string.nk_setupactivity_section_8),
+                getString(R.string.nk_setupactivity_section_9),
+                getString(R.string.nk_setupactivity_section_10)}[Math.max(0, Math.min(3, pr.getInt("kblayout", 0)))],
                 12, Typeface.NORMAL, 0xFF8A90A0);
         lh.setPadding((int) (6 * dp), (int) (8 * dp), (int) (6 * dp), 0);
         content.addView(lh);
@@ -2425,7 +2425,7 @@ public class SetupActivity extends Activity {
 
         section("إمكانية الوصول");
         LinearLayout a11y = cardBox();
-        a11y.addView(toggle("تباين عالٍ (يتجاوز السمة الحالية)", "contrast", false));
+        a11y.addView(toggle(getString(R.string.nk_setupactivity_section_11), "contrast", false));
         a11y.addView(divider());
         a11y.addView(toggle("مفاتيح كبيرة", "bigkeys", false));
         a11y.addView(divider());
@@ -2433,12 +2433,12 @@ public class SetupActivity extends Activity {
         rm.setOnCheckedChangeListener((b, on) -> { Theme.prefs(this).edit().putBoolean("reducemotion", on).apply(); bnPause(on); });
         a11y.addView(rm);
         a11y.addView(divider());
-        a11y.addView(toggle("علامات للحالة لا تعتمد على اللون وحده", "cues", true));
+        a11y.addView(toggle(getString(R.string.nk_setupactivity_section_12), "cues", true));
         content.addView(a11y);
         if (pr.getBoolean("contrast", false)) {
             content.addView(seg(new String[]{"تباين داكن", "تباين فاتح"}, pr.getInt("contrast_mode", 0), "contrast_mode"), new LinearLayout.LayoutParams(-1, -2) {{ topMargin = (int) (8 * dp); }});
         }
-        TextView sr = text("قارئ الشاشة (TalkBack): المس واسحب إصبعك لسماع اسم كل زر، وارفع إصبعك للكتابة، أو اضغط مرتين على الزر المحدد. كل الأزرار الخاصة لها أسماء مسموعة.",
+        TextView sr = text(getString(R.string.nk_setupactivity_section_13),
                 12, Typeface.NORMAL, 0xFF8A90A0);
         sr.setPadding((int) (6 * dp), (int) (8 * dp), (int) (6 * dp), 0);
         content.addView(sr);
@@ -2460,7 +2460,7 @@ public class SetupActivity extends Activity {
         rlp.topMargin = (int) (24 * dp);
         content.addView(reset, rlp);
 
-        TextView tip = text("نصائح: اضغط مطولاً على أي حرف لبدائله، ومطولاً على المسافة لتبديل الكيبورد. اسحب إصبعك على الحروف لكتابة الكلمة كاملة، واسحب على زر الحذف لمسح كلمات. زر «تصحيح اللغة» في ••• يصحح النص المكتوب بلغة غلط. زر ••• فيه تحرير النص والعبارات والزخرفة واليد الواحدة، واضغط مطولاً على أي نص في الحافظة لتثبيته. لما تنسخ نص يطلع لك فوق الكيبورد للصق بضغطة، ووضع التخفي يوقف حفظ كلماتك.",
+        TextView tip = text(getString(R.string.nk_setupactivity_showtab_1),
                 13, Typeface.NORMAL, 0xFF8A90A0);
         tip.setPadding((int) (4 * dp), (int) (16 * dp), (int) (4 * dp), 0);
         content.addView(tip);
@@ -2469,13 +2469,13 @@ public class SetupActivity extends Activity {
         // صف واحد يفتح الشاشة المخصصة؛ الافتراضي مغلق والإذن منفصل داخل الشاشة.
         section("الحساب والمزامنة");
         LinearLayout syncCard = cardBox();
-        TextView syncRow = text("حسابي المشفر والمزامنة بين الأجهزة", 14, Typeface.BOLD, 0xFF93B4FF);
+        TextView syncRow = text(getString(R.string.nk_setupactivity_section_14), 14, Typeface.BOLD, 0xFF93B4FF);
         syncRow.setMinHeight((int) (48 * dp));
         syncRow.setGravity(Gravity.CENTER_VERTICAL);
         syncRow.setOnClickListener(v -> startActivity(new Intent(this, SyncActivity.class)));
         syncCard.addView(syncRow);
         syncCard.addView(divider());
-        TextView syncNote = text("تُشفَّر حالتك على جوالك قبل مغادرتها — مغلقة افتراضياً وتُفعّل بإذن صريح.",
+        TextView syncNote = text(getString(R.string.nk_setupactivity_section_15),
                 13, Typeface.NORMAL, 0xFF8A8FA3);
         syncNote.setLineSpacing(0, 1.2f);
         syncNote.setPadding(0, (int) (6 * dp), 0, (int) (4 * dp));
@@ -2484,9 +2484,9 @@ public class SetupActivity extends Activity {
 
         section("الخصوصية");
         LinearLayout pc = cardBox();
-        TextView pt = text("كل شي يبقى على جوالك: الإعدادات، الكلمات المتعلّمة، الحافظة، والعبارات. ما فيه إعلانات ولا حسابات ولا تتبع. "
-                + "ما يتعلّم الكيبورد من حقول كلمات المرور ولا في الوضع الخفي. تقارير الأداء ما فيها أي نص. "
-                + "الإنترنت يُستخدم فقط إذا فعّلت تحسين النص بالذكاء الاصطناعي بمفتاحك، ووقتها يُرسل النص اللي تطلب تحسينه فقط.", 13, Typeface.NORMAL, 0xFFB9BECA);
+        TextView pt = text(getString(R.string.nk_setupactivity_section_16)
+                + getString(R.string.nk_setupactivity_section_17)
+                + getString(R.string.nk_setupactivity_section_18), 13, Typeface.NORMAL, 0xFFB9BECA);
         pt.setLineSpacing(0, 1.25f);
         pt.setPadding(0, (int) (6 * dp), 0, (int) (8 * dp));
         pc.addView(pt);
@@ -2504,7 +2504,7 @@ public class SetupActivity extends Activity {
                 .setPositiveButton("حسناً", null).show());
         pc.addView(sh);
         pc.addView(divider());
-        pc.addView(toggle("الوضع الخفي دائماً (لا تعلّم ولا حافظة)", "incognito", false));
+        pc.addView(toggle(getString(R.string.nk_setupactivity_section_19), "incognito", false));
         pc.addView(divider());
         Switch perfSw = new Switch(this);
         perfSw.setText(L.t("قياس الأداء والأعطال محلياً"));
@@ -2516,11 +2516,11 @@ public class SetupActivity extends Activity {
         perfSw.setOnCheckedChangeListener((bv, on) -> Perf.setEnabled(on));
         pc.addView(perfSw);
         pc.addView(divider());
-        TextView forget = text("مسح الكلمات المتعلّمة وسجل التصحيح", 14, Typeface.BOLD, 0xFFF87171);
+        TextView forget = text(getString(R.string.nk_setupactivity_section_20), 14, Typeface.BOLD, 0xFFF87171);
         forget.setMinHeight((int) (48 * dp));
         forget.setGravity(Gravity.CENTER_VERTICAL);
         forget.setOnClickListener(v -> new android.app.AlertDialog.Builder(this)
-                .setMessage(L.t("أكيد؟ بتنحذف كل الكلمات اللي تعلّمها الكيبورد بالعربي والإنجليزي."))
+                .setMessage(L.t(getString(R.string.nk_setupactivity_section_21)))
                 .setPositiveButton(L.t("مسح"), (d, w) -> {
                     for (String n : new String[]{"user_ar.txt", "user_en.txt", "bigram_ar.txt", "bigram_en.txt"}) new java.io.File(getFilesDir(), n).delete();
                     Theme.prefs(this).edit().remove("nocorrect").putBoolean("dict_reload", true).apply();
@@ -2569,8 +2569,8 @@ public class SetupActivity extends Activity {
         // promised by the store listing, wired to the tested Feedback contract).
         section("تواصل ومختبر بيتا");
         LinearLayout fbc = cardBox();
-        TextView fbt = text("مختبر البيتا هو الحلقة الأولى قبل التوسع: 100 مقعد، وملاحظاتك تصنع "
-                + "التحديث القادم. أي تقرير ترسله مجهول بالكامل (أرقام فقط بلا أي بيانات شخصية).",
+        TextView fbt = text(getString(R.string.nk_setupactivity_section_22)
+                + getString(R.string.nk_setupactivity_section_23),
                 13, Typeface.NORMAL, 0xFFB9BECA);
         fbt.setLineSpacing(0, 1.25f);
         fbt.setPadding(0, (int) (6 * dp), 0, (int) (10 * dp));
@@ -2593,7 +2593,7 @@ public class SetupActivity extends Activity {
         });
         fbc.addView(mailB);
         fbc.addView(divider());
-        TextView repB = text(L.t("نسخ التقرير المجهول جاهز الإرسال"), 14, Typeface.BOLD, Color.WHITE);
+        TextView repB = text(L.t(getString(R.string.nk_setupactivity_startactivity_1)), 14, Typeface.BOLD, Color.WHITE);
         repB.setGravity(Gravity.CENTER_VERTICAL);
         repB.setMinHeight((int) (52 * dp));
         repB.setBackground(round(CARD, 20, LINE));
@@ -2678,7 +2678,7 @@ public class SetupActivity extends Activity {
         name.setGravity(Gravity.CENTER);
         name.setPadding(0, (int) (8 * dp), 0, 0);
         card.addView(name);
-        TextView role = text("مطوّر نيو كيبورد • استشارات تقنية", 13, Typeface.NORMAL, 0xFFA5B4FC);
+        TextView role = text(getString(R.string.nk_setupactivity_developercard_1), 13, Typeface.NORMAL, 0xFFA5B4FC);
         role.setGravity(Gravity.CENTER);
         role.setPadding(0, (int) (2 * dp), 0, (int) (12 * dp));
         card.addView(role, new LinearLayout.LayoutParams(-1, -2));
@@ -2815,7 +2815,7 @@ public class SetupActivity extends Activity {
         ll.topMargin = (int) (14 * dp);
         card.addView(link, ll);
 
-        TextView how = text("طريقة المسح:\n١. افتح كاميرا الجوال أو تطبيق قارئ الباركود من جهاز ثاني.\n٢. وجّه الكاميرا على الرمز وخلّه داخل الإطار.\n٣. اضغط على الرابط اللي يطلع لك، ويفتح الحساب مباشرة.",
+        TextView how = text(getString(R.string.nk_setupactivity_showqr_1),
                 13, Typeface.NORMAL, 0xFFCBD5E1);
         how.setLineSpacing(4 * dp, 1f);
         how.setPadding((int) (14 * dp), (int) (12 * dp), (int) (14 * dp), (int) (12 * dp));
@@ -3078,7 +3078,7 @@ public class SetupActivity extends Activity {
         TextView wt = text("مساعد المراسلات", 17, Typeface.BOLD, Color.WHITE);
         Icons.withIcon(wt, "edit_note", Color.WHITE, (int) (22 * dp), false, (int) (8 * dp));
         wc.addView(wt);
-        TextView wd = text("رسائل رسمية، ردود خدمة العملاء، رسائل عمل، طلبات توظيف، ردود مختصرة، اعتذار وشكر. تراجع وتعدّل كل مسودة قبل إدراجها. من الكيبورد: ••• ← مساعد المراسلات.",
+        TextView wd = text(getString(R.string.nk_setupactivity_buildphrases_1),
                 13, Typeface.NORMAL, 0xFFDDE4FF);
         wd.setPadding(0, (int) (6 * dp), 0, (int) (10 * dp));
         wc.addView(wd);
@@ -3142,7 +3142,7 @@ public class SetupActivity extends Activity {
         }
 
         section("الاختصارات");
-        TextView sTip = text("اكتب الاختصار في أي مكان ويطلع لك النص الكامل أول اقتراح.", 13, Typeface.NORMAL, 0xFF8A90A0);
+        TextView sTip = text(getString(R.string.nk_setupactivity_section_24), 13, Typeface.NORMAL, 0xFF8A90A0);
         sTip.setPadding((int) (4 * dp), 0, (int) (4 * dp), (int) (8 * dp));
         content.addView(sTip);
         LinearLayout scRow = new LinearLayout(this);
@@ -3222,7 +3222,7 @@ public class SetupActivity extends Activity {
             chips.addView(t, lp);
         }
         content.addView(chips);
-        TextView tip = text("تلقاها كلها في الكيبورد من زر ••• ثم «عبارات جاهزة».", 13, Typeface.NORMAL, 0xFF8A90A0);
+        TextView tip = text(getString(R.string.nk_setupactivity_section_25), 13, Typeface.NORMAL, 0xFF8A90A0);
         tip.setPadding((int) (4 * dp), (int) (12 * dp), (int) (4 * dp), 0);
         content.addView(tip);
     }
@@ -3230,11 +3230,11 @@ public class SetupActivity extends Activity {
     private void buildActivation() {
         boolean enabled = isEnabled(), selected = isSelected();
         section("التفعيل");
-        content.addView(step("١", "فعّل نيو كيبورد", "شغّل المفتاح جنب NeoKey 2036 في الإعدادات.", enabled,
+        content.addView(step("١", "فعّل نيو كيبورد", getString(R.string.nk_setupactivity_section_26), enabled,
                 "افتح الإعدادات", v -> startActivity(new Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))));
         content.addView(step("٢", "اختره كيبورد أساسي", "اختر NeoKey 2036 من القائمة.", selected,
                 "اختيار الكيبورد", v -> imm().showInputMethodPicker()));
-        content.addView(step("٣", "الكتابة بالصوت (اختياري)", "اسمح بالمايك عشان تكتب بصوتك عربي وإنجليزي.", micGranted(),
+        content.addView(step("٣", "الكتابة بالصوت (اختياري)", getString(R.string.nk_setupactivity_section_27), micGranted(),
                 "السماح بالمايك", v -> askMic()));
         if (enabled && selected) {
             TextView ok = text("كل شي جاهز، جرّب الكتابة تحت.", 15, Typeface.BOLD, 0xFF4ADE80);
@@ -3256,7 +3256,7 @@ public class SetupActivity extends Activity {
     public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
         super.onRequestPermissionsResult(req, perms, res);
         if (req == 7) {
-            Toast.makeText(this, micGranted() ? "تم، ارجع واضغط المايك في الكيبورد" : "بدون المايك ما تشتغل الكتابة بالصوت",
+            Toast.makeText(this, micGranted() ? getString(R.string.nk_setupactivity_onrequestpermissionsresult_1) : getString(R.string.nk_setupactivity_onrequestpermissionsresult_2),
                     Toast.LENGTH_SHORT).show();
             showTab();
         }
@@ -3351,7 +3351,7 @@ public class SetupActivity extends Activity {
             for (int i = 0; i < DIALECT_MODES.length; i++) if (DIALECT_MODES[i].equals(cur)) sel = i;
             new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                     .setTitle("لهجة التنبؤ")
-                    .setMessage("كلمات اللهجة تظهر أولاً في الاقتراحات وسدادة الفصحى تكملها. الكشف لحظي على جهازك — لا يُخزن شيء ولا يُرسل.")
+                    .setMessage(getString(R.string.nk_setupactivity_dialectrow_1))
                     .setSingleChoiceItems(new String[]{"تلقائي حسب السياق", "فصحى فقط", "حجازي", "نجدي", "خليجي عام"},
                             sel, (d, w) -> {
                                 Theme.prefs(this).edit().putString("dialect_mode", DIALECT_MODES[w]).apply();
@@ -3375,13 +3375,13 @@ public class SetupActivity extends Activity {
     private void showExceptionsDialog(final TextView row) {
         final java.util.List<String> l = Exceptions.parse(Theme.prefs(this).getString("nocorrect", ""));
         if (l.isEmpty()) {
-            android.widget.Toast.makeText(this, L.t("القائمة فاضية — تراجع عن أي تصحيح بزر الحذف وتُضاف هنا"), android.widget.Toast.LENGTH_SHORT).show();
+            android.widget.Toast.makeText(this, L.t(getString(R.string.nk_setupactivity_showexceptionsdialog_1)), android.widget.Toast.LENGTH_SHORT).show();
             return;
         }
         final String[] items = l.toArray(new String[0]);
         new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle(L.t("كلمات لا تُصحح"))
-                .setMessage(L.t("اضغط على كلمة لإزالتها من الاستثناءات؛ تُعاد للتصحيح التلقائي."))
+                .setMessage(L.t(getString(R.string.nk_setupactivity_showexceptionsdialog_2)))
                 .setItems(items, (d, w) -> {
                     java.util.List<String> rest = Exceptions.remove(l, items[w]);
                     Theme.prefs(SetupActivity.this).edit().putString("nocorrect", Exceptions.serialize(rest)).apply();

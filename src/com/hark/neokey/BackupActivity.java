@@ -19,8 +19,8 @@ public class BackupActivity extends Screen {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
-        header("النسخ الاحتياطي", "انقل إعداداتك وكلماتك لجوال جديد", "download");
-        TextView info = text("الملف يحتوي: الإعدادات، السمات المحفوظة، العبارات والاختصارات، والكلمات المتعلّمة. ما يحتوي الحافظة ولا مفتاح الذكاء الاصطناعي ولا صورة الخلفية. احفظه بمكان آمن لأنه فيه كلماتك.",
+        header("النسخ الاحتياطي", getString(R.string.nk_backupactivity_oncreate_1), "download");
+        TextView info = text(getString(R.string.nk_backupactivity_header_1),
                 13, Typeface.NORMAL, MUTED);
         info.setPadding((int) (4 * dp), (int) (16 * dp), (int) (4 * dp), 0);
         root.addView(info);
@@ -114,7 +114,7 @@ public class BackupActivity extends Screen {
                     while ((n = in.read(buf)) > 0) { bo.write(buf, 0, n); if (bo.size() > 20_000_000) throw new IOException("big"); }
                 }
                 restore(bo.toString("UTF-8"));
-                Toast.makeText(this, L.t("تمت الاستعادة. افتح الكيبورد وبتشوف إعداداتك"), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, L.t(getString(R.string.nk_backupactivity_restore_1)), Toast.LENGTH_LONG).show();
             }
         } catch (Exception ex) {
             Toast.makeText(this, req == IMPORT ? "الملف غير صالح أو تالف" : "تعذّر الحفظ", Toast.LENGTH_LONG).show();
