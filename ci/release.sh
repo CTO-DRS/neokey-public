@@ -75,6 +75,12 @@ if [ "${ENTGATE:-}" = "OK" ]; then
   ENTGATE_BLOCK=$',\n    "entitlements": { "verifiedBy": "ci/entitlement_gate.sh", "contract": "docs/PHASE3-W3-REPORT.md", "recordKind": "entitlement (ownership pin only — binaries always come from the pinned catalog)", "granted": '"${ENTGATE_GRANTED:-0}"', "negativesRefused": "'"${ENTGATE_NEGATIVES:-0}"'", "collectP50Us": '"${ENTGATE_P50_COLLECT_US:-0}"', "applyP50Us": '"${ENTGATE_P50_APPLY_US:-0}"', "serverEntropyX100": '"${ENTGATE_ENTROPY:-0}"', "trustChain": "catalog purchase -> entitlement record -> E2E sealed sync -> grantFromSync by exact pin -> install from catalog" }'
 fi
 
+# REST reference-server gate (phase 4, week 23) — present when the gate ran
+REST_BLOCK=""
+if [ "${REST_GATE:-}" = "OK" ]; then
+  REST_BLOCK=$',\n    "restServer": { "verifiedBy": "ci/rest_gate.sh", "contract": "docs/SYNC-REST.md", "server": "SyncServer — real HTTP (JDK) reference server on 127.0.0.1, tests/ not src/ (proof infrastructure, zero dex, zero app attack surface)", "client": "SyncRestTransport (production, HttpURLConnection)", "endpoints": 5, "wireRounds": '"${REST_ROUNDS:-0}"', "blobsSynced": '"${REST_BLOBS:-0}"', "wireBytes": '"${REST_WIRE_BYTES:-0}"', "grantedAcrossDevices": '"${REST_GRANTED:-0}"', "negativesRefused": "'"${REST_NEGATIVES:-0}"'", "p50PushMs": '"${REST_P50_PUSH_MS:-0}"', "p50PullMs": '"${REST_P50_PULL_MS:-0}"', "serverEntropyX100": '"${REST_ENTROPY_X100:-0}"', "negativeProof": "ci/rest-negative-proof.log" }'
+fi
+
 # Phase-3 closing gate (phase 3, week 4) — present when the closing gate ran
 PHASE3_BLOCK=""
 if [ "${PHASE3_GATE:-}" = "OK" ]; then
@@ -97,7 +103,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$PHASE3_BLOCK$TRIM_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$PHASE3_BLOCK$TRIM_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
   "signedBy": "release workflow only — signing secrets never leave the vault"

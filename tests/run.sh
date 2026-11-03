@@ -32,6 +32,7 @@ SRC="src/com/hark/neokey/ClipItem.java src/com/hark/neokey/ClipRepo.java src/com
  src/com/hark/neokey/Dialect.java src/com/hark/neokey/SmartSwitch.java src/com/hark/neokey/Assistant.java src/com/hark/neokey/NetGate.java \
  src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncServerSim.java \
  src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java \
+ src/com/hark/neokey/SyncRestTransport.java \
  src/com/hark/neokey/ThemePack.java src/com/hark/neokey/Economy.java \
  src/com/hark/neokey/NqfPort.java src/com/hark/neokey/CommunityDict.java \
  src/com/hark/neokey/StoreUi.java src/com/hark/neokey/DictSign.java \
@@ -59,3 +60,4 @@ java -cp build/test:$JAR com.hark.neokey.CommunityDictTest
 java -cp build/test:$JAR com.hark.neokey.StoreUiTest
 java -cp build/test:$JAR com.hark.neokey.DictSignTest
 java -cp build/test:$JAR com.hark.neokey.EntitlementTest
+java -cp build/test:$JAR com.hark.neokey.SyncServerContractTest

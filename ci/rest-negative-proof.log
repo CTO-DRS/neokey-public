@@ -1,0 +1,30 @@
+== REST negative proof — Tue Nov 03 22:59:05 UTC 2026 ==
+--- attack: wire.stored-blob byte-flip (expect: auth_failed)
+caught: auth_failed → BIT
+  baseline: RESTBASELINE_OK (fresh account on the same server) → HEALED
+--- attack: wire.stored-salt byte-flip (expect: account_mismatch)
+caught: account_mismatch → BIT
+  baseline: RESTBASELINE_OK (fresh account on the same server) → HEALED
+--- attack: wire.stored-blob truncation (-8B) (expect: auth_failed)
+caught: auth_failed → BIT
+  baseline: RESTBASELINE_OK (fresh account on the same server) → HEALED
+--- attack: wire.same-id growth smuggling (400KB → 1MB+1) (expect: http_507)
+caught: http_507 → BIT
+  baseline: RESTBASELINE_OK (fresh account on the same server) → HEALED
+--- attack: wire.blob-id path injection (a/b) (expect: http_404)
+caught: http_404 → BIT
+  baseline: RESTBASELINE_OK (fresh account on the same server) → HEALED
+  store intact: blobCount=0 (before=0)
+--- attack: client pre-wire charset refusal (bad|id) (expect: bad_account_id)
+caught: bad_account_id → BIT
+server-side raw non-b64url account: HTTP 400 (expect 400)
+  baseline: RESTBASELINE_OK (fresh account on the same server) → HEALED
+--- attack: wire.salt-overwrite smuggling (expect: 409 recorded + salt kept)
+caught: 409 recorded / salt kept → BIT
+  baseline: RESTBASELINE_OK (fresh account on the same server) → HEALED
+--- attack: wire.oversize blob (8MB+1) (expect: http_413)
+caught: http_413 → BIT
+  baseline: RESTBASELINE_OK (fresh account on the same server) → HEALED
+  baseline: RESTBASELINE_OK (fresh account on the same server) → HEALED
+
+== PROOF_PASSED attacks=9/9 baselines=9 — every attack bit with its own tag, every baseline healed ==

@@ -24,12 +24,29 @@ import java.util.List;
 final class SyncRestTransport implements SyncClient.Transport {
 
     private final String base;
+    /** الحلبة المحلية فقط (بوابة RESTGATE): 127.0.0.1 حصراً — لا يمكن لهذا
+     *  المسار مغادرة الجهاز، ويُستبدل فحص NetGate الاستنتاجي بفحص الحلبة. */
+    private final boolean arena;
 
     /** يُبنى بنطاق البوابة فقط — أي مصدر آخر يُرفض عند البناء. */
     SyncRestTransport() {
         String ep = NetGate.endpoint(NetGate.CAP_SYNC);
         if (ep == null) throw new SyncVault.SyncRefused("no_endpoint");
         this.base = ep;
+        this.arena = false;
+    }
+
+    /**
+     * حصراً لبوابة الحلبة المحلية (المرحلة 4، الأسبوع 2): الخادم المرجعي
+     * HTTP حقيقي على 127.0.0.1 — العقد يُثبت على السلك بعميل الإنتاج نفسه.
+     * البناء يقبل 127.0.0.1 حصراً قبالة النص، فلا يمكن للحلبة أبداً أن
+     * تولّد طلباً نحو نطاق حقيقي؛ فحص NetGate يبقى حكراً على مسار الإنتاج.
+     */
+    SyncRestTransport(String arenaBase) {
+        if (arenaBase == null || !arenaBase.startsWith("http://127.0.0.1:"))
+            throw new SyncVault.SyncRefused("not_arena");
+        this.base = arenaBase;
+        this.arena = true;
     }
 
     // ---- الحساب ------------------------------------------------------------------
@@ -79,7 +96,7 @@ final class SyncRestTransport implements SyncClient.Transport {
     }
 
     private byte[] req(String method, String relPath, byte[] body, int[] okCodes) {
-        if (!NetGate.endpointAllowed(NetGate.CAP_SYNC, base))     // دفاع ثانٍ عند كل طلب
+        if (!arena && !NetGate.endpointAllowed(NetGate.CAP_SYNC, base))  // دفاع ثانٍ عند كل طلب (الإنتاج)
             throw new SyncVault.SyncRefused("endpoint_not_allowed");
         HttpURLConnection c = null;
         try {
@@ -90,6 +107,7 @@ final class SyncRestTransport implements SyncClient.Transport {
             if (body != null) {
                 c.setDoOutput(true);
                 c.setFixedLengthStreamingMode(body.length);
+                c.setRequestProperty("Content-Type", "application/octet-stream");  // عقد الأجسام الخام
                 OutputStream out = c.getOutputStream();
                 out.write(body);
                 out.close();

@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → phase-3 gates → phase3 close → build → release manifest (21 stages)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → phase-3 gates → phase3 close → build → r8 → trim → release manifest (23 stages)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -85,6 +85,13 @@ stage_sync() { ci/sync_gate.sh; }
 
 # ---- 3g: sync-client gate (phase 2, item A2, week 2) ------------------------------
 stage_syncclient() { ci/sync_client_gate.sh; }
+
+# ---- 3g2: REST reference-server gate (phase 4, week 2 — week 23) -----------------
+# The contract docs/SYNC-REST.md proven ON THE WIRE: real HTTP server on
+# 127.0.0.1 + the production SyncRestTransport — no simulator substitute.
+stage_rest() { ci/rest_gate.sh; }
+
+
 
 # ---- 3h: theme-store gate (phase 2, item B, week 3) -------------------------------
 stage_themestore() { ci/theme_store_gate.sh; }
@@ -221,6 +228,18 @@ collect_gates() {
   echo "SYNCCLIENT_ENTROPY=$(echo "$SC_LINE" | sed -E 's/.*entropy=([0-9.]+).*/\1/')" >> "$GATES"
   echo "SYNCCLIENT_BIG_MS=$(echo "$SC_LINE" | sed -E 's/.*big_ms=([0-9.]+).*/\1/')" >> "$GATES"
   echo "SYNCCLIENT_KDF_MS=$(echo "$SC_LINE" | sed -E 's/.*kdf_ms=([0-9]+).*/\1/')" >> "$GATES"
+  # REST reference-server gate numbers (phase 4, week 23)
+  echo "REST_GATE=$(grep -q '^RESTGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  R_LINE=$(grep '^RESTGATE_OK' "$LOG" | tail -1)
+  echo "REST_ROUNDS=$(echo "$R_LINE" | sed -E 's/.*rounds=([0-9]+).*/\1/')" >> "$GATES"
+  echo "REST_BLOBS=$(echo "$R_LINE" | sed -E 's/.*blobs=([0-9]+).*/\1/')" >> "$GATES"
+  echo "REST_WIRE_BYTES=$(echo "$R_LINE" | sed -E 's/.*wire_bytes=([0-9]+).*/\1/')" >> "$GATES"
+  echo "REST_GRANTED=$(echo "$R_LINE" | sed -E 's/.*granted=([0-9]+).*/\1/')" >> "$GATES"
+  echo "REST_NEGATIVES=$(echo "$R_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
+  echo "REST_ENTROPY_X100=$(echo "$R_LINE" | sed -E 's/.*entropy_x100=([0-9]+).*/\1/')" >> "$GATES"
+  echo "REST_P50_PUSH_MS=$(echo "$R_LINE" | sed -E 's/.*p50_push_ms=([0-9.]+).*/\1/')" >> "$GATES"
+  echo "REST_P50_PULL_MS=$(echo "$R_LINE" | sed -E 's/.*p50_pull_ms=([0-9.]+).*/\1/')" >> "$GATES"
+  echo "REST_CHECKS=$(echo "$R_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
   # theme-store gate numbers (phase 2, item B, week 3)
   echo "THEMESTORE_GATE=$(grep -q '^THEME_STORE_GATE_OK$' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   echo "THEMESTORE_PACKS=$(grep -o 'packs=[0-9]*' "$LOG" | tail -1 | cut -d= -f2)" >> "$GATES"
@@ -291,6 +310,7 @@ run_stage "dialect" stage_dialect
 run_stage "assistant" stage_assistant
 run_stage "sync" stage_sync
 run_stage "syncclient" stage_syncclient
+run_stage "rest" stage_rest
 run_stage "themestore" stage_themestore
 run_stage "nqfport" stage_nqfport
 run_stage "community" stage_community
