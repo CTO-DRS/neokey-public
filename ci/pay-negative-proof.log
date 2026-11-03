@@ -1,0 +1,30 @@
+# pay-negative-proof — week 24 (phase 4 W3), 2026-11-03T23:25:06Z
+# Each attack runs on a fresh wallet and must be caught by its exact tag
+# (or by evidence the provider was never called). After EVERY attack a full
+# green baseline re-runs on a clean wallet: containment, not restore.
+H1 inflated_receipt_within_caps -> RECEIPT_MISMATCH [CAUGHT]
+H2 forged_seal -> RECEIPT_MISMATCH [CAUGHT]
+H3 receipt_replay -> REPLAY [CAUGHT]
+H4 provider_exception -> PROVIDER_ERROR [CAUGHT]
+H5 decline_passthrough -> issuer_unavailable [CAUGHT]
+H6 cross_provider_receipt -> RECEIPT_MISMATCH [CAUGHT]
+H7 request_id_smuggling -> BAD_REQUEST_ID [CAUGHT]
+H8 null_receipt -> RECEIPT_MISSING [CAUGHT]
+H9 rogue_provider_topup_cap -> TOPUP_CAP provider_called=false [CAUGHT]
+H10 rogue_provider_balance_cap -> BALANCE_CAP provider_called=false [CAUGHT]
+H11 externalRef_journal_injection -> RECEIPT_MISMATCH [CAUGHT]
+H12 journal_copy_tamper -> wallet_untouched [CAUGHT]
+BASELINE 1 topup->purchase->install->monthClose [GREEN]
+BASELINE 2 topup->purchase->install->monthClose [GREEN]
+BASELINE 3 topup->purchase->install->monthClose [GREEN]
+BASELINE 4 topup->purchase->install->monthClose [GREEN]
+BASELINE 5 topup->purchase->install->monthClose [GREEN]
+BASELINE 6 topup->purchase->install->monthClose [GREEN]
+BASELINE 7 topup->purchase->install->monthClose [GREEN]
+BASELINE 8 topup->purchase->install->monthClose [GREEN]
+BASELINE 9 topup->purchase->install->monthClose [GREEN]
+BASELINE 10 topup->purchase->install->monthClose [GREEN]
+BASELINE 11 topup->purchase->install->monthClose [GREEN]
+BASELINE 12 topup->purchase->install->monthClose [GREEN]
+PAY-PROOF_PASSED attacks=12/12 baselines=12/12
+# exit=0

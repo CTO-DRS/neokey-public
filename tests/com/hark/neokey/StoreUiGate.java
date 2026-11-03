@@ -19,11 +19,14 @@ import java.util.List;
  *     post-purchase byte flip, review consulted via unregistered vendor,
  *     catalog pin/schema/bytes/dup/price refusals)
  *   • install p50 measured; entitlement restore code deterministic
+ * Week 24: every topup in the flow goes through the PaymentProvider contract
+ * (SimProvider) — the wallet accepts money only via a verified sealed receipt.
  * Verdict: STOREUI_GATE_OK … (exit 0) / STOREUI_GATE_FAILED <reason> (exit 1).
  */
 public final class StoreUiGate {
 
     static int passed = 0, failed = 0;
+    static final PaymentProvider SIM = new PaymentProvider.SimProvider();
 
     static void check(String name, boolean cond) {
         if (cond) passed++;
@@ -61,7 +64,7 @@ public final class StoreUiGate {
 
         // full month: buy everything, install everything through the guard chain
         StoreUi.Wallet w = new StoreUi.Wallet();
-        check("wallet.topup", w.topUp(StoreUi.MAX_TOPUP_CENTS, 1).ok);
+        check("wallet.topup", w.topUp(SIM, StoreUi.MAX_TOPUP_CENTS, "g1", 1).ok);
         StoreUi.Store s = new StoreUi.Store(c, w);
         long t0 = System.nanoTime();
         List<Long> installNanos = new ArrayList<>();
@@ -94,11 +97,11 @@ public final class StoreUiGate {
         StoreUi.Store s2 = new StoreUi.Store(c, w2);
         neg("INSUFFICIENT", !s2.purchase("f01-p01", 4).ok && s2.purchase("f01-p01", 4).tag.equals("INSUFFICIENT"));
         StoreUi.Wallet w3 = new StoreUi.Wallet();
-        neg("BAD_TOPUP", !w3.topUp(-1, 4).ok && w3.topUp(-1, 4).tag.equals("BAD_TOPUP"));
-        neg("TOPUP_CAP", !w3.topUp(StoreUi.MAX_TOPUP_CENTS + 1, 4).ok && w3.topUp(StoreUi.MAX_TOPUP_CENTS + 1, 4).tag.equals("TOPUP_CAP"));
+        neg("BAD_TOPUP", !w3.topUp(SIM, -1, "g3x", 4).ok && w3.topUp(SIM, -1, "g3x", 4).tag.equals("BAD_TOPUP"));
+        neg("TOPUP_CAP", !w3.topUp(SIM, StoreUi.MAX_TOPUP_CENTS + 1, "g3y", 4).ok && w3.topUp(SIM, StoreUi.MAX_TOPUP_CENTS + 1, "g3y", 4).tag.equals("TOPUP_CAP"));
         boolean fill3 = true;
-        for (int i = 0; i < 5; i++) if (!w3.topUp(StoreUi.MAX_TOPUP_CENTS, 4).ok) fill3 = false;
-        neg("BALANCE_CAP", fill3 && !w3.topUp(1, 4).ok && w3.topUp(1, 4).tag.equals("BALANCE_CAP"));
+        for (int i = 0; i < 5; i++) if (!w3.topUp(SIM, StoreUi.MAX_TOPUP_CENTS, "g3-" + i, 4).ok) fill3 = false;
+        neg("BALANCE_CAP", fill3 && !w3.topUp(SIM, 1, "g3z", 4).ok && w3.topUp(SIM, 1, "g3z", 4).tag.equals("BALANCE_CAP"));
         neg("NOT_OWNED", !s2.install("f01-p01", c.pack("f01-p01").specJson.getBytes(StandardCharsets.UTF_8), 4).ok
                 && s2.install("f01-p01", c.pack("f01-p01").specJson.getBytes(StandardCharsets.UTF_8), 4).tag.equals("NOT_OWNED"));
         byte[] flip = c.pack("f02-p01").specJson.getBytes(StandardCharsets.UTF_8).clone();
@@ -123,7 +126,7 @@ public final class StoreUiGate {
                 + jstr(spec) + ",\"sha256\":\"" + sha + "\",\"bytes\":" + spec.getBytes(StandardCharsets.UTF_8).length + "}]}]}";
         StoreUi.Catalog c2 = StoreUi.loadCatalog(crafted);
         StoreUi.Wallet w4 = new StoreUi.Wallet();
-        w4.topUp(1000, 5);
+        w4.topUp(SIM, 1000, "g4", 5);
         StoreUi.Store s4 = new StoreUi.Store(c2, w4);
         s4.purchase("z1", 6);
         StoreUi.Result rv = s4.install("z1", spec.getBytes(StandardCharsets.UTF_8), 7);
@@ -132,7 +135,7 @@ public final class StoreUiGate {
         // entitlement determinism
         StoreUi.Catalog c5 = StoreUi.loadCatalog(json);
         StoreUi.Wallet w5 = new StoreUi.Wallet();
-        w5.topUp(StoreUi.MAX_TOPUP_CENTS, 8);
+        w5.topUp(SIM, StoreUi.MAX_TOPUP_CENTS, "g5", 8);
         StoreUi.Store s5 = new StoreUi.Store(c5, w5);
         List<String> ids = new ArrayList<>(c5.byId.keySet());
         java.util.Collections.reverse(ids);

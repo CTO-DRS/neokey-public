@@ -47,6 +47,7 @@ import java.util.Map;
 public final class RestGate {
 
     static int passed = 0, failed = 0;
+    static final PaymentProvider SIM = new PaymentProvider.SimProvider();
     static int NEG_OK = 0, NEG_TOTAL = 0;
     static int ROUNDS = 7, BLOBS = -1, WIRE_BYTES = -1, GRANTED = -1, ENTROPY_X100 = -1;
     static long P50_PUSH_MS = -1, P50_PULL_MS = -1, REGISTER_MS = -1;
@@ -197,7 +198,7 @@ public final class RestGate {
 
             // 2) جهاز A: شراء حقيقي وتثبيت من الكتالوج
             StoreUi.Wallet walletA = new StoreUi.Wallet();
-            check("walletA.topup", walletA.topUp(100_00, 1000L).ok);
+            check("walletA.topup", walletA.topUp(SIM, 100_00, "rst-a1", 1000L).ok);
             StoreUi.Store storeA = new StoreUi.Store(cat, walletA);
             for (int i = 0; i < 2; i++) {
                 StoreUi.Pack p = first3.get(i);
@@ -268,7 +269,7 @@ public final class RestGate {
 
             // 9) جولة عكسية عبر السلك: شراء B الثالث يعبر إلى A
             StoreUi.Pack third = first3.get(2);
-            check("B.topup", walletB.topUp(100_00, 3000L).ok);
+            check("B.topup", walletB.topUp(SIM, 100_00, "rst-b1", 3000L).ok);
             check("B.buy3", storeB.purchase(third.id, 3000L).ok);
             SyncState.Snapshot snapB = new SyncState.Snapshot();
             snapB.entitlements.putAll(storeB.ownedPins());

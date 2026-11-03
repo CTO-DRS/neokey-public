@@ -72,16 +72,18 @@ public final class StoreUiTest {
     }
 
     // ---- wallet caps and audit --------------------------------------------------
+    static final PaymentProvider SIM = new PaymentProvider.SimProvider();
+
     static void walletRules() {
         StoreUi.Wallet w = new StoreUi.Wallet();
-        check("wallet.negativeTopup", !w.topUp(-5, 1).ok && w.topUp(-5, 1).tag.equals("BAD_TOPUP"));
-        check("wallet.zeroTopup", !w.topUp(0, 1).ok);
-        check("wallet.topupCap", !w.topUp(StoreUi.MAX_TOPUP_CENTS + 1, 1).ok && w.topUp(StoreUi.MAX_TOPUP_CENTS + 1, 2).tag.equals("TOPUP_CAP"));
+        check("wallet.negativeTopup", !w.topUp(SIM, -5, "t1", 1).ok && w.topUp(SIM, -5, "t1", 1).tag.equals("BAD_TOPUP"));
+        check("wallet.zeroTopup", !w.topUp(SIM, 0, "t1", 1).ok);
+        check("wallet.topupCap", !w.topUp(SIM, StoreUi.MAX_TOPUP_CENTS + 1, "t2", 1).ok && w.topUp(SIM, StoreUi.MAX_TOPUP_CENTS + 1, "t2", 2).tag.equals("TOPUP_CAP"));
         boolean fillOk = true;
-        for (int i = 0; i < 5; i++) if (!w.topUp(StoreUi.MAX_TOPUP_CENTS, 3 + i).ok) fillOk = false;
+        for (int i = 0; i < 5; i++) if (!w.topUp(SIM, StoreUi.MAX_TOPUP_CENTS, "t3-" + i, 3 + i).ok) fillOk = false;
         check("wallet.fillToCap", fillOk && w.balance() == StoreUi.MAX_BALANCE_CENTS);
-        check("wallet.balanceCap", !w.topUp(1, 9).ok && w.topUp(1, 9).tag.equals("BALANCE_CAP"));
-        check("wallet.journalAudit", w.journal().size() == 5 && w.journal().get(0).startsWith("TOPUP\t10000\t3"));
+        check("wallet.balanceCap", !w.topUp(SIM, 1, "t4", 9).ok && w.topUp(SIM, 1, "t4", 9).tag.equals("BALANCE_CAP"));
+        check("wallet.journalAudit", w.journal().size() == 5 && w.journal().get(0).startsWith("TOPUP\t10000\t3\tlocal-sim\t"));
         List<String> jCopy = w.journal();
         jCopy.clear();
         check("wallet.journalCopy", w.journal().size() == 5);
@@ -91,7 +93,7 @@ public final class StoreUiTest {
     static void purchaseFlow() throws Exception {
         StoreUi.Catalog c = StoreUi.loadCatalog(catalogJson());
         StoreUi.Wallet w = new StoreUi.Wallet();
-        w.topUp(50_00, 1);
+        w.topUp(SIM, 50_00, "p1", 1);
         StoreUi.Store s = new StoreUi.Store(c, w);
         check("buy.unknownPack", !s.purchase("f99-nope", 2).ok && s.purchase("f99-nope", 2).tag.equals("NO_PACK"));
         check("buy.first", s.purchase("f01-p01", 3).ok && s.owned("f01-p01"));
@@ -109,7 +111,7 @@ public final class StoreUiTest {
     static void installFlow() throws Exception {
         StoreUi.Catalog c = StoreUi.loadCatalog(catalogJson());
         StoreUi.Wallet w = new StoreUi.Wallet();
-        w.topUp(StoreUi.MAX_TOPUP_CENTS, 1);
+        w.topUp(SIM, StoreUi.MAX_TOPUP_CENTS, "i1", 1);
         StoreUi.Store s = new StoreUi.Store(c, w);
         StoreUi.Pack p = c.pack("f01-p01");
         byte[] bytes = p.specJson.getBytes(StandardCharsets.UTF_8);
@@ -135,7 +137,7 @@ public final class StoreUiTest {
         StoreUi.Catalog c2 = StoreUi.loadCatalog(crafted);
         check("install.craftedLoads", c2.packCount() == 1 && c2.vendorIds.contains("fZZ"));
         StoreUi.Wallet w2 = new StoreUi.Wallet();
-        w2.topUp(1000, 6);
+        w2.topUp(SIM, 1000, "i2", 6);
         StoreUi.Store s2 = new StoreUi.Store(c2, w2);
         s2.purchase("z1", 7);
         StoreUi.Result r = s2.install("z1", spec.getBytes(StandardCharsets.UTF_8), 8);
@@ -156,7 +158,7 @@ public final class StoreUiTest {
     static void ledgerAndEntitlements() throws Exception {
         StoreUi.Catalog c = StoreUi.loadCatalog(catalogJson());
         StoreUi.Wallet w = new StoreUi.Wallet();
-        w.topUp(StoreUi.MAX_TOPUP_CENTS, 1);
+        w.topUp(SIM, StoreUi.MAX_TOPUP_CENTS, "l1", 1);
         StoreUi.Store s = new StoreUi.Store(c, w);
         List<String> ids = new ArrayList<>(c.byId.keySet());
         for (String id : ids) if (!s.purchase(id, 2).ok) check("ledger.allBought", false);
@@ -174,7 +176,7 @@ public final class StoreUiTest {
         check("ent.prefix", code1.startsWith("STOREENT1|f01-p"));
         check("ent.sortedDeterministic", code1.equals(new StoreUi.Store(c, new StoreUi.Wallet()).restoreCode()) == false); // empty store differs
         StoreUi.Wallet w3 = new StoreUi.Wallet();
-        w3.topUp(StoreUi.MAX_TOPUP_CENTS, 3);
+        w3.topUp(SIM, StoreUi.MAX_TOPUP_CENTS, "l2", 3);
         StoreUi.Store s3 = new StoreUi.Store(c, w3);
         List<String> rev = new ArrayList<>(ids);
         Collections.reverse(rev);
@@ -194,7 +196,7 @@ public final class StoreUiTest {
         long refPaid = -1;
         for (int seed = 1804; seed < 1834; seed++) {
             StoreUi.Wallet w = new StoreUi.Wallet();
-            w.topUp(StoreUi.MAX_TOPUP_CENTS, 0);
+            w.topUp(SIM, StoreUi.MAX_TOPUP_CENTS, "fz-" + seed, 0);
             StoreUi.Store s = new StoreUi.Store(c, w);
             List<String> order = new ArrayList<>(ids);
             Collections.shuffle(order, new Random(seed));

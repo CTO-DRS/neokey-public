@@ -13,8 +13,10 @@ import java.util.Set;
  * المتجر داخل التطبيق — المرحلة 3، الأسبوع 1.
  *
  * المنطق النقي (صفر android.*) لواجهة متجر السمات: كتالوج المؤسسين كأصل محمّل
- * ببنية صارمة، محفظة محلية سنت-دقيقة (الشحن محاكى — مزوّد الدفع الحقيقي خارج
- * البيئة ويستبدل topUp فقط دون لمس أي دالة شراء)، شراء idempotent (الشراء
+ * ببنية صارمة، محفظة محلية سنت-دقيقة تقبل المال من عقد مزوّد الدفع القياسي
+ * (`PaymentProvider`، الأسبوع 24) حصراً — لا قبض بلا إيصال مختوم مُتحقق منه
+ * ولا مسار ثانٍ للمال، ومزوّد حقيقي يستبدل `SimProvider` دون لمس أي دالة
+ * شراء). شراء idempotent (الشراء
  * الثاني = صفر بيع)، مكتبة ملكية مثبتة بدبوس sha256 للحزمة المراجَعة، تثبيت
  * لا يمر إلا من بوابة مراجعة ThemePack نفسها + مطابقة الدبوس (عبث ما بعد
  * الشراء يُصطاد)، وإغلاق شهري 70/30 يفوَّض حصراً إلى Economy — دفتر واحد لا
@@ -135,20 +137,86 @@ public final class StoreUi {
         return c;
     }
 
-    /** محفظة محلية سنت-دقيقة — دفتر يومية نصي قابل للتدقيق. */
+    /**
+     * محفظة محلية سنت-دقيقة — دفتر يومية نصي قابل للتدقيق.
+     *
+     * المال يدخل من عقد المزوّد حصراً (الأسبوع 24): سقوف الشحن والرصيد
+     * محفظية تُفحص قبل مناداة المزوّد وتظل نافذة مهما كان مزوّداً، والإيصال
+     * لا يُصدّق إلا بإعادة اشتقاق ختمه الحتمي، ومعرف الطلب لا يُقبض مرتين
+     * (REPLAY) — أي إعادة تشغيل إيصال أو إعادة بثّ طلب تُرفض بلا قيد ثانٍ.
+     */
     public static final class Wallet {
         private long balance;
         private final List<String> journal = new ArrayList<>();
+        private final Set<String> usedRequests = new HashSet<>();
 
         public long balance() { return balance; }
         public List<String> journal() { return new ArrayList<>(journal); }
+        public boolean requestUsed(String requestId) { return usedRequests.contains(requestId); }
 
-        public Result topUp(long cents, long ts) {
+        /** معرف طلب مقبول: 1..64 من [A-Za-z0-9._:-] — يرتكز في الجرنة والختم. */
+        static boolean validRequestId(String s) {
+            if (s == null || s.isEmpty() || s.length() > 64) return false;
+            for (int i = 0; i < s.length(); i++) {
+                char c = s.charAt(i);
+                boolean ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+                        || (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-' || c == ':';
+                if (!ok) return false;
+            }
+            return true;
+        }
+
+        /**
+         * المرجع الخارجي حر لكنه ليس عربة حقن: نص طباعي ASCII من 1..64 بلا
+         * TAB/CR/LF — أي محاولة زرع أعمدة جرنة عبره = إيصال مرفوض كله.
+         */
+        static boolean validExternalRef(String s) {
+            if (s == null) return true;              // الحقل اختياري
+            if (s.isEmpty() || s.length() > 64) return false;
+            for (int i = 0; i < s.length(); i++) {
+                char c = s.charAt(i);
+                if (c < 0x20 || c > 0x7E) return false;
+            }
+            return true;
+        }
+
+        /**
+         * الشحن عبر المزوّد — نقطة الاستبدال القياسية (الأسبوع 24). الترتيب
+         * مقصود: الفحوص الشكلية والمحفظية أولاً (المزوّد الشريد لا يصل إلى
+         * تجاوز السقوف)، ثم REPLAY، ثم مناداة المزوّد، ثم تحقق الإيصال، وقبض
+         * المعرف يُحرَّر عند أي فشل (الفشل لا يحرق المعرف — النجاح وحده يقفله).
+         */
+        public Result topUp(PaymentProvider p, long cents, String requestId, long ts) {
+            if (p == null) return Result.no("BAD_PROVIDER");
+            if (!validRequestId(requestId)) return Result.no("BAD_REQUEST_ID");
             if (cents <= 0) return Result.no("BAD_TOPUP");
             if (cents > MAX_TOPUP_CENTS) return Result.no("TOPUP_CAP");
             if (balance + cents > MAX_BALANCE_CENTS) return Result.no("BALANCE_CAP");
-            balance += cents;
-            journal.add("TOPUP\t" + cents + "\t" + ts);
+            if (!usedRequests.add(requestId)) return Result.no("REPLAY");
+            PaymentProvider.Receipt r;
+            try {
+                r = p.charge(new PaymentProvider.ChargeRequest(requestId, cents, ts));
+            } catch (PaymentProvider.Declined d) {
+                usedRequests.remove(requestId);
+                String t = d.tag;
+                return Result.no(t == null || t.isEmpty() ? "PROVIDER_DECLINED" : t);
+            } catch (RuntimeException e) {
+                usedRequests.remove(requestId);
+                return Result.no("PROVIDER_ERROR");
+            }
+            if (r == null) {
+                usedRequests.remove(requestId);
+                return Result.no("RECEIPT_MISSING");
+            }
+            if (!p.id().equals(r.providerId) || !requestId.equals(r.requestId) || cents != r.cents
+                    || !validExternalRef(r.externalRef)
+                    || !PaymentProvider.Receipt.seal(p.id(), requestId, cents).equals(r.receiptId)) {
+                usedRequests.remove(requestId);
+                return Result.no("RECEIPT_MISMATCH");
+            }
+            balance += cents;   // النجاح وحده يُبقي قفل المعرف — الإيصال نفسه هو القفل
+            journal.add("TOPUP\t" + cents + "\t" + ts + "\t" + p.id() + "\t" + requestId
+                    + "\t" + r.receiptId + "\t" + (r.externalRef == null ? "-" : r.externalRef));
             return Result.ok();
         }
 

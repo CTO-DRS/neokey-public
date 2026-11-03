@@ -37,7 +37,7 @@ CP=""
 [ -n "$AJ" ] && CP="-cp $AJ"
 STUBS=""
 [ -z "$AJ" ] && STUBS=$(find tests/stubs -name '*.java' | tr '\n' ' ')
-SRC="tests/com/hark/neokey/EntitlementGate.java src/com/hark/neokey/StoreUi.java src/com/hark/neokey/Economy.java src/com/hark/neokey/ThemePack.java src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java src/com/hark/neokey/SyncServerSim.java src/com/hark/neokey/NetGate.java src/com/hark/neokey/Dictionary.java src/com/hark/neokey/DictSign.java src/com/hark/neokey/CommunityDict.java src/com/hark/neokey/ArabicFixes.java src/com/hark/neokey/Exceptions.java $STUBS"
+SRC="tests/com/hark/neokey/EntitlementGate.java src/com/hark/neokey/StoreUi.java src/com/hark/neokey/PaymentProvider.java src/com/hark/neokey/Economy.java src/com/hark/neokey/ThemePack.java src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java src/com/hark/neokey/SyncServerSim.java src/com/hark/neokey/NetGate.java src/com/hark/neokey/Dictionary.java src/com/hark/neokey/DictSign.java src/com/hark/neokey/CommunityDict.java src/com/hark/neokey/ArabicFixes.java src/com/hark/neokey/Exceptions.java $STUBS"
 if command -v javac >/dev/null 2>&1; then
   javac -nowarn -encoding UTF-8 $CP -d "$OUT" $SRC 2>&1
 else

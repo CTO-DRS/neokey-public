@@ -31,6 +31,7 @@ import java.util.Map;
 public final class EntitlementGate {
 
     static int passed = 0, failed = 0;
+    static final PaymentProvider SIM = new PaymentProvider.SimProvider();
     static int NEG_OK = 0, NEG_TOTAL = 0;
     static long P50_COLLECT_US = -1, P50_APPLY_US = -1, P50_GRANT_US = -1;
     static int GRANTED = -1;
@@ -133,7 +134,7 @@ public final class EntitlementGate {
 
         // 1) جهاز A: محفظة حقيقية، شراء فعلي، تثبيت من بايتات الكتالوج
         StoreUi.Wallet walletA = new StoreUi.Wallet();
-        check("walletA.topup", walletA.topUp(100_00, 1000L).ok);
+        check("walletA.topup", walletA.topUp(SIM, 100_00, "ent-a1", 1000L).ok);
         StoreUi.Store storeA = new StoreUi.Store(cat, walletA);
         for (StoreUi.Pack p : first4) {
             check("A.buy." + p.id, storeA.purchase(p.id, 1000L).ok);
@@ -205,7 +206,7 @@ public final class EntitlementGate {
         // 5) جولة عكسية: B يشتري خامسة → تعبر إلى A
         List<StoreUi.Pack> all5 = cheapest(cat, 5);
         StoreUi.Pack fifth = all5.get(4);
-        check("B.topup", walletB.topUp(100_00, 3000L).ok);
+        check("B.topup", walletB.topUp(SIM, 100_00, "ent-b1", 3000L).ok);
         check("B.buy5", storeB.purchase(fifth.id, 3000L).ok);
         SyncState.Snapshot snapB = new SyncState.Snapshot();
         snapB.entitlements.putAll(storeB.ownedPins());

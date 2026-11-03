@@ -22,7 +22,7 @@ find_jar() {
 }
 
 OUT=build/storeuigate; mkdir -p "$OUT"
-SRC="tests/com/hark/neokey/StoreUiGate.java src/com/hark/neokey/StoreUi.java src/com/hark/neokey/ThemePack.java src/com/hark/neokey/Economy.java"
+SRC="tests/com/hark/neokey/StoreUiGate.java src/com/hark/neokey/StoreUi.java src/com/hark/neokey/PaymentProvider.java src/com/hark/neokey/ThemePack.java src/com/hark/neokey/Economy.java"
 if command -v javac >/dev/null 2>&1; then
   javac -nowarn -encoding UTF-8 -d "$OUT" $SRC 2>&1
 else

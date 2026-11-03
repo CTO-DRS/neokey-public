@@ -19,7 +19,9 @@ import java.nio.charset.StandardCharsets;
  *
  * تبويبان: «المتجر» (كتالوج المؤسسين بأسعارهم) و«مكتبتي» (المملوك + التثبيت).
  * كل منطق القرار في StoreUi النقي؛ هذه الشاشة ربط فقط: الشراء يخصم من المحفظة
- * المحلية (الشحن محاكى — مزوّد الدفع الحقيقي قرار نشر خارج هذه البيئة)،
+ * المحلية، والشحن يمر من عقد مزوّد الدفع القياسي (الأسبوع 24) بمزوّد المحاكاة
+ * المحلي `SimProvider` — الاستبدال بمزوّد حقيقي (Play Billing) عند النشر =
+ * تغيير هذا السطر فقط دون لمس أي دالة شراء أو دالة مكتبة أو دالة اقتصاد)،
  * والتثبيت لا يمر إلا من سلسلة الحرس كاملة (ملكية ← دبوس sha256 ← مراجعة
  * ThemePack)، والتطبيق على لوحة المفاتيح يمر من Theme.importPack الجاهز
  * (يضيف للمكتبة ويختار ويطبق إعدادات التخطيط) — لا مسار جانب للسمات.
@@ -29,6 +31,7 @@ public class StoreActivity extends Screen {
     StoreUi.Catalog catalog;
     StoreUi.Wallet wallet;
     StoreUi.Store store;
+    PaymentProvider sim;                        // مزوّد المحاكاة المحلي — نقطة الاستبدال الوحيدة
     int tab;                                    // 0 = المتجر، 1 = مكتبتي
     LinearLayout list;
     TextView balance;
@@ -47,7 +50,8 @@ public class StoreActivity extends Screen {
         }
         catalog = c;
         wallet = new StoreUi.Wallet();
-        wallet.topUp(2000, System.currentTimeMillis());   // شحن ترحيبي للمحاكاة ($20)
+        sim = new PaymentProvider.SimProvider();
+        wallet.topUp(sim, 2000, "welcome", System.currentTimeMillis());   // شحن ترحيبي للمحاكاة ($20)
         store = new StoreUi.Store(catalog, wallet);
 
         LinearLayout wc = card();
@@ -57,7 +61,10 @@ public class StoreActivity extends Screen {
         tr.setGravity(Gravity.CENTER_VERTICAL);
         TextView hint = text("الشحن محاكاة محلياً — الدفع الحقيقي خارج هذه البيئة", 11, Typeface.NORMAL, MUTED);
         tr.addView(hint, new LinearLayout.LayoutParams(0, -2, 1f));
-        tr.addView(button("شحن $20", "plus", false, v -> { wallet.topUp(2000, System.currentTimeMillis()); refresh(); }));
+        tr.addView(button("شحن $20", "plus", false, v -> {
+            wallet.topUp(sim, 2000, "btn-" + System.currentTimeMillis(), System.currentTimeMillis());
+            refresh();
+        }));
         wc.addView(tr, top(8));
         root.addView(wc, top(10));
 

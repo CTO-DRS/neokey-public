@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → phase-3 gates → phase3 close → build → r8 → trim → release manifest (23 stages)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → release manifest (24 stages)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -90,6 +90,12 @@ stage_syncclient() { ci/sync_client_gate.sh; }
 # The contract docs/SYNC-REST.md proven ON THE WIRE: real HTTP server on
 # 127.0.0.1 + the production SyncRestTransport — no simulator substitute.
 stage_rest() { ci/rest_gate.sh; }
+
+# ---- 3g3: payment-provider contract gate (phase 4, week 3 — week 24) -------------
+# The week-19 promise implemented: PaymentProvider is THE standard replacement
+# point — the wallet accepts money only via a verified sealed receipt, no
+# second money path; caps are wallet-side and bind regardless of the provider.
+stage_paygate() { ci/pay_gate.sh; }
 
 
 
@@ -240,6 +246,15 @@ collect_gates() {
   echo "REST_P50_PUSH_MS=$(echo "$R_LINE" | sed -E 's/.*p50_push_ms=([0-9.]+).*/\1/')" >> "$GATES"
   echo "REST_P50_PULL_MS=$(echo "$R_LINE" | sed -E 's/.*p50_pull_ms=([0-9.]+).*/\1/')" >> "$GATES"
   echo "REST_CHECKS=$(echo "$R_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  # payment-provider contract gate numbers (phase 4, week 24)
+  echo "PAY_GATE=$(grep -q '^PAYGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  PG_LINE=$(grep '^PAYGATE_OK' "$LOG" | tail -1)
+  echo "PAY_PROVIDERS=$(echo "$PG_LINE" | sed -E 's/.*providers=([0-9]+).*/\1/')" >> "$GATES"
+  echo "PAY_RECEIPTS=$(echo "$PG_LINE" | sed -E 's/.*receipts=([0-9]+).*/\1/')" >> "$GATES"
+  echo "PAY_DET_EQUAL=$(echo "$PG_LINE" | sed -E 's/.*det_equal=([0-9]+).*/\1/')" >> "$GATES"
+  echo "PAY_LEDGER_CLOSES=$(echo "$PG_LINE" | sed -E 's/.*ledger_closes=([0-9]+).*/\1/')" >> "$GATES"
+  echo "PAY_NEGATIVES=$(echo "$PG_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
+  echo "PAY_P50_TOPUP_US=$(echo "$PG_LINE" | sed -E 's/.*p50_topup_us=([0-9]+).*/\1/')" >> "$GATES"
   # theme-store gate numbers (phase 2, item B, week 3)
   echo "THEMESTORE_GATE=$(grep -q '^THEME_STORE_GATE_OK$' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   echo "THEMESTORE_PACKS=$(grep -o 'packs=[0-9]*' "$LOG" | tail -1 | cut -d= -f2)" >> "$GATES"
@@ -311,6 +326,7 @@ run_stage "assistant" stage_assistant
 run_stage "sync" stage_sync
 run_stage "syncclient" stage_syncclient
 run_stage "rest" stage_rest
+run_stage "paygate" stage_paygate
 run_stage "themestore" stage_themestore
 run_stage "nqfport" stage_nqfport
 run_stage "community" stage_community
