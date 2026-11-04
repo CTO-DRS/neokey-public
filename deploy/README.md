@@ -21,6 +21,32 @@ java -jar neokey-sync-server.jar --print-spki --keystore server.p12 --password *
 البصمة تُضبط مرة واحدة عند النشر في العميل: `NetGate.setSyncPins("<بصمة>")` —
 وتدوير شهادة الخادم = طباعة البصمة الجديدة وتحديث الدبابيس المعتمدة.
 
+## التجهيز والدوران (الأسبوع 30 — الإجراء الآلي)
+
+قبل ضبط الدبابيس قرار واحد يجب أن يُتخذ: هل سلسلة شهادات الخادم صالحة
+للنشر على النطاق المعلن؟ الأداة `Provision` (نقي JVM — تعمل على أي JDK،
+وهي الصنف نفسه الذي تتحقق به بوابة `ci/provision_gate.sh`):
+
+```bash
+# القرار + الاشتقاق + بيان التجهيز (CA بـ PEM أو DER):
+java -cp <classes> com.hark.neokey.Provision server.p12 '<pass>' sync sync.example.com \
+  --ca ca.pem --statement provision-statement.json
+# PROVISION_OK domain=sync.example.com pin=<64hex> pin16=<16hex> days_left=… chain=… emitted="NetGate.setSyncPins("<pin>")"
+
+# فشل بوسم حرفي واحد: PROVISION_FAIL san_mismatch | ca_mismatch | validity_expired | …
+```
+
+الفحوص بترتيب حتمي: الحاوية PKCS12 (بسحر بايتاتها لا برأي الـJDK)، المفتاح
+الخاص حاضر، السلسلة [leaf, CA] بترتيبها وتواقيعها، الذيل CA (و= CA المشغّل
+المتوقعة عند تمرير `--ca`)، الـ SAN يطابق النطاق (dNSName أو iPAddress)،
+الصلاحية فوق أرضية 30 يوماً، والدبوس يُشتق باشتقاق واحد (`SpkiPins.pinOf`).
+
+**الدوران:** تجديد الشهادة بنفس المفتاح = الدبوس نفسه (العملاء لا يعيدون
+شيئاً)؛ دوران المفتاح = دبوس جديد — العميل المثبت بالدبوس القديم يُرفض
+**داخل المصافحة** (`spki_not_pinned`) حتى ضبط الدبوس الجديد ثم تعود
+الجولة خضراء. البوابة تُتمرّن على بدائل ملتزمة (`tests/provision/`) وتثبت
+الطبقة كاملة (تدريب/سلبية/إثبات سلبي محفوظ).
+
 ## الخدمة
 
 ```bash

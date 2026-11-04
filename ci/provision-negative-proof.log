@@ -1,0 +1,9 @@
+NEGATIVE PROOF — provisioning + rotation drill (week 30) — 2026-11-04T22:29:05Z
+baseline: PROVISIONGATE_OK checks=17 negatives=11/11 anchor_pin16=e67e815c3494a3c5 pin16=b1b209b32486cf49 rotation=stable+rotate renew_days_left=899 ms=1350
+BITE  attack1.fixture.swap -> ref.pin.published
+HEAL  attack1.fixture.swap -> PROVISIONGATE_OK (restored + re-verified green)
+BITE  attack2.derivation.neutered -> anchor.arena.pin
+HEAL  attack2.derivation.neutered -> PROVISIONGATE_OK (restored + re-verified green)
+BITE  attack3.class.hidden -> PROVISIONGATE_FAILED compile
+HEAL  attack3.class.hidden -> PROVISIONGATE_OK (restored + re-verified green)
+NEGATIVE_PROOF_OK attacks=3/3 bites=exact heals=green

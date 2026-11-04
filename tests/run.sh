@@ -64,3 +64,4 @@ java -cp build/test:$JAR com.hark.neokey.DictSignTest
 java -cp build/test:$JAR com.hark.neokey.EntitlementTest
 java -cp build/test:$JAR com.hark.neokey.SyncServerContractTest
 java -cp build/test:$JAR com.hark.neokey.SpkiPinsTest
+java -cp build/test:$JAR com.hark.neokey.ProvisionTest

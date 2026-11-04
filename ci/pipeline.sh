@@ -117,6 +117,19 @@ stage_deploy() { ci/deploy_gate.sh; }
 # leaves the owner's vault.
 stage_ksdrill() { ci/keystore_drill.sh; }
 
+# ---- 3g2b: provisioning + rotation drill (phase 6, week 1 — week 30) ----------
+# The last locally-closable slice of the live-TLS-deployment pending: the
+# pin-SETTING decision procedure automated and proven to bite. Provision (pure
+# JDK, the operator's CLI) decides whether a server chain is provisionable
+# (chain order/signatures to the operator's CA, SAN matches the domain,
+# validity floor, RSA>=2048), derives the pin by the ONE derivation
+# (SpkiPins.pinOf) and emits the literal NetGate.setSyncPins line + a
+# deterministic statement. The rotation drill proves on the wire: same-key
+# renewal = same pin (transparent), new key = new pin refused INSIDE the
+# handshake until re-pin, then a green round. The anchor is the FIRST barrier:
+# the committed arena fixture re-derives the pinned literal EXPECTED_ARENA_PIN.
+stage_provision() { ci/provision_gate.sh; }
+
 # ---- 3g3: payment-provider contract gate (phase 4, week 3 — week 24) -------------
 # The week-19 promise implemented: PaymentProvider is THE standard replacement
 # point — the wallet accepts money only via a verified sealed receipt, no
@@ -306,6 +319,13 @@ collect_gates() {
   echo "KSDRILL_NEGATIVES=$(echo "$KD_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
   echo "KSDRILL_DAYS_LEFT=$(echo "$KD_LINE" | sed -E 's/.*days_left=([0-9]+).*/\1/')" >> "$GATES"
   echo "KSDRILL_FP16=$(echo "$KD_LINE" | sed -E 's/.*fp16=([0-9a-f]+).*/\1/')" >> "$GATES"
+  # provisioning + rotation drill numbers (phase 6, week 30)
+  echo "PROVISION_GATE=$(grep -q '^PROVISIONGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  PV_LINE=$(grep '^PROVISIONGATE_OK' "$LOG" | tail -1)
+  echo "PROVISION_CHECKS=$(echo "$PV_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  echo "PROVISION_NEGATIVES=$(echo "$PV_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
+  echo "PROVISION_ANCHOR_PIN16=$(echo "$PV_LINE" | sed -E 's/.*anchor_pin16=([0-9a-f]+).*/\1/')" >> "$GATES"
+  echo "PROVISION_PIN16=$(echo "$PV_LINE" | sed -E 's/.* pin16=([0-9a-f]+).*/\1/')" >> "$GATES"
   # payment-provider contract gate numbers (phase 4, week 24)
   echo "PAY_GATE=$(grep -q '^PAYGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   PG_LINE=$(grep '^PAYGATE_OK' "$LOG" | tail -1)
@@ -390,6 +410,7 @@ run_stage "rest" stage_rest
 run_stage "tls" stage_tls
 run_stage "deploy" stage_deploy
 run_stage "ksdrill" stage_ksdrill
+run_stage "provision" stage_provision   # phase 6 W1 (week 30): provisioning + rotation drill
 run_stage "paygate" stage_paygate
 run_stage "themestore" stage_themestore
 run_stage "nqfport" stage_nqfport
