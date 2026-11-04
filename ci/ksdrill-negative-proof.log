@@ -1,0 +1,24 @@
+== ksdrill negative proof — 2026-11-04T10:24:55Z ==
+
+--- attack: fixture swap (rogue keystore planted as the drill fixture) (expect: FAIL anchor.drill.fp)
+rc=1
+verdict: KSDRILLGATE_FAILED checks=1 negatives=0/0
+tag: FAIL anchor.drill.fp (fixture re-derives to none detail=fp_mismatch)
+tag: OK
+restored: rc=0 KSDRILLGATE_OK checks=12 negatives=8/8 fp16=a80e71b9a5d15546 days_left
+
+--- attack: neutered KsValidator.fpEqual (always-true identity check) (expect: FAIL negatives.rogue)
+rc=1
+verdict: KSDRILLGATE_FAILED checks=5 negatives=0/1
+tag: FAIL negatives.rogue (expected tag fp_mismatch but got ACCEPT (check stopped biting!))
+tag: OK
+restored: rc=0 KSDRILLGATE_OK checks=12 negatives=8/8 fp16=a80e71b9a5d15546 days_left
+
+--- attack: hide KsValidator.java (compile guard must refuse) (expect: KSDRILLGATE_FAILED compile)
+rc=1
+verdict: KSDRILLGATE_FAILED compile
+tag: KSDRILLGATE_FAILED compile
+tag: OK
+restored: rc=0 KSDRILLGATE_OK checks=12 negatives=8/8 fp16=a80e71b9a5d15546 days_left
+
+KSDRILL_NEGATIVE_PROOF_OK 3 attacks bitten, all restores healed

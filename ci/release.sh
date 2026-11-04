@@ -99,6 +99,12 @@ if [ "${DEPLOY_GATE:-}" = "OK" ]; then
   DEPLOY_BLOCK=$',\n    "deployBundle": { "verifiedBy": "ci/deploy_gate.sh", "contract": "deploy/README.md", "pendingSlice": "locally-closable slice of the live-sync-server deployment — the deployable artifact itself", "bundle": "build/deploy/neokey-sync-server.jar (standalone, java 8 target, zero dependencies; the SAME reference-contract SyncServer class proven on the wire by RESTGATE/TLSGATE — no parallel implementation)", "launcher": "deploy/com/hark/neokey/deploy/DeployMain.java — serve / --print-spki (the pin NetGate.setSyncPins consumes) / --check (the contract is the probe: grey 404 = alive, over a pinned channel)", "bootDiscipline": "READY line once, loopback default bind (public exposure = explicit --host), every pre-READY error = DEPLOY_REFUSED with non-zero exit", "pinAnchor": "jar printed pin == pinned fixture fingerprint == gate constant (three sources, one truth)", "healthP50Ms": '"${DEPLOY_HEALTH_MS:-0}"', "negativesRefused": "'"${DEPLOY_NEGATIVES:-0}"'", "negativeProof": "ci/deploy-negative-proof.log" }'
 fi
 
+# Keystore-recovery-drill gate (phase 5, week 28) — present when the drill ran
+KSDRILL_BLOCK=""
+if [ "${KSDRILL_GATE:-}" = "OK" ]; then
+  KSDRILL_BLOCK=$',\n    "ksDrill": { "verifiedBy": "ci/keystore_drill.sh", "contract": "docs/PHASE5-W3-REPORT.md + docs/SECURITY.md §6", "pendingSlice": "the PROCEDURE half of the restore-signing-secrets pending — rehearsed on a committed stand-in keystore; the secret itself never leaves the owner-side vault", "validator": "tests/com/hark/neokey/KsValidator.java (pure JDK, zero android.*) — the same class the owner runs on the real restored artifact", "drillAnchor": "sha256(cert DER) of tests/ks/drill-release.p12 pinned as a literal (fp16 '"${KSDRILL_FP16:-}"'…) — المرجع = المنشور; the anchor is the FIRST barrier", "checks": '"${KSDRILL_CHECKS:-0}"', "negativesRefused": "'"${KSDRILL_NEGATIVES:-0}"'", "daysLeftOnStandIn": '"${KSDRILL_DAYS_LEFT:-0}"', "recoverySimulation": "fixture → build/ks-drill/restored.p12 (chmod 600) → KsValidator CLI against the published fingerprint", "negativeProof": "ci/ksdrill-negative-proof.log" }'
+fi
+
 # Phase-3 closing gate (phase 3, week 4) — present when the closing gate ran
 PHASE3_BLOCK=""
 if [ "${PHASE3_GATE:-}" = "OK" ]; then
@@ -127,7 +133,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
   "signedBy": "release workflow only — signing secrets never leave the vault"
@@ -140,7 +146,7 @@ EOF
 # is named as pending with its exact original wording.
 SIGNING_STATUS="verified — keystore fingerprint pinned in the manifest"
 [ "$FP" = "(keystore fingerprint unavailable on this machine)" ] && \
-  SIGNING_STATUS="pending — .secrets lost in environment rotation; restore from the encrypted backup before any signed build (DictSign/CI do not need it)"
+  SIGNING_STATUS="pending — .secrets lost in environment rotation; restore from the encrypted backup before any signed build (DictSign/CI do not need it) — THE RESTORE PROCEDURE ITSELF IS NOW AUTOMATED AND PROVEN TO BITE (ci/keystore_drill.sh, KsValidator + KsDrillGate: anchor-first, ${KSDRILL_CHECKS:-0} checks, ${KSDRILL_NEGATIVES:-0/0} negatives; rehearsed on a stand-in keystore, the real secret never leaves the vault)"
 
 cat > "$OUT/store-readiness.json" <<EOF
 {
@@ -163,7 +169,7 @@ cat > "$OUT/store-readiness.json" <<EOF
     "real payment provider (Play Billing) — replaces PaymentProvider.SimProvider in StoreActivity only",
     "live sync server deployment with TLS on a real domain (contract already proven on the wire)",
     "store developer accounts + actual store upload (rollout plan ready)",
-    "keystore secrets restore from the encrypted backup before any signed build",
+    "keystore secrets restore from the encrypted backup before any signed build — the DECISION PROCEDURE is now automated and proven (week 28 drill: anchor + 8 negatives on a stand-in keystore); the actual restore stays with the owner",
     "real-device matrix + MAU numbers"
   ]
 }
@@ -188,7 +194,7 @@ cat > "$OUT/store-readiness.txt" <<EOF
   • مزوّد دفع حقيقي (يستبدل SimProvider في StoreActivity فقط)
   • نشر خادم مزامنة حي بنطاق حقيقي + TLS
   • حسابات متاجر + رفع فعلي (الخطة جاهزة)
-  • استعادة أسرار التوقيع من النسخة المشفرة قبل أي بناء موقّع
+  • استعادة أسرار التوقيع من النسخة المشفرة قبل أي بناء موقّع — إجراء القرار نفسه آلي ومثبت (تدريب الأسبوع 28: مرساة + 8 سلبية على مخزن بديل)، والاستعادة الفعلية تبقى بيد المالك
   • أجهزة حقيقية + أرقام استخدام
 ════════════════════════════════════════════════════════════
 EOF

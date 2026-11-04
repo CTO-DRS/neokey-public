@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → release manifest (27 stages)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → release manifest (28 stages)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -106,6 +106,16 @@ stage_tls() { ci/tls_gate.sh; }
 # process, health check FROM THE JAR (the contract is the probe), fail-closed
 # boot (wrong password / unknown arg = DEPLOY_REFUSED, never a READY line).
 stage_deploy() { ci/deploy_gate.sh; }
+
+# ---- 3g2d: keystore-recovery-drill gate (phase 5, week 3 — week 28) -------------
+# The rehearsal slice of the documented "restore signing secrets from the
+# encrypted backup" pending: the owner's decision procedure (KsValidator) runs
+# against a restored STAND-IN keystore — the anchor (published fingerprint)
+# is the FIRST barrier, then eight designed negatives prove every check still
+# bites (rogue key / weak key / expired / short validity / wrong container /
+# wrong password / wrong alias / missing artifact). The secret itself never
+# leaves the owner's vault.
+stage_ksdrill() { ci/keystore_drill.sh; }
 
 # ---- 3g3: payment-provider contract gate (phase 4, week 3 — week 24) -------------
 # The week-19 promise implemented: PaymentProvider is THE standard replacement
@@ -281,6 +291,13 @@ collect_gates() {
   echo "DEPLOY_HEALTH_MS=$(echo "$DP_LINE" | sed -E 's/.*health_ms=([0-9]+).*/\1/')" >> "$GATES"
   echo "DEPLOY_NEGATIVES=$(echo "$DP_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
   echo "DEPLOY_CHECKS=$(echo "$DP_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  # keystore-recovery-drill gate numbers (phase 5, week 28)
+  echo "KSDRILL_GATE=$(grep -q '^KSDRILLGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  KD_LINE=$(grep '^KSDRILLGATE_OK' "$LOG" | tail -1)
+  echo "KSDRILL_CHECKS=$(echo "$KD_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  echo "KSDRILL_NEGATIVES=$(echo "$KD_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
+  echo "KSDRILL_DAYS_LEFT=$(echo "$KD_LINE" | sed -E 's/.*days_left=([0-9]+).*/\1/')" >> "$GATES"
+  echo "KSDRILL_FP16=$(echo "$KD_LINE" | sed -E 's/.*fp16=([0-9a-f]+).*/\1/')" >> "$GATES"
   # payment-provider contract gate numbers (phase 4, week 24)
   echo "PAY_GATE=$(grep -q '^PAYGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   PG_LINE=$(grep '^PAYGATE_OK' "$LOG" | tail -1)
@@ -364,6 +381,7 @@ run_stage "syncclient" stage_syncclient
 run_stage "rest" stage_rest
 run_stage "tls" stage_tls
 run_stage "deploy" stage_deploy
+run_stage "ksdrill" stage_ksdrill
 run_stage "paygate" stage_paygate
 run_stage "themestore" stage_themestore
 run_stage "nqfport" stage_nqfport
