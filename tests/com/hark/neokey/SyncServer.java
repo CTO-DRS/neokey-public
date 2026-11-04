@@ -2,11 +2,14 @@ package com.hark.neokey;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpsConfigurator;
+import com.sun.net.httpserver.HttpsServer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 
 /**
  * الخادم المرجعي REST — المرحلة 4، الأسبوع 2 (الأسبوع 23): HTTP حقيقي على
@@ -79,12 +84,33 @@ public final class SyncServer {
     private final ExecutorService pool;
     private final Map<String, Account> accounts = new LinkedHashMap<>();
     private final List<String> wire = Collections.synchronizedList(new ArrayList<String>());
+    private final boolean tls;
 
     /** خادم حقيقي على 127.0.0.1 بمنفذ يختاره النظام (0) — عزلة كاملة للحلبة. */
-    public static SyncServer start() throws IOException { return new SyncServer(); }
+    public static SyncServer start() throws IOException { return new SyncServer(false, null, null); }
 
-    private SyncServer() throws IOException {
-        http = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    /** خادم TLS حقيقي (المرحلة 5/الأسبوع 26): PKCS12 من الملف + عبارة — نفس
+     *  العقد على السلك المشفر حرفاً بحرف (HttpsServer فوق المنطق نفسه). */
+    public static SyncServer startTls(String p12Path, char[] pass) throws Exception {
+        KeyStore ks = KeyStore.getInstance("PKCS12");
+        try (java.io.InputStream in = new java.io.FileInputStream(p12Path)) { ks.load(in, pass); }
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(ks, pass);
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(kmf.getKeyManagers(), null, null);
+        return new SyncServer(true, ctx, pass);
+    }
+
+    private SyncServer(boolean tls, SSLContext ctx, char[] pass) throws IOException {
+        this.tls = tls;
+        if (tls) {
+            HttpsServer hs = HttpsServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            final SSLContext c = ctx;
+            hs.setHttpsConfigurator(new HttpsConfigurator(c));
+            http = hs;
+        } else {
+            http = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        }
         http.createContext("/", ex -> route(ex));
         pool = Executors.newFixedThreadPool(2);
         http.setExecutor(pool);
@@ -93,7 +119,7 @@ public final class SyncServer {
 
     public int port() { return http.getAddress().getPort(); }
     /** القاعدة الموحدة للعملاء — نفس شكل قائمة NetGate البيضاء مع /v1/. */
-    public String base() { return "http://127.0.0.1:" + port() + "/v1/"; }
+    public String base() { return (tls ? "https" : "http") + "://127.0.0.1:" + port() + "/v1/"; }
     public void stop() { http.stop(0); pool.shutdownNow(); }
 
     // ---- التوجيه والمعالجة -------------------------------------------------------

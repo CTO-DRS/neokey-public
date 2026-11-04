@@ -32,7 +32,7 @@ find_jar() {
 }
 
 OUT=build/assistgate; mkdir -p "$OUT"
-SRC="tests/com/hark/neokey/AssistantGate.java src/com/hark/neokey/SmartSwitch.java src/com/hark/neokey/Assistant.java src/com/hark/neokey/NetGate.java src/com/hark/neokey/Dialect.java"
+SRC="tests/com/hark/neokey/AssistantGate.java src/com/hark/neokey/SmartSwitch.java src/com/hark/neokey/Assistant.java src/com/hark/neokey/NetGate.java src/com/hark/neokey/SyncVault.java src/com/hark/neokey/Dialect.java"
 if command -v javac >/dev/null 2>&1; then
   javac -nowarn -encoding UTF-8 -d "$OUT" $SRC 2>&1
 else

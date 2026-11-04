@@ -87,6 +87,12 @@ if [ "${PAY_GATE:-}" = "OK" ]; then
   PAY_BLOCK=$',\n    "payment": { "verifiedBy": "ci/pay_gate.sh", "contract": "docs/PHASE4-W3-REPORT.md", "replacementPoint": "PaymentProvider — the ONLY money path into the wallet (verified sealed receipt, deterministic seal, REPLAY ledger)", "simulation": "local-sim welcome credit — a declared provider, replaced by the real one at deployment", "providersProven": '"${PAY_PROVIDERS:-0}"', "receiptsVerified": '"${PAY_RECEIPTS:-0}"', "deterministicProof": "'"det_runs=2 det_equal=${PAY_DET_EQUAL:-0}"'", "ledgerClosesCents": '"${PAY_LEDGER_CLOSES:-0}"', "negativesRefused": "'"${PAY_NEGATIVES:-0}"'", "topupP50Us": '"${PAY_P50_TOPUP_US:-0}"', "negativeProof": "ci/pay-negative-proof.log (12 attacks + 12 green baselines)" }'
 fi
 
+# TLS-SPKI-pinning gate (phase 5, week 26) — present when the gate ran
+TLS_BLOCK=""
+if [ "${TLS_GATE:-}" = "OK" ]; then
+  TLS_BLOCK=$',\n    "tlsPinning": { "verifiedBy": "ci/tls_gate.sh", "contract": "docs/SYNC-REST.md §TLS", "pendingSlice": "locally-closable slice of the live-TLS-server deployment — the client trust contract", "trustModel": "SPKI sha256 pin on the END-ENTITY key inside the handshake TrustManager — a valid chain with a different key is refused; no request byte leaves before the pin passes", "pins": '"${TLS_PINS:-0}"', "protocolMeasured": "'"${TLS_PROTOCOL:-}"'", "protocolFloor": "TLSv1.2", "wireRounds": '"${TLS_ROUNDS:-0}"', "negativesRefused": "'"${TLS_NEGATIVES:-0}"'", "serverEntropyX100": '"${TLS_ENTROPY_X100:-0}"', "p50HandshakeMs": '"${TLS_P50_HANDSHAKE_MS:-0}"', "productionRule": "NetGate.setSyncPins at deployment — https sync without pins refuses at construction (https_unpinned)", "negativeProof": "ci/tls-negative-proof.log" }'
+fi
+
 # Phase-3 closing gate (phase 3, week 4) — present when the closing gate ran
 PHASE3_BLOCK=""
 if [ "${PHASE3_GATE:-}" = "OK" ]; then
@@ -115,7 +121,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
   "signedBy": "release workflow only — signing secrets never leave the vault"
@@ -140,7 +146,7 @@ cat > "$OUT/store-readiness.json" <<EOF
     "storeListing": { "status": "verified by ci/play_gate.sh", "name_ar_en": "${PLAY_name_ar:-0}/30 + ${PLAY_name_en:-0}/30", "short_ar_en": "${PLAY_short_ar:-0}/80 + ${PLAY_short_en:-0}/80", "full_ar_en": "${PLAY_full_ar:-0}/4000 + ${PLAY_full_en:-0}/4000" },
     "shrink": { "status": "R8 Full Mode green + real trim enforced", "dexBytes": ${R8_DEX_BYTES:-0}, "ceiling": ${TRIM_CEILING:-512000}, "mapping": "build/release/mapping.txt" },
     "payments": { "status": "provider contract standard and proven; real provider = deployment decision", "gate": "${PAY_GATE:-NOT_OK}", "ledgerClosesCents": ${PAY_LEDGER_CLOSES:-0}, "negativeProof": "ci/pay-negative-proof.log" },
-    "syncBackend": { "status": "contract proven on the wire via the arena reference server; production deployment (sync.neokey.app + TLS) pending", "gate": "${REST_GATE:-NOT_OK}", "wireRounds": ${REST_ROUNDS:-0} },
+    "syncBackend": { "status": "contract proven on the wire + client TLS trust contract (SPKI pinning) proven; production deployment (sync.neokey.app + TLS pins at NetGate) pending", "gate": "${REST_GATE:-NOT_OK}", "tlsGate": "${TLS_GATE:-NOT_OK}", "wireRounds": ${REST_ROUNDS:-0} },
     "entitlements": { "status": "restore re-grants ownership by pin, never re-buys", "gate": "${ENTGATE:-NOT_OK}" },
     "economy": { "status": "70/30 close exact to the cent through Economy only", "monthCloseCents": ${PAY_LEDGER_CLOSES:-0} },
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
@@ -165,7 +171,7 @@ cat > "$OUT/store-readiness.txt" <<EOF
  قائمة المتجر     جاهزة — play_gate (${PLAY_name_ar:-0}/30 اسم عربي، ${PLAY_short_ar:-0}/80 وصف قصير، ${PLAY_full_ar:-0}/4000 وصف كامل + الإنجليزية)
  البناء والتصغير  R8 Full Mode أخضر — dex ${R8_DEX_BYTES:-0}/${TRIM_CEILING:-512000} بايت (تقليم حقيقي مفروض) + mapping.txt
  الدفع            العقد قياسي مثبت — PaymentProvider نقطة الاستبدال الوحيدة، دفتر ينغلق ${PAY_LEDGER_CLOSES:-0} سنتاً، إثبات سلبي 12 هجمة (المزوّد الحقيقي قرار نشر)
- خادم المزامنة    العقد مثبت على السلك (خادم مرجعي محلي) — النشر الحي بTLS قرار نشر
+ خادم المزامنة    العقد مثبت على السلك + عقد ثقة العميل بTLS مثبت (تثبيت SPKI داخل المصافحة) — النشر الحي قرار نشر بضبط الدبابيس عند NetGate
  الاستحقاقات      الاستعادة تعيد الملكية بالدبوس ولا تشتري أبداً
  الاقتصاد         إغلاق 70/30 دقيق للسنت عبر Economy حصراً
  الاختبارات       $TESTS_TOTAL اختباراً، $TESTS_FAILED إخفاق

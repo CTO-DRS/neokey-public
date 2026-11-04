@@ -45,7 +45,7 @@ CP=""
 STUBS="tests/stubs/org/json/JSONArray.java"
 [ -z "$AJ" ] && STUBS="$STUBS $(find tests/stubs -name '*.java' | tr '\n' ' ')"
 SRC="tests/com/hark/neokey/SyncServer.java tests/com/hark/neokey/RestGate.java \
- src/com/hark/neokey/SyncRestTransport.java src/com/hark/neokey/SyncVault.java \
+ src/com/hark/neokey/SyncRestTransport.java src/com/hark/neokey/SpkiPins.java src/com/hark/neokey/PinnedTls.java src/com/hark/neokey/SyncVault.java \
  src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java src/com/hark/neokey/NetGate.java \
  src/com/hark/neokey/StoreUi.java src/com/hark/neokey/PaymentProvider.java src/com/hark/neokey/Economy.java src/com/hark/neokey/ThemePack.java \
  src/com/hark/neokey/Dictionary.java src/com/hark/neokey/DictSign.java src/com/hark/neokey/CommunityDict.java \

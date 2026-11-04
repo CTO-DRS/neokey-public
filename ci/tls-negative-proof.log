@@ -1,0 +1,24 @@
+== tls negative proof — 2026-11-04T09:24:21Z ==
+
+--- attack: fixture swap (rogue cert planted as the arena fixture) (expect: FAIL anchor.arena.pin)
+rc=1
+verdict: TLSGATE_FAILED unit (SpkiPinsTest)
+tag: FAIL anchor.arena.pin
+tag: OK
+restored: rc=0 TLSGATE_OK pins=1 protocol_floor=TLSv1.2 protocol=TLSv1.3 ro
+
+--- attack: neutered SpkiPins.verify (always-true pin check) (expect: FAIL verify.rogue)
+rc=1
+verdict: TLSGATE_FAILED unit (SpkiPinsTest)
+tag: FAIL verify.rogue
+tag: OK
+restored: rc=0 TLSGATE_OK pins=1 protocol_floor=TLSv1.2 protocol=TLSv1.3 ro
+
+--- attack: hide PinnedTls.java (compile gate must refuse) (expect: TLSGATE_FAILED compile)
+rc=1
+verdict: TLSGATE_FAILED compile
+tag: TLSGATE_FAILED compile
+tag: OK
+restored: rc=0 TLSGATE_OK pins=1 protocol_floor=TLSv1.2 protocol=TLSv1.3 ro
+
+TLS_NEGATIVE_PROOF_OK 3 attacks bitten, all restores healed

@@ -27,13 +27,27 @@ final class SyncRestTransport implements SyncClient.Transport {
     /** الحلبة المحلية فقط (بوابة RESTGATE): 127.0.0.1 حصراً — لا يمكن لهذا
      *  المسار مغادرة الجهاز، ويُستبدل فحص NetGate الاستنتاجي بفحص الحلبة. */
     private final boolean arena;
+    /** دبابيس SPKI — null = قناة http خام (حلبة المحاكاة فقط؛ الإنتاج https
+     *  بلا دبابيس مرفوض عند البناء). المرحلة 5/الأسبوع 26. */
+    private final SpkiPins pins;
+    /** مرساة ثقة الحلبة (DER) — للإنتاج null (سلاسل النظام) ويكفي الدبوس. */
+    private final byte[] trustAnchor;
 
-    /** يُبنى بنطاق البوابة فقط — أي مصدر آخر يُرفض عند البناء. */
+    /** يُبنى بنطاق البوابة فقط — أي مصدر آخر يُرفض عند البناء. https بلا دبابيس
+     *  SPKI يُرفض مغلق (المعلق «نشر حي بTLS»: هوية المفتاح تُثبّت عند النشر). */
     SyncRestTransport() {
         String ep = NetGate.endpoint(NetGate.CAP_SYNC);
         if (ep == null) throw new SyncVault.SyncRefused("no_endpoint");
         this.base = ep;
         this.arena = false;
+        if (ep.startsWith("https://")) {
+            String[] p = NetGate.syncPins();
+            if (p == null) throw new SyncVault.SyncRefused("https_unpinned");
+            this.pins = new SpkiPins(p);
+        } else {
+            this.pins = null;
+        }
+        this.trustAnchor = null;
     }
 
     /**
@@ -47,6 +61,23 @@ final class SyncRestTransport implements SyncClient.Transport {
             throw new SyncVault.SyncRefused("not_arena");
         this.base = arenaBase;
         this.arena = true;
+        this.pins = null;
+        this.trustAnchor = null;
+    }
+
+    /** حلبة TLS مثبتة SPKI حصراً (المرحلة 5/الأسبوع 26): https://127.0.0.1:
+     *  فقط، بدبابيس إلزامية ومرساة الحلبة المزوّدة — المصافحة نفسها ترفض أي
+     *  مفتاح غير مثبت قبل أن يغادر بايت طلب واحد الجهاز. */
+    SyncRestTransport(String arenaBase, SpkiPins pins, byte[] caCertDer) {
+        if (arenaBase == null || !arenaBase.startsWith("https://127.0.0.1:"))
+            throw new SyncVault.SyncRefused("not_arena");
+        if (pins == null) throw new SyncVault.SyncRefused("no_pins");
+        if (caCertDer == null || caCertDer.length == 0)
+            throw new SyncVault.SyncRefused("no_trust_anchor");
+        this.base = arenaBase;
+        this.arena = true;
+        this.pins = pins;
+        this.trustAnchor = caCertDer.clone();
     }
 
     // ---- الحساب ------------------------------------------------------------------
@@ -101,6 +132,16 @@ final class SyncRestTransport implements SyncClient.Transport {
         HttpURLConnection c = null;
         try {
             c = (HttpURLConnection) new URL(base + relPath).openConnection();
+            if (c instanceof javax.net.ssl.HttpsURLConnection) {         // TLS مثبت SPKI — فشل مغلق
+                javax.net.ssl.HttpsURLConnection h = (javax.net.ssl.HttpsURLConnection) c;
+                if (pins == null) throw new SyncVault.SyncRefused("https_unpinned");
+                javax.net.ssl.SSLContext ctx = trustAnchor != null
+                        ? PinnedTls.arenaContext(trustAnchor, pins)
+                        : PinnedTls.systemContext(pins);
+                h.setSSLSocketFactory(ctx.getSocketFactory());
+            } else if (pins != null) {
+                throw new SyncVault.SyncRefused("tls_required");
+            }
             c.setRequestMethod(method);
             c.setConnectTimeout(8000);
             c.setReadTimeout(12000);

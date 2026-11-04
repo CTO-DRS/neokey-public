@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → release manifest (25 stages)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → release manifest (26 stages)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -90,6 +90,13 @@ stage_syncclient() { ci/sync_client_gate.sh; }
 # The contract docs/SYNC-REST.md proven ON THE WIRE: real HTTP server on
 # 127.0.0.1 + the production SyncRestTransport — no simulator substitute.
 stage_rest() { ci/rest_gate.sh; }
+
+# ---- 3g2b: TLS-SPKI-pinning gate (phase 5, week 1 — week 26) ---------------------
+# The client trust contract of the documented "live TLS sync server" pending:
+# the pinned transport refuses a MITM inside the HANDSHAKE (no request byte
+# leaves), the published fixture cert's SPKI sha256 re-derives byte-exactly,
+# and https-without-pins closes at construction (fail-closed).
+stage_tls() { ci/tls_gate.sh; }
 
 # ---- 3g3: payment-provider contract gate (phase 4, week 3 — week 24) -------------
 # The week-19 promise implemented: PaymentProvider is THE standard replacement
@@ -249,6 +256,16 @@ collect_gates() {
   echo "REST_P50_PUSH_MS=$(echo "$R_LINE" | sed -E 's/.*p50_push_ms=([0-9.]+).*/\1/')" >> "$GATES"
   echo "REST_P50_PULL_MS=$(echo "$R_LINE" | sed -E 's/.*p50_pull_ms=([0-9.]+).*/\1/')" >> "$GATES"
   echo "REST_CHECKS=$(echo "$R_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  # TLS-SPKI-pinning gate numbers (phase 5, week 26)
+  echo "TLS_GATE=$(grep -q '^TLSGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  TL_LINE=$(grep '^TLSGATE_OK' "$LOG" | tail -1)
+  echo "TLS_PINS=$(echo "$TL_LINE" | sed -E 's/.*pins=([0-9]+).*/\1/')" >> "$GATES"
+  echo "TLS_PROTOCOL=$(echo "$TL_LINE" | sed -E 's/.*protocol=([^ ]+).*/\1/')" >> "$GATES"
+  echo "TLS_ROUNDS=$(echo "$TL_LINE" | sed -E 's/.*rounds=([0-9]+).*/\1/')" >> "$GATES"
+  echo "TLS_NEGATIVES=$(echo "$TL_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
+  echo "TLS_ENTROPY_X100=$(echo "$TL_LINE" | sed -E 's/.*entropy_x100=([0-9]+).*/\1/')" >> "$GATES"
+  echo "TLS_P50_HANDSHAKE_MS=$(echo "$TL_LINE" | sed -E 's/.*p50_handshake_ms=([0-9]+).*/\1/')" >> "$GATES"
+  echo "TLS_CHECKS=$(echo "$TL_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
   # payment-provider contract gate numbers (phase 4, week 24)
   echo "PAY_GATE=$(grep -q '^PAYGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   PG_LINE=$(grep '^PAYGATE_OK' "$LOG" | tail -1)
@@ -330,6 +347,7 @@ run_stage "assistant" stage_assistant
 run_stage "sync" stage_sync
 run_stage "syncclient" stage_syncclient
 run_stage "rest" stage_rest
+run_stage "tls" stage_tls
 run_stage "paygate" stage_paygate
 run_stage "themestore" stage_themestore
 run_stage "nqfport" stage_nqfport

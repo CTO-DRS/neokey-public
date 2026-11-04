@@ -41,6 +41,26 @@ public final class NetGate {
     public static final String MASTER_PREF = "net_state";
     public static String capPref(String cap) { return "net_" + cap; }
 
+    /** دبابيس SPKI لمزامنة الإنتاج (المرحلة 5/الأسبوع 26): هوية مفتاح الخادم
+     *  مثبتة عند النشر (NetGate.setSyncPins) — https بلا دبابيس = مزامنة مغلقة.
+     *  المتقلب مع حاجز القراءة/الكتابة يكفي: يُكتب مرة عند الإقلاع قبل أي مزامنة. */
+    private static volatile String[] syncPins = null;
+
+    /** يضبط دبابيس مزامنة الإنتاج عند النشر فقط — من الواجهة/التهيئة، قبل أي طلب. */
+    public static void setSyncPins(String... pins) {
+        if (pins == null || pins.length == 0) throw new SyncVault.SyncRefused("no_pins");
+        syncPins = pins.clone();
+    }
+
+    /** دبابيس المزامنة الحالية أو null إن لم تُضبط (المزامنة https تُغلق). */
+    public static String[] syncPins() {
+        String[] p = syncPins;
+        return p == null ? null : p.clone();
+    }
+
+    /** مسح الدبابيس — عزل الاختبارات والتبديل الموثق فقط؛ الإنتاج لا يمسحها أبداً. */
+    public static void clearSyncPins() { syncPins = null; }
+
     /** قرار البوابة. */
     public static final class Decision {
         public final boolean allowed;   // يمرّ الآن

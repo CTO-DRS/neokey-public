@@ -67,7 +67,12 @@ TR_UIEN=$(field "$TR" ui_en_coupled)
 [ "${TR_REG:-1}"   = 0 ]        || fail "trim regrown ${TR_REG:-?} != 0 (a shell-class literal regrew)"
 [ "${TR_PUR:-0}"   -ge 36 ]     || fail "trim purity $TR_PUR < 36 (android imports lost their stubs)"
 [ "${TR_UIEN:-0}"  -ge 80 ]     || fail "trim ui_en_coupled ${TR_UIEN:-0} < 80 (translation coupling broke)"
-[ "${TR_SAVED:-0}" -ge 13548 ]  || fail "trim saved ${TR_SAVED:-0} < 13548 (the lever shrank)"
+# saved floor rides the current dex size: phase-5 W1 (week 26) spent 124B of
+# the trim margin on SpkiPins+PinnedTls (+transport wiring) — 13548 → 13424.
+# The DOCTRINE is unchanged: ceiling stays 512,000 (never raised); overflow
+# still means trim, never raise. A sinking "saved" BEYOND the documented
+# spend is still a regression.
+[ "${TR_SAVED:-0}" -ge 13424 ]  || fail "trim saved ${TR_SAVED:-0} < 13424 (the lever shrank)"
 [ "${TR_CEIL:-0}"  = "$DEX_CEILING" ] || fail "trim ceiling ${TR_CEIL:-0} != $DEX_CEILING"
 [ "${TR_DEX:-999999}" -le "$DEX_CEILING" ] || fail "trim dex $TR_DEX > ceiling $DEX_CEILING"
 
