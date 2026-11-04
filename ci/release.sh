@@ -123,6 +123,12 @@ if [ "${PHASE4_GATE:-}" = "OK" ]; then
   PHASE4_BLOCK=$',\n    "phase4Close": { "verifiedBy": "ci/phase4_gate.sh", "contract": "docs/PHASE4-W4-REPORT.md", "phaseGatesGreen": "'"${PHASE4_GATES:-0/0}"'", "regressions": "'"${PHASE4_REGRESSIONS:-?}"'", "dexBytes": '"${PHASE4_DEX:-0}"', "dexCeiling": '"${PHASE4_CEILING:-512000}"', "versionCode": '"$VC"', "tests": "'"${PHASE4_TESTS:-0/0}"'", "negatives": "'"${PHASE4_NEGATIVES:-?}"'", "exitCriteria": "all phase-4 gates re-run green + three-way evidence integrity + zero pinned regressions + dex under the lowered ceiling + versionCode bumped" }'
 fi
 
+# Phase-5 closing gate (phase 5, week 4 / week 29) — present when the closing gate ran
+PHASE5_BLOCK=""
+if [ "${PHASE5_GATE:-}" = "OK" ]; then
+  PHASE5_BLOCK=$',\n    "phase5Close": { "verifiedBy": "ci/phase5_gate.sh", "contract": "docs/PHASE5-W4-REPORT.md", "phaseGatesGreen": "'"${PHASE5_GATES:-0/0}"'", "regressions": "'"${PHASE5_REGRESSIONS:-?}"'", "dexBytes": '"${PHASE5_DEX:-0}"', "dexCeiling": '"${PHASE5_CEILING:-512000}"', "versionCode": '"$VC"', "tests": "'"${PHASE5_TESTS:-0/0}"'", "negatives": "'"${PHASE5_NEGATIVES:-?}"'", "drillFp16": "'"${KSDRILL_FP16:-}"'", "exitCriteria": "all phase-5 gates re-run fresh (tls/deploy/ksdrill) + three-way evidence integrity + zero regressions on all 21 previous gate keys + dex under the lowered ceiling + versionCode 70 / versionName 2.3" }'
+fi
+
 cat > "$OUT/release-manifest.json" <<EOF
 {
   "app": "com.hark.neokey",
@@ -133,7 +139,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK$PHASE5_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
   "signedBy": "release workflow only — signing secrets never leave the vault"
@@ -158,18 +164,19 @@ cat > "$OUT/store-readiness.json" <<EOF
     "storeListing": { "status": "verified by ci/play_gate.sh", "name_ar_en": "${PLAY_name_ar:-0}/30 + ${PLAY_name_en:-0}/30", "short_ar_en": "${PLAY_short_ar:-0}/80 + ${PLAY_short_en:-0}/80", "full_ar_en": "${PLAY_full_ar:-0}/4000 + ${PLAY_full_en:-0}/4000" },
     "shrink": { "status": "R8 Full Mode green + real trim enforced", "dexBytes": ${R8_DEX_BYTES:-0}, "ceiling": ${TRIM_CEILING:-512000}, "mapping": "build/release/mapping.txt" },
     "payments": { "status": "provider contract standard and proven; real provider = deployment decision", "gate": "${PAY_GATE:-NOT_OK}", "ledgerClosesCents": ${PAY_LEDGER_CLOSES:-0}, "negativeProof": "ci/pay-negative-proof.log" },
-    "syncBackend": { "status": "contract proven on the wire + client TLS trust contract (SPKI pinning) proven + the deployable bundle proven as a separate process (READY pin anchor, health check, fail-closed boot); production deployment (sync.neokey.app + TLS pins at NetGate) pending", "gate": "${REST_GATE:-NOT_OK}", "tlsGate": "${TLS_GATE:-NOT_OK}", "deployGate": "${DEPLOY_GATE:-NOT_OK}", "wireRounds": ${REST_ROUNDS:-0} },
+    "syncBackend": { "status": "contract proven on the wire + client TLS trust contract (SPKI pinning) proven + the deployable bundle proven as a separate process + the keystore-recovery drill proven to bite; PHASE 5 CLOSED by ci/phase5_gate.sh (3/3 gates fresh, three-way evidence integrity, 0 regressions); production deployment (sync.neokey.app + TLS pins at NetGate) pending", "gate": "${REST_GATE:-NOT_OK}", "tlsGate": "${TLS_GATE:-NOT_OK}", "deployGate": "${DEPLOY_GATE:-NOT_OK}", "ksdrillGate": "${KSDRILL_GATE:-NOT_OK}", "phase5Gate": "${PHASE5_GATE:-NOT_OK}", "wireRounds": ${REST_ROUNDS:-0} },
     "entitlements": { "status": "restore re-grants ownership by pin, never re-buys", "gate": "${ENTGATE:-NOT_OK}" },
     "economy": { "status": "70/30 close exact to the cent through Economy only", "monthCloseCents": ${PAY_LEDGER_CLOSES:-0} },
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
     "rollout": { "status": "staged 10/50/100 with halt procedure — see rollout-plan.json", "defaultProcedure": true },
-    "signing": { "status": "$SIGNING_STATUS" }
+    "signing": { "status": "$SIGNING_STATUS" },
+    "phase5": { "status": "closed by ci/phase5_gate.sh — the three locally-closable slices of the deployment pendings are proven; what remains outside is named below with its exact wording", "gates": "${PHASE5_GATES:-0/0}", "regressions": "${PHASE5_REGRESSIONS:-?}" }
   },
   "pendingOutsideThisEnvironment": [
     "real payment provider (Play Billing) — replaces PaymentProvider.SimProvider in StoreActivity only",
-    "live sync server deployment with TLS on a real domain (contract already proven on the wire)",
+    "live sync server deployment with TLS on a real domain (client trust contract + deployable bundle + keystore-recovery drill all proven locally — PHASE 5 closed by ci/phase5_gate.sh; what remains is exactly: the domain, the CA certificate, and setting the pins at NetGate.setSyncPins)",
     "store developer accounts + actual store upload (rollout plan ready)",
-    "keystore secrets restore from the encrypted backup before any signed build — the DECISION PROCEDURE is now automated and proven (week 28 drill: anchor + 8 negatives on a stand-in keystore); the actual restore stays with the owner",
+    "keystore secrets restore from the encrypted backup before any signed build — the DECISION PROCEDURE is now automated and proven (week 28 drill: anchor + 8 negatives on a stand-in keystore, re-proven fresh by the phase-5 closing gate); the actual restore stays with the owner",
     "real-device matrix + MAU numbers"
   ]
 }
@@ -183,7 +190,7 @@ cat > "$OUT/store-readiness.txt" <<EOF
  قائمة المتجر     جاهزة — play_gate (${PLAY_name_ar:-0}/30 اسم عربي، ${PLAY_short_ar:-0}/80 وصف قصير، ${PLAY_full_ar:-0}/4000 وصف كامل + الإنجليزية)
  البناء والتصغير  R8 Full Mode أخضر — dex ${R8_DEX_BYTES:-0}/${TRIM_CEILING:-512000} بايت (تقليم حقيقي مفروض) + mapping.txt
  الدفع            العقد قياسي مثبت — PaymentProvider نقطة الاستبدال الوحيدة، دفتر ينغلق ${PAY_LEDGER_CLOSES:-0} سنتاً، إثبات سلبي 12 هجمة (المزوّد الحقيقي قرار نشر)
- خادم المزامنة    العقد على السلك + ثقة العميل مثبتة + حزمة النشر مثبتة كعملية مستقلة (بصمة الجرة = المرساة، فحص حي، إقلاع مغلقة الفشل) — النشر الحي = نطاق + شهادة + ضبط الدبابيس
+ خادم المزامنة    العقد على السلك + ثقة العميل مثبتة + حزمة النشر عملية مستقلة + تدريب استعادة التوقيع يعضّ — المرحلة 5 مغلقة ببوابة phase5 (3/3 طازجة، اتساق ثلاثي، صفر تراجع) — النشر الحي = نطاق + شهادة + ضبط الدبابيس
  الاستحقاقات      الاستعادة تعيد الملكية بالدبوس ولا تشتري أبداً
  الاقتصاد         إغلاق 70/30 دقيق للسنت عبر Economy حصراً
  الاختبارات       $TESTS_TOTAL اختباراً، $TESTS_FAILED إخفاق
@@ -192,7 +199,7 @@ cat > "$OUT/store-readiness.txt" <<EOF
 ────────────────────────────────────────────────────────────
  خارج هذه البيئة (موثق لا منسي):
   • مزوّد دفع حقيقي (يستبدل SimProvider في StoreActivity فقط)
-  • نشر خادم مزامنة حي بنطاق حقيقي + TLS
+  • نشر خادم مزامنة حي بنطاق حقيقي + TLS — العقد والثقة والحزمة والتدريب كلها مثبتة محلياً (المرحلة 5 مغلقة)؛ الباقي بالضبط: النطاق، شهادة CA، ضبط الدبابيس عند NetGate.setSyncPins
   • حسابات متاجر + رفع فعلي (الخطة جاهزة)
   • استعادة أسرار التوقيع من النسخة المشفرة قبل أي بناء موقّع — إجراء القرار نفسه آلي ومثبت (تدريب الأسبوع 28: مرساة + 8 سلبية على مخزن بديل)، والاستعادة الفعلية تبقى بيد المالك
   • أجهزة حقيقية + أرقام استخدام

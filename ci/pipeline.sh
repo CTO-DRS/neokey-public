@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → release manifest (28 stages)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → phase5 close → release manifest (29 stages)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -149,6 +149,14 @@ stage_trim() { ci/trim_gate.sh; }   # phase 4 W1: the real dex trim, enforced (a
 
 # ---- 3r: phase-4 CLOSING gate (roadmap phase 4, week 4) -----------------------
 stage_phase4() { ci/phase4_gate.sh; }
+
+# ---- 3s: phase-5 CLOSING gate (roadmap phase 5, week 4 — week 29) --------------
+# All phase-5 gates in one line, fresh: the TLS trust contract, the deployment
+# bundle and the keystore-recovery drill re-execute with every shipped field
+# pinned, three-way evidence integrity (fresh == pipeline.log == gates.env),
+# zero regressions on all 21 previous gate keys, and the measured exit criteria
+# (tests >= 1,354, dex <= the lowered 512,000B ceiling, vc >= 70, vn = 2.3).
+stage_phase5() { ci/phase5_gate.sh; }
 
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
@@ -411,6 +419,7 @@ fi
 collect_gates   # BEFORE the release stage — the manifest must carry the real gate numbers
 run_stage "phase3"   stage_phase3   # closing gate reads THIS run's gates.env
 run_stage "phase4"   stage_phase4   # phase 4 W4 (week 25): all phase-4 gates in one line, fresh
+run_stage "phase5"   stage_phase5   # phase 5 W4 (week 29): all phase-5 gates in one line, fresh
 run_stage "release"  stage_release
 
 # ---- summary ------------------------------------------------------------------

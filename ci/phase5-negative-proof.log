@@ -1,0 +1,23 @@
+== phase5 negative proof — 2026-11-04T21:27:53Z ==
+
+--- baseline (untampered)
+rc=0
+verdict: PHASE5_OK gates=3/3 regressions=0/81 dex=505264/512000 vc=70 tests=1354/0 negatives=11/11+3/3+8/8 fp16=a80e71b9a5d15546
+
+--- attack: gates.env tamper (KSDRILL_NEGATIVES 8/8 -> 7/8)
+rc=1
+verdict: PHASE5_FAILED regressions=1/81 (see PHASE5 regression lines above)
+restored: rc=0 PHASE5_OK gates=3/3 regressions=0/81 dex=505264/512000 vc=70 tests=1354/0 negatives=11/11+3/3+8/8 fp16=a80e71b9a5d15546
+
+--- attack: log+env double tamper (TLS_PINS 1 -> 2 in both)
+rc=1
+verdict: PHASE5_FAILED regressions=2/81 (see PHASE5 regression lines above)
+restored: rc=0 PHASE5_OK gates=3/3 regressions=0/81 dex=505264/512000 vc=70 tests=1354/0 negatives=11/11+3/3+8/8 fp16=a80e71b9a5d15546
+
+--- attack: phase-5 module hidden (DeployGate.java -> /tmp)
+rc=1
+verdict: PHASE5_FAILED deploy (rc=1, verdict missing)
+restored: rc=0 PHASE5_OK gates=3/3 regressions=0/81 dex=505264/512000 vc=70 tests=1354/0 negatives=11/11+3/3+8/8 fp16=a80e71b9a5d15546
+
+== PROOF PASSED: all three attacks bit with their own tags, all files restored, final gate green ==
+PHASE5_OK gates=3/3 regressions=0/81 dex=505264/512000 vc=70 tests=1354/0 negatives=11/11+3/3+8/8 fp16=a80e71b9a5d15546
