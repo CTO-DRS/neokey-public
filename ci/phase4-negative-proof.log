@@ -1,0 +1,23 @@
+== phase4 negative proof — 2026-11-04T00:06:58Z ==
+
+--- baseline (untampered)
+rc=0
+verdict: PHASE4_OK gates=3/3 regressions=0/85 dex=505140/512000 vc=66 tests=1334/0 negatives=18/18+7/7 trim=119
+
+--- attack: gates.env tamper (PAY_NEGATIVES 18/18 -> 17/18)
+rc=1
+verdict: PHASE4_FAILED regressions=1/85 (see PHASE4 regression lines above)
+restored: rc=0 PHASE4_OK gates=3/3 regressions=0/85 dex=505140/512000 vc=66 tests=1334/0 negatives=18/18+7/7 trim=119
+
+--- attack: log+env double tamper (TRIM_ENTRIES 119 -> 118 in both)
+rc=1
+verdict: PHASE4_FAILED regressions=2/85 (see PHASE4 regression lines above)
+restored: rc=0 PHASE4_OK gates=3/3 regressions=0/85 dex=505140/512000 vc=66 tests=1334/0 negatives=18/18+7/7 trim=119
+
+--- attack: phase-4 module hidden (PayGate.java -> /tmp)
+rc=1
+verdict: PHASE4_FAILED pay (rc=1, verdict missing)
+restored: rc=0 PHASE4_OK gates=3/3 regressions=0/85 dex=505140/512000 vc=66 tests=1334/0 negatives=18/18+7/7 trim=119
+
+== PROOF PASSED: all three attacks bit with their own tags, all files restored, final gate green ==
+PHASE4_OK gates=3/3 regressions=0/85 dex=505140/512000 vc=66 tests=1334/0 negatives=18/18+7/7 trim=119

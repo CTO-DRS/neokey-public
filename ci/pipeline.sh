@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → release manifest (24 stages)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → release manifest (25 stages)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -120,6 +120,9 @@ stage_entitlement() { ci/entitlement_gate.sh; }
 # ---- 3q: phase-3 CLOSING gate (roadmap phase 3, week 4) -----------------------
 stage_phase3() { ci/phase3_gate.sh; }
 stage_trim() { ci/trim_gate.sh; }   # phase 4 W1: the real dex trim, enforced (after r8)
+
+# ---- 3r: phase-4 CLOSING gate (roadmap phase 4, week 4) -----------------------
+stage_phase4() { ci/phase4_gate.sh; }
 
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
@@ -255,6 +258,7 @@ collect_gates() {
   echo "PAY_LEDGER_CLOSES=$(echo "$PG_LINE" | sed -E 's/.*ledger_closes=([0-9]+).*/\1/')" >> "$GATES"
   echo "PAY_NEGATIVES=$(echo "$PG_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
   echo "PAY_P50_TOPUP_US=$(echo "$PG_LINE" | sed -E 's/.*p50_topup_us=([0-9]+).*/\1/')" >> "$GATES"
+  echo "PAY_CHECKS=$(echo "$PG_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
   # theme-store gate numbers (phase 2, item B, week 3)
   echo "THEMESTORE_GATE=$(grep -q '^THEME_STORE_GATE_OK$' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   echo "THEMESTORE_PACKS=$(grep -o 'packs=[0-9]*' "$LOG" | tail -1 | cut -d= -f2)" >> "$GATES"
@@ -354,6 +358,7 @@ else
 fi
 collect_gates   # BEFORE the release stage — the manifest must carry the real gate numbers
 run_stage "phase3"   stage_phase3   # closing gate reads THIS run's gates.env
+run_stage "phase4"   stage_phase4   # phase 4 W4 (week 25): all phase-4 gates in one line, fresh
 run_stage "release"  stage_release
 
 # ---- summary ------------------------------------------------------------------

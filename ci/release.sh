@@ -99,6 +99,12 @@ if [ "${TRIM_GATE:-}" = "OK" ]; then
   TRIM_BLOCK=$',\n    "trim": { "verifiedBy": "ci/trim_gate.sh", "contract": "docs/PHASE4-W1-REPORT.md", "lever": "119 static Arabic UI-copy literals relocated byte-identically to res/values/strings.xml (resources ride in the APK, not the dex; purity untouched)", "entries": '"${TRIM_ENTRIES:-0}"', "bytesSavedFromDex": '"${TRIM_SAVED:-0}"', "dexBytes": '"${TRIM_DEX_BYTES:-0}"', "dexCeilingLoweredTo": '"${TRIM_CEILING:-0}"', "uiEnCoupledKeys": '"${TRIM_UI_EN_COUPLED:-0}"', "doctrine": "overflow means trim, never raise" }'
 fi
 
+# Phase-4 closing gate (phase 4, week 4 / week 25) — present when the closing gate ran
+PHASE4_BLOCK=""
+if [ "${PHASE4_GATE:-}" = "OK" ]; then
+  PHASE4_BLOCK=$',\n    "phase4Close": { "verifiedBy": "ci/phase4_gate.sh", "contract": "docs/PHASE4-W4-REPORT.md", "phaseGatesGreen": "'"${PHASE4_GATES:-0/0}"'", "regressions": "'"${PHASE4_REGRESSIONS:-?}"'", "dexBytes": '"${PHASE4_DEX:-0}"', "dexCeiling": '"${PHASE4_CEILING:-512000}"', "versionCode": '"$VC"', "tests": "'"${PHASE4_TESTS:-0/0}"'", "negatives": "'"${PHASE4_NEGATIVES:-?}"'", "exitCriteria": "all phase-4 gates re-run green + three-way evidence integrity + zero pinned regressions + dex under the lowered ceiling + versionCode bumped" }'
+fi
+
 cat > "$OUT/release-manifest.json" <<EOF
 {
   "app": "com.hark.neokey",
@@ -109,7 +115,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
   "signedBy": "release workflow only — signing secrets never leave the vault"
