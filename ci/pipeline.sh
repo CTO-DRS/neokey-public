@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → release manifest (26 stages)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → release manifest (27 stages)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -97,6 +97,15 @@ stage_rest() { ci/rest_gate.sh; }
 # leaves), the published fixture cert's SPKI sha256 re-derives byte-exactly,
 # and https-without-pins closes at construction (fail-closed).
 stage_tls() { ci/tls_gate.sh; }
+
+# ---- 3g2c: deployment-bundle gate (phase 5, week 2 — week 27) -------------------
+# The deployment slice of the "live sync server" pending: the standalone jar
+# (ci/build_deploy.sh) is launched as a REAL SEPARATE PROCESS — READY line pin
+# == fixture pin == gate anchor, loopback default bind, restart-stable pin, a
+# real sync round through the PRODUCTION pinned transport against the
+# process, health check FROM THE JAR (the contract is the probe), fail-closed
+# boot (wrong password / unknown arg = DEPLOY_REFUSED, never a READY line).
+stage_deploy() { ci/deploy_gate.sh; }
 
 # ---- 3g3: payment-provider contract gate (phase 4, week 3 — week 24) -------------
 # The week-19 promise implemented: PaymentProvider is THE standard replacement
@@ -266,6 +275,12 @@ collect_gates() {
   echo "TLS_ENTROPY_X100=$(echo "$TL_LINE" | sed -E 's/.*entropy_x100=([0-9]+).*/\1/')" >> "$GATES"
   echo "TLS_P50_HANDSHAKE_MS=$(echo "$TL_LINE" | sed -E 's/.*p50_handshake_ms=([0-9]+).*/\1/')" >> "$GATES"
   echo "TLS_CHECKS=$(echo "$TL_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  # Deployment-bundle gate numbers (phase 5, week 27)
+  echo "DEPLOY_GATE=$(grep -q '^DEPLOYGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  DP_LINE=$(grep '^DEPLOYGATE_OK' "$LOG" | tail -1)
+  echo "DEPLOY_HEALTH_MS=$(echo "$DP_LINE" | sed -E 's/.*health_ms=([0-9]+).*/\1/')" >> "$GATES"
+  echo "DEPLOY_NEGATIVES=$(echo "$DP_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
+  echo "DEPLOY_CHECKS=$(echo "$DP_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
   # payment-provider contract gate numbers (phase 4, week 24)
   echo "PAY_GATE=$(grep -q '^PAYGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   PG_LINE=$(grep '^PAYGATE_OK' "$LOG" | tail -1)
@@ -348,6 +363,7 @@ run_stage "sync" stage_sync
 run_stage "syncclient" stage_syncclient
 run_stage "rest" stage_rest
 run_stage "tls" stage_tls
+run_stage "deploy" stage_deploy
 run_stage "paygate" stage_paygate
 run_stage "themestore" stage_themestore
 run_stage "nqfport" stage_nqfport

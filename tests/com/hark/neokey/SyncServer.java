@@ -92,24 +92,34 @@ public final class SyncServer {
     /** خادم TLS حقيقي (المرحلة 5/الأسبوع 26): PKCS12 من الملف + عبارة — نفس
      *  العقد على السلك المشفر حرفاً بحرف (HttpsServer فوق المنطق نفسه). */
     public static SyncServer startTls(String p12Path, char[] pass) throws Exception {
+        return startTlsAt("127.0.0.1", 0, p12Path, pass);
+    }
+
+    /** خادم TLS بمضيف ومنفذ صريحين (المرحلة 5/الأسبوع 27 — حزمة النشر):
+     *  المنفذ 0 = يختاره النظام؛ المضيف قرار المشغل (الافتراضي loopback). */
+    public static SyncServer startTlsAt(String host, int port, String p12Path, char[] pass) throws Exception {
         KeyStore ks = KeyStore.getInstance("PKCS12");
         try (java.io.InputStream in = new java.io.FileInputStream(p12Path)) { ks.load(in, pass); }
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         kmf.init(ks, pass);
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(kmf.getKeyManagers(), null, null);
-        return new SyncServer(true, ctx, pass);
+        return new SyncServer(true, ctx, host, port);
     }
 
     private SyncServer(boolean tls, SSLContext ctx, char[] pass) throws IOException {
+        this(tls, ctx, "127.0.0.1", 0);
+    }
+
+    private SyncServer(boolean tls, SSLContext ctx, String host, int port) throws IOException {
         this.tls = tls;
         if (tls) {
-            HttpsServer hs = HttpsServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            HttpsServer hs = HttpsServer.create(new InetSocketAddress(host, port), 0);
             final SSLContext c = ctx;
             hs.setHttpsConfigurator(new HttpsConfigurator(c));
             http = hs;
         } else {
-            http = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            http = HttpServer.create(new InetSocketAddress(host, port), 0);
         }
         http.createContext("/", ex -> route(ex));
         pool = Executors.newFixedThreadPool(2);
@@ -118,8 +128,10 @@ public final class SyncServer {
     }
 
     public int port() { return http.getAddress().getPort(); }
+    /** المضيف المربوط فعلياً (حزمة النشر تضبطه صراحة؛ الحلبة 127.0.0.1). */
+    public String host() { return http.getAddress().getAddress().getHostAddress(); }
     /** القاعدة الموحدة للعملاء — نفس شكل قائمة NetGate البيضاء مع /v1/. */
-    public String base() { return (tls ? "https" : "http") + "://127.0.0.1:" + port() + "/v1/"; }
+    public String base() { return (tls ? "https" : "http") + "://" + host() + ":" + port() + "/v1/"; }
     public void stop() { http.stop(0); pool.shutdownNow(); }
 
     // ---- التوجيه والمعالجة -------------------------------------------------------

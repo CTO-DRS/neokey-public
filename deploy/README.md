@@ -1,0 +1,60 @@
+# حزمة نشر خادم المزامنة المرجعي — `neokey-sync-server.jar`
+
+المرحلة 5، الأسبوع 27. الجرة المستقلة التي يشغّلها مشغل النشر فوق **نفس منطق
+العقد المرجعي** الذي ثبتت بوابتا `RESTGATE` و`TLSGATE` عقدَه على السلك — لا
+نسخة موازية. بلا تبعيات، هدف Java 8، صفر كود تطبيق (deploy/ وtests/ خارج dex
+التطبيق بالتصميم — لوحة المفاتيح لا تفتح مقبس استماع أبداً).
+
+## البناء
+
+```bash
+ci/build_deploy.sh   # → build/deploy/neokey-sync-server.jar
+```
+
+## البصمة المرساة (المرجع = المنشور)
+
+```bash
+java -jar neokey-sync-server.jar --print-spki --keystore server.p12 --password ****
+# SYNC_SERVER_SPKI e67e815c…a395
+```
+
+البصمة تُضبط مرة واحدة عند النشر في العميل: `NetGate.setSyncPins("<بصمة>")` —
+وتدوير شهادة الخادم = طباعة البصمة الجديدة وتحديث الدبابيس المعتمدة.
+
+## الخدمة
+
+```bash
+java -jar neokey-sync-server.jar --keystore server.p12 --password **** --port 443
+# SYNC_SERVER_READY port=443 host=127.0.0.1 spki=e67e815c…
+```
+
+- سطر الجاهزية واحد على stdout ثم الصمت — سجل الطلبات أدوات المشغل (journald).
+- **الربط الافتراضي loopback**؛ كشف واجهة عامة قرار صريح: `--host 0.0.0.0`
+  خلف TLS-terminating proxy أو مباشرة.
+- كل خطأ قبل سطر الجاهزية = `DEPLOY_REFUSED <وسم>` ورمز خروج غير صفري
+  (`keystore_load` عبارة/ملف، `bad_port`، `unknown_arg`، `missing_arg`،
+  `keystore_no_key`) — لا يُشغَّل منفذ ولا تُطبع جاهزية أبداً.
+
+## فحص الحي (العقد نفسه هو المسبار)
+
+```bash
+java -jar neokey-sync-server.jar --check https://127.0.0.1:443/v1/ \
+     --pin e67e815c… --anchor server-cert.pem
+# SYNCH_HEALTH_OK base=https://127.0.0.1:443/v1/ code=404 latency_ms=12
+# SYNCH_HEALTH_FAIL spki_not_pinned  (قناة بمفتاح مغترب — مرفوضة)
+```
+
+لا نقطة نهاية جديدة: مسبار الفحص هو `GET /v1/account/healthprobe0/salt`
+المتوقع **404** (الرمضاء الرمادي للعقد = الخادم حي) فوق قناة مثبتة SPKI —
+`--pin` إلزامي، و`--anchor` لشهادة ذاتية-التوقيع (النشر الحي بشهادة CA
+تجارية يكفي النظام + الدبوس).
+
+## systemd (قالب)
+
+راجع `neokey-sync-server.service` — `Restart=on-failure`، `NoNewPrivileges`،
+`ProtectSystem=strict`، والعبارة من `EnvironmentFile` بمقارنة صلاحية 600.
+
+## ما يبقى خارج هذه البيئة موثقاً
+
+نطاق حقيقي + شهادة CA تجارية، تشغيل فعلي خلف DNS، ومراقبة خارجية — العقد
+والثقة والحزمة وفحص الحي مثبتة محلياً ببوابة `DEPLOYGATE_OK`.

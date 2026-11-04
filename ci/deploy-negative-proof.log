@@ -1,0 +1,24 @@
+== deploy negative proof — 2026-11-04T09:55:52Z ==
+
+--- attack: forged READY pin (lying launcher) (expect: GATEFAIL: boot.pin.anchor)
+rc=1
+verdict: DEPLOYGATE_FAILED exception SyncRefused: network
+tag: GATEFAIL: boot.pin.anchor
+tag: OK
+restored: rc=0 DEPLOYGATE_OK bundle=1 pins_match=1 restart_stable=1 round=o
+
+--- attack: hide SyncServer.java from the bundle build (expect: DEPLOY_BUILD_FAILED compile)
+rc=1
+verdict: DEPLOYGATE_FAILED bundle build
+tag: DEPLOY_BUILD_FAILED compile
+tag: OK
+restored: rc=0 DEPLOYGATE_OK bundle=1 pins_match=1 restart_stable=1 round=o
+
+--- attack: truncate stored blobs in SyncServer (poisoned contract logic) (expect: DEPLOYGATE_FAILED exception)
+rc=1
+verdict: DEPLOYGATE_FAILED exception SyncRefused: auth_failed
+tag: DEPLOYGATE_FAILED exception SyncRefused: auth_failed
+tag: OK
+restored: rc=0 DEPLOYGATE_OK bundle=1 pins_match=1 restart_stable=1 round=o
+
+DEPLOY_NEGATIVE_PROOF_OK 3 attacks bitten, all restores healed
