@@ -193,8 +193,8 @@ if [ "${PHASE8_GATE:-}" = "OK" ]; then
   PHASE8_BLOCK=$',\n    "phase8Close": { "verifiedBy": "ci/phase8_gate.sh", "contract": "docs/PHASE8-W4-REPORT.md", "phaseGatesGreen": "'"${PHASE8_GATES:-0/0}"'", "regressions": "'"${PHASE8_REGRESSIONS:-?}"'", "dexBytes": '"${PHASE8_DEX:-0}"', "dexCeiling": '"${PHASE8_CEILING:-512000}"', "versionCode": '"$VC"', "tests": "'"${PHASE8_TESTS:-0/0}"'", "negatives": "'"${PHASE8_NEGATIVES:-?}"'", "pins": "'"${PHASE8_PINS:-?}"'", "letters": '"${PHASE8_LETTERS:-0}"', "packs": '"${PHASE8_PACKS:-0}"', "swaps": '"${PHASE8_SWAPS:-0}"', "exitCriteria": "all phase-8 gates re-run fresh (rebuild = a fresh drill, evaudit, opverify) + three-way evidence integrity + zero regressions on all 33 previous gate keys + dex under the lowered ceiling + versionCode 82 / versionName 3.5 (pinned once here; the live check is a floor)" }'
 fi
 
-REBUILD_BLOCK=""
-if [ "${REBUILD_GATE:-}" = "OK" ]; then
+OPVERIFY_BLOCK=""
+if [ "${OPVERIFY_GATE:-}" = "OK" ]; then
   OPVERIFY_BLOCK=$',\n    "opverify": { "verifiedBy": "ci/opverify_gate.sh", "contract": "docs/PHASE8-W3-REPORT.md", "pendingSlice": "phase 8 W3 — the OPERATOR-OUTPUT VERIFIER: the outputs of the documented outside steps (pendings #1/#2) become machine-verifiable — the Provision letter (the emitted NetGate.setSyncPins literal + the neokey-provision-1 statement) verified against the published deployment shape with a fresh arena run as reference; the transferred pack re-verified BEFORE any run through the same SyncServerPack.check that proved it (the one-derivation law); the StoreActivity swap line documented as a gated line with its published identity (literal text + sha256) and an edited copy must touch exactly that line — twelve exact-tag negatives, no pretending", "letters": '"${OPVERIFY_LETTERS:-0}"', "packs": '"${OPVERIFY_PACKS:-0}"', "swaps": '"${OPVERIFY_SWAPS:-0}"', "swapLine16": "${OPVERIFY_SWAP_SHA16:-}", "checks": "'"${OPVERIFY_CHECKS:-0}"'", "negativesRefused": "'"${OPVERIFY_NEGATIVES:-0}"'", "negativeProof": "ci/opverify-negative-proof.log" }'
 fi
 
