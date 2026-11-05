@@ -83,6 +83,7 @@ echo "[phase8] $OV"
 # shape change must re-pin consciously, not slide through
 RB_CHK=$(field "$RB" checks);      RB_NEG=$(negof "$RB" negatives)
 RB_PINS=$(field "$RB" pins);       RB_STAGES=$(field "$RB" stages | cut -d/ -f1)
+RB_STAGES_SHAPE=$(field "$RB" stages)   # the gate verdict carries n/n (the drill verdict is single-N)
 RB_TESTS=$(field "$RB" tests);     RB_DEX=$(field "$RB" dex | cut -d/ -f1)
 RB_VC=$(field "$RB" vc);           RB_VN=$(field "$RB" vn)
 [ "${RB_CHK:-0}"     = 24 ]        || fail "rebuild checks ${RB_CHK:-0} != 24 (the gate's check inventory moved)"
@@ -141,7 +142,7 @@ eq3() { # $1 env-key, $2 fresh value, $3 log value, $4 label
 eq3 REBUILD_CHECKS   "$RB_CHK"    "$(field "$LOG_RB" checks)"     rebuild.checks
 eq3 REBUILD_NEGATIVES "$RB_NEG"   "$(negof "$LOG_RB" negatives)"  rebuild.negatives
 eq3 REBUILD_PINS     "$RB_PINS"   "$(field "$LOG_RB" pins)"       rebuild.pins
-eq3 REBUILD_STAGES   "$RB_STAGES" "$(field "$LOG_RB" stages)"     rebuild.stages
+eq3 REBUILD_STAGES   "$RB_STAGES_SHAPE" "$(field "$LOG_RB" stages)" rebuild.stages
 eq3 REBUILD_TESTS    "$RB_TESTS"  "$(field "$LOG_RB" tests)"      rebuild.tests
 eq3 EVAUDIT_CHECKS   "$EA_CHK"    "$(field "$LOG_EA" checks)"     evaudit.checks
 eq3 EVAUDIT_NEGATIVES "$EA_NEG"   "$(negof "$LOG_EA" negatives)"  evaudit.negatives
