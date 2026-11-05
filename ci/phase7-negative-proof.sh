@@ -66,7 +66,7 @@ run_attack "gates.env tamper (PAY_GATE OK -> NOT_OK)" \
 #    (the billing contract-parity negatives 10/10 -> 9/10) is caught by the
 #    three-way equality (bump-independent: no identity literal involved)
 run_attack "log+env double tamper (BILLING negatives 10/10 -> 9/10 in both)" \
-'sed -i "s/negatives=10\/10 vc=78/negatives=9\/10 vc=78/g" build/pipeline.log
+'sed -i "s/negatives=10\/10/negatives=9\/10/g" build/pipeline.log
 sed -i "s/^BILLING_NEGATIVES=10\/10/BILLING_NEGATIVES=9\/10/" build/release/gates.env' \
 'PHASE7 regression: billing.negatives: pipeline log 9/10 != fresh re-run 10/10'
 

@@ -33,10 +33,10 @@
 #                             copies — the real sheet untouched
 #     5. THE ANCHOR         — the verdict's identity derives from SyncServerPack
 #                             constants (single source, the W35 lesson) and the
-#                             bash anchor pins the PUBLISHED identity 78 / 3.1
+#                             bash anchor pins the PUBLISHED identity 79 / 3.2
 #
 #   Verdict: PREFLIGHTGATE_OK checks=N negatives=4/4 rows=10 checked=5
-#            outside=5 sheet=build/release/preflight-sheet.md vc=78 vn=3.1
+#            outside=5 sheet=build/release/preflight-sheet.md vc=79 vn=3.2
 #            / PREFLIGHTGATE_FAILED <reason> (exit 1). Keys appended to
 #            gates.env idempotently (the week-33 hardening).
 set -uo pipefail
