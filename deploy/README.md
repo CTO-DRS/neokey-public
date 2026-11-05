@@ -47,6 +47,28 @@ java -cp <classes> com.hark.neokey.Provision server.p12 '<pass>' sync sync.examp
 الجولة خضراء. البوابة تُتمرّن على بدائل ملتزمة (`tests/provision/`) وتثبت
 الطبقة كاملة (تدريب/سلبية/إثبات سلبي محفوظ).
 
+## الإصدار الموقَّع (الأسبوع 31 — الأمران)
+
+مسار الإصدار الموقَّع أتمتة مثبتة عضّةً (`ci/signedapk_gate.sh`: 14 فحصاً + 6
+سلبيات + إثبات محفوظ). المالك — بعد استعادة مخزنه الحقيقي بإجراء W28 — يشغّل
+**الأمرين نفسَيهما** الذي يُتمرَّن عليهما CI على مخزن التدريب:
+
+```bash
+# 1) التجميع والمحاذاة (بلا أسرار): aapt2 link بموارد حقيقية + dex الأنبوب
+#    + resources.arsc STORED ومحاذاة 4 بايت
+ci/build_signedapk.sh
+
+# 2) التوقيع v1+v2 + التحقق الذاتي (البصمة المنشورة هي حاجز الهوية):
+java -cp build/signedapk-gate:tools/apksig.jar com.hark.neokey.SignedApk sign \
+  build/sapk/aligned.apk build/NeoKey-2036.apk \
+  .secrets/neokey.keystore "$NEOKEY_KS_PASS" neokey <البصمة_المنشورة_64hex>
+```
+
+المخرج `SIGNEDAPK_OK v1=1 v2=1 fp16=… apk_sha256=…` يعني: الأرتقف محملاً
+بـ dex الأنبوب بايت-لطرفاً، موقَّع بشهادة تعيد البصمة المنشورة، ومُتحقق منه
+كلياً. أي رفض `SIGNEDAPK_FAIL <tag>` هو قرار مغلقة الفشل بوسم واحد.
+أداة التحقق وحدها: `… SignedApk verify build/NeoKey-2036.apk <البصمة>`.
+
 ## الخدمة
 
 ```bash

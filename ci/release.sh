@@ -22,10 +22,9 @@ PERF_JSON=$(grep -E '^PERF_' "$OUT/gates.env" 2>/dev/null \
   | sed 's/^PERF_//' | awk -F= '{printf "%s\"%s\":%s", sep, $1, $2; sep=","}') || PERF_JSON=""
 PERF_OBJ="{${PERF_JSON:-}}"
 
-ARTIFACT_APK="pending (built on the release machine / release CI)"
+ARTIFACT_APK="pending (the owner re-signs with the real keystore — same two commands)"
 ARTIFACT_AAB="pending (built on the release machine / release CI)"
-[ -f build/NeoKey-2036.apk ] && ARTIFACT_APK="build/NeoKey-2036.apk"
-[ -f build/NeoKey.aab ] && ARTIFACT_AAB="build/NeoKey.aab"
+[ -f build/NeoKey-2036.apk ] && ARTIFACT_APK="build/NeoKey-2036.apk (SIGNED, drill stand-in identity — verified v1+v2, sha256 in gates.signedApk)"
 
 # R8 Full Mode (item C) — present when the shrink gate ran
 R8_BLOCK=""
@@ -111,6 +110,12 @@ if [ "${PROVISION_GATE:-}" = "OK" ]; then
   PROVISION_BLOCK=$',\n    "provisioning": { "verifiedBy": "ci/provision_gate.sh", "contract": "docs/PHASE6-PLAN.md + docs/PHASE6-W1-REPORT.md", "pendingSlice": "the pin-SETTING half of the live-deployment pending — the decision procedure automated and proven to bite on committed stand-in fixtures; buying the domain + CA cert and running the two commands stays with the operator", "tool": "tests/com/hark/neokey/Provision.java (pure JDK, zero android.*) — the same CLI the operator runs on the real chain (PEM or DER CA accepted)", "oneDerivation": "SpkiPins.pinOf — the same derivation as the TLS gate and the pinned statements; the emitted literal is the single deployment line: NetGate.setSyncPins followed by the 64-hex pin in double quotes", "anchors": "arena pin16 '"${PROVISION_ANCHOR_PIN16:-}"' pinned literally (first barrier) + reference pin16 '"${PROVISION_PIN16:-}"' pinned literally (second barrier — internal consistency never judges identity)", "checks": '"${PROVISION_CHECKS:-0}"', "negativesRefused": "'"${PROVISION_NEGATIVES:-0}"'", "rotation": "same-key renewal = same pin (transparent); new key = new pin refused INSIDE the handshake until re-pin, then a green round", "statement": "build/provision/provision-statement.json (deterministic schema neokey-provision-1)", "negativeProof": "ci/provision-negative-proof.log" }'
 fi
 
+# Signed-artifact gate (phase 6, week 2 — week 31) — present when the gate ran
+SIGNEDAPK_BLOCK=""
+if [ "${SIGNEDAPK_GATE:-}" = "OK" ]; then
+  SIGNEDAPK_BLOCK=$',\n    "signedApk": { "verifiedBy": "ci/signedapk_gate.sh", "contract": "docs/PHASE6-W2-REPORT.md", "pendingSlice": "the ARTIFACT half of the restore-signing-secrets pending — the full APK assembled offline (aapt2 link — real resources, restored week 31 after the W22 trim had dropped the identity strings; align: dex injected, arsc stored + 4-byte aligned), signed v1+v2 with the drill stand-in via Google apksig and verified end-to-end; the owner swaps in the real (W28-validated) keystore and runs the SAME two commands", "anchorFp16": "'"${SIGNEDAPK_FP16:-}"'", "v1": '"${SIGNEDAPK_V1:-0}"', "v2": '"${SIGNEDAPK_V2:-0}"', "artifactVersionCode": "'"${SIGNEDAPK_VC:-}"'", "artifactVersionName": "'"${SIGNEDAPK_VN:-}"'", "apkSha256": "'"${SIGNEDAPK_APK_SHA256:-}"'", "dexBytes": '"${SIGNEDAPK_DEX_BYTES:-0}"', "dexCeiling": 512000, "checks": '"${SIGNEDAPK_CHECKS:-0}"', "negativesRefused": "'"${SIGNEDAPK_NEGATIVES:-0}"'", "statement": "build/release/signedapk-statement.json (deterministic schema neokey-signedapk-1)", "negativeProof": "ci/signedapk-negative-proof.log" }'
+fi
+
 # Phase-3 closing gate (phase 3, week 4) — present when the closing gate ran
 PHASE3_BLOCK=""
 if [ "${PHASE3_GATE:-}" = "OK" ]; then
@@ -145,10 +150,10 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PROVISION_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK$PHASE5_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PROVISION_BLOCK$SIGNEDAPK_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK$PHASE5_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
-  "signedBy": "release workflow only — signing secrets never leave the vault"
+  "signedBy": "the signed-ARTIFACT path is proven automation (week 31: apksig v1+v2 on the drill stand-in, fp-pinned, 14 checks + 6/6 negatives); the release signature itself = the owner restores the real keystore (W28 procedure) and re-runs the same two commands — secrets never leave the vault"
 }
 EOF
 
@@ -158,8 +163,7 @@ EOF
 # is named as pending with its exact original wording.
 SIGNING_STATUS="verified — keystore fingerprint pinned in the manifest"
 [ "$FP" = "(keystore fingerprint unavailable on this machine)" ] && \
-  SIGNING_STATUS="pending — .secrets lost in environment rotation; restore from the encrypted backup before any signed build (DictSign/CI do not need it) — THE RESTORE PROCEDURE ITSELF IS NOW AUTOMATED AND PROVEN TO BITE (ci/keystore_drill.sh, KsValidator + KsDrillGate: anchor-first, ${KSDRILL_CHECKS:-0} checks, ${KSDRILL_NEGATIVES:-0/0} negatives; rehearsed on a stand-in keystore, the real secret never leaves the vault)"
-
+  SIGNING_STATUS="pending — .secrets lost in environment rotation; restore from the encrypted backup before any signed build — BOTH HALVES ARE NOW AUTOMATED AND PROVEN TO BITE: the DECISION (week 28: ci/keystore_drill.sh — anchor + 12 checks + 8/8 negatives) and the ARTIFACT (week 31: ci/signedapk_gate.sh — full APK signed v1+v2 via apksig on the drill stand-in, 14 checks + 6/6 negatives, deterministic artifact); the owner restores the real keystore and runs the same two commands with it"
 cat > "$OUT/store-readiness.json" <<EOF
 {
   "app": "com.hark.neokey",
@@ -177,13 +181,13 @@ cat > "$OUT/store-readiness.json" <<EOF
     "rollout": { "status": "staged 10/50/100 with halt procedure — see rollout-plan.json", "defaultProcedure": true },
     "signing": { "status": "$SIGNING_STATUS" },
     "phase5": { "status": "closed by ci/phase5_gate.sh — the three locally-closable slices of the deployment pendings are proven; what remains outside is named below with its exact wording", "gates": "${PHASE5_GATES:-0/0}", "regressions": "${PHASE5_REGRESSIONS:-?}" },
-    "phase6": { "status": "opened by week 30 (docs/PHASE6-PLAN.md — derived from the phase-5 pendings in writing): W1 the pin-setting decision procedure automated + rotation wire drill", "provisionGate": "${PROVISION_GATE:-NOT_OK}", "weeks": "W1/30 provision → W2/31 signed artifact → W3/32 upload bundle → W4/33 close" }
+    "phase6": { "status": "opened by week 30 (docs/PHASE6-PLAN.md — derived from the phase-5 pendings in writing): W1 the pin-setting decision procedure automated + rotation wire drill; W2 (week 31) the signed ARTIFACT: full APK + apksig v1+v2 on the drill stand-in, fp-pinned, deterministic", "provisionGate": "${PROVISION_GATE:-NOT_OK}", "signedApkGate": "${SIGNEDAPK_GATE:-NOT_OK}", "weeks": "W1/30 provision → W2/31 signed artifact → W3/32 upload bundle → W4/33 close" }
   },
   "pendingOutsideThisEnvironment": [
     "real payment provider (Play Billing) — replaces PaymentProvider.SimProvider in StoreActivity only",
     "live sync server deployment with TLS on a real domain — what remains is EXACTLY: buying the domain + the CA certificate, then running the two automated commands (Provision → the emitted NetGate.setSyncPins literal); the pin-setting decision procedure is automated and bite-proven (week 30: two published-pin anchors + SAN/chain/validity checks + renewal-transparency and key-rotation wire drill; a valid-but-foreign chain is caught by the published literal, not by internal consistency)",
     "store developer accounts + actual store upload (rollout plan ready)",
-    "keystore secrets restore from the encrypted backup before any signed build — the DECISION PROCEDURE is now automated and proven (week 28 drill: anchor + 8 negatives on a stand-in keystore, re-proven fresh by the phase-5 closing gate); the actual restore stays with the owner",
+    "keystore secrets restore from the encrypted backup before any signed build — BOTH halves automated and proven (the DECISION: week-28 drill, anchor + 8 negatives on a stand-in; the ARTIFACT: week-31 signed APK, apksig v1+v2, 14 checks + 6/6 negatives, deterministic); the actual restore stays with the owner, who then runs the same two release commands",
     "real-device matrix + MAU numbers"
   ]
 }
@@ -208,7 +212,7 @@ cat > "$OUT/store-readiness.txt" <<EOF
   • مزوّد دفع حقيقي (يستبدل SimProvider في StoreActivity فقط)
   • نشر خادم مزامنة حي بنطاق حقيقي + TLS — الباقي بالضبط: شراء النطاق + شهادة CA، ثم الأمران الآليان؛ إجراء ضبط الدبابيس والدوران آلي وعضّال (الأسبوع 30: مرساتان بدبوسين منشورين + تدريب تجديد/دوران على السلك)
   • حسابات متاجر + رفع فعلي (الخطة جاهزة)
-  • استعادة أسرار التوقيع من النسخة المشفرة قبل أي بناء موقّع — إجراء القرار نفسه آلي ومثبت (تدريب الأسبوع 28: مرساة + 8 سلبية على مخزن بديل)، والاستعادة الفعلية تبقى بيد المالك
+  • استعادة أسرار التوقيع من النسخة المشفرة قبل أي بناء موقّع — النصفان آليان ومثبتان (القرار: تدريب الأسبوع 28 مرساة + 8 سلبية؛ الأرتقف: الأسبوع 31 APK موقّع v1+v2 عبر apksig على المخزن البديل، 14 فحصاً + 6/6 سلبية، أرتقف حتمي) — والاستعادة الفعلية تبقى بيد المالك الذي يشغّل الأمرين نفسَيهما
   • أجهزة حقيقية + أرقام استخدام
 ════════════════════════════════════════════════════════════
 EOF

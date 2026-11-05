@@ -245,7 +245,7 @@ public final class TrimGate {
         // (tests/stubs/android/**) that the same SRC find() pulls in — so the
         // invariant is: every android import in a SRC file must have a stub class.
         String runsh = read("tests/run.sh");
-        Matcher sm = Pattern.compile("SRC=\"(.*?)\"", Pattern.DOTALL).matcher(runsh);
+        Matcher sm = Pattern.compile("(?ms)^SRC=\"(.*?)\"").matcher(runsh);
         ok(sm.find(), "cannot find SRC list in tests/run.sh");
         Set<String> pureFiles = new TreeSet<>();
         for (String tok : sm.group(1).split("[\\\\ \\n]+")) {

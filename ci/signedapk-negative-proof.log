@@ -1,0 +1,24 @@
+== signedapk negative proof — 2026-11-05T00:30:25Z ==
+
+--- attack: fixture swap (rogue keystore planted as the drill fixture) (expect: SIGNEDAPKGATE_FAILED anchor.drill.fp)
+rc=1
+verdict: SIGNEDAPKGATE_FAILED anchor.drill.fp (fixture cert sha256=89f301064b30e527629a179db8ce6c1a0e153771892c4cec9da37319ffd95da7 != published a80e71b9a5d1554619afe7853b6ef4b20fbbcc05d6e9f4f73a9c98d04092f587)
+tag: SIGNEDAPKGATE_FAILED anchor.drill.fp (fixture cert sha256=89f301064b30e527629a179db8ce6c1a0e153771892c4cec9da37319ffd95da7 != published a80e71b9a5d1554619afe7853b6ef4b20fbbcc05d6e9f4f73a9c98d04092f587)
+tag: OK
+restored: rc=0 SIGNEDAPKGATE_OK checks=14 negatives=6/6 fp16=a80e71b9a5d15546 v1=1 v2=1 vc=72 v
+
+--- attack: neutered SignedApk.verify integrity verdict (always-skip) (expect: SIGNEDAPKGATE_FAILED negatives.tamper)
+rc=1
+verdict: SIGNEDAPKGATE_FAILED negatives.tamper
+tag: SIGNEDAPKGATE_FAILED negatives.tamper
+tag: OK
+restored: rc=0 SIGNEDAPKGATE_OK checks=14 negatives=6/6 fp16=a80e71b9a5d15546 v1=1 v2=1 vc=72 v
+
+--- attack: hide SignedApk.java (compile guard must refuse) (expect: SIGNEDAPKGATE_FAILED compile)
+rc=1
+verdict: SIGNEDAPKGATE_FAILED compile
+tag: SIGNEDAPKGATE_FAILED compile
+tag: OK
+restored: rc=0 SIGNEDAPKGATE_OK checks=14 negatives=6/6 fp16=a80e71b9a5d15546 v1=1 v2=1 vc=72 v
+
+SIGNEDAPK_NEGATIVE_PROOF_OK 3 attacks bitten, all restores healed

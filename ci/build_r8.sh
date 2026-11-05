@@ -22,8 +22,30 @@ if [ -z "$AJAR" ]; then
 fi
 
 # ---- compile (javac when available, else ECJ) ---------------------------------
+# Week 31 (phase 6 W2): when tools/aapt2 exists, the dex is built against the
+# REAL R (aapt2 link — real resource IDs 0x7f…) — REQUIRED once the dex ships
+# inside a signed APK: the stub's 1..N constants would resolve wrong resources
+# at runtime (the app has 120 direct R.* references). The stub fallback stays
+# for aapt2-less environments (shrink proof only — its dex must never ride an
+# APK; the SIGNEDAPK gate refuses any dex that is not the pipeline artifact).
 rm -rf build/r8-classes && mkdir -p build/r8-classes build/release
-if [ -f build/gen/com/hark/neokey/R.java ]; then
+AAPT2=""
+for d in "${NEOKEY_TOOLS:-}" ./tools /workspace/work; do
+  [ -n "$d" ] && [ -x "$d/aapt2" ] && { AAPT2="$d/aapt2"; break; }
+done
+if [ -n "$AAPT2" ]; then
+  # real-R path: aapt2 link generates the authoritative R.java (same inputs the
+  # APK assembly uses — one resource table, one identity)
+  rm -rf build/r8-gen build/r8-base.apk && mkdir -p build/r8-gen
+  RVC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
+  RVN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
+  "$AAPT2" compile --dir res -o build/r8-res.zip
+  "$AAPT2" link -I "$AJAR" --manifest AndroidManifest.xml -o build/r8-base.apk -A assets \
+    --java build/r8-gen build/r8-res.zip \
+    --min-sdk-version 21 --target-sdk-version 35 --version-code "$RVC" --version-name "$RVN"
+  SRCS="$(find src build/r8-gen -name '*.java')"
+  echo "R8_R_SOURCE=aapt2 (real resource IDs — the artifact dex)"
+elif [ -f build/gen/com/hark/neokey/R.java ]; then
   SRCS="$(find src build/gen -name '*.java')"   # aapt2 R already generated (build machine)
 else
   # offline proof path: generate a compile-time-only R — real builds get the

@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → phase5 close → release manifest (29 stages)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → phase5 close → release manifest (31 stages; phase 6 W2 = signedapk after trim)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -170,6 +170,16 @@ stage_phase4() { ci/phase4_gate.sh; }
 # zero regressions on all 21 previous gate keys, and the measured exit criteria
 # (tests >= 1,354, dex <= the lowered 512,000B ceiling, vc >= 70, vn = 2.3).
 stage_phase5() { ci/phase5_gate.sh; }
+
+# ---- 4a: signed-artifact gate (phase 6, week 2 — week 31) ----------------------
+# The ARTIFACT half of the "restore signing secrets" pending (the DECISION half
+# was the W28 drill): the full APK is assembled offline (aapt2 link — real
+# resources, the step silently broken since week 22 dropped the identity
+# strings), aligned (dex injected, arsc stored + 4-byte aligned), signed v1+v2
+# with the drill stand-in through Google's apksig and verified end-to-end —
+# the owner re-runs the SAME two commands with the real (W28-validated)
+# keystore. Anchor first (published fingerprint), then 14 checks + 6 negatives.
+stage_signedapk() { ci/signedapk_gate.sh; }
 
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
@@ -391,6 +401,18 @@ collect_gates() {
   echo "TRIM_DEX_BYTES=$(echo "$TR_LINE" | sed -E 's/.*dex=([0-9]+)\/[0-9]+.*/\1/')" >> "$GATES"
   echo "TRIM_CEILING=$(echo "$TR_LINE" | sed -E 's/.*dex=[0-9]+\/([0-9]+).*/\1/')" >> "$GATES"
   echo "TRIM_UI_EN_COUPLED=$(echo "$TR_LINE" | sed -E 's/.*ui_en_coupled=([0-9]+).*/\1/')" >> "$GATES"
+  # signed-artifact gate numbers (phase 6, week 2 — week 31)
+  echo "SIGNEDAPK_GATE=$(grep -q '^SIGNEDAPKGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  SA_LINE=$(grep '^SIGNEDAPKGATE_OK' "$LOG" | tail -1)
+  echo "SIGNEDAPK_CHECKS=$(echo "$SA_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  echo "SIGNEDAPK_NEGATIVES=$(echo "$SA_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
+  echo "SIGNEDAPK_FP16=$(echo "$SA_LINE" | sed -E 's/.*fp16=([0-9a-f]+).*/\1/')" >> "$GATES"
+  echo "SIGNEDAPK_V1=$(echo "$SA_LINE" | sed -E 's/.*v1=([01]).*/\1/')" >> "$GATES"
+  echo "SIGNEDAPK_V2=$(echo "$SA_LINE" | sed -E 's/.*v2=([01]).*/\1/')" >> "$GATES"
+  echo "SIGNEDAPK_VC=$(echo "$SA_LINE" | sed -E 's/.*vc=([0-9]+).*/\1/')" >> "$GATES"
+  echo "SIGNEDAPK_VN=$(echo "$SA_LINE" | sed -E 's/.*vn=([0-9.]+) .*apk_sha256.*/\1/')" >> "$GATES"
+  echo "SIGNEDAPK_APK_SHA256=$(echo "$SA_LINE" | sed -E 's/.*apk_sha256=([0-9a-f]+).*/\1/')" >> "$GATES"
+  echo "SIGNEDAPK_DEX_BYTES=$(echo "$SA_LINE" | sed -E 's/.*dex=([0-9]+)\/[0-9]+.*/\1/')" >> "$GATES"
 }
 
 # ---- run the line -------------------------------------------------------------
@@ -436,6 +458,11 @@ if [ -f tools/r8.jar ] && [ -f tools/android.jar ]; then
   run_stage "trim" stage_trim   # phase 4 W1 (week 22): rides r8's dex artifact
 else
   skip_stage "trim" "no r8 tools — the trim gate measures the r8 dex artifact"
+fi
+if [ -f tools/apksig.jar ] && [ -f tools/aapt2 ] && [ -f tools/android.jar ]; then
+  run_stage "signedapk" stage_signedapk   # phase 6 W2 (week 31): the signed artifact
+else
+  skip_stage "signedapk" "tools/apksig.jar + tools/aapt2 + tools/android.jar missing (see docs/R8.md) — the signed-artifact proof runs where they exist"
 fi
 collect_gates   # BEFORE the release stage — the manifest must carry the real gate numbers
 run_stage "phase3"   stage_phase3   # closing gate reads THIS run's gates.env

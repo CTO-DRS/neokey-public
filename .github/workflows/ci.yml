@@ -23,8 +23,11 @@ jobs:
           curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
           curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
 
-      - name: Pipeline gates (audit + 455 tests + perf budgets)
-        run: ci/pipeline.sh
+      - name: Install ripgrep (the secrets audit and the probe require it — week 31 fix: the audit was silently green without it)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
+
+      - name: Pipeline gates — JVM-only mode (audit + tests + perf budgets; week 31 fix: SKIP_BUILD=1 — this job has no SDK pieces, the hosted ANDROID_SDK_ROOT made stage_build run and fail red since week 29)
+        run: SKIP_BUILD=1 ci/pipeline.sh
 
       - name: Upload pipeline log
         if: always()
@@ -49,10 +52,10 @@ jobs:
           ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
           ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
 
-      - name: Unsigned compile gate
+      - name: Unsigned compile gate (week 31: green again — the W22 trim had dropped the identity strings, every aapt2 link since failed)
         run: ci/build_unsigned.sh
 
-      - name: R8 Full Mode shrink gate (roadmap item C)
+      - name: R8 Full Mode shrink gate (roadmap item C — real-R via aapt2 on this machine)
         run: |
           curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"

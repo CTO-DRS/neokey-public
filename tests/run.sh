@@ -22,6 +22,17 @@ SQLITE_JAR=$(find_jar sqlite-jdbc.jar) || { echo "ERROR: sqlite-jdbc.jar not fou
 SLF4J_JAR=$(find_jar slf4j-api.jar)  || SLF4J_JAR=""
 JAR=$SQLITE_JAR:${SLF4J_JAR:-$SQLITE_JAR}
 [ -n "$SLF4J_JAR" ] && JAR=$SQLITE_JAR:$SLF4J_JAR
+# week 31 (phase 6 W2): the signed-artifact classes need tools/apksig.jar (a
+# documented download, docs/R8.md). Present -> they compile + their suite runs;
+# absent -> an explicit skip line (the SIGNEDAPK gate hard-requires the jar
+# anyway, so a pipeline run that matters always has it).
+APKSIG_JAR=$(find_jar apksig.jar) || APKSIG_JAR=""
+APKSIG_FILES=""; APKSIG_SUITE=""
+if [ -n "$APKSIG_JAR" ]; then
+  JAR="$JAR:$APKSIG_JAR"
+  APKSIG_FILES=" $(find tests -name 'SignedApk*.java' | tr '\n' ' ')"
+  APKSIG_SUITE="com.hark.neokey.SignedApkTest"
+fi
 
 # ---- compile: javac when available, else Eclipse ECJ on plain JRE ----------
 rm -rf build/test && mkdir -p build/test
@@ -37,7 +48,7 @@ SRC="src/com/hark/neokey/ClipItem.java src/com/hark/neokey/ClipRepo.java src/com
  src/com/hark/neokey/ThemePack.java src/com/hark/neokey/Economy.java \
  src/com/hark/neokey/NqfPort.java src/com/hark/neokey/CommunityDict.java \
  src/com/hark/neokey/StoreUi.java src/com/hark/neokey/PaymentProvider.java src/com/hark/neokey/DictSign.java \
- $(find tests -name '*.java')"
+ $(find tests -name '*.java' -not -name 'SignedApk*')$APKSIG_FILES"
 if command -v javac >/dev/null 2>&1; then
   javac -nowarn -encoding UTF-8 -cp "$JAR" -d build/test $SRC
 else
@@ -65,3 +76,8 @@ java -cp build/test:$JAR com.hark.neokey.EntitlementTest
 java -cp build/test:$JAR com.hark.neokey.SyncServerContractTest
 java -cp build/test:$JAR com.hark.neokey.SpkiPinsTest
 java -cp build/test:$JAR com.hark.neokey.ProvisionTest
+if [ -n "${APKSIG_SUITE:-}" ]; then
+  java -cp build/test:$JAR $APKSIG_SUITE
+else
+  echo "SKIP SignedApkTest (tools/apksig.jar absent — see docs/R8.md; the SIGNEDAPK gate requires it)"
+fi

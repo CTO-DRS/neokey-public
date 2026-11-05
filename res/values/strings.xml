@@ -3,6 +3,14 @@
      relocated byte-identically out of the dex. Each entry keeps its
      origin (file:line at move time) in the comment above it. -->
 <resources>
+    <!-- identity strings — restored week 31 (phase 6 W2): the W22 trim regenerated
+         this file with only the 119 relocated nk_* entries and silently dropped the
+         two manifest-identity strings; every real aapt2 link since W22 failed with
+         "resource string/app_name not found". Values byte-exact from v1.5-week21
+         (git show v1.5-week21:res/values/strings.xml). The SIGNEDAPK gate links the
+         full APK every week — this can never silently regress again. -->
+    <string name="app_name">نيو كيبورد</string>
+    <string name="ime_name">NeoKey 2036</string>
     <!-- origin: SetupActivity.java:212 -->
     <string name="nk_setupactivity_buildheader_1">جرّب NeoKey — كيبورد عربي بتصميم حديث</string>
     <!-- origin: SetupActivity.java:387 -->

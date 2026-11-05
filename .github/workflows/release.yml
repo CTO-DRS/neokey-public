@@ -31,7 +31,9 @@ jobs:
           mkdir -p tools
           curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
           curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
-      - run: ci/pipeline.sh   # audit + 455 tests + perf budgets (no SDK here: build stage skips itself)
+      - name: Install ripgrep (audit + probe require it — week 31 fix)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
+      - run: SKIP_BUILD=1 ci/pipeline.sh   # week 31 fix: JVM-only mode — this job has no SDK pieces (the hosted ANDROID_SDK_ROOT made stage_build fail red since week 29)
 
   # ---------- build, sign, publish internal + production @ 10% ----------
   release:
@@ -43,6 +45,14 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
       - uses: android-actions/setup-android@v3
+      - name: Signing-secrets presence check (week 31: absent secrets = a DOCUMENTED skip, not a red run — the owner signs with the proven two-command path, docs/PHASE6-W2-REPORT.md)
+        id: sec
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then echo "present=true" >> "$GITHUB_OUTPUT";
+          else echo "present=false" >> "$GITHUB_OUTPUT";
+               echo "RELEASE_SIGNING_SKIPPED — signing secrets not configured on this repo; the owner restores them (W28 procedure) and runs the two release commands (ci/build_signedapk.sh + SignedApk sign)"; fi
       - name: Install SDK pieces
         run: |
           sdkmanager --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
@@ -53,6 +63,7 @@ jobs:
           curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar
 
       - name: Restore signing secrets into the vault layout
+        if: steps.sec.outputs.present == 'true'
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
           KS_PASS: ${{ secrets.NEOKEY_KS_PASS }}
@@ -70,6 +81,7 @@ jobs:
         run: ci/pipeline.sh   # audit + tests + perf + build_unsigned + R8 full mode + manifest (gates.env survives build.sh)
 
       - name: Build SIGNED APK + AAB on the R8 Full Mode line (mapping.txt archived)
+        if: steps.sec.outputs.present == 'true'
         run: |
           bash ci/build_r8.sh      # aapt2 -> javac -> R8 (shrink+obfuscate+dex) -> zipalign -> apksigner
           bash build_aab.sh        # same R8 dex -> AAB for Play
@@ -88,6 +100,7 @@ jobs:
             build/release/rollout-plan.json
 
       - name: Upload to Play — internal track
+        if: steps.sec.outputs.present == 'true'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
@@ -98,6 +111,7 @@ jobs:
           status: completed
 
       - name: Production staged rollout — 10%
+        if: steps.sec.outputs.present == 'true'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}

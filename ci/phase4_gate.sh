@@ -72,7 +72,12 @@ TR_UIEN=$(field "$TR" ui_en_coupled)
 # The DOCTRINE is unchanged: ceiling stays 512,000 (never raised); overflow
 # still means trim, never raise. A sinking "saved" BEYOND the documented
 # spend is still a regression.
-[ "${TR_SAVED:-0}" -ge 13424 ]  || fail "trim saved ${TR_SAVED:-0} < 13424 (the lever shrank)"
+# week 31 amendment (documented, PHASE6-W2-REPORT §4): the pipeline dex is now
+# built against the REAL R (aapt2 — the artifact path, the W22 stub would ship
+# wrong resource IDs); R.* constants inline as 32-bit, shifting the measured
+# trim delta 13424 -> 13052 (-372 = exactly the real-R size delta). The lever
+# itself is unchanged (entries=119, regrown=0, purity intact).
+[ "${TR_SAVED:-0}" -ge 13052 ]  || fail "trim saved ${TR_SAVED:-0} < 13052 (the lever shrank)"
 [ "${TR_CEIL:-0}"  = "$DEX_CEILING" ] || fail "trim ceiling ${TR_CEIL:-0} != $DEX_CEILING"
 [ "${TR_DEX:-999999}" -le "$DEX_CEILING" ] || fail "trim dex $TR_DEX > ceiling $DEX_CEILING"
 
