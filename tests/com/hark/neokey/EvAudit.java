@@ -120,6 +120,10 @@ public class EvAudit {
         {"OPVERIFYGATE_OK", "negatives", "OPVERIFY_NEGATIVES"},
         {"OPVERIFYGATE_OK", "vc", "OPVERIFY_VC"},
         {"OPVERIFYGATE_OK", "vn", "OPVERIFY_VN"},
+        {"PHASE8_OK", "gates", "PHASE8_GATES"},
+        {"PHASE8_OK", "regressions", "PHASE8_REGRESSIONS"},
+        {"PHASE8_OK", "vc", "PHASE8_VC"},
+        {"PHASE8_OK", "tests", "PHASE8_TESTS"},
     };
 
     /** سطر الحكم ← سجل الإثبات السلبي المحفوظ الإلزامي (القانون لا النصيحة). */
@@ -143,6 +147,11 @@ public class EvAudit {
         {"KSDRILLGATE_OK", "ksdrill-negative-proof.log"},
         {"ENTGATE_OK", "entitlement-negative-proof.log"},
         {"OPVERIFYGATE_OK", "opverify-negative-proof.log"},
+        // PHASE8_OK يُستثنى قصداً (درس W39 الآن لصنفين): إغلاق phase8 يعيد
+        // تشغيل هذا المدقّق داخل كل استدعاء، وإثباته يُكتب بتشغيل الإغلاق
+        // ذاته — مطلبه داخل الأرشيف مرجع ذاتي لا يمكن الوفاء به إلا بالتزوير،
+        // وهو محفوظ في مستوى المستودع (ci/phase8-negative-proof.log) وفي حزمة
+        // الأسبوع، وقارئ الأرشيف يتحقق منه هناك
     };
 
     static int checks, reg, negPass, negTotal;
@@ -275,7 +284,9 @@ public class EvAudit {
         });
         for (Path p : proofs) {
             String n = p.getFileName().toString();
-            if (n.equals("evaudit-negative-proof.log")) continue; // لا إثبات ذاتي — انظر أعلاه
+            // لا إثبات ذاتي — انظر أعلاه: سجل المدقّق نفسه، ومنذ W41 سجل
+            // إغلاق phase8 (الذي يعيد تشغيل المدقّق داخل كل استدعاء)
+            if (n.equals("evaudit-negative-proof.log") || n.equals("phase8-negative-proof.log")) continue;
             copies.add(new String[]{p.toString(), n});
         }
         List<String> names = new ArrayList<String>();
@@ -468,7 +479,7 @@ public class EvAudit {
                                 String expectVc, String expectVn) throws IOException {
         Set<String> vcs = new LinkedHashSet<String>();
         Set<String> vns = new LinkedHashSet<String>();
-        String[] idLines = {"BILLINGGATE_OK", "DEPLOYSRVGATE_OK", "PREFLIGHTGATE_OK", "REBUILDGATE_OK", "OPVERIFYGATE_OK"};
+        String[] idLines = {"BILLINGGATE_OK", "DEPLOYSRVGATE_OK", "PREFLIGHTGATE_OK", "REBUILDGATE_OK", "OPVERIFYGATE_OK", "PHASE8_OK"};
         for (String p : idLines) {
             String line = verdictLine(s, p);
             if (line == null) continue;
@@ -478,7 +489,7 @@ public class EvAudit {
         }
         String[][] idKeys = {{"BILLING_VC", "BILLING_VN"}, {"DEPLOYSRV_VC", "DEPLOYSRV_VN"},
                 {"PREFLIGHT_VC", "PREFLIGHT_VN"}, {"REBUILD_VC", "REBUILD_VN"}, {"PHASE7_VC", null},
-                {"OPVERIFY_VC", "OPVERIFY_VN"}};
+                {"OPVERIFY_VC", "OPVERIFY_VN"}, {"PHASE8_VC", null}};
         for (String[] k : idKeys) {
             if (env.get(k[0]) != null) vcs.add(env.get(k[0]));
             if (k[1] != null && env.get(k[1]) != null) vns.add(env.get(k[1]));

@@ -20,7 +20,7 @@
 #                             law) + TEN designed negatives each biting its
 #                             exact tag + construction refusals.
 #
-#   Verdict: BILLINGGATE_OK checks=N negatives=10/10 vc=81 vn=3.4 providers=2
+#   Verdict: BILLINGGATE_OK checks=N negatives=10/10 vc=82 vn=3.5 providers=2
 #            / BILLINGGATE_FAILED <reason> (exit 1). Keys are appended to
 #            gates.env idempotently (the week-33 hardening: no block piling).
 set -uo pipefail
@@ -50,8 +50,8 @@ fi || fail "compile"
 # on the shipped APK == the manifest == the gate's pinned literals.
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
-[ "$VC" = "81" ] || fail "anchor.identity.vc (manifest declares $VC — the week carrying the adapter is 81)"
-[ "$VN" = "3.4" ] || fail "anchor.identity.vn (manifest declares $VN — the week carrying the adapter is 3.3)"
+[ "$VC" = "82" ] || fail "anchor.identity.vc (manifest declares $VC — the week carrying the adapter is 82)"
+[ "$VN" = "3.5" ] || fail "anchor.identity.vn (manifest declares $VN — the week carrying the adapter is 3.5)"
 [ -f build/NeoKey-2036.apk ] || fail "anchor.apk.missing (run the build stage first)"
 AAPT2=""
 for d in "${NEOKEY_TOOLS:-}" ./tools /workspace/work; do
@@ -59,9 +59,9 @@ for d in "${NEOKEY_TOOLS:-}" ./tools /workspace/work; do
 done
 [ -n "$AAPT2" ] || fail "anchor.badging (aapt2 missing)"
 BADGE=$("$AAPT2" dump badging build/NeoKey-2036.apk | head -1)
-echo "$BADGE" | grep -q "versionCode='81'" || fail "anchor.badging.vc (want 81: $BADGE)"
-echo "$BADGE" | grep -q "versionName='3.4'" || fail "anchor.badging.vn (want 3.4: $BADGE)"
-echo "ANCHOR_OK build/NeoKey-2036.apk badging vc=81 vn=3.4 (the artifact and the manifest agree)"
+echo "$BADGE" | grep -q "versionCode='82'" || fail "anchor.badging.vc (want 82: $BADGE)"
+echo "$BADGE" | grep -q "versionName='3.5'" || fail "anchor.badging.vn (want 3.5: $BADGE)"
+echo "ANCHOR_OK build/NeoKey-2036.apk badging vc=82 vn=3.5 (the artifact and the manifest agree)"
 
 # ---- 3: THE GATE ----------------------------------------------------------------
 V=$(java -cp "$OUT" com.hark.neokey.BillingGate) || { echo "$V" | grep -E "^(BILLING regression|NEG-OK|BILLINGGATE_FAILED)" || echo "$V" | tail -5; fail "gate"; }

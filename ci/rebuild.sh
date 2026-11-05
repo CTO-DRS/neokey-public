@@ -16,8 +16,12 @@
 #        pins manifest (المرجع = المنشور) and copied into the clone's tools/
 #        (what a provisioned runner has),
 #     3. the FULL INNER PIPELINE on the clone (NEOKEY_REBUILD_INNER=1 — the
-#        drill stage omits itself inside the inner run: 37 stages, no
-#        recursion), required 37/37 PASS with ZERO SKIP rows,
+#        stages that would recurse omit themselves inside the inner run: the
+#        drill stage itself AND, since W41, the phase8 closer whose job IS
+#        re-running this drill — both marked INNER_OMIT on their run_stage
+#        lines in ci/pipeline.sh: a note, no row), the stage count DERIVED
+#        from the clone's own pipeline source (W39 lesson: never hardcoded),
+#        required zero FAIL rows,
 #     4. a single-line verdict carrying the inner run's measured fields.
 #
 #   ci/rebuild.sh provision — one-time toolchain fetch into tools/ from the
@@ -88,8 +92,17 @@ done < "$PINS_FILE"
 # 3: the FULL INNER PIPELINE on the clean clone — its stage count is DERIVED
 # from the CLONE's own pipeline source (the tested thing): the outer rows
 # already proven at drill time (minus the drill's own row and its
-# descendants) + the clone's post-drill stage count — correct mid-week (the
-# clone = last week's committed tree) and after the commit (clone == HEAD)
+# descendants) + the count of post-drill stages that RUN inside the inner
+# run — correct mid-week (the clone = last week's committed tree) and after
+# the commit (clone == HEAD). TWO lists fall out of the same source:
+#   AFTER_LIST  — every post-drill stage name: the PROFILE-STRIP set (both
+#                 the bash prof() below and RebuildGate's --after), because
+#                 their rows exist only on one side at drill time;
+#   INNER_LIST  — the same list minus stages marked INNER_OMIT on their
+#                 run_stage line (W41: the phase8 closer omits itself inside
+#                 inner runs exactly like the drill — a note, no row — so it
+#                 must not be COUNTED, though it stays in the strip set):
+#                 EXPECTED_INNER = OUTER_BASE + |INNER_LIST|.
 # a FAILED inner run leaves its own evidence file (the next run must not
 # overwrite it — the W38 proof lesson: erased evidence is no evidence)
 ( cd "$RB/repo" && NEOKEY_REBUILD_INNER=1 ci/pipeline.sh ) > "$OUTDIR/inner-run.last.out" 2>&1 \
@@ -100,8 +113,9 @@ grep -q '^PIPELINE_OK$' "$INNER_LOG" || fail "inner_pipeline_not_green"
 # the post-drill stage names, from THE CLONE's pipeline source (W39: derived,
 # never hardcoded — the shape grows without edits)
 POST_LIST=$(awk '/stage_rebuild\(\)|run_stage "rebuild"/{f=1; next} f && match($0, /(run_stage|skip_stage) "[a-z0-9]+"/){s=substr($0, RSTART, RLENGTH); sub(/^[a-z_]+ "/, "", s); sub(/"$/, "", s); print s}' "$RB/repo/ci/pipeline.sh" | grep -v '^rebuild$' | sort -u)
+INNER_LIST=$(awk '/stage_rebuild\(\)|run_stage "rebuild"/{f=1; next} f && /INNER_OMIT/{next} f && match($0, /(run_stage|skip_stage) "[a-z0-9]+"/){s=substr($0, RSTART, RLENGTH); sub(/^[a-z_]+ "/, "", s); sub(/"$/, "", s); print s}' "$RB/repo/ci/pipeline.sh" | grep -v '^rebuild$' | sort -u)
 POST_RE=$(echo "$POST_LIST" | paste -sd'|' -)
-POST_COUNT=$(echo "$POST_LIST" | grep -c . || true)
+POST_COUNT=$(echo "$INNER_LIST" | grep -c . || true)
 prof() { grep -E '^\[[a-z0-9]+\] (PASS|FAIL|SKIP)' "$1" | sed -E 's/ \([0-9]+s\)$//' \
           | grep -vE '^\[rebuild\] ' \
           | { [ -n "$POST_RE" ] && grep -vE "^\[($POST_RE)\] " || cat; } | sort; }

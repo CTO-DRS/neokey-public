@@ -31,8 +31,8 @@
 #        REBUILDGATE_OK line already in the outer pipeline log (a
 #        standalone re-run after a pipeline) must byte-equal fresh.
 #
-#   Verdict: `REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=38/38
-#   tests=T/F dex=D/512000 vc=81 vn=3.4` / `REBUILDGATE_FAILED <reason>`
+#   Verdict: `REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=39/39
+#   tests=T/F dex=D/512000 vc=82 vn=3.5` / `REBUILDGATE_FAILED <reason>`
 #   (exit 1). The saved negative proof: ci/rebuild-negative-proof.log.
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -44,8 +44,8 @@ LOGF=build/pipeline.log
 # ---- 0: THE ANCHOR — المرجع = المنشور ----------------------------------------
 # the week's published identity + the seven toolchain pins (single written
 # source: this file; the drill and RebuildGate.java receive them from here)
-PUB_VC=81
-PUB_VN=3.4
+PUB_VC=82
+PUB_VN=3.5
 PINS="r8.jar 4733945987ee0a840fafc34080b135259e01678412e07212b23f706334290294
 android.jar 96ccfdc84d15fad4e22d76cbb8ef38b150a4b56327957067875ca7e18113a424
 apksig.jar c4f6fdf2148490296f422a7eb37647ea11d1c3b02f1f2349c33ce257f3c29b1f

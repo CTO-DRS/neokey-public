@@ -38,7 +38,7 @@ import javax.net.ssl.HttpsURLConnection;
  *      تحقق خضراء للحزمة الحقيقية.
  *
  * الحكم: `DEPLOYSRVGATE_OK checks=N negatives=4/4 jar_sha256=<16hex>
- * members=N vc=81 vn=3.4` / `DEPLOYSRVGATE_FAILED <reason>` (exit 1).
+ * members=N vc=82 vn=3.5` / `DEPLOYSRVGATE_FAILED <reason>` (exit 1).
  */
 public final class DeploySrvGate {
 

@@ -31,7 +31,7 @@
 #   inputs), then the real inputs re-verify green.
 #
 #   Verdict: `OPVERIFYGATE_OK checks=N negatives=12/12 letters=2 packs=1
-#   swaps=1 vc=81 vn=3.4 ms=…` / `OPVERIFYGATE_FAILED <reason>` (exit 1).
+#   swaps=1 vc=82 vn=3.5` / `OPVERIFYGATE_FAILED <reason>` (exit 1).
 #   Keys are appended to gates.env idempotently (the week-33 hardening).
 #   The saved negative proof: ci/opverify-negative-proof.log.
 set -uo pipefail
@@ -42,8 +42,8 @@ STATE=build/release/gates.env
 LOGF=build/pipeline.log
 
 # ---- 0: THE ANCHOR — المرجع = المنشور ----------------------------------------
-PUB_VC=81
-PUB_VN=3.4
+PUB_VC=82
+PUB_VN=3.5
 
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
