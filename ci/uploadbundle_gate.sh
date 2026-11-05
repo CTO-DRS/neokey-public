@@ -33,8 +33,8 @@
 #                             SIX designed negatives each biting its exact tag,
 #                             restore-inside-run, green re-verify after each.
 #
-#   Verdict: UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=7 evidence=8
-#            vc=74 vn=2.7 apk_sha256=… / UPLOADBUNDLEGATE_FAILED <reason> (exit 1)
+#   Verdict: UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=8 evidence=8
+#            vc=75 vn=2.8 apk_sha256=… / UPLOADBUNDLEGATE_FAILED <reason> (exit 1)
 set -uo pipefail
 cd "$(dirname "$0")/.."
 

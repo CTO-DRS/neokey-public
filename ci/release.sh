@@ -154,6 +154,12 @@ if [ "${PHASE6_GATE:-}" = "OK" ]; then
   PHASE6_BLOCK=$',\n    "phase6Close": { "verifiedBy": "ci/phase6_gate.sh", "contract": "docs/PHASE6-W4-REPORT.md", "phaseGatesGreen": "'"${PHASE6_GATES:-0/0}"'", "regressions": "'"${PHASE6_REGRESSIONS:-?}"'", "dexBytes": '"${PHASE6_DEX:-0}"', "dexCeiling": '"${PHASE6_CEILING:-512000}"', "versionCode": '"$VC"', "tests": "'"${PHASE6_TESTS:-0/0}"'", "negatives": "'"${PHASE6_NEGATIVES:-?}"'", "anchorPin16": "'"${PHASE6_ANCHOR_PIN16:-}"'", "artifactFp16": "'"${PHASE6_FP16:-}"'", "exitCriteria": "all phase-6 gates re-run fresh (provision/signedapk/uploadbundle) + three-way evidence integrity + zero regressions on all 25 previous gate keys + dex under the lowered ceiling + versionCode 74 / versionName 2.7 (pinned once here; the live check is a floor)" }'
 fi
 
+# Phase-7 opener gate (phase 7 W1 / week 34) — present when the billing gate ran
+BILLING_BLOCK=""
+if [ "${BILLING_GATE:-}" = "OK" ]; then
+  BILLING_BLOCK=$',\n    "billing": { "verifiedBy": "ci/billing_gate.sh", "contract": "docs/PHASE7-W1-REPORT.md", "pendingSlice": "the locally-closable slice of the real-payment-provider pending — the REPLACEMENT proven before the console exists: PaymentProvider.PlayProvider (pure JVM, zero android.*) verifies the Play purchase RSA signature with the pasted console key (المرجع = المنشور), purchase state, catalog price, request binding (obfuscatedExternalAccountId) and orderId replay — then seals with THE SAME derivation, so the wallet never notices the provider swap; the contract-parity suite runs on BOTH providers; what remains outside: the ~20-line BillingClient wiring (needs a device) + pasting the real console key", "providers": 2, "checks": '"${BILLING_CHECKS:-0}"', "negativesRefused": "'"${BILLING_NEGATIVES:-0}"'", "artifactVersionCode": "'"${BILLING_VC:-}"'", "artifactVersionName": "'"${BILLING_VN:-}"'", "negativeProof": "ci/billing-negative-proof.log" }'
+fi
+
 cat > "$OUT/release-manifest.json" <<EOF
 {
   "app": "com.hark.neokey",
@@ -164,7 +170,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PROVISION_BLOCK$SIGNEDAPK_BLOCK$UPLOADBUNDLE_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK$PHASE5_BLOCK$PHASE6_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PROVISION_BLOCK$SIGNEDAPK_BLOCK$UPLOADBUNDLE_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK$PHASE5_BLOCK$PHASE6_BLOCK$BILLING_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB", "uploadBundle": "${UPLOADBUNDLE_BUNDLE_LINE:-pending (the uploadbundle gate assembles it: build/upload/bundle — signed APK + mapping + ar/en listing + data-safety + privacy + rollout plan)}" },
   "signedBy": "the signed-ARTIFACT path is proven automation (week 31: apksig v1+v2 on the drill stand-in, fp-pinned, 14 checks + 6/6 negatives); the release signature itself = the owner restores the real keystore (W28 procedure) and re-runs the same two commands — secrets never leave the vault"
@@ -195,10 +201,11 @@ cat > "$OUT/store-readiness.json" <<EOF
     "rollout": { "status": "staged 10/50/100 with halt procedure — see rollout-plan.json", "defaultProcedure": true },
     "signing": { "status": "$SIGNING_STATUS" },
     "phase5": { "status": "closed by ci/phase5_gate.sh — the three locally-closable slices of the deployment pendings are proven; what remains outside is named below with its exact wording", "gates": "${PHASE5_GATES:-0/0}", "regressions": "${PHASE5_REGRESSIONS:-?}" },
-    "phase6": { "status": "CLOSED by ci/phase6_gate.sh (week 33) — W1/30 the pin-setting decision procedure automated + rotation wire drill; W2/31 the signed ARTIFACT: full APK + apksig v1+v2 on the drill stand-in, fp-pinned, deterministic; W3/32 the store-upload bundle assembled, coupled and gate-verified; W4/33 the closure: all three re-run fresh + three-way evidence + zero regressions on 25 keys", "gates": "${PHASE6_GATES:-0/0}", "regressions": "${PHASE6_REGRESSIONS:-?}", "versionPinned": "vc 74 / vn 2.7 — pinned once in this manifest; the live check is a non-regression floor" }
+    "phase6": { "status": "CLOSED by ci/phase6_gate.sh (week 33) — W1/30 the pin-setting decision procedure automated + rotation wire drill; W2/31 the signed ARTIFACT: full APK + apksig v1+v2 on the drill stand-in, fp-pinned, deterministic; W3/32 the store-upload bundle assembled, coupled and gate-verified; W4/33 the closure: all three re-run fresh + three-way evidence + zero regressions on 25 keys", "gates": "${PHASE6_GATES:-0/0}", "regressions": "${PHASE6_REGRESSIONS:-?}", "versionPinned": "vc 74 / vn 2.7 — pinned once in this manifest; the live check is a non-regression floor" },
+    "phase7": { "status": "OPEN by ci/billing_gate.sh (week 34, W1) — derived from the five documented pendings (docs/PHASE7-PLAN.md): W1/34 the billing adapter REPLACEMENT proven before the console exists (contract parity on both providers + 10 exact-tag negatives); W2/35 the sync server as a deployable artifact; W3/36 the operator preflight sheet; W4/37 the phase-7 closure (fresh re-runs + three-way evidence + no regression on 28 keys)", "gates": "${BILLING_GATE:-NOT_OK}", "checks": "${BILLING_CHECKS:-0}", "negatives": "${BILLING_NEGATIVES:-0}" }
   },
   "pendingOutsideThisEnvironment": [
-    "real payment provider (Play Billing) — replaces PaymentProvider.SimProvider in StoreActivity only",
+    "real payment provider (Play Billing) — the REPLACEMENT is proven since week 34 (billing_gate: contract parity on both providers + purchase-signature verification with the pasted console key); what remains is EXACTLY: the ~20-line BillingClient wiring (needs a device) + pasting the real console key into the one-line swap in StoreActivity",
     "live sync server deployment with TLS on a real domain — what remains is EXACTLY: buying the domain + the CA certificate, then running the two automated commands (Provision → the emitted NetGate.setSyncPins literal); the pin-setting decision procedure is automated and bite-proven (week 30: two published-pin anchors + SAN/chain/validity checks + renewal-transparency and key-rotation wire drill; a valid-but-foreign chain is caught by the published literal, not by internal consistency)",
     "store developer accounts + the upload click itself — the BUNDLE is assembled, coupled and gate-verified since week 32 (uploadbundle_gate): signed APK, mapping, ar/en listing, manifest-derived data-safety, privacy policy, staged rollout plan; what remains is the account and the console click",
     "keystore secrets restore from the encrypted backup before any signed build — BOTH halves automated and proven (the DECISION: week-28 drill, anchor + 8 negatives on a stand-in; the ARTIFACT: week-31 signed APK, apksig v1+v2, 14 checks + 6/6 negatives, deterministic); the actual restore stays with the owner, who then runs the same two release commands",
@@ -215,9 +222,10 @@ cat > "$OUT/store-readiness.txt" <<EOF
  حزمة الرفع       مجمّعة ومتحقق منها — uploadbundle_gate (${UPLOADBUNDLE_MEMBERS:-0} أعضاء، ${UPLOADBUNDLE_CHECKS:-0} فحصاً، ${UPLOADBUNDLE_NEGATIVES:-0} سلبية) — الباقي: الحساب والنقرة
  قائمة المتجر     جاهزة — play_gate (${PLAY_name_ar:-0}/30 اسم عربي، ${PLAY_short_ar:-0}/80 وصف قصير، ${PLAY_full_ar:-0}/4000 وصف كامل + الإنجليزية)
  البناء والتصغير  R8 Full Mode أخضر — dex ${R8_DEX_BYTES:-0}/${TRIM_CEILING:-512000} بايت (تقليم حقيقي مفروض) + mapping.txt
- الدفع            العقد قياسي مثبت — PaymentProvider نقطة الاستبدال الوحيدة، دفتر ينغلق ${PAY_LEDGER_CLOSES:-0} سنتاً، إثبات سلبي 12 هجمة (المزوّد الحقيقي قرار نشر)
+ الدفع            العقد قياسي مثبت — PaymentProvider نقطة الاستبدال الوحيدة، دفتر ينغلق ${PAY_LEDGER_CLOSES:-0} سنتاً، إثبات سلبي 12 هجمة — **الاستبدال نفسه مثبت (الأسبوع 34: billing_gate ${BILLING_CHECKS:-0} فحصاً و${BILLING_NEGATIVES:-0} سلبية — تعادل العقد على المزوّدين + تحقق توقيع الشراء بمفتاح اللوحة)** — الباقي: سلك BillingClient على جهاز + لصق مفتاح اللوحة الحقيقي
  خادم المزامنة    العقد على السلك + ثقة العميل مثبتة + حزمة النشر عملية مستقلة + تدريب استعادة التوقيع يعضّ — المرحلة 5 مغلقة ببوابة phase5 — **التجهيز والدوران آليان وعضّالان (الأسبوع 30: provision_gate ${PROVISION_CHECKS:-0} فحصاً و${PROVISION_NEGATIVES:-0} سلبية)** — النشر الحي = شراء النطاق + شهادة CA ثم الأمران الآليان (Provision ← NetGate.setSyncPins)
  المرحلة 6        مغلقة ببوابة phase6 — بواباتها الثلاث تُعاد طازجة في خط واحد: التجهيز + الأرتقف الموقَّع + حزمة الرفع، اتساق ثلاثي للأدلة، لا تراجع في 25 مفتاحاً — الإصدار المثبت: vc ${PHASE6_VC:-$VC} / 2.7
+ المرحلة 7        افتُتحت ببوابة billing (W1/34 — من خطة المرحلة 7 المشتقة من المعلقات الموثقة) — مُحوّل الفاتورة المثبت: الاستبدال آمن قبل وجود الحساب — بقية الأسابيع موثقة في docs/PHASE7-PLAN.md
  الاستحقاقات      الاستعادة تعيد الملكية بالدبوس ولا تشتري أبداً
  الاقتصاد         إغلاق 70/30 دقيق للسنت عبر Economy حصراً
  الاختبارات       $TESTS_TOTAL اختباراً، $TESTS_FAILED إخفاق
@@ -225,7 +233,7 @@ cat > "$OUT/store-readiness.txt" <<EOF
  التوقيع          $SIGNING_STATUS
 ────────────────────────────────────────────────────────────
  خارج هذه البيئة (موثق لا منسي):
-  • مزوّد دفع حقيقي (يستبدل SimProvider في StoreActivity فقط)
+  • مزوّد دفع حقيقي (الاستبدال مثبت منذ الأسبوع 34 (تعادل العقد على المزوّدين + تحقق توقيع الشراء + 10 سلبية بأوسمتها)؛ الباقي: سلك BillingClient على جهاز + لصق المفتاح الحقيقي
   • نشر خادم مزامنة حي بنطاق حقيقي + TLS — الباقي بالضبط: شراء النطاق + شهادة CA، ثم الأمران الآليان؛ إجراء ضبط الدبابيس والدوران آلي وعضّال (الأسبوع 30: مرساتان بدبوسين منشورين + تدريب تجديد/دوران على السلك)
   • حسابات متاجر + نقطة الرفع نفسها — الحزمة نفسها مجمّعة ومتحقق منها منذ الأسبوع 32 (أرتقف موقَّع + mapping + قائمة ar/en + سلامة بيانات مشتقة من الأذونات + خصوصية + خطة طرح)
   • استعادة أسرار التوقيع من النسخة المشفرة قبل أي بناء موقّع — النصفان آليان ومثبتان (القرار: تدريب الأسبوع 28 مرساة + 8 سلبية؛ الأرتقف: الأسبوع 31 APK موقّع v1+v2 عبر apksig على المخزن البديل، 14 فحصاً + 6/6 سلبية، أرتقف حتمي) — والاستعادة الفعلية تبقى بيد المالك الذي يشغّل الأمرين نفسَيهما

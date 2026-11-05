@@ -30,7 +30,7 @@
 #                             negatives each biting its exact tag.
 #
 #   Verdict: SIGNEDAPKGATE_OK checks=14 negatives=6/6 fp16=a80e71b9a5d15546
-#            v1=1 v2=1 vc=74 vn=2.7 apk_sha256=… dex=…/512000 (identity bumped weekly)
+#            v1=1 v2=1 vc=75 vn=2.8 apk_sha256=… dex=…/512000 (identity bumped weekly)
 #            / SIGNEDAPKGATE_FAILED <reason> (exit 1)
 set -uo pipefail
 cd "$(dirname "$0")/.."

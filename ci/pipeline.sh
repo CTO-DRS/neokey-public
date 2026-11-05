@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close (33 stages; phase 6 W4 = the phase6 closer LAST — it consumes the second collect_gates pass that carries the UPLOADBUNDLE_* keys)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing (34 stages; phase 6 closed at stage 33 on week 33; phase 7 W1 = week 34 opens with the billing adapter LAST — it needs the rebuilt artifact for its identity anchor)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -204,6 +204,10 @@ stage_uploadbundle() { ci/uploadbundle_gate.sh; }
 # day one, the W30 lesson applied proactively).
 stage_phase6() { ci/phase6_gate.sh; }
 
+# ---- 4: the phase-7 opener (phase 7 W1, week 34) — the billing adapter -------
+# release-manifest.billing; the live check is the contract-parity suite itself
+stage_billing() { ci/billing_gate.sh; }
+
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
 
@@ -245,7 +249,7 @@ collect_gates() {
   # standalone release.sh re-run) saw the closers as NOT_OK/defaults. The pass
   # now snapshots the closers' keys first and re-appends them at the end.
   local CLOSE_KEEP="build/release/.closer-keys.$$"
-  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
+  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
   # tests totals: sum the RESULT lines of both suites
   local T=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOG" | awk '{p+=$2; f+=$4} END {print p+0, f+0}')
   {
@@ -541,6 +545,19 @@ if [ -f tools/aapt2 ] && [ -f build/NeoKey-2036.apk ] && [ -f build/release/sign
 else
   skip_stage "uploadbundle" "needs the signedapk artifact + its statement + aapt2 + the release rollout plan — runs where the signed artifact lives"
   skip_stage "phase6" "the phase-6 closer consumes the UPLOADBUNDLE_* keys — it runs where the signed artifact lives"
+fi
+
+# ---- 4: the phase-7 opener (phase 7 W1, week 34) — billing runs LAST this
+# week: the phase-6 closer (stage 33) closes the previous phase, then the new
+# phase's first gate proves the billing-adapter replacement. Its keys are
+# appended to gates.env by the gate itself (the phase-6 pattern; no third
+# collect_gates pass needed), and the closer-key snapshot now carries BILLING_
+# too (the week-33 lesson applied on day one: a later pass must never wipe
+# the new phase's keys).
+if command -v javac >/dev/null 2>&1 || [ -f tools/ecj.jar ]; then
+  run_stage "billing" stage_billing   # phase 7 W1 (week 34): the proven billing adapter
+else
+  skip_stage "billing" "needs javac or tools/ecj.jar to compile the adapter contract"
 fi
 
 # ---- summary ------------------------------------------------------------------
