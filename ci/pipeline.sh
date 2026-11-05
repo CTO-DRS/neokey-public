@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight → phase7 close → rebuild (38 stages; phase 6 closed at stage 33 on week 33, phase 7 closed at stage 37 on week 37; phase 8 W1 = week 38 the REBUILD DRILL LAST: a clean clone + the seven pinned tools + the full INNER pipeline of 37 stages, every stage PASS with zero SKIP — the capability the closures presumed, now measured; NEOKEY_REBUILD_INNER=1 omits the drill inside the inner run)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight → phase7 close → rebuild → evaudit (39 stages; phase 6 closed at stage 33 on week 33, phase 7 closed at stage 37 on week 37, phase 8 W1 = week 38 the REBUILD DRILL at 38, phase 8 W2 = week 39 the WEEK EVIDENCE AUDITOR LAST: this run's evidence archive packed deterministically + four law layers (member integrity, log shape, verdict↔ledger cross-check, identity consensus + the saved-negative-proof law) + twelve exact-tag negatives — the archive is verified, not trusted; NEOKEY_REBUILD_INNER=1 omits the drill inside the inner run)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -267,7 +267,7 @@ collect_gates() {
   # standalone release.sh re-run) saw the closers as NOT_OK/defaults. The pass
   # now snapshots the closers' keys first and re-appends them at the end.
   local CLOSE_KEEP="build/release/.closer-keys.$$"
-  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_|PREFLIGHT_|PHASE7_|REBUILD_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
+  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_|PREFLIGHT_|PHASE7_|REBUILD_|EVAUDIT_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
   # tests totals: sum the RESULT lines of both suites
   local T=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOG" | awk '{p+=$2; f+=$4} END {print p+0, f+0}')
   {
@@ -613,8 +613,10 @@ fi
 
 # ---- 8: phase 8 W1 (week 38) — the REBUILD DRILL runs LAST: a clean local
 # clone of HEAD + the seven sha256-pinned tools + the FULL INNER PIPELINE
-# (37 stages, zero SKIP). The recursion guard NEOKEY_REBUILD_INNER=1 omits
-# this stage ENTIRELY inside the inner run — no SKIP row, exactly 37 rows.
+# (38 stages since W39 grew the pipeline to 39, zero SKIP). The recursion
+# guard NEOKEY_REBUILD_INNER=1 omits this stage ENTIRELY inside the inner
+# run — no SKIP row, exactly 38 rows; the stages after the drill (evaudit)
+# strip out of the inner/outer shape comparison (the W39 lesson).
 stage_rebuild() { ci/rebuild_gate.sh; }
 if [ "${NEOKEY_REBUILD_INNER:-0}" = "1" ]; then
   note "REBUILD_INNER: the drill stage omits itself inside the inner run (recursion guard NEOKEY_REBUILD_INNER=1)"
@@ -622,6 +624,22 @@ elif [ -f tools/r8.jar ] && [ -f tools/android.jar ]; then
   run_stage "rebuild" stage_rebuild
 else
   skip_stage "rebuild" "the drill needs the provisioned toolchain (ci/rebuild.sh provision; docs/R8.md) — it runs where the tools live"
+fi
+
+# ---- 9: phase 8 W2 (week 39) — the WEEK EVIDENCE AUDITOR runs LAST: this
+# run's evidence archive (the log + the ledger + the manifest + the rollout
+# plans + the preflight sheet + EVERY saved negative-proof log) is packed
+# deterministically with a SHA256SUMS manifest, then audited in isolation —
+# member integrity, log shape, verdict↔ledger cross-check, identity consensus
+# + the saved-negative-proof law — with twelve exact-tag negatives on dirty
+# copies. The vault owner verifies any week's proof BEFORE the outside step
+# (pendings #3/#4): the archive is verified, not trusted. Its keys ride the
+# closer-key snapshot (EVAUDIT_ in CLOSE_KEEP) since day one.
+stage_evaudit() { ci/evaudit_gate.sh; }
+if command -v javac >/dev/null 2>&1 || [ -f tools/ecj.jar ]; then
+  run_stage "evaudit" stage_evaudit
+else
+  skip_stage "evaudit" "needs javac/ecj to compile the evidence auditor"
 fi
 
 # ---- summary ------------------------------------------------------------------

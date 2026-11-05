@@ -15,10 +15,11 @@
 #     2. THE DRILL (ci/rebuild.sh) runs FRESH — no cached verdicts: a clean
 #        local clone of HEAD (no build/, no tool jars — all gitignored),
 #        the seven verified tools copied in, the FULL INNER PIPELINE
-#        (NEOKEY_REBUILD_INNER=1 omits this stage inside: 37 stages),
-#        required 37/37 PASS with ZERO SKIP.
+#        (NEOKEY_REBUILD_INNER=1 omits this stage inside: 38 stages since
+#        W39 grew the pipeline to 39),
+#        required 38/38 PASS with ZERO SKIP.
 #     3. RebuildGate.java (the module) re-computes every pin from tools/,
-#        re-parses the inner log (37 stages, zero FAIL, zero SKIP,
+#        re-parses the inner log (38 stages, zero FAIL, zero SKIP,
 #        PIPELINE_OK, zero test failures, dex under the lowered ceiling,
 #        components 10/10, identity == SyncServerPack.VC/VN — the ONE
 #        source), cross-checks the drill verdict against the inner log,
@@ -30,8 +31,8 @@
 #        REBUILDGATE_OK line already in the outer pipeline log (a
 #        standalone re-run after a pipeline) must byte-equal fresh.
 #
-#   Verdict: `REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=37/37
-#   tests=T/F dex=D/512000 vc=79 vn=3.2` / `REBUILDGATE_FAILED <reason>`
+#   Verdict: `REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=38/38
+#   tests=T/F dex=D/512000 vc=80 vn=3.3` / `REBUILDGATE_FAILED <reason>`
 #   (exit 1). The saved negative proof: ci/rebuild-negative-proof.log.
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -43,8 +44,8 @@ LOGF=build/pipeline.log
 # ---- 0: THE ANCHOR — المرجع = المنشور ----------------------------------------
 # the week's published identity + the seven toolchain pins (single written
 # source: this file; the drill and RebuildGate.java receive them from here)
-PUB_VC=79
-PUB_VN=3.2
+PUB_VC=80
+PUB_VN=3.3
 PINS="r8.jar 4733945987ee0a840fafc34080b135259e01678412e07212b23f706334290294
 android.jar 96ccfdc84d15fad4e22d76cbb8ef38b150a4b56327957067875ca7e18113a424
 apksig.jar c4f6fdf2148490296f422a7eb37647ea11d1c3b02f1f2349c33ce257f3c29b1f
@@ -84,7 +85,9 @@ GOUT=$(java -cp "$OUTD" com.hark.neokey.RebuildGate \
         --pins build/rebuild-pins.txt --tools tools \
         --inner-log build/rebuild/inner-pipeline.log \
         --drill-verdict build/rebuild/drill-verdict.txt \
-        --outer-log build/pipeline.log 2>&1); GRC=$?
+        --outer-log build/pipeline.log \
+        --expect-stages "$(echo "$DRILL_LINE" | sed -E 's/.* stages=([0-9]+) .*/\1/')" \
+        --after "$(awk '/stage_rebuild\(\)|run_stage "rebuild"/{f=1; next} f && match($0, /(run_stage|skip_stage) "[a-z0-9]+"/){s=substr($0, RSTART, RLENGTH); sub(/^[a-z_]+ "/, "", s); sub(/"$/, "", s); print s}' ci/pipeline.sh | grep -v '^rebuild$' | sort -u | paste -sd, -)" 2>&1); GRC=$?
 echo "$GOUT" | grep -E 'NEG-OK|REBUILD regression' >&2 || :
 GATE_LINE=$(echo "$GOUT" | grep -m1 '^REBUILDGATE_OK ')
 if [ "$GRC" -ne 0 ] || [ -z "$GATE_LINE" ]; then
@@ -98,6 +101,7 @@ echo "[rebuild] $GATE_LINE"
 field() { echo "$1" | sed -E "s/.* $2=([^ ]+).*/\1/"; }
 CHK=$(field "$GATE_LINE" checks);     NEG=$(echo "$GATE_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)
 TPF=$(field "$GATE_LINE" tests);      DEX=$(field "$GATE_LINE" dex | cut -d/ -f1)
+STAGES=$(field "$GATE_LINE" stages)
 mkdir -p build/release; [ -f "$STATE" ] || : > "$STATE"
 sed -i '/^REBUILD_/d' "$STATE"
 {
@@ -105,7 +109,7 @@ sed -i '/^REBUILD_/d' "$STATE"
   echo "REBUILD_CHECKS=$CHK"
   echo "REBUILD_NEGATIVES=$NEG"
   echo "REBUILD_PINS=7/7"
-  echo "REBUILD_STAGES=37/37"
+  echo "REBUILD_STAGES=$STAGES"
   echo "REBUILD_TESTS=$TPF"
   echo "REBUILD_DEX=$DEX"
   echo "REBUILD_CEILING=512000"

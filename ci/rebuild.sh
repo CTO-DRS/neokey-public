@@ -85,7 +85,11 @@ while read -r name sha; do
   cp "tools/$name" "$RB/repo/tools/$name"
 done < "$PINS_FILE"
 
-# 3: the FULL INNER PIPELINE on the clean clone — 37 stages, no recursion
+# 3: the FULL INNER PIPELINE on the clean clone — its stage count is DERIVED
+# from the CLONE's own pipeline source (the tested thing): the outer rows
+# already proven at drill time (minus the drill's own row and its
+# descendants) + the clone's post-drill stage count — correct mid-week (the
+# clone = last week's committed tree) and after the commit (clone == HEAD)
 # a FAILED inner run leaves its own evidence file (the next run must not
 # overwrite it — the W38 proof lesson: erased evidence is no evidence)
 ( cd "$RB/repo" && NEOKEY_REBUILD_INNER=1 ci/pipeline.sh ) > "$OUTDIR/inner-run.last.out" 2>&1 \
@@ -93,16 +97,28 @@ done < "$PINS_FILE"
 INNER_LOG="$RB/repo/build/pipeline.log"
 [ -f "$INNER_LOG" ] || fail "inner_log missing"
 grep -q '^PIPELINE_OK$' "$INNER_LOG" || fail "inner_pipeline_not_green"
+# the post-drill stage names, from THE CLONE's pipeline source (W39: derived,
+# never hardcoded — the shape grows without edits)
+POST_LIST=$(awk '/stage_rebuild\(\)|run_stage "rebuild"/{f=1; next} f && match($0, /(run_stage|skip_stage) "[a-z0-9]+"/){s=substr($0, RSTART, RLENGTH); sub(/^[a-z_]+ "/, "", s); sub(/"$/, "", s); print s}' "$RB/repo/ci/pipeline.sh" | grep -v '^rebuild$' | sort -u)
+POST_RE=$(echo "$POST_LIST" | paste -sd'|' -)
+POST_COUNT=$(echo "$POST_LIST" | grep -c . || true)
+prof() { grep -E '^\[[a-z0-9]+\] (PASS|FAIL|SKIP)' "$1" | sed -E 's/ \([0-9]+s\)$//' \
+          | grep -vE '^\[rebuild\] ' \
+          | { [ -n "$POST_RE" ] && grep -vE "^\[($POST_RE)\] " || cat; } | sort; }
+OUTER_BASE=$(prof build/pipeline.log | wc -l)
+EXPECTED_INNER=$((OUTER_BASE + POST_COUNT))
 INNER_SUMMARY=$(grep -cE '^  [a-z0-9]+ +(PASS|FAIL|SKIP)' "$INNER_LOG")
 INNER_FAILS=$(grep -cE '^  [a-z0-9]+ +FAIL' "$INNER_LOG")
-[ "$INNER_SUMMARY" = "37" ] || fail "inner_stage_count ($INNER_SUMMARY != 37)"
+[ "$INNER_SUMMARY" = "$EXPECTED_INNER" ] || fail "inner_stage_count ($INNER_SUMMARY != $EXPECTED_INNER — the clone's own pipeline shape)"
 [ "$INNER_FAILS" = "0" ]    || fail "inner_stage_fails ($INNER_FAILS)"
 # the inner run must reproduce THIS environment's exact proof shape: the
 # per-stage verdict lines ([name] PASS/FAIL/SKIP, the PASS timing stripped —
 # jitter is not a profile) equal the outer run's lines minus the rebuild row
-# itself (written only after this gate exits) — the documented build SKIP is
-# part of this environment's honest profile and must reproduce, no more, no less
-prof() { grep -E '^\[[a-z0-9]+\] (PASS|FAIL|SKIP)' "$1" | sed -E 's/ \([0-9]+s\)$//' | grep -vE '^\[rebuild\] ' | sort; }
+# itself (written only after this gate exits) AND minus the stages that come
+# after the drill in the CLONE's pipeline source (their rows exist only in
+# the inner run at drill time — the W39 lesson) — the documented build SKIP
+# is part of this environment's honest profile and must reproduce, no more,
+# no less
 prof build/pipeline.log > "$OUTDIR/outer.rows"
 prof "$INNER_LOG"          > "$OUTDIR/inner.rows"
 cmp -s "$OUTDIR/outer.rows" "$OUTDIR/inner.rows" || fail "inner_profile_drift (the inner run's stage profile != the outer run's — see $OUTDIR/{outer,inner}.rows)"

@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  *      (SyncServerPack.VC/VN).
  *
  * الحكم: `REBUILDGATE_OK checks=N negatives=M/12 pins=7/7 stages=37/37
- * tests=T/F dex=D/512000 vc=79 vn=3.2` / `REBUILDGATE_FAILED <reason>` (exit 1).
+ * tests=T/F dex=D/512000 vc=80 vn=3.3` / `REBUILDGATE_FAILED <reason>` (exit 1).
  * السلبيات الاثنتا عشرة تعضّ بأوسامها الحرفية على نسخ متسخة مؤقتة ثم
  * يُعاد التحقق أخضر على المدخلات الحقيقية — والحفرية نفسها (ci/rebuild.sh)
  * هي التي تُنتج المدخلات الحية.
@@ -45,7 +45,17 @@ import java.util.regex.Pattern;
 public class RebuildGate {
 
     static final String DEX_CEILING = "512000";
-    static final int INNER_STAGES = 37;
+    /** شكل الأنبوب الحالي: 39 مرحلة خارجية، والحفريات تُسقط نفسها داخلها
+     *  (38 صفًا) — يتحرك مع نمو الأنبوب مثل الهوية في مواضعها. */
+    static final int INNER_STAGES = 38;
+    /** العدد المتوقع للتشغيل الداخلي — يُمرَّر من البوابة مشتقاً من أنبوب
+     *  الاستنساخ ذاته (المرحلة W39: الشكل المُختبر هو شكل الاستنساخ لا
+     *  ثابت هذا الأسبوع) — والثابت الافتراضي يخدم الاختبارات التركيبية. */
+    static int EXPECTED_STAGES = INNER_STAGES;
+    /** المراحل التي تلي الحفريات في مصدر الأنبوب (مشتق من ci/pipeline.sh
+     *  ويُمرَّر بالبوابة): صفوفها موجودة في الداخل وغائبة عن الخارج لحظة
+     *  الحفرية — تُسقط من الطرفين قبل مقارنة الشكل. */
+    static String AFTER_STAGES = "";
 
     /** أسماء الأدوات السبعة المرساة — الطلب ثابت والاحصاء ثابت. */
     static final String[] TOOL_NAMES = {
@@ -147,6 +157,7 @@ public class RebuildGate {
         List<String> skips = new ArrayList<String>();
         List<String> resultLines = new ArrayList<String>();
         String testsPassed, testsFailed, dex, components, pipelineOk, r8Line;
+        String identityVc, identityVn;   // الهوية المعلنة داخل التشغيل الداخلي نفسه
     }
 
     /** يحلل كتلة ملخص الأنبوب الداخلي + سطور الحكم — يرفض بأوسام حرفية. */
@@ -174,12 +185,16 @@ public class RebuildGate {
                 }
             }
             if (l.startsWith("R8_OK ")) in.r8Line = l;
+            if (l.startsWith("BILLINGGATE_OK ")) {
+                Matcher im = Pattern.compile("vc=(\\d+) vn=([0-9.]+)").matcher(l);
+                if (im.find()) { in.identityVc = im.group(1); in.identityVn = im.group(2); }
+            }
             if (l.contains("RESULT ")) in.resultLines.add(l);
             if (l.equals("PIPELINE_OK") || l.equals("PIPELINE_FAILED")) in.pipelineOk = l;
         }
         if (in.pipelineOk == null) refuse("inner.pipeline_ok_missing");
         if (!"PIPELINE_OK".equals(in.pipelineOk)) refuse("inner.pipeline_failed");
-        if (in.stageRows != INNER_STAGES) refuse("inner.count");
+        if (in.stageRows != EXPECTED_STAGES) refuse("inner.count");
         if (!in.fails.isEmpty()) refuse("inner.stage_fail");
         // the per-suite RESULT lines must sum to the summary's tests: line
         long rp = 0, rf = 0;
@@ -207,23 +222,39 @@ public class RebuildGate {
     static java.util.List<String> summaryRows(String logFile) throws IOException {
         java.util.List<String> lines = Files.readAllLines(Paths.get(logFile), StandardCharsets.UTF_8);
         java.util.List<String> rows = new ArrayList<String>();
-        Pattern row = Pattern.compile("^\\[([a-z0-9]+)\\] (PASS|FAIL \\(rc=[0-9]+\\)|SKIP \\(.*\\))$");
+        Pattern row = Pattern.compile("^\\[([a-z0-9]+)\\] (PASS( \\([0-9]+s\\))?|FAIL \\(rc=[0-9]+\\)|SKIP \\(.*\\))$");
         for (String l : lines) {
             Matcher m = row.matcher(l);
-            if (m.matches()) rows.add(m.group(1) + " " + m.group(2));
+            if (!m.matches()) continue;
+            String verdict = m.group(2);
+            rows.add(m.group(1) + " " + (verdict.startsWith("PASS") ? "PASS" : verdict));
         }
         return rows;
     }
 
     /** الحفرية تعيد إنتاج شكل هذا المحيط حرفياً: صفوف الداخل == صفوف الخارج
-     * منقوصاً صفّ المرحلة ذاتها (حكمها لا يوجد إلا بعد انتهائها). */
+     * منقوصاً صفّ المرحلة ذاتها وصفوف المراحل التي تليها (W39: صف evaudit
+     * موجود في الداخل وغائب عن الخارج لحظة الحفرية) — وزمن الـ PASS مسقوط
+     * والـ PASS مطبَّع، فالمقارنة حقيقية لا إغفال. */
     static void crossCheckSummary(String innerLog, String outerLog, String selfStage) throws IOException {
         java.util.List<String> want = new ArrayList<String>();
-        for (String r : summaryRows(outerLog)) if (!r.startsWith(selfStage + " ")) want.add(r);
-        java.util.List<String> got = new ArrayList<String>(summaryRows(innerLog));
+        for (String r : summaryRows(outerLog)) if (!dropRow(r, selfStage)) want.add(r);
+        java.util.List<String> got = new ArrayList<String>();
+        for (String r : summaryRows(innerLog)) if (!dropRow(r, selfStage)) got.add(r);
         java.util.Collections.sort(want);
         java.util.Collections.sort(got);
         if (!want.equals(got)) refuse("xref.summary");
+    }
+
+    static boolean dropRow(String row, String selfStage) {
+        String name = row.contains(" ") ? row.substring(0, row.indexOf(' ')) : row;
+        return name.equals(selfStage) || inAfter(name);
+    }
+
+    static boolean inAfter(String name) {
+        if (AFTER_STAGES.isEmpty()) return false;
+        for (String a : AFTER_STAGES.split(",")) if (a.equals(name)) return true;
+        return false;
     }
 
     // ---- سطر حفرية الحكم: الشكل والتقاطع -----------------------------------
@@ -245,12 +276,14 @@ public class RebuildGate {
 
     static void crossCheck(Map<String, String> v, InnerRun in, String pinsCount) {
         if (!pinsCount.equals(v.get("pins"))) refuse("xref.pins");
-        if (!String.valueOf(INNER_STAGES).equals(v.get("stages"))) refuse("xref.stages");
+        if (!String.valueOf(EXPECTED_STAGES).equals(v.get("stages"))) refuse("xref.stages");
         if (!in.testsPassed.equals(v.get("tests").split("/")[0])) refuse("xref.tests");
         if (!in.testsFailed.equals(v.get("tests").split("/")[1])) refuse("xref.tests");
         if (!in.dex.equals(v.get("dex"))) refuse("xref.dex");
-        if (!SyncServerPack.VC.equals(v.get("inner_vc"))) refuse("xref.identity");
-        if (!SyncServerPack.VN.equals(v.get("inner_vn"))) refuse("xref.identity");
+        // الهوية: الحكم == التشغيل الداخلي نفسه (مقاس == مقاس) — الحفريات
+        // تُثبت أسبوعَ الاستنساخ لا أسبوعَ الشجرة الحية (درس W39)
+        if (!in.identityVc.equals(v.get("inner_vc"))) refuse("xref.identity");
+        if (!in.identityVn.equals(v.get("inner_vn"))) refuse("xref.identity");
     }
 
     // ---- المدخل: المدخلات الحية ثم السلبيات الاثنتا عشرة ثم إعادة الأخضر --
@@ -261,6 +294,10 @@ public class RebuildGate {
         String innerLog = arg(args, "--inner-log");
         String verdictFile = arg(args, "--drill-verdict");
         String outerLog = arg(args, "--outer-log");
+        String after = arg(args, "--after");
+        if (after != null) AFTER_STAGES = after;
+        String esp = arg(args, "--expect-stages");
+        if (esp != null) EXPECTED_STAGES = Integer.parseInt(esp);
         if (pinsFile == null || toolsDir == null || innerLog == null || verdictFile == null || outerLog == null) {
             System.out.println("REBUILDGATE_FAILED usage (--pins --tools --inner-log --drill-verdict --outer-log)");
             System.exit(1);
@@ -288,8 +325,8 @@ public class RebuildGate {
             ck("inner.ceiling", Long.parseLong(fin.dex) <= Long.parseLong(DEX_CEILING), "inner dex " + fin.dex + " <= " + DEX_CEILING);
             ck("inner.components", fin.r8Line.contains("kept=10/10"), "all ten manifest components kept");
             String vcLine = innerLogField(innerLog, "BILLINGGATE_OK .*vc=(\\d+) vn=([0-9.]+)");
-            ck("inner.identity_source", SyncServerPack.VC.equals(grp(vcLine, 1)) && SyncServerPack.VN.equals(grp(vcLine, 2)),
-                    "the inner run's artifact identity == SyncServerPack.VC/VN (the one source)");
+            ck("inner.identity_present", grp(vcLine, 1) != null && grp(vcLine, 2) != null,
+                    "the inner run declares its own artifact identity (the drill proves the clone's week, not this week's)");
         }
 
         // ---- 3: التقاطع — سطر الحفرية == السجل الداخلي ----------------------
@@ -471,7 +508,7 @@ public class RebuildGate {
         }
         System.out.println("REBUILDGATE_OK checks=" + checks + " negatives=" + negPass + "/" + negTotal
                 + " pins=" + TOOL_NAMES.length + "/" + TOOL_NAMES.length
-                + " stages=" + INNER_STAGES + "/" + INNER_STAGES
+                + " stages=" + EXPECTED_STAGES + "/" + EXPECTED_STAGES
                 + " tests=" + fin.testsPassed + "/" + fin.testsFailed
                 + " dex=" + fin.dex + "/" + DEX_CEILING
                 + " vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN);
