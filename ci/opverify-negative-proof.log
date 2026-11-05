@@ -1,0 +1,20 @@
+== opverify negative proof — 2026-11-05T21:36:37Z ==
+baseline: OPVERIFYGATE_OK checks=18 negatives=12/12 letters=2 packs=1 swaps=1 vc=81 vn=3.4
+
+--- attack: anchor.identity_tamper
+bit: OPVERIFYGATE_FAILED anchor.identity.vc (manifest declares 3 — the verifier week is 81)
+restored: green re-verify OK (OPVERIFYGATE_OK checks=18 negatives=12/12 letters=2 packs=1 swaps=1 vc=81 vn=3.4)
+
+--- attack: fixture.arena_keystore_unreadable
+bit: OPVERIFYGATE_FAILED arena letter (PROVISION_FAIL unreadable_chain)
+restored: green re-verify OK (OPVERIFYGATE_OK checks=18 negatives=12/12 letters=2 packs=1 swaps=1 vc=81 vn=3.4)
+
+--- attack: swap.identity_drift
+bit: NEG-OK swap.identity_drift [swap.identity]
+restored: green re-verify OK (OPVERIFYGATE_OK checks=18 negatives=12/12 letters=2 packs=1 swaps=1 vc=81 vn=3.4)
+
+--- attack: deadguard.emitted_law_neutered
+bit: OPVERIFYGATE_FAILED regressions=1 negatives=11/12
+restored: green re-verify OK (OPVERIFYGATE_OK checks=18 negatives=12/12 letters=2 packs=1 swaps=1 vc=81 vn=3.4)
+
+== PROOF PASSED: all four attacks bit with their own tags, all files restored, final gate green ==
