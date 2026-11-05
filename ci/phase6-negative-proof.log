@@ -1,0 +1,23 @@
+== phase6 negative proof — 2026-11-05T06:48:05Z ==
+
+--- baseline (untampered)
+rc=0
+verdict: PHASE6_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=74 tests=1424/0 negatives=11/11+6/6+6/6 anchor_pin16=e67e815c3494a3c5 fp16=a80e71b9a5d15546
+
+--- attack: gates.env tamper (UPLOADBUNDLE_MEMBERS 8 -> 7)
+rc=1
+verdict: PHASE6_FAILED regressions=1/88 (see PHASE6 regression lines above)
+restored: rc=0 PHASE6_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=74 tests=1424/0 negatives=11/11+6/6+6/6 anchor_pin16=e67e815c3494a3c5 fp16=a80e71b9a5d15546
+
+--- attack: log+env double tamper (SIGNEDAPK_FP16 -> 0123456789abcdef in both)
+rc=1
+verdict: PHASE6_FAILED regressions=2/88 (see PHASE6 regression lines above)
+restored: rc=0 PHASE6_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=74 tests=1424/0 negatives=11/11+6/6+6/6 anchor_pin16=e67e815c3494a3c5 fp16=a80e71b9a5d15546
+
+--- attack: phase-6 module hidden (UploadBundle.java -> /tmp)
+rc=1
+verdict: PHASE6_FAILED uploadbundle (rc=1, verdict missing)
+restored: rc=0 PHASE6_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=74 tests=1424/0 negatives=11/11+6/6+6/6 anchor_pin16=e67e815c3494a3c5 fp16=a80e71b9a5d15546
+
+== PROOF PASSED: all three attacks bit with their own tags, all files restored, final gate green ==
+PHASE6_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=74 tests=1424/0 negatives=11/11+6/6+6/6 anchor_pin16=e67e815c3494a3c5 fp16=a80e71b9a5d15546

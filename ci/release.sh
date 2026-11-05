@@ -148,6 +148,12 @@ if [ "${PHASE5_GATE:-}" = "OK" ]; then
   PHASE5_BLOCK=$',\n    "phase5Close": { "verifiedBy": "ci/phase5_gate.sh", "contract": "docs/PHASE5-W4-REPORT.md", "phaseGatesGreen": "'"${PHASE5_GATES:-0/0}"'", "regressions": "'"${PHASE5_REGRESSIONS:-?}"'", "dexBytes": '"${PHASE5_DEX:-0}"', "dexCeiling": '"${PHASE5_CEILING:-512000}"', "versionCode": '"$VC"', "tests": "'"${PHASE5_TESTS:-0/0}"'", "negatives": "'"${PHASE5_NEGATIVES:-?}"'", "drillFp16": "'"${KSDRILL_FP16:-}"'", "exitCriteria": "all phase-5 gates re-run fresh (tls/deploy/ksdrill) + three-way evidence integrity + zero regressions on all 21 previous gate keys + dex under the lowered ceiling + versionCode 70 / versionName 2.3" }'
 fi
 
+# Phase-6 closing gate (phase 6, week 4 / week 33) — present when the closing gate ran
+PHASE6_BLOCK=""
+if [ "${PHASE6_GATE:-}" = "OK" ]; then
+  PHASE6_BLOCK=$',\n    "phase6Close": { "verifiedBy": "ci/phase6_gate.sh", "contract": "docs/PHASE6-W4-REPORT.md", "phaseGatesGreen": "'"${PHASE6_GATES:-0/0}"'", "regressions": "'"${PHASE6_REGRESSIONS:-?}"'", "dexBytes": '"${PHASE6_DEX:-0}"', "dexCeiling": '"${PHASE6_CEILING:-512000}"', "versionCode": '"$VC"', "tests": "'"${PHASE6_TESTS:-0/0}"'", "negatives": "'"${PHASE6_NEGATIVES:-?}"'", "anchorPin16": "'"${PHASE6_ANCHOR_PIN16:-}"'", "artifactFp16": "'"${PHASE6_FP16:-}"'", "exitCriteria": "all phase-6 gates re-run fresh (provision/signedapk/uploadbundle) + three-way evidence integrity + zero regressions on all 25 previous gate keys + dex under the lowered ceiling + versionCode 74 / versionName 2.7 (pinned once here; the live check is a floor)" }'
+fi
+
 cat > "$OUT/release-manifest.json" <<EOF
 {
   "app": "com.hark.neokey",
@@ -158,7 +164,7 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PROVISION_BLOCK$SIGNEDAPK_BLOCK$UPLOADBUNDLE_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK$PHASE5_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PROVISION_BLOCK$SIGNEDAPK_BLOCK$UPLOADBUNDLE_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK$PHASE5_BLOCK$PHASE6_BLOCK
   },
   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB", "uploadBundle": "${UPLOADBUNDLE_BUNDLE_LINE:-pending (the uploadbundle gate assembles it: build/upload/bundle — signed APK + mapping + ar/en listing + data-safety + privacy + rollout plan)}" },
   "signedBy": "the signed-ARTIFACT path is proven automation (week 31: apksig v1+v2 on the drill stand-in, fp-pinned, 14 checks + 6/6 negatives); the release signature itself = the owner restores the real keystore (W28 procedure) and re-runs the same two commands — secrets never leave the vault"
@@ -182,14 +188,14 @@ cat > "$OUT/store-readiness.json" <<EOF
     "storeListing": { "status": "verified by ci/play_gate.sh", "name_ar_en": "${PLAY_name_ar:-0}/30 + ${PLAY_name_en:-0}/30", "short_ar_en": "${PLAY_short_ar:-0}/80 + ${PLAY_short_en:-0}/80", "full_ar_en": "${PLAY_full_ar:-0}/4000 + ${PLAY_full_en:-0}/4000" },
     "shrink": { "status": "R8 Full Mode green + real trim enforced", "dexBytes": ${R8_DEX_BYTES:-0}, "ceiling": ${TRIM_CEILING:-512000}, "mapping": "build/release/mapping.txt" },
     "payments": { "status": "provider contract standard and proven; real provider = deployment decision", "gate": "${PAY_GATE:-NOT_OK}", "ledgerClosesCents": ${PAY_LEDGER_CLOSES:-0}, "negativeProof": "ci/pay-negative-proof.log" },
-    "syncBackend": { "status": "contract proven on the wire + client TLS trust contract (SPKI pinning) proven + the deployable bundle proven as a separate process + the keystore-recovery drill proven to bite; PHASE 5 CLOSED by ci/phase5_gate.sh; phase 6 opened (week 30): the pin-SETTING decision procedure is automated and bite-proven (anchors + renewal/rotation wire drill); production deployment (domain + CA cert + the two automated commands) pending", "gate": "${REST_GATE:-NOT_OK}", "tlsGate": "${TLS_GATE:-NOT_OK}", "deployGate": "${DEPLOY_GATE:-NOT_OK}", "ksdrillGate": "${KSDRILL_GATE:-NOT_OK}", "provisionGate": "${PROVISION_GATE:-NOT_OK}", "phase5Gate": "${PHASE5_GATE:-NOT_OK}", "wireRounds": ${REST_ROUNDS:-0} },
+    "syncBackend": { "status": "contract proven on the wire + client TLS trust contract (SPKI pinning) proven + the deployable bundle proven as a separate process + the keystore-recovery drill proven to bite; PHASE 5 CLOSED by ci/phase5_gate.sh; PHASE 6 CLOSED by ci/phase6_gate.sh (week 33): the pin-SETTING decision procedure automated and bite-proven + the signed ARTIFACT proven v1+v2 + the store-upload bundle assembled and gate-verified; production deployment (domain + CA cert + the two automated commands) pending", "gate": "${REST_GATE:-NOT_OK}", "tlsGate": "${TLS_GATE:-NOT_OK}", "deployGate": "${DEPLOY_GATE:-NOT_OK}", "ksdrillGate": "${KSDRILL_GATE:-NOT_OK}", "provisionGate": "${PROVISION_GATE:-NOT_OK}", "phase5Gate": "${PHASE5_GATE:-NOT_OK}", "phase6Gate": "${PHASE6_GATE:-NOT_OK}", "wireRounds": ${REST_ROUNDS:-0} },
     "entitlements": { "status": "restore re-grants ownership by pin, never re-buys", "gate": "${ENTGATE:-NOT_OK}" },
     "economy": { "status": "70/30 close exact to the cent through Economy only", "monthCloseCents": ${PAY_LEDGER_CLOSES:-0} },
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
     "rollout": { "status": "staged 10/50/100 with halt procedure — see rollout-plan.json", "defaultProcedure": true },
     "signing": { "status": "$SIGNING_STATUS" },
     "phase5": { "status": "closed by ci/phase5_gate.sh — the three locally-closable slices of the deployment pendings are proven; what remains outside is named below with its exact wording", "gates": "${PHASE5_GATES:-0/0}", "regressions": "${PHASE5_REGRESSIONS:-?}" },
-    "phase6": { "status": "opened by week 30 (docs/PHASE6-PLAN.md — derived from the phase-5 pendings in writing): W1 the pin-setting decision procedure automated + rotation wire drill; W2 (week 31) the signed ARTIFACT: full APK + apksig v1+v2 on the drill stand-in, fp-pinned, deterministic", "provisionGate": "${PROVISION_GATE:-NOT_OK}", "signedApkGate": "${SIGNEDAPK_GATE:-NOT_OK}", "weeks": "W1/30 provision → W2/31 signed artifact → W3/32 upload bundle → W4/33 close" }
+    "phase6": { "status": "CLOSED by ci/phase6_gate.sh (week 33) — W1/30 the pin-setting decision procedure automated + rotation wire drill; W2/31 the signed ARTIFACT: full APK + apksig v1+v2 on the drill stand-in, fp-pinned, deterministic; W3/32 the store-upload bundle assembled, coupled and gate-verified; W4/33 the closure: all three re-run fresh + three-way evidence + zero regressions on 25 keys", "gates": "${PHASE6_GATES:-0/0}", "regressions": "${PHASE6_REGRESSIONS:-?}", "versionPinned": "vc 74 / vn 2.7 — pinned once in this manifest; the live check is a non-regression floor" }
   },
   "pendingOutsideThisEnvironment": [
     "real payment provider (Play Billing) — replaces PaymentProvider.SimProvider in StoreActivity only",
@@ -211,6 +217,7 @@ cat > "$OUT/store-readiness.txt" <<EOF
  البناء والتصغير  R8 Full Mode أخضر — dex ${R8_DEX_BYTES:-0}/${TRIM_CEILING:-512000} بايت (تقليم حقيقي مفروض) + mapping.txt
  الدفع            العقد قياسي مثبت — PaymentProvider نقطة الاستبدال الوحيدة، دفتر ينغلق ${PAY_LEDGER_CLOSES:-0} سنتاً، إثبات سلبي 12 هجمة (المزوّد الحقيقي قرار نشر)
  خادم المزامنة    العقد على السلك + ثقة العميل مثبتة + حزمة النشر عملية مستقلة + تدريب استعادة التوقيع يعضّ — المرحلة 5 مغلقة ببوابة phase5 — **التجهيز والدوران آليان وعضّالان (الأسبوع 30: provision_gate ${PROVISION_CHECKS:-0} فحصاً و${PROVISION_NEGATIVES:-0} سلبية)** — النشر الحي = شراء النطاق + شهادة CA ثم الأمران الآليان (Provision ← NetGate.setSyncPins)
+ المرحلة 6        مغلقة ببوابة phase6 — بواباتها الثلاث تُعاد طازجة في خط واحد: التجهيز + الأرتقف الموقَّع + حزمة الرفع، اتساق ثلاثي للأدلة، لا تراجع في 25 مفتاحاً — الإصدار المثبت: vc ${PHASE6_VC:-$VC} / 2.7
  الاستحقاقات      الاستعادة تعيد الملكية بالدبوس ولا تشتري أبداً
  الاقتصاد         إغلاق 70/30 دقيق للسنت عبر Economy حصراً
  الاختبارات       $TESTS_TOTAL اختباراً، $TESTS_FAILED إخفاق

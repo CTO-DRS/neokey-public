@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle (the week's closing gate; consumes the release rollout plan) (32 stages; phase 6 W3 = uploadbundle LAST)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close (33 stages; phase 6 W4 = the phase6 closer LAST — it consumes the second collect_gates pass that carries the UPLOADBUNDLE_* keys)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -192,6 +192,18 @@ stage_signedapk() { ci/signedapk_gate.sh; }
 # plan — and a gate that refuses anything missing or inconsistent.
 stage_uploadbundle() { ci/uploadbundle_gate.sh; }
 
+# ---- 4b: phase-6 CLOSING gate (phase 6, week 4 — week 33) ---------------------
+# All phase-6 gates in one line, fresh: the provisioning + rotation drill, the
+# signed artifact and the store-upload bundle re-execute with every shipped
+# field pinned (anchors literal, checks/negatives exact, the artifact sha256
+# three-way), three-way evidence integrity (fresh == pipeline.log ==
+# gates.env), zero regressions on all 25 previous gate keys, and the measured
+# exit criteria (tests >= 1,424, dex <= the lowered 512,000B ceiling, vc >= 74,
+# vn >= 2.7 — the exact close measurement is pinned once in
+# release-manifest.phase6Close; the live check is a non-regression floor from
+# day one, the W30 lesson applied proactively).
+stage_phase6() { ci/phase6_gate.sh; }
+
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
 
@@ -226,6 +238,14 @@ keyof() { # stable ASCII key per gate name
 }
 
 collect_gates() {
+  # week-33 fix (a real latent defect this closure week exists to catch): the
+  # closing gates append their PHASE*_ keys to gates.env AFTER the first pass,
+  # and the W32 second pass (added for UPLOADBUNDLE_*) silently WIPED them by
+  # truncating the file — any reader after it (the phase-6 closer, the
+  # standalone release.sh re-run) saw the closers as NOT_OK/defaults. The pass
+  # now snapshots the closers' keys first and re-appends them at the end.
+  local CLOSE_KEEP="build/release/.closer-keys.$$"
+  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
   # tests totals: sum the RESULT lines of both suites
   local T=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOG" | awk '{p+=$2; f+=$4} END {print p+0, f+0}')
   {
@@ -347,6 +367,7 @@ collect_gates() {
   echo "PROVISION_NEGATIVES=$(echo "$PV_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
   echo "PROVISION_ANCHOR_PIN16=$(echo "$PV_LINE" | sed -E 's/.*anchor_pin16=([0-9a-f]+).*/\1/')" >> "$GATES"
   echo "PROVISION_PIN16=$(echo "$PV_LINE" | sed -E 's/.* pin16=([0-9a-f]+).*/\1/')" >> "$GATES"
+  echo "PROVISION_RENEW_DAYS_LEFT=$(echo "$PV_LINE" | sed -E 's/.*renew_days_left=([0-9]+).*/\1/')" >> "$GATES"
   # payment-provider contract gate numbers (phase 4, week 24)
   echo "PAY_GATE=$(grep -q '^PAYGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   PG_LINE=$(grep '^PAYGATE_OK' "$LOG" | tail -1)
@@ -432,6 +453,11 @@ collect_gates() {
   echo "UPLOADBUNDLE_MEMBERS=$(echo "$UB_LINE" | sed -E 's/.*members=([0-9]+).*/\1/')" >> "$GATES"
   echo "UPLOADBUNDLE_EVIDENCE=$(echo "$UB_LINE" | sed -E 's/.*evidence=([0-9]+).*/\1/')" >> "$GATES"
   echo "UPLOADBUNDLE_APK_SHA256=$(echo "$UB_LINE" | sed -E 's/.*apk_sha256=([0-9a-f]+).*/\1/')" >> "$GATES"
+  # re-append the closing gates' keys the truncation above would have wiped
+  # (week-33: PHASE3_/PHASE4_/PHASE5_ keys survive every pass — the phase-6
+  # closer and the standalone release.sh re-run read them AFTER this line)
+  if [ -s "$CLOSE_KEEP" ]; then cat "$CLOSE_KEEP" >> "$GATES"; fi
+  rm -f "$CLOSE_KEEP"
 }
 
 # ---- run the line -------------------------------------------------------------
@@ -506,9 +532,15 @@ run_stage "release"  stage_release
 # measured uploadBundle block.
 if [ -f tools/aapt2 ] && [ -f build/NeoKey-2036.apk ] && [ -f build/release/signedapk-statement.json ] && [ -f build/release/rollout-plan.json ]; then
   run_stage "uploadbundle" stage_uploadbundle   # phase 6 W3 (week 32): the store-upload bundle
-  collect_gates   # second pass: gates.env gains the UPLOADBUNDLE_* keys
+  collect_gates   # second pass: gates.env gains the UPLOADBUNDLE_* keys (closer keys preserved since week 33)
+  if [ -f tools/r8.jar ] && [ -f tools/android.jar ]; then
+    run_stage "phase6" stage_phase6   # phase 6 W4 (week 33): all phase-6 gates in one line, fresh
+  else
+    skip_stage "phase6" "closing gates need the r8 artifact (no r8 tools here) — they re-run where the artifact lives"
+  fi
 else
   skip_stage "uploadbundle" "needs the signedapk artifact + its statement + aapt2 + the release rollout plan — runs where the signed artifact lives"
+  skip_stage "phase6" "the phase-6 closer consumes the UPLOADBUNDLE_* keys — it runs where the signed artifact lives"
 fi
 
 # ---- summary ------------------------------------------------------------------

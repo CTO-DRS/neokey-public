@@ -34,7 +34,7 @@
 #                             restore-inside-run, green re-verify after each.
 #
 #   Verdict: UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=7 evidence=8
-#            vc=73 vn=2.6 apk_sha256=… / UPLOADBUNDLEGATE_FAILED <reason> (exit 1)
+#            vc=74 vn=2.7 apk_sha256=… / UPLOADBUNDLEGATE_FAILED <reason> (exit 1)
 set -uo pipefail
 cd "$(dirname "$0")/.."
 

@@ -45,7 +45,7 @@ import java.util.zip.ZipOutputStream;
  *                          neokey-signedapk-1, fields match this run, and a
  *                          rebuild from the second signing is byte-identical
  *  13  versions            AndroidManifest.xml carries the pinned release
- *                          identity (vc 73 / vn 2.6 — the week's literals (bumped week 32))
+ *                          identity (vc 74 / vn 2.7 — the week's literals (bumped week 33))
  *  14  purity              SignedApk.java has zero android.* imports
  *
  * Negatives (each must fail with ITS OWN tag — a check that stops biting is a
@@ -65,8 +65,8 @@ public final class SignedApkGate {
     // fp16 is derived from it for verdicts.
     static final String EXPECTED_FP = "a80e71b9a5d1554619afe7853b6ef4b20fbbcc05d6e9f4f73a9c98d04092f587";
     static final String EXPECTED_FP16 = EXPECTED_FP.substring(0, 16);
-    static final String EXPECTED_VC = "73";
-    static final String EXPECTED_VN = "2.6";
+    static final String EXPECTED_VC = "74";
+    static final String EXPECTED_VN = "2.7";
     static final long DEX_CEILING = 512000;
 
     static int CHECKS = 0;
