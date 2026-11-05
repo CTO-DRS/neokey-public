@@ -202,7 +202,10 @@ if [ "$REG" -ne 0 ]; then
 fi
 echo "PHASE6_OK gates=3/3 regressions=0/$CHECKS dex=${R8_DEX_BYTES:-0}/$DEX_CEILING vc=$VC tests=${TESTS_TOTAL:-0}/${TESTS_FAILED:-0} negatives=$PV_NEG+$SA_NEG+$UB_NEG anchor_pin16=$PV_ANCHOR fp16=$SA_FP"
 
-# keys for the release manifest (release.sh sources gates.env)
+# keys for the release manifest (release.sh sources gates.env) — idempotent
+# upsert (week-33 hardening): a standalone re-run must not pile a second
+# PHASE6_* block onto the pipeline's block; drop the old keys, append fresh.
+sed -i '/^PHASE6_/d' "$STATE"
 {
   echo "PHASE6_GATE=OK"
   echo "PHASE6_GATES=3/3"
