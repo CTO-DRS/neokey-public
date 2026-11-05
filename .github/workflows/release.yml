@@ -44,7 +44,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
-      - uses: android-actions/setup-android@v3
       - name: Signing-secrets presence check (week 31 — absent secrets = a DOCUMENTED skip, not a red run — the owner signs with the proven two-command path, docs/PHASE6-W2-REPORT.md)
         id: sec
         env:
@@ -55,7 +54,9 @@ jobs:
                echo "RELEASE_SIGNING_SKIPPED — signing secrets not configured on this repo; the owner restores them (W28 procedure) and runs the two release commands (ci/build_signedapk.sh + SignedApk sign)"; fi
       - name: Install SDK pieces
         run: |
-          sdkmanager --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
           ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
@@ -131,10 +132,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
-      - uses: android-actions/setup-android@v3
       - name: Install SDK pieces + bundletool (promotion rebuilds the same-tag AAB deterministically)
         run: |
-          sdkmanager --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
           ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"

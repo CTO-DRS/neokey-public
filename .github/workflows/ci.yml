@@ -43,11 +43,11 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
 
-      - uses: android-actions/setup-android@v3
-
       - name: Install SDK pieces expected by the build scripts
         run: |
-          sdkmanager --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
           ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
