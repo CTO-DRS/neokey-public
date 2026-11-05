@@ -45,7 +45,7 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
       - uses: android-actions/setup-android@v3
-      - name: Signing-secrets presence check (week 31: absent secrets = a DOCUMENTED skip, not a red run — the owner signs with the proven two-command path, docs/PHASE6-W2-REPORT.md)
+      - name: Signing-secrets presence check (week 31 — absent secrets = a DOCUMENTED skip, not a red run — the owner signs with the proven two-command path, docs/PHASE6-W2-REPORT.md)
         id: sec
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
