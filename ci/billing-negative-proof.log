@@ -1,17 +1,17 @@
-== billing negative proof — 2026-11-05T08:59:57Z ==
-baseline: BILLINGGATE_OK checks=24 negatives=10/10 vc=75 vn=2.8 providers=2
+== billing negative proof — 2026-11-05T10:55:04Z ==
+baseline: BILLINGGATE_OK checks=24 negatives=10/10 vc=77 vn=3.0 providers=2
 
---- attack: manifest identity tamper (75 -> 74)
-bit: BILLINGGATE_FAILED anchor.identity.vc (manifest declares 74 — the billing week is 75)
-restored: green re-verify OK (BILLINGGATE_OK checks=24 negatives=10/10 vc=75 vn=2.8 providers=2)
+--- attack: manifest identity tamper (versionCode -> 1, always wrong)
+bit: BILLINGGATE_FAILED anchor.identity.vc (manifest declares 1 — the preflight week is 77)
+restored: green re-verify OK (BILLINGGATE_OK checks=24 negatives=10/10 vc=77 vn=3.0 providers=2)
 
 --- attack: dead guard (PlayProvider.verify neutered to always-true)
 bit: BILLING regression: neg.tampered_text (tag purchase_price_mismatch != purchase_signature_invalid)
-restored: green re-verify OK (BILLINGGATE_OK checks=24 negatives=10/10 vc=75 vn=2.8 providers=2)
+restored: green re-verify OK (BILLINGGATE_OK checks=24 negatives=10/10 vc=77 vn=3.0 providers=2)
 
 --- attack: hidden validator (BillingGate.java removed)
 bit: BILLINGGATE_FAILED compile
-restored: green re-verify OK (BILLINGGATE_OK checks=24 negatives=10/10 vc=75 vn=2.8 providers=2)
+restored: green re-verify OK (BILLINGGATE_OK checks=24 negatives=10/10 vc=77 vn=3.0 providers=2)
 
 == PROOF PASSED: all three attacks bit with their own tags, all files restored, final gate green ==
-BILLINGGATE_OK checks=24 negatives=10/10 vc=75 vn=2.8 providers=2
+BILLINGGATE_OK checks=24 negatives=10/10 vc=77 vn=3.0 providers=2

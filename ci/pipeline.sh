@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv (35 stages; phase 6 closed at stage 33 on week 33; phase 7 W1 = week 34 opens with the billing adapter LAST — it needs the rebuilt artifact for its identity anchor)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight (36 stages; phase 6 closed at stage 33 on week 33; phase 7 W1 = week 34 opens with the billing adapter LAST, W2 = week 35 the deployable pack, W3 = week 36 the operator preflight sheet LAST — it re-runs the four week gates fresh inside itself, so nothing rides a cached verdict)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -212,6 +212,13 @@ stage_billing() { ci/billing_gate.sh; }
 # release-manifest.deploySrv; the live check boots the pack's own copy
 stage_deploysrv() { ci/deploysrv_gate.sh; }
 
+# ---- 6: the phase-7 preflight (phase 7 W3, week 36) — the operator sheet ------
+# release-manifest.preflight; the live check is THE FIVE FRESH PROOFS: the
+# four week gates re-run green inside the stage + the release commands'
+# existence, then the handover sheet is emitted from THIS run's evidence and
+# checked against itself (the sheet is the reference).
+stage_preflight() { ci/preflight_gate.sh; }
+
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
 
@@ -253,7 +260,7 @@ collect_gates() {
   # standalone release.sh re-run) saw the closers as NOT_OK/defaults. The pass
   # now snapshots the closers' keys first and re-appends them at the end.
   local CLOSE_KEEP="build/release/.closer-keys.$$"
-  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
+  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_|PREFLIGHT_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
   # tests totals: sum the RESULT lines of both suites
   local T=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOG" | awk '{p+=$2; f+=$4} END {print p+0, f+0}')
   {
@@ -572,6 +579,18 @@ if [ -f tests/tls/arena-server.p12 ] && { command -v javac >/dev/null 2>&1 || [ 
   run_stage "deploysrv" stage_deploysrv   # phase 7 W2 (week 35): the deployable server pack
 else
   skip_stage "deploysrv" "needs the arena keystore fixture + javac/ecj to compile the pack"
+fi
+
+# ---- 6: phase 7 W3 (week 36) — the OPERATOR PREFLIGHT SHEET runs LAST:
+# ONE tool walks ALL release conditions on FRESH re-runs (the four week
+# gates re-run green inside this stage — never a cached verdict) and emits
+# the handover sheet: every operator step either CHECKED here or OUTSIDE
+# with its literal command + documented externality. Its keys ride the
+# closer-key snapshot (PREFLIGHT_ in CLOSE_KEEP) since day one.
+if command -v javac >/dev/null 2>&1 || [ -f tools/ecj.jar ]; then
+  run_stage "preflight" stage_preflight   # phase 7 W3 (week 36): the operator preflight sheet
+else
+  skip_stage "preflight" "needs javac/ecj to compile the preflight tool"
 fi
 
 # ---- summary ------------------------------------------------------------------

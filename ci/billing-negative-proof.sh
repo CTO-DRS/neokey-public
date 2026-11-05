@@ -5,9 +5,12 @@
 # and the gate re-verified GREEN. The proof fails loudly if any attack fails
 # to bite or any restore fails to heal.
 #
-#   1) identity tamper: the manifest's versionCode 75 -> 74 — the gate's
-#      anchor bites BEFORE anything compiles («المرجع = المنشور»: the week
-#      carrying the adapter declares its own identity).
+#   1) identity tamper: the manifest's versionCode rewritten to a wrong value
+#      (bump-independent: any identity, always wrong — the weeks-34/35 lesson:
+#      a sed pinned to LAST week's literal goes stale at the next bump and
+#      the attack silently stops biting) — the gate's anchor bites BEFORE
+#      anything compiles («المرجع = المنشور»: the week carrying the adapter
+#      declares its own identity).
 #   2) dead guard: PlayProvider.verify neutered to always-true — the
 #      tampered-purchase-text negative STOPS BITING with its expected tag
 #      and the gate fails on it: a verifier that verifies nothing is a
@@ -65,8 +68,8 @@ if [ "$BASE_RC" -ne 0 ] || ! grep -q '^BILLINGGATE_OK' /tmp/bill_base.txt; then
 fi
 echo "baseline: $(grep -m1 '^BILLINGGATE_OK' /tmp/bill_base.txt)"
 
-run_attack "manifest identity tamper (75 -> 74)" \
-  "sed -i 's/android:versionCode=\"75\"/android:versionCode=\"74\"/' AndroidManifest.xml" \
+run_attack "manifest identity tamper (versionCode -> 1, always wrong)" \
+  "sed -i 's/android:versionCode=\"[0-9]*\"/android:versionCode=\"1\"/' AndroidManifest.xml" \
   "BILLINGGATE_FAILED anchor.identity.vc"
 
 run_attack "dead guard (PlayProvider.verify neutered to always-true)" \

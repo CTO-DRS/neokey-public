@@ -4,11 +4,15 @@
 # restored (cp snapshot, restore INSIDE run_attack — the weeks-24/25 lesson)
 # and the gate re-verified GREEN.
 #
-#   1) identity tamper: the pack assembler's week identity 76 -> 75 — the
-#      java gate stays self-consistent (a statement can agree with a lie),
-#      so the BASH anchor bites: the verdict must carry 76 / 2.9, the week
+#   1) identity tamper: the pack assembler's week identity rewritten one
+#      week behind — the java gate stays self-consistent (a statement can
+#      agree with a lie),
+#      so the BASH anchor bites: the verdict must carry 77 / 3.0, the week
 #      published identity («المرجع = المنشور» — the pack's identity is
-#      checked against the week, not against itself).
+#      checked against the week, not against itself). The tamper is
+#      BUMP-INDEPENDENT (any current literal -> 76, always wrong): a sed
+#      pinned to last week's value goes stale at the next bump (the W34
+#      billing proof caught this class of drift; W3 applies it).
 #   2) dead guard: SyncServerPack's jar-sha comparison neutered — the
 #      statement_sha_tampered negative STOPS BITING with its expected tag
 #      and the gate fails on it: a checker that compares nothing is a
@@ -56,8 +60,8 @@ if [ "$BASE_RC" -ne 0 ] || ! grep -q '^DEPLOYSRVGATE_OK' /tmp/ds_base.txt; then
 fi
 echo "baseline: $(grep -m1 '^DEPLOYSRVGATE_OK' /tmp/ds_base.txt)"
 
-run_attack "pack identity tamper (76 -> 75; the statement agrees with the lie, the bash anchor does not)" \
-  "sed -i 's/static final String VC = \"76\";/static final String VC = \"75\";/' tests/com/hark/neokey/SyncServerPack.java" \
+run_attack "pack identity tamper (week identity -> 76, always one behind; the statement agrees with the lie, the bash anchor does not)" \
+  "sed -i 's/static final String VC = \"[0-9]*\";/static final String VC = \"76\";/' tests/com/hark/neokey/SyncServerPack.java" \
   "DEPLOYSRVGATE_FAILED anchor.identity" \
   "cp build/deploysrv-proof-backup/SyncServerPack.java tests/com/hark/neokey/SyncServerPack.java"
 

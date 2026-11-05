@@ -34,7 +34,7 @@
 #                             real pack re-verified green
 #
 #   Verdict: DEPLOYSRVGATE_OK checks=N negatives=4/4 jar_sha256=<16hex>
-#            members=N health_ms=<ms> vc=76 vn=2.9
+#            members=N health_ms=<ms> vc=77 vn=3.0
 #            / DEPLOYSRVGATE_FAILED <reason> (exit 1). Keys appended to
 #            gates.env idempotently (the week-33 hardening).
 set -uo pipefail
@@ -78,7 +78,7 @@ MEMBERS=$(echo "$VERDICT" | grep -oE 'members=[0-9]+' | cut -d= -f2)
 JARSHA=$(echo "$VERDICT" | grep -oE 'jar_sha256=[0-9a-f]+' | cut -d= -f2)
 [ "$JARSHA" = "${JAR_SHA:0:16}" ] || fail "anchor (gate's jar sha $JARSHA != the fresh build ${JAR_SHA:0:16})"
 [ -n "$CHECKS" ] && [ -n "$NEG" ] && [ -n "$MEMBERS" ] || fail "gate (verdict fields unparseable: $VERDICT)"
-echo "$VERDICT" | grep -q "vc=76 vn=2.9" || fail "anchor.identity (the pack statement must carry the week's identity 76 / 2.9 — got: $VERDICT)"
+echo "$VERDICT" | grep -q "vc=77 vn=3.0" || fail "anchor.identity (the pack statement must carry the week's identity 77 / 3.0 — got: $VERDICT)"
 echo "$VERDICT"
 
 # ---- 7: keys for the release manifest (idempotent upsert, week-33 hardening) ------
@@ -89,7 +89,7 @@ sed -i '/^DEPLOYSRV_/d' build/release/gates.env
   echo "DEPLOYSRV_NEGATIVES=$NEG"
   echo "DEPLOYSRV_MEMBERS=$MEMBERS"
   echo "DEPLOYSRV_JAR_SHA256=$JAR_SHA"
-  echo "DEPLOYSRV_VC=76"
-  echo "DEPLOYSRV_VN=2.9"
+  echo "DEPLOYSRV_VC=77"
+  echo "DEPLOYSRV_VN=3.0"
 } >> build/release/gates.env
 exit 0

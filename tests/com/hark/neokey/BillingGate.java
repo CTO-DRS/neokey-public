@@ -15,7 +15,7 @@ import java.util.Map;
  * المعلق الموثق «المزوّد الحقيقي يستبدل SimProvider في StoreActivity فقط»
  * يُقاس هنا بخط واحد: **الاستبدال مُثبَت قبل وجود الحساب**. البوابة تُحقق:
  *
- *   1. المراساة أولاً («المرجع = المنشور»): هوية الأسبوع 76 / 2.9 معلنة
+ *   1. المراساة أولاً («المرجع = المنشور»): هوية الأسبوع 77 / 3.0 معلنة
  *      حرفياً في الـ manifest — الأسبوع الذي يحمل المُحوّل يحمل هويته.
  *   2. النقاء: عقد الدفع صفر android.* — المُحوّل نقي-JVM يتشغَّل في
  *      الاختبار والبوابة دون جهاز، ونقطة الوصل `PurchaseSource` هي امتداد
@@ -30,7 +30,7 @@ import java.util.Map;
  *      orderId — والمُحوّل يرفض البناء نفسه على مفتاح لوحة باطل أو فهرس
  *      أسعار فارغ.
  *
- * الحكم: `BILLINGGATE_OK checks=N negatives=10/10 vc=76 vn=2.9 providers=2`
+ * الحكم: `BILLINGGATE_OK checks=N negatives=10/10 vc=77 vn=3.0 providers=2`
  * / `BILLINGGATE_FAILED <reason>` (exit 1).
  */
 public class BillingGate {
@@ -108,8 +108,8 @@ public class BillingGate {
 
         // ---- 1: المراساة أولاً — هوية الأسبوع في المانيفست الحي -------------
         String mf = new String(Files.readAllBytes(Paths.get("AndroidManifest.xml")), "UTF-8");
-        ck("anchor.vc", mf.contains("android:versionCode=\"76\""), "the week carrying the adapter declares 76");
-        ck("anchor.vn", mf.contains("android:versionName=\"2.9\""), "the week carrying the adapter declares 2.9");
+        ck("anchor.vc", mf.contains("android:versionCode=\"77\""), "the week carrying the adapter declares 77");
+        ck("anchor.vn", mf.contains("android:versionName=\"3.0\""), "the week carrying the adapter declares 3.0");
 
         // ---- 2: النقاء ونقطة الوصل ------------------------------------------
         String src = new String(Files.readAllBytes(Paths.get("src/com/hark/neokey/PaymentProvider.java")), "UTF-8");
@@ -217,6 +217,6 @@ public class BillingGate {
             System.exit(1);
         }
         System.out.println("BILLINGGATE_OK checks=" + checks + " negatives=" + negPass + "/" + negTotal
-                + " vc=76 vn=2.9 providers=2");
+                + " vc=77 vn=3.0 providers=2");
     }
 }
