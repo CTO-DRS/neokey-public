@@ -424,6 +424,14 @@ collect_gates() {
   echo "SIGNEDAPK_VN=$(echo "$SA_LINE" | sed -E 's/.*vn=([0-9.]+) .*apk_sha256.*/\1/')" >> "$GATES"
   echo "SIGNEDAPK_APK_SHA256=$(echo "$SA_LINE" | sed -E 's/.*apk_sha256=([0-9a-f]+).*/\1/')" >> "$GATES"
   echo "SIGNEDAPK_DEX_BYTES=$(echo "$SA_LINE" | sed -E 's/.*dex=([0-9]+)\/[0-9]+.*/\1/')" >> "$GATES"
+  # store-upload-bundle gate numbers (phase 6, week 32)
+  echo "UPLOADBUNDLE_GATE=$(grep -q '^UPLOADBUNDLEGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  UB_LINE=$(grep '^UPLOADBUNDLEGATE_OK' "$LOG" | tail -1)
+  echo "UPLOADBUNDLE_CHECKS=$(echo "$UB_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  echo "UPLOADBUNDLE_NEGATIVES=$(echo "$UB_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
+  echo "UPLOADBUNDLE_MEMBERS=$(echo "$UB_LINE" | sed -E 's/.*members=([0-9]+).*/\1/')" >> "$GATES"
+  echo "UPLOADBUNDLE_EVIDENCE=$(echo "$UB_LINE" | sed -E 's/.*evidence=([0-9]+).*/\1/')" >> "$GATES"
+  echo "UPLOADBUNDLE_APK_SHA256=$(echo "$UB_LINE" | sed -E 's/.*apk_sha256=([0-9a-f]+).*/\1/')" >> "$GATES"
 }
 
 # ---- run the line -------------------------------------------------------------

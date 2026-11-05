@@ -1,4 +1,4 @@
-== uploadbundle negative proof — 2026-11-05T02:29:37Z ==
+== uploadbundle negative proof — 2026-11-05T02:41:54Z ==
 
 --- attack: swapped artifact (rebuilt APK planted as build/NeoKey-2036.apk) (expect: UPLOADBUNDLEGATE_FAILED anchor.apk.sha)
 rc=1
