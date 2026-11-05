@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → uploadbundle → phase4 close → phase5 close → release manifest (32 stages; phase 6 W3 = uploadbundle after signedapk)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle (the week's closing gate; consumes the release rollout plan) (32 stages; phase 6 W3 = uploadbundle LAST)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -483,12 +483,7 @@ if [ -f tools/apksig.jar ] && [ -f tools/aapt2 ] && [ -f tools/android.jar ]; th
 else
   skip_stage "signedapk" "tools/apksig.jar + tools/aapt2 + tools/android.jar missing (see docs/R8.md) — the signed-artifact proof runs where they exist"
 fi
-if [ -f tools/aapt2 ] && [ -f build/NeoKey-2036.apk ] && [ -f build/release/signedapk-statement.json ]; then
-  run_stage "uploadbundle" stage_uploadbundle   # phase 6 W3 (week 32): the store-upload bundle
-else
-  skip_stage "uploadbundle" "needs the signedapk artifact + its statement + aapt2 — runs where the signed artifact lives"
-fi
-collect_gates   # BEFORE the release stage — the manifest must carry the real gate numbers
+collect_gates   # BEFORE the closers/release — they read these keys
 # the closing gates measure THIS run's dex/trim/regression keys — they can only
 # run where the r8 artifact exists (week 31 fix: a JVM-only machine skipped
 # r8/trim/signedapk, so their keys are absent and the closers must SKIP with a
@@ -504,6 +499,17 @@ else
   skip_stage "phase5" "closing gates need the r8 artifact (no r8 tools here) — they re-run where the artifact lives"
 fi
 run_stage "release"  stage_release
+# ---- 3g2e: the week's CLOSING gate (phase 6, week 32) — uploadbundle runs
+# AFTER release on purpose: the bundle consumes release outputs (the staged
+# rollout plan), then collect_gates re-runs so gates.env carries the week's
+# keys and a standalone `ci/release.sh` re-run issues the manifest with the
+# measured uploadBundle block.
+if [ -f tools/aapt2 ] && [ -f build/NeoKey-2036.apk ] && [ -f build/release/signedapk-statement.json ] && [ -f build/release/rollout-plan.json ]; then
+  run_stage "uploadbundle" stage_uploadbundle   # phase 6 W3 (week 32): the store-upload bundle
+  collect_gates   # second pass: gates.env gains the UPLOADBUNDLE_* keys
+else
+  skip_stage "uploadbundle" "needs the signedapk artifact + its statement + aapt2 + the release rollout plan — runs where the signed artifact lives"
+fi
 
 # ---- summary ------------------------------------------------------------------
 note ""

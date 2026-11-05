@@ -62,6 +62,13 @@ jobs:
           ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
           curl -fsSLo "$SDK/bundletool.jar" https://github.com/google/bundletool/releases/download/1.17.0/bundletool-all-1.17.0.jar
           curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar
+          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
+          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
+          curl -fsSLo tools/apksig.jar     https://dl.google.com/dl/android/maven2/com/android/tools/build/apksig/8.5.0/apksig-8.5.0.jar
+          ln -sfn "$SDK/platforms/android-30/android.jar" tools/android.jar
+
+      - name: Install ripgrep (probe + secrets audit require it — week 32 fix — the release job was red weekly on the missing JVM provisions while ci.yml was fixed in week 31)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
 
       - name: Restore signing secrets into the vault layout
         if: steps.sec.outputs.present == 'true'
@@ -141,6 +148,10 @@ jobs:
           ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
           ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
           curl -fsSLo "$SDK/bundletool.jar" https://github.com/google/bundletool/releases/download/1.17.0/bundletool-all-1.17.0.jar
+          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
+          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
+          curl -fsSLo tools/apksig.jar     https://dl.google.com/dl/android/maven2/com/android/tools/build/apksig/8.5.0/apksig-8.5.0.jar
+          ln -sfn "$SDK/platforms/android-30/android.jar" tools/android.jar
 
       - name: Restore signing secrets
         env:
