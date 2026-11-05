@@ -465,9 +465,20 @@ else
   skip_stage "signedapk" "tools/apksig.jar + tools/aapt2 + tools/android.jar missing (see docs/R8.md) — the signed-artifact proof runs where they exist"
 fi
 collect_gates   # BEFORE the release stage — the manifest must carry the real gate numbers
-run_stage "phase3"   stage_phase3   # closing gate reads THIS run's gates.env
-run_stage "phase4"   stage_phase4   # phase 4 W4 (week 25): all phase-4 gates in one line, fresh
-run_stage "phase5"   stage_phase5   # phase 5 W4 (week 29): all phase-5 gates in one line, fresh
+# the closing gates measure THIS run's dex/trim/regression keys — they can only
+# run where the r8 artifact exists (week 31 fix: a JVM-only machine skipped
+# r8/trim/signedapk, so their keys are absent and the closers must SKIP with a
+# documented reason, not fail red — they re-run fully in the release workflow
+# and in the weekly sandbox run where the artifact lives)
+if [ -f tools/r8.jar ] && [ -f tools/android.jar ]; then
+  run_stage "phase3"   stage_phase3   # closing gate reads THIS run's gates.env
+  run_stage "phase4"   stage_phase4   # phase 4 W4 (week 25): all phase-4 gates in one line, fresh
+  run_stage "phase5"   stage_phase5   # phase 5 W4 (week 29): all phase-5 gates in one line, fresh
+else
+  skip_stage "phase3" "closing gates need the r8 artifact (no r8 tools here) — they re-run where the artifact lives"
+  skip_stage "phase4" "closing gates need the r8 artifact (no r8 tools here) — they re-run where the artifact lives"
+  skip_stage "phase5" "closing gates need the r8 artifact (no r8 tools here) — they re-run where the artifact lives"
+fi
 run_stage "release"  stage_release
 
 # ---- summary ------------------------------------------------------------------
