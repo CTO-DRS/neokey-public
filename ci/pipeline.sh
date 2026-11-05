@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight (36 stages; phase 6 closed at stage 33 on week 33; phase 7 W1 = week 34 opens with the billing adapter LAST, W2 = week 35 the deployable pack, W3 = week 36 the operator preflight sheet LAST — it re-runs the four week gates fresh inside itself, so nothing rides a cached verdict)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight → phase7 close (37 stages; phase 6 closed at stage 33 on week 33; phase 7 W1 = week 34 the billing adapter, W2 = week 35 the deployable pack, W3 = week 36 the operator preflight sheet — it re-runs the four week gates fresh inside itself — and W4 = week 37 the CLOSURE LAST: the three phase-7 gates re-run fresh in one line with three-way evidence — nothing rides a cached verdict)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -219,6 +219,13 @@ stage_deploysrv() { ci/deploysrv_gate.sh; }
 # checked against itself (the sheet is the reference).
 stage_preflight() { ci/preflight_gate.sh; }
 
+# ---- 7: the phase-7 CLOSING gate (phase 7 W4, week 37) ------------------------
+# release-manifest.phase7Close; the live check re-runs the three phase-7 gates
+# FRESH in one line (billing/deploysrv/preflight — never cached verdicts) with
+# three-way evidence integrity (the week-21 design, inherited a fourth time)
+# and zero regressions on all 29 previous gate keys.
+stage_phase7() { ci/phase7_gate.sh; }
+
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
 
@@ -260,7 +267,7 @@ collect_gates() {
   # standalone release.sh re-run) saw the closers as NOT_OK/defaults. The pass
   # now snapshots the closers' keys first and re-appends them at the end.
   local CLOSE_KEEP="build/release/.closer-keys.$$"
-  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_|PREFLIGHT_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
+  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_|PREFLIGHT_|PHASE7_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
   # tests totals: sum the RESULT lines of both suites
   local T=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOG" | awk '{p+=$2; f+=$4} END {print p+0, f+0}')
   {
@@ -591,6 +598,17 @@ if command -v javac >/dev/null 2>&1 || [ -f tools/ecj.jar ]; then
   run_stage "preflight" stage_preflight   # phase 7 W3 (week 36): the operator preflight sheet
 else
   skip_stage "preflight" "needs javac/ecj to compile the preflight tool"
+fi
+
+# ---- 7: phase 7 W4 (week 37) — the CLOSURE runs LAST: the three phase-7
+# gates re-run fresh in one line (their re-runs need the r8 artifact the
+# signedapk/uploadbundle gates proved), three-way evidence integrity, and
+# zero regressions on all 29 previous gate keys. The exact close measurement
+# (vc 78 / vn 3.1) is pinned once in release-manifest.phase7Close.
+if [ -f tools/r8.jar ] && [ -f tools/android.jar ]; then
+  run_stage "phase7" stage_phase7   # phase 7 W4 (week 37): the phase-7 closure
+else
+  skip_stage "phase7" "the phase-7 closer re-runs gates that need the r8 artifact — it runs where the artifact lives"
 fi
 
 # ---- summary ------------------------------------------------------------------

@@ -38,8 +38,8 @@ import java.util.TreeMap;
 public final class SyncServerPack {
 
     /** هوية الأسبوع المُجمِّعة — تتحرك مع ترقية الأسبوع (درس المواضع الخمسة). */
-    static final String VC = "77";
-    static final String VN = "3.0";
+    static final String VC = "78";
+    static final String VN = "3.1";
     /** اسم الجرة الحرفي الذي تشير إليه السكربتات والوثيقة — انحرافه = رفض. */
     static final String JAR_NAME = "neokey-sync-server.jar";
     /** الأمران الآليان الحرفيان — نص المعلق الموثق نفسه، والفحص يطابق وجودهما. */

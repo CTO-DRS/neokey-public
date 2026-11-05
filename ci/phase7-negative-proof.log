@@ -1,0 +1,25 @@
+== phase7 negative proof — 2026-11-05T11:49:45Z ==
+
+--- baseline (untampered)
+rc=0
+verdict: PHASE7_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=78 tests=1479/0 negatives=10/10+5/5+4/4 members=6 rows=10 checked=5 outside=5
+
+--- attack: gates.env tamper (PAY_GATE OK -> NOT_OK)
+rc=1
+verdict: PHASE7 regression: PAY_GATE not OK
+verdict: PHASE7_FAILED regressions=1/88 (see PHASE7 regression lines above)
+restored: rc=0 PHASE7_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=78 tests=1479/0 negatives=10/10+5/5+4/4 members=6 rows=10 checked=5 outside=5
+
+--- attack: log+env double tamper (BILLING negatives 10/10 -> 9/10 in both)
+rc=1
+verdict: PHASE7 regression: billing.negatives: pipeline log 9/10 != fresh re-run 10/10
+verdict: PHASE7_FAILED regressions=1/88 (see PHASE7 regression lines above)
+restored: rc=0 PHASE7_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=78 tests=1479/0 negatives=10/10+5/5+4/4 members=6 rows=10 checked=5 outside=5
+
+--- attack: phase-7 module hidden (PreflightGate.java -> /tmp)
+rc=1
+verdict: PHASE7_FAILED preflight (rc=1, verdict missing)
+restored: rc=0 PHASE7_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=78 tests=1479/0 negatives=10/10+5/5+4/4 members=6 rows=10 checked=5 outside=5
+
+== PROOF PASSED: all three attacks bit with their own tags, all files restored, final gate green ==
+PHASE7_OK gates=3/3 regressions=0/88 dex=505636/512000 vc=78 tests=1479/0 negatives=10/10+5/5+4/4 members=6 rows=10 checked=5 outside=5

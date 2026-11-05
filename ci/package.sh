@@ -14,8 +14,14 @@ SEC_ZIP="${2:-build/neokey-secrets.zip}"
 
 # ---- clean, shareable app zip -------------------------------------------------
 rm -f "$APP_ZIP" "$SEC_ZIP"
+# the week deliverables (older app/evidence zips, patches) are RELEASE assets,
+# not tree content — nesting them inside the app zip doubles the size with
+# zip-in-zip bytes that never recompress (the W37 packaging hardening; the
+# published week-36 asset already shipped without them)
 zip -qr "$APP_ZIP" . \
   -x '.secrets/*' 'build/*' 'tools/*.jar' '.git/*' '*.apk' '*.aab' '*.env' 'play/promo/tmp/*' \
+  'neokey-app-week*.zip' 'neokey-evidence-week*.zip' 'neokey-patch-week*.patch' \
+  'neokey-app.zip' 'neokey-secrets.zip' \
   'dictsrc/corpus/news_*' 'dictsrc/corpus/train_pairs.tsv' 'dictsrc/corpus/dev_pairs.tsv' 'dictsrc/corpus/w10-ckpt-*.npz' "dictsrc/corpus/news.2020.ar.gz"
 
 # ---- post-pack scan: the two real secret files must not be inside -------------
