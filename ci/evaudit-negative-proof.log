@@ -1,0 +1,20 @@
+== evaudit negative proof — 2026-11-05T20:23:13Z ==
+baseline: EVAUDITGATE_OK checks=19 negatives=12/12 members=27 proofs=21 vc=80 vn=3.3 tests=1530/0 dex=505636
+
+--- attack: anchor.identity_tamper
+bit: EVAUDITGATE_FAILED anchor.identity.vc (manifest declares 79 — the audit week is 80)
+restored: green re-verify OK (EVAUDITGATE_OK checks=19 negatives=12/12 members=27 proofs=21 vc=80 vn=3.3 tests=1530/0 dex=505636)
+
+--- attack: ledger.billing_checks_forged
+bit: EVAUDIT regression: audit.real_inputs (the live archive audits green [env.billing_checks_mismatch])
+restored: green re-verify OK (EVAUDITGATE_OK checks=19 negatives=12/12 members=27 proofs=21 vc=80 vn=3.3 tests=1530/0 dex=505636)
+
+--- attack: proof.emptied
+bit: EVAUDIT regression: audit.real_inputs (the live archive audits green [proof.not_passed billing-negative-proof.log])
+restored: green re-verify OK (EVAUDITGATE_OK checks=19 negatives=12/12 members=27 proofs=21 vc=80 vn=3.3 tests=1530/0 dex=505636)
+
+--- attack: deadguard.lawIdentity_neutered
+bit: EVAUDITGATE_FAILED regressions=1/19 (see EVAUDIT regression lines above)
+restored: green re-verify OK (EVAUDITGATE_OK checks=19 negatives=12/12 members=27 proofs=21 vc=80 vn=3.3 tests=1530/0 dex=505636)
+
+== PROOF PASSED: all four attacks bit with their own tags, all files restored, final gate green ==

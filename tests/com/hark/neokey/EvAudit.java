@@ -239,7 +239,11 @@ public class EvAudit {
 
     // ---- الحزم: أرشيف حتمي بلا طوابع زمن -------------------------------------
 
-    /** يجمع أرشيف الأدلة من مصادر التشغيل الحية — يجمع لا يقرر. */
+    /** يجمع أرشيف الأدلة من مصادر التشغيل الحية — يجمع لا يقرر. سجل إثبات
+     *  المدقق ذاته يُستثنى استثناءً موثقاً: لا يمكن للأرشيف أن يحمل إثبات
+     *  البوابة التي تحزمه دون تزوير ذاتي (يكتب في التشغيل ذاته) — هو محفوظ
+     *  في مستوى المستودع (ci/evaudit-negative-proof.log) وفي حزمة الأسبوع،
+     *  وقارئ الأرشيف يتحقق منه هناك. */
     public static String pack(Path archiveDir, Path pipelineLog, Path releaseDir, Path ciDir) throws IOException {
         for (Path src : new Path[]{pipelineLog, releaseDir, ciDir})
             if (!Files.exists(src)) refuse("pack.source_missing " + src);
@@ -264,7 +268,11 @@ public class EvAudit {
                 return a.getFileName().toString().compareTo(b.getFileName().toString());
             }
         });
-        for (Path p : proofs) copies.add(new String[]{p.toString(), p.getFileName().toString()});
+        for (Path p : proofs) {
+            String n = p.getFileName().toString();
+            if (n.equals("evaudit-negative-proof.log")) continue; // لا إثبات ذاتي — انظر أعلاه
+            copies.add(new String[]{p.toString(), n});
+        }
         List<String> names = new ArrayList<String>();
         for (String[] c : copies) {
             Path src = Paths.get(c[0]);

@@ -27,6 +27,16 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
+# the proof writes itself to a TEMP file and moves into ci/ ONLY when
+# complete — the gate must never see its own mid-write proof (the
+# self-reference this proof caught live: an in-progress log is not
+# evidence). pack() also skips evaudit-negative-proof.log by design, so
+# the auditor never carries a self-proof; the committed file + the week
+# package are where the reader verifies it.
+PROOF_TMP=/tmp/evaudit-proof-in-progress.log
+rm -f ci/evaudit-negative-proof.log
+exec > "$PROOF_TMP" 2>&1
+
 FAILED=0
 
 echo "== evaudit negative proof — $(date -u +"%Y-%m-%dT%H:%M:%SZ") =="
@@ -39,6 +49,10 @@ cp ci/billing-negative-proof.log build/evaudit-proof-backup/billing-negative-pro
 cp tests/com/hark/neokey/EvAudit.java build/evaudit-proof-backup/EvAudit.java
 
 gate() { bash ci/evaudit_gate.sh > "$1" 2>&1; echo $?; }
+# the proof writes to a TEMP file and moves into ci/ only when complete —
+# the gate must never pack its own mid-write proof (the self-reference the
+# proof caught live: an in-progress log is not evidence)
+PROOF_OUT=/tmp/evaudit-proof-in-progress.log
 
 run_attack() { # $1 name, $2 attacker (bash), $3 expected line (grep -E)
   local name="$1" attacker="$2" expect="$3"
@@ -97,7 +111,11 @@ run_attack "deadguard.lawIdentity_neutered" \
 if [ "$FAILED" -ne 0 ]; then
   echo ""
   echo "PROOF FAILED: an attack did not bite, a restore did not heal — see above"
+  mv "$PROOF_TMP" ci/evaudit-negative-proof.log
   exit 1
 fi
 echo ""
 echo "== PROOF PASSED: all four attacks bit with their own tags, all files restored, final gate green =="
+# the completed proof moves into place ONLY now — a later gate run packs it
+# never (pack skips it by design); the reader verifies it at repo level
+mv "$PROOF_TMP" ci/evaudit-negative-proof.log
