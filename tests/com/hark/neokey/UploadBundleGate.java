@@ -63,8 +63,8 @@ import java.util.regex.Pattern;
 public final class UploadBundleGate {
     private UploadBundleGate() {}
 
-    static final String EXPECTED_VC = "75";
-    static final String EXPECTED_VN = "2.8";
+    static final String EXPECTED_VC = "76";
+    static final String EXPECTED_VN = "2.9";
 
     static int CHECKS = 0;
     static int NEG_OK = 0;

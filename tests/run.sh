@@ -72,6 +72,7 @@ java -cp build/test:$JAR com.hark.neokey.CommunityDictTest
 java -cp build/test:$JAR com.hark.neokey.StoreUiTest
 java -cp build/test:$JAR com.hark.neokey.PaymentProviderTest
 java -cp build/test:$JAR com.hark.neokey.PlayProviderTest
+java -cp build/test:$JAR com.hark.neokey.SyncServerPackTest
 java -cp build/test:$JAR com.hark.neokey.DictSignTest
 java -cp build/test:$JAR com.hark.neokey.EntitlementTest
 java -cp build/test:$JAR com.hark.neokey.SyncServerContractTest

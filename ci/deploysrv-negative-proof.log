@@ -1,0 +1,17 @@
+== deploysrv negative proof — 2026-11-05T09:37:13Z ==
+baseline: DEPLOYSRVGATE_OK checks=24 negatives=5/5 jar_sha256=faad7b7a0a324e45 members=6 health_ms=958 vc=76 vn=2.9
+
+--- attack: pack identity tamper (76 -> 75; the statement agrees with the lie, the bash anchor does not)
+bit: DEPLOYSRVGATE_FAILED anchor.identity (the pack statement must carry the week's identity 76 / 2.9 — got: DEPLOYSRVGATE_OK checks=24 negatives=5/5 jar_sha256=d9d4b849186294e4 members=6 health_ms=906 vc=75 vn=2.9)
+restored: green re-verify OK (DEPLOYSRVGATE_OK checks=24 negatives=5/5 jar_sha256=e9d3a4eedaf69b32 members=6 health_ms=858 vc=76 vn=2.9)
+
+--- attack: dead guard (the pack checker's jar-sha comparison neutered)
+bit: DEPLOYSRV regression: neg.statement_sha_tampered (got: NO_REFUSAL)
+restored: green re-verify OK (DEPLOYSRVGATE_OK checks=24 negatives=5/5 jar_sha256=6d1e0cd00fd4e24a members=6 health_ms=874 vc=76 vn=2.9)
+
+--- attack: hidden assembler (SyncServerPack.java removed)
+bit: DEPLOYSRVGATE_FAILED compile
+restored: green re-verify OK (DEPLOYSRVGATE_OK checks=24 negatives=5/5 jar_sha256=57c9c3d8e1ee7bef members=6 health_ms=826 vc=76 vn=2.9)
+
+== PROOF PASSED: all three attacks bit with their own tags, all files restored, final gate green ==
+DEPLOYSRVGATE_OK checks=24 negatives=5/5 jar_sha256=d08a27b15f2cfe61 members=6 health_ms=885 vc=76 vn=2.9

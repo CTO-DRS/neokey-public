@@ -10,7 +10,7 @@
 #                             PlayProvider) + PlayProviderTest + BillingGate
 #     2. THE ANCHOR FIRST   — the SHIPPED artifact (build/NeoKey-2036.apk,
 #                             badging via aapt2) must carry THIS week's
-#                             identity (75 / 2.8) — the week carrying the
+#                             identity (76 / 2.9) — the week carrying the
 #                             adapter declares it («المرجع = المنشور»: the
 #                             manifest the console sees is the manifest the
 #                             gate pins, byte-for-byte)
@@ -20,7 +20,7 @@
 #                             law) + TEN designed negatives each biting its
 #                             exact tag + construction refusals.
 #
-#   Verdict: BILLINGGATE_OK checks=N negatives=10/10 vc=75 vn=2.8 providers=2
+#   Verdict: BILLINGGATE_OK checks=N negatives=10/10 vc=76 vn=2.9 providers=2
 #            / BILLINGGATE_FAILED <reason> (exit 1). Keys are appended to
 #            gates.env idempotently (the week-33 hardening: no block piling).
 set -uo pipefail
@@ -50,8 +50,8 @@ fi || fail "compile"
 # on the shipped APK == the manifest == the gate's pinned literals.
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
-[ "$VC" = "75" ] || fail "anchor.identity.vc (manifest declares $VC — the billing week is 75)"
-[ "$VN" = "2.8" ] || fail "anchor.identity.vn (manifest declares $VN — the billing week is 2.8)"
+[ "$VC" = "76" ] || fail "anchor.identity.vc (manifest declares $VC — the billing week is 76)"
+[ "$VN" = "2.9" ] || fail "anchor.identity.vn (manifest declares $VN — the billing week is 2.9)"
 [ -f build/NeoKey-2036.apk ] || fail "anchor.apk.missing (run the build stage first)"
 AAPT2=""
 for d in "${NEOKEY_TOOLS:-}" ./tools /workspace/work; do
@@ -59,9 +59,9 @@ for d in "${NEOKEY_TOOLS:-}" ./tools /workspace/work; do
 done
 [ -n "$AAPT2" ] || fail "anchor.badging (aapt2 missing)"
 BADGE=$("$AAPT2" dump badging build/NeoKey-2036.apk | head -1)
-echo "$BADGE" | grep -q "versionCode='75'" || fail "anchor.badging.vc (want 75: $BADGE)"
-echo "$BADGE" | grep -q "versionName='2.8'" || fail "anchor.badging.vn (want 2.8: $BADGE)"
-echo "ANCHOR_OK build/NeoKey-2036.apk badging vc=75 vn=2.8 (the artifact and the manifest agree)"
+echo "$BADGE" | grep -q "versionCode='76'" || fail "anchor.badging.vc (want 76: $BADGE)"
+echo "$BADGE" | grep -q "versionName='2.9'" || fail "anchor.badging.vn (want 2.9: $BADGE)"
+echo "ANCHOR_OK build/NeoKey-2036.apk badging vc=76 vn=2.9 (the artifact and the manifest agree)"
 
 # ---- 3: THE GATE ----------------------------------------------------------------
 V=$(java -cp "$OUT" com.hark.neokey.BillingGate) || { echo "$V" | grep -E "^(BILLING regression|NEG-OK|BILLINGGATE_FAILED)" || echo "$V" | tail -5; fail "gate"; }
