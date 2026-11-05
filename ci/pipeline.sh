@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight → phase7 close → rebuild → evaudit (39 stages; phase 6 closed at stage 33 on week 33, phase 7 closed at stage 37 on week 37, phase 8 W1 = week 38 the REBUILD DRILL at 38, phase 8 W2 = week 39 the WEEK EVIDENCE AUDITOR LAST: this run's evidence archive packed deterministically + four law layers (member integrity, log shape, verdict↔ledger cross-check, identity consensus + the saved-negative-proof law) + twelve exact-tag negatives — the archive is verified, not trusted; NEOKEY_REBUILD_INNER=1 omits the drill inside the inner run)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight → phase7 close → rebuild → evaudit → opverify (40 stages; phase 6 closed at stage 33 on week 33, phase 7 closed at stage 37 on week 37, phase 8 W1 = week 38 the REBUILD DRILL at 38, phase 8 W2 = week 39 the WEEK EVIDENCE AUDITOR: this run's evidence archive packed deterministically + four law layers (member integrity, log shape, verdict↔ledger cross-check, identity consensus + the saved-negative-proof law) + twelve exact-tag negatives — the archive is verified, not trusted; phase 8 W3 = week 40 the OPERATOR-OUTPUT VERIFIER LAST: the outputs of the documented outside steps (pendings #1/#2) become machine-verifiable — the Provision letter against the published deployment shape, the transferred pack re-verified before any run, the StoreActivity swap line as a gated line with its published identity + twelve exact-tag negatives; NEOKEY_REBUILD_INNER=1 omits the drill inside the inner run)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -267,7 +267,7 @@ collect_gates() {
   # standalone release.sh re-run) saw the closers as NOT_OK/defaults. The pass
   # now snapshots the closers' keys first and re-appends them at the end.
   local CLOSE_KEEP="build/release/.closer-keys.$$"
-  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_|PREFLIGHT_|PHASE7_|REBUILD_|EVAUDIT_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
+  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_|PREFLIGHT_|PHASE7_|REBUILD_|EVAUDIT_|OPVERIFY_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
   # tests totals: sum the RESULT lines of both suites
   local T=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOG" | awk '{p+=$2; f+=$4} END {print p+0, f+0}')
   {
@@ -640,6 +640,24 @@ if command -v javac >/dev/null 2>&1 || [ -f tools/ecj.jar ]; then
   run_stage "evaudit" stage_evaudit
 else
   skip_stage "evaudit" "needs javac/ecj to compile the evidence auditor"
+fi
+
+# ---- 10: phase 8 W3 (week 40) — the OPERATOR-OUTPUT VERIFIER runs LAST: the
+# outputs of the documented outside steps become machine-verifiable (pendings
+# #1/#2, external by nature — no pretending): the Provision letter (the
+# emitted NetGate.setSyncPins literal + the neokey-provision-1 statement)
+# verified against the published deployment shape (a fresh arena run is the
+# reference), the transferred pack re-verified BEFORE any run through the
+# same SyncServerPack.check that proved it (the one-derivation law), and the
+# StoreActivity swap line documented as a GATED LINE with its published
+# identity (literal text + sha256) — an edited copy must touch exactly that
+# line. TWELVE exact-tag negatives on temp dirty copies. Its keys ride the
+# closer-key snapshot (OPVERIFY_ in CLOSE_KEEP) since day one.
+stage_opverify() { ci/opverify_gate.sh; }
+if command -v javac >/dev/null 2>&1 || [ -f tools/ecj.jar ]; then
+  run_stage "opverify" stage_opverify   # phase 8 W3 (week 40): the operator-output verifier
+else
+  skip_stage "opverify" "needs javac/ecj to compile the verifier"
 fi
 
 # ---- summary ------------------------------------------------------------------

@@ -116,6 +116,10 @@ public class EvAudit {
         {"PHASE7_OK", "regressions", "PHASE7_REGRESSIONS"},
         {"PHASE7_OK", "vc", "PHASE7_VC"},
         {"PHASE7_OK", "tests", "PHASE7_TESTS"},
+        {"OPVERIFYGATE_OK", "checks", "OPVERIFY_CHECKS"},
+        {"OPVERIFYGATE_OK", "negatives", "OPVERIFY_NEGATIVES"},
+        {"OPVERIFYGATE_OK", "vc", "OPVERIFY_VC"},
+        {"OPVERIFYGATE_OK", "vn", "OPVERIFY_VN"},
     };
 
     /** سطر الحكم ← سجل الإثبات السلبي المحفوظ الإلزامي (القانون لا النصيحة). */
@@ -138,6 +142,7 @@ public class EvAudit {
         {"RESTGATE_OK", "rest-negative-proof.log"},
         {"KSDRILLGATE_OK", "ksdrill-negative-proof.log"},
         {"ENTGATE_OK", "entitlement-negative-proof.log"},
+        {"OPVERIFYGATE_OK", "opverify-negative-proof.log"},
     };
 
     static int checks, reg, negPass, negTotal;
@@ -463,7 +468,7 @@ public class EvAudit {
                                 String expectVc, String expectVn) throws IOException {
         Set<String> vcs = new LinkedHashSet<String>();
         Set<String> vns = new LinkedHashSet<String>();
-        String[] idLines = {"BILLINGGATE_OK", "DEPLOYSRVGATE_OK", "PREFLIGHTGATE_OK", "REBUILDGATE_OK"};
+        String[] idLines = {"BILLINGGATE_OK", "DEPLOYSRVGATE_OK", "PREFLIGHTGATE_OK", "REBUILDGATE_OK", "OPVERIFYGATE_OK"};
         for (String p : idLines) {
             String line = verdictLine(s, p);
             if (line == null) continue;
@@ -472,7 +477,8 @@ public class EvAudit {
             if (vn != null) vns.add(vn);
         }
         String[][] idKeys = {{"BILLING_VC", "BILLING_VN"}, {"DEPLOYSRV_VC", "DEPLOYSRV_VN"},
-                {"PREFLIGHT_VC", "PREFLIGHT_VN"}, {"REBUILD_VC", "REBUILD_VN"}, {"PHASE7_VC", null}};
+                {"PREFLIGHT_VC", "PREFLIGHT_VN"}, {"REBUILD_VC", "REBUILD_VN"}, {"PHASE7_VC", null},
+                {"OPVERIFY_VC", "OPVERIFY_VN"}};
         for (String[] k : idKeys) {
             if (env.get(k[0]) != null) vcs.add(env.get(k[0]));
             if (k[1] != null && env.get(k[1]) != null) vns.add(env.get(k[1]));

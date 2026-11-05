@@ -9,7 +9,7 @@
 #   pretending — the archive is verified, not trusted.
 #
 #     1. THE ANCHOR IS THE FIRST BARRIER (المرجع = المنشور): the week's
-#        published identity (80 / 3.3) is pinned here and checked against
+#        published identity (81 / 3.4) is pinned here and checked against
 #        the live manifest before anything is packed.
 #     2. THE PACK: EvAudit.pack builds THIS run's evidence archive
 #        (build/evaudit/archive) deterministically — no timestamps: the
@@ -29,7 +29,7 @@
 #        re-verifies green.
 #
 #   Verdict: `EVAUDITGATE_OK checks=N negatives=12/12 members=M proofs=P/P
-#   vc=80 vn=3.3 tests=T/F dex=D/512000` / `EVAUDITGATE_FAILED <reason>`
+#   vc=81 vn=3.4 tests=T/F dex=D/512000` / `EVAUDITGATE_FAILED <reason>`
 #   (exit 1). The verdict line carries NO run shape (mid/complete) so a
 #   standalone re-run after a pipeline byte-equals the pipeline's line
 #   (the equality law below). Keys are appended to gates.env idempotently
@@ -43,8 +43,8 @@ STATE=build/release/gates.env
 LOGF=build/pipeline.log
 
 # ---- 0: THE ANCHOR — المرجع = المنشور ----------------------------------------
-PUB_VC=80
-PUB_VN=3.3
+PUB_VC=81
+PUB_VN=3.4
 
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)

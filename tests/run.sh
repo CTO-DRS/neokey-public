@@ -76,6 +76,7 @@ java -cp build/test:$JAR com.hark.neokey.SyncServerPackTest
 java -cp build/test:$JAR com.hark.neokey.PreflightTest
 java -cp build/test:$JAR com.hark.neokey.RebuildDrillTest
 java -cp build/test:$JAR com.hark.neokey.EvAuditTest
+java -cp build/test:$JAR com.hark.neokey.OpVerifyTest
 java -cp build/test:$JAR com.hark.neokey.DictSignTest
 java -cp build/test:$JAR com.hark.neokey.EntitlementTest
 java -cp build/test:$JAR com.hark.neokey.SyncServerContractTest
