@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.hark.neokey"
-    android:versionCode="72"
-    android:versionName="2.5">
+    android:versionCode="73"
+    android:versionName="2.6">
 
     <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35" />
+    <!-- week 32 (phase 6 W3): the duplicate VIBRATE declaration (lines 8+11, a
+         latent defect since week 1) is REMOVED — the upload-bundle data-safety
+         derivation refuses duplicates (safety.duplicate): one permission, one
+         answer, and the console form would double-count it. -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.VIBRATE" />
 
     <queries>
         <intent>

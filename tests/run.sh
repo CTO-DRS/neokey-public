@@ -76,6 +76,7 @@ java -cp build/test:$JAR com.hark.neokey.EntitlementTest
 java -cp build/test:$JAR com.hark.neokey.SyncServerContractTest
 java -cp build/test:$JAR com.hark.neokey.SpkiPinsTest
 java -cp build/test:$JAR com.hark.neokey.ProvisionTest
+java -cp build/test:$JAR com.hark.neokey.UploadBundleTest
 if [ -n "${APKSIG_SUITE:-}" ]; then
   java -cp build/test:$JAR $APKSIG_SUITE
 else

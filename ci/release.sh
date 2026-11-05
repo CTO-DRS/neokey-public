@@ -25,6 +25,8 @@ PERF_OBJ="{${PERF_JSON:-}}"
 ARTIFACT_APK="pending (the owner re-signs with the real keystore — same two commands)"
 ARTIFACT_AAB="pending (built on the release machine / release CI)"
 [ -f build/NeoKey-2036.apk ] && ARTIFACT_APK="build/NeoKey-2036.apk (SIGNED, drill stand-in identity — verified v1+v2, sha256 in gates.signedApk)"
+UPLOADBUNDLE_BUNDLE_LINE=""
+[ "${UPLOADBUNDLE_GATE:-}" = "OK" ] && UPLOADBUNDLE_BUNDLE_LINE="build/upload/bundle (week 32 — gate-verified: $UPLOADBUNDLE_MEMBERS members, data-safety derived from the manifest, listing coupled to live ui_en keys, statement neokey-uploadbundle-1)"
 
 # R8 Full Mode (item C) — present when the shrink gate ran
 R8_BLOCK=""
@@ -116,6 +118,12 @@ if [ "${SIGNEDAPK_GATE:-}" = "OK" ]; then
   SIGNEDAPK_BLOCK=$',\n    "signedApk": { "verifiedBy": "ci/signedapk_gate.sh", "contract": "docs/PHASE6-W2-REPORT.md", "pendingSlice": "the ARTIFACT half of the restore-signing-secrets pending — the full APK assembled offline (aapt2 link — real resources, restored week 31 after the W22 trim had dropped the identity strings; align: dex injected, arsc stored + 4-byte aligned), signed v1+v2 with the drill stand-in via Google apksig and verified end-to-end; the owner swaps in the real (W28-validated) keystore and runs the SAME two commands", "anchorFp16": "'"${SIGNEDAPK_FP16:-}"'", "v1": '"${SIGNEDAPK_V1:-0}"', "v2": '"${SIGNEDAPK_V2:-0}"', "artifactVersionCode": "'"${SIGNEDAPK_VC:-}"'", "artifactVersionName": "'"${SIGNEDAPK_VN:-}"'", "apkSha256": "'"${SIGNEDAPK_APK_SHA256:-}"'", "dexBytes": '"${SIGNEDAPK_DEX_BYTES:-0}"', "dexCeiling": 512000, "checks": '"${SIGNEDAPK_CHECKS:-0}"', "negativesRefused": "'"${SIGNEDAPK_NEGATIVES:-0}"'", "statement": "build/release/signedapk-statement.json (deterministic schema neokey-signedapk-1)", "negativeProof": "ci/signedapk-negative-proof.log" }'
 fi
 
+# Upload-bundle gate (phase 6, week 3 — week 32) — present when the gate ran
+UPLOADBUNDLE_BLOCK=""
+if [ "${UPLOADBUNDLE_GATE:-}" = "OK" ]; then
+  UPLOADBUNDLE_BLOCK=$',\n    "uploadBundle": { "verifiedBy": "ci/uploadbundle_gate.sh", "contract": "docs/PHASE6-W3-REPORT.md", "pendingSlice": "the locally-closable slice of the store-upload pending — ONE verifiable bundle: the signed artifact (anchored byte-for-byte to the signedapk statement BEFORE assembly), mapping.txt, ar/en listing re-measured by the play-gate parser, every listing claim coupled to a LIVE ui_en.txt key, data-safety answers DERIVED from the actually-declared manifest permissions (duplicates refused; no answer without a declaration; collected=false everywhere), privacy policy, staged rollout plan, deterministic statement neokey-uploadbundle-1", "members": '"${UPLOADBUNDLE_MEMBERS:-0}"', "uiEvidence": '"${UPLOADBUNDLE_EVIDENCE:-0}"', "checks": '"${UPLOADBUNDLE_CHECKS:-0}"', "negativesRefused": "'"${UPLOADBUNDLE_NEGATIVES:-0}"'", "apkSha256": "'"${UPLOADBUNDLE_APK_SHA256:-}"'", "negativeProof": "ci/uploadbundle-negative-proof.log" }'
+fi
+
 # Phase-3 closing gate (phase 3, week 4) — present when the closing gate ran
 PHASE3_BLOCK=""
 if [ "${PHASE3_GATE:-}" = "OK" ]; then
@@ -150,9 +158,9 @@ cat > "$OUT/release-manifest.json" <<EOF
   "gates": {
     "secretsAudit": "$AUDIT",
     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PROVISION_BLOCK$SIGNEDAPK_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK$PHASE5_BLOCK
+    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK$REST_BLOCK$TLS_BLOCK$DEPLOY_BLOCK$KSDRILL_BLOCK$PROVISION_BLOCK$SIGNEDAPK_BLOCK$UPLOADBUNDLE_BLOCK$PAY_BLOCK$PHASE3_BLOCK$TRIM_BLOCK$PHASE4_BLOCK$PHASE5_BLOCK
   },
-  "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
+  "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB", "uploadBundle": "${UPLOADBUNDLE_BUNDLE_LINE:-pending (the uploadbundle gate assembles it: build/upload/bundle — signed APK + mapping + ar/en listing + data-safety + privacy + rollout plan)}" },
   "signedBy": "the signed-ARTIFACT path is proven automation (week 31: apksig v1+v2 on the drill stand-in, fp-pinned, 14 checks + 6/6 negatives); the release signature itself = the owner restores the real keystore (W28 procedure) and re-runs the same two commands — secrets never leave the vault"
 }
 EOF
@@ -186,7 +194,7 @@ cat > "$OUT/store-readiness.json" <<EOF
   "pendingOutsideThisEnvironment": [
     "real payment provider (Play Billing) — replaces PaymentProvider.SimProvider in StoreActivity only",
     "live sync server deployment with TLS on a real domain — what remains is EXACTLY: buying the domain + the CA certificate, then running the two automated commands (Provision → the emitted NetGate.setSyncPins literal); the pin-setting decision procedure is automated and bite-proven (week 30: two published-pin anchors + SAN/chain/validity checks + renewal-transparency and key-rotation wire drill; a valid-but-foreign chain is caught by the published literal, not by internal consistency)",
-    "store developer accounts + actual store upload (rollout plan ready)",
+    "store developer accounts + the upload click itself — the BUNDLE is assembled, coupled and gate-verified since week 32 (uploadbundle_gate): signed APK, mapping, ar/en listing, manifest-derived data-safety, privacy policy, staged rollout plan; what remains is the account and the console click",
     "keystore secrets restore from the encrypted backup before any signed build — BOTH halves automated and proven (the DECISION: week-28 drill, anchor + 8 negatives on a stand-in; the ARTIFACT: week-31 signed APK, apksig v1+v2, 14 checks + 6/6 negatives, deterministic); the actual restore stays with the owner, who then runs the same two release commands",
     "real-device matrix + MAU numbers"
   ]
@@ -198,6 +206,7 @@ cat > "$OUT/store-readiness.txt" <<EOF
 ════════════════════════════════════════════════════════════
  البند            الحالة (بوابة التحقيق + القياس)
 ────────────────────────────────────────────────────────────
+ حزمة الرفع       مجمّعة ومتحقق منها — uploadbundle_gate (${UPLOADBUNDLE_MEMBERS:-0} أعضاء، ${UPLOADBUNDLE_CHECKS:-0} فحصاً، ${UPLOADBUNDLE_NEGATIVES:-0} سلبية) — الباقي: الحساب والنقرة
  قائمة المتجر     جاهزة — play_gate (${PLAY_name_ar:-0}/30 اسم عربي، ${PLAY_short_ar:-0}/80 وصف قصير، ${PLAY_full_ar:-0}/4000 وصف كامل + الإنجليزية)
  البناء والتصغير  R8 Full Mode أخضر — dex ${R8_DEX_BYTES:-0}/${TRIM_CEILING:-512000} بايت (تقليم حقيقي مفروض) + mapping.txt
  الدفع            العقد قياسي مثبت — PaymentProvider نقطة الاستبدال الوحيدة، دفتر ينغلق ${PAY_LEDGER_CLOSES:-0} سنتاً، إثبات سلبي 12 هجمة (المزوّد الحقيقي قرار نشر)
@@ -211,7 +220,7 @@ cat > "$OUT/store-readiness.txt" <<EOF
  خارج هذه البيئة (موثق لا منسي):
   • مزوّد دفع حقيقي (يستبدل SimProvider في StoreActivity فقط)
   • نشر خادم مزامنة حي بنطاق حقيقي + TLS — الباقي بالضبط: شراء النطاق + شهادة CA، ثم الأمران الآليان؛ إجراء ضبط الدبابيس والدوران آلي وعضّال (الأسبوع 30: مرساتان بدبوسين منشورين + تدريب تجديد/دوران على السلك)
-  • حسابات متاجر + رفع فعلي (الخطة جاهزة)
+  • حسابات متاجر + نقطة الرفع نفسها — الحزمة نفسها مجمّعة ومتحقق منها منذ الأسبوع 32 (أرتقف موقَّع + mapping + قائمة ar/en + سلامة بيانات مشتقة من الأذونات + خصوصية + خطة طرح)
   • استعادة أسرار التوقيع من النسخة المشفرة قبل أي بناء موقّع — النصفان آليان ومثبتان (القرار: تدريب الأسبوع 28 مرساة + 8 سلبية؛ الأرتقف: الأسبوع 31 APK موقّع v1+v2 عبر apksig على المخزن البديل، 14 فحصاً + 6/6 سلبية، أرتقف حتمي) — والاستعادة الفعلية تبقى بيد المالك الذي يشغّل الأمرين نفسَيهما
   • أجهزة حقيقية + أرقام استخدام
 ════════════════════════════════════════════════════════════

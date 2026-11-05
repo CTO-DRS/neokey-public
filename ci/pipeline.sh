@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → phase4 close → phase5 close → release manifest (31 stages; phase 6 W2 = signedapk after trim)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → uploadbundle → phase4 close → phase5 close → release manifest (32 stages; phase 6 W3 = uploadbundle after signedapk)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -180,6 +180,17 @@ stage_phase5() { ci/phase5_gate.sh; }
 # the owner re-runs the SAME two commands with the real (W28-validated)
 # keystore. Anchor first (published fingerprint), then 14 checks + 6 negatives.
 stage_signedapk() { ci/signedapk_gate.sh; }
+
+# ---- 3g2e: store-upload-bundle gate (phase 6, week 3 — week 32) ---------------
+# The locally-closable slice of the "store accounts + actual upload" pending:
+# ONE verifiable upload bundle — the signed artifact (anchored to the W31
+# statement byte-for-byte BEFORE assembly), the deobfuscation mapping, the
+# ar/en listing re-measured by the SAME parser as the weekly play gate, every
+# listing claim coupled to a LIVE ui_en.txt key, data-safety answers DERIVED
+# from the actually-declared manifest permissions (duplicates refused, no
+# answer without a declaration), the privacy policy and the staged rollout
+# plan — and a gate that refuses anything missing or inconsistent.
+stage_uploadbundle() { ci/uploadbundle_gate.sh; }
 
 # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
 stage_build() { ci/build_unsigned.sh; }
@@ -463,6 +474,11 @@ if [ -f tools/apksig.jar ] && [ -f tools/aapt2 ] && [ -f tools/android.jar ]; th
   run_stage "signedapk" stage_signedapk   # phase 6 W2 (week 31): the signed artifact
 else
   skip_stage "signedapk" "tools/apksig.jar + tools/aapt2 + tools/android.jar missing (see docs/R8.md) — the signed-artifact proof runs where they exist"
+fi
+if [ -f tools/aapt2 ] && [ -f build/NeoKey-2036.apk ] && [ -f build/release/signedapk-statement.json ]; then
+  run_stage "uploadbundle" stage_uploadbundle   # phase 6 W3 (week 32): the store-upload bundle
+else
+  skip_stage "uploadbundle" "needs the signedapk artifact + its statement + aapt2 — runs where the signed artifact lives"
 fi
 collect_gates   # BEFORE the release stage — the manifest must carry the real gate numbers
 # the closing gates measure THIS run's dex/trim/regression keys — they can only
