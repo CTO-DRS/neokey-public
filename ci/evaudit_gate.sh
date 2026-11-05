@@ -113,11 +113,18 @@ sed -i '/^EVAUDIT_/d' "$STATE"
 [ "${EVAUDIT_TESTS:-}" = "$TPF" ]     || fail "env.evaudit_tests ${EVAUDIT_TESTS:-?} != fresh $TPF"
 [ "${EVAUDIT_VC:-}" = "$PUB_VC" ]     || fail "env.evaudit_vc ${EVAUDIT_VC:-?} != $PUB_VC"
 # equality 2: any EVAUDITGATE_OK line already in the outer log (a standalone
-# re-run after a pipeline) must byte-equal fresh — a drifted rerun is caught;
-# the verdict line carries no run shape so both invocation modes can agree
+# re-run after a pipeline) must agree with fresh — a drifted rerun is caught;
+# the verdict line carries no run shape so both invocation modes can agree.
+# MEMBERS and PROOFS are masked in the comparison: the evidence set grows
+# MONOTONICALLY — a proof log saved after the pipeline (the week's own proof
+# lands post-commit by design) joins the next pack legitimately, so those two
+# fields are expected to advance; every stable field (checks, negatives,
+# tests, dex, vc, vn) must stay byte-equal, and the deeper laws (shape, xref,
+# identity, the proof law) still audit the archive content itself.
+mask() { echo "$1" | sed -E 's/members=[0-9]+/members=M/; s/proofs=[0-9/]+/proofs=P/'; }
 LOG_LINE=$(grep -m1 '^EVAUDITGATE_OK ' "$LOGF" 2>/dev/null || true)
 if [ -n "$LOG_LINE" ]; then
-  [ "$LOG_LINE" = "$GATE_LINE" ] || fail "log.evaudit != fresh (the outer log's line drifted from this run)"
+  [ "$(mask "$LOG_LINE")" = "$(mask "$GATE_LINE")" ] || fail "log.evaudit != fresh (the outer log's line drifted from this run)"
 fi
 
 echo "$GATE_LINE"
