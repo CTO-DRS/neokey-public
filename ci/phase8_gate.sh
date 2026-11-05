@@ -82,7 +82,7 @@ echo "[phase8] $OV"
 # pins are exact, and the inner pipeline shape is frozen at the close — a
 # shape change must re-pin consciously, not slide through
 RB_CHK=$(field "$RB" checks);      RB_NEG=$(negof "$RB" negatives)
-RB_PINS=$(field "$RB" pins);       RB_STAGES=$(field "$RB" stages)
+RB_PINS=$(field "$RB" pins);       RB_STAGES=$(field "$RB" stages | cut -d/ -f1)
 RB_TESTS=$(field "$RB" tests);     RB_DEX=$(field "$RB" dex | cut -d/ -f1)
 RB_VC=$(field "$RB" vc);           RB_VN=$(field "$RB" vn)
 [ "${RB_CHK:-0}"     = 24 ]        || fail "rebuild checks ${RB_CHK:-0} != 24 (the gate's check inventory moved)"
