@@ -27,7 +27,7 @@ OUTD=build/pubsync/proof-work
 
 : > "$LOG"
 note() { echo -e "$*" | tee -a "$LOG"; }
-run_gate() { PUBSYNC_TOKEN_FILE="${PUBSYNC_TOKEN_FILE:-/tmp/gh.token}" ci/pubsync_gate.sh 2>&1; }
+run_gate() { PUBSYNC_TOKEN_FILE="${PUBSYNC_TOKEN_FILE:-/tmp/gh.token}" ci/pubsync_gate.sh --roundtrip 2>&1; }
 expect() { # $1 label, $2 wanted tag, $3 the gate output
   if printf '%s' "$3" | grep -q "PUBSYNC_FAILED $2"; then
     note "ok: $1 bit with its tag ($2)"

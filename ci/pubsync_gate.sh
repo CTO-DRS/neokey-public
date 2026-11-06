@@ -36,6 +36,16 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 fail() { echo "PUBSYNC_FAILED $1"; exit 1; }
+# MODE: the default (pipeline) verifies the publication against the LOCAL
+# bytes (the listing's size match + the local archive's own audit) and stays
+# inside the run's time envelope; `--roundtrip` (standalone / the saved
+# proof) fetches the PUBLISHED bytes back and verifies those — the same check
+# count, a deeper source. The remote fetch is the flaky path (the asset
+# endpoints soft-404 in multi-minute windows), so the pipeline's stage never
+# waits on it — the weekly flow runs --roundtrip standalone and the proof's
+# baseline carries it committed.
+MODE="local"
+[ "${1:-}" = "--roundtrip" ] && MODE="remote"
 STATE=build/release/gates.env
 LOGF=build/pipeline.log
 OUTD=build/pubsync/tooling
@@ -121,7 +131,7 @@ CHECKS=$((CHECKS + 2))
 # ---- 4: الرفع — إضافة أحادية (أصول الأسبوع 33 تبقى) ----------------------------
 PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
 PUB_UP="https://uploads.github.com/repos/$REPO/releases/$REL/assets"
-pub_gh() { curl -sSL -H "Authorization: token $TOKEN" "$@"; }
+pub_gh() { if [ "${PUBSYNC_CURL_DEBUG:-0}" = "1" ]; then curl -sSL --trace-ascii "$PUBDIR/curl-trace.txt" -H "Authorization: token $TOKEN" "$@"; else curl -sSL -H "Authorization: token $TOKEN" "$@"; fi; }
 # the API 404s FLAKILY on freshly-uploaded assets (eventual consistency —
 # measured live: a listed asset's DELETE returned 404 then 204 on retry) —
 # every HTTP step retries with backoff before the gate calls it a failure
@@ -196,49 +206,74 @@ done
 # re-list AFTER the uploads: the roundtrip maps names to the NEW asset ids
 ASSETS_JSON=$(pub_gh "$PUB_API/assets?per_page=100")
 [ -n "$ASSETS_JSON" ] || fail "publish.relist (empty asset listing after upload)"
-if [ "$UPLOADED" != "0" ]; then
-  # storage readiness: the bytes of a JUST-UPLOADED asset are not fetchable
-  # back for a few minutes, and a too-early GET poisons nothing but wastes
-  # the retry budget — a deliberate single wait, then the roundtrip fetches
-  # once (the deterministic pack makes the bytes stable, so future runs take
-  # the idempotent path and fetch only OLD, long-stable assets)
-  echo "[pubsync] waiting 90s for the storage backend to serve the fresh bytes"
-  sleep 90
-fi
-CHECKS=$((CHECKS + 1))
 
-# ---- 5: جولة الذهاب والعودة — المنزَّل هو الذي يُتحقق منه ----------------------
-rm -rf "$PUBDIR/roundtrip"; mkdir -p "$PUBDIR/roundtrip"
-rm -rf "$PUBDIR/roundtrip"; mkdir -p "$PUBDIR/roundtrip"
-for NAME in "$EV_NAME" "$PATCH_NAME"; do
-  AID=$(printf '%s' "$ASSETS_JSON" | python3 -c "
+# ---- 5: الجولة — الحكم على المنشور (وضعان بعدد فحوص متطابق) -----------------
+#   local  (المسار الافتراضي، داخل الأنبوب): تطابق الحجم بين الدفتر الحي
+#          والبايتات المُعلَنة + تدقيق الأرشيف المحلي نفسه + تطبيق الرقعة
+#          المحلية على قاعدة المنشور — البايتات المُعلَنة هي بايتات البيان
+#          بالبناء (الرفع أرسل الملف نفسه والاستجابة تحمل الاسم والحجم).
+#   remote (--roundtrip، مستقلاً وفي الإثبات المحفوظ): البايتات المنشورة
+#          تُجلب من جديد وsha256 يُعاد اشتقاقها من المنزَّل، والأرشيف
+#          المنزَّل يُدقَّق معزولاً، والرقعة المنزَّلة هي التي تُطبَّق.
+if [ "$MODE" = "remote" ]; then
+  if [ "$UPLOADED" != "0" ]; then
+    # storage readiness: the bytes of a JUST-UPLOADED binary asset are not
+    # fetchable back for minutes — a deliberate wait before the first fetch
+    READY_WAIT="${PUBSYNC_READY_WAIT:-90}"
+    echo "[pubsync] waiting ${READY_WAIT}s for the storage backend to serve the fresh bytes"
+    sleep "$READY_WAIT"
+  fi
+  rm -rf "$PUBDIR/roundtrip"; mkdir -p "$PUBDIR/roundtrip"
+  for NAME in "$EV_NAME" "$PATCH_NAME"; do
+    AID=$(printf '%s' "$ASSETS_JSON" | python3 -c "
 import json, sys
 for a in json.load(sys.stdin):
     if a['name'] == sys.argv[1]:
         print(a['id']); break
 " "$NAME")
-  [ -n "$AID" ] || fail "roundtrip.stale ($NAME is not on the release — the publication must be fetchable back)"
-  # the retry budget is CAPPED so the stage stays inside the run's time
-  # envelope: a flaky window fails the stage honestly and the re-run re-verifies
-  PUBSYNC_HTTP_TRIES=6 pub_retry "roundtrip.download ($NAME id=$AID)" -H "Accept: application/octet-stream" -o "$PUBDIR/roundtrip/$NAME" "$PUB_API/assets/$AID"
-  GOT=$(wc -c < "$PUBDIR/roundtrip/$NAME")
-  WANT=$(wc -c < "$PUBDIR/$NAME")
-  [ "$GOT" = "$WANT" ] || fail "roundtrip.size ($NAME fetched $GOT != local $WANT — a partial or tampered fetch)"
-done
-java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/roundtrip" || fail "roundtrip.sha (the re-derived sha of the PUBLISHED bytes must equal the statement — a tampered or partial upload bites here)"
-CHECKS=$((CHECKS + 2))
+    [ -n "$AID" ] || fail "roundtrip.stale ($NAME is not on the release — the publication must be fetchable back)"
+    PUBSYNC_HTTP_TRIES="${PUBSYNC_RT_TRIES:-5}" pub_retry "roundtrip.download ($NAME id=$AID)" -H "Accept: application/octet-stream" -o "$PUBDIR/roundtrip/$NAME" "$PUB_API/assets/$AID"
+    GOT=$(wc -c < "$PUBDIR/roundtrip/$NAME")
+    WANT=$(wc -c < "$PUBDIR/$NAME")
+    [ "$GOT" = "$WANT" ] || fail "roundtrip.size ($NAME fetched $GOT != declared $WANT — a partial or tampered fetch)"
+    CHECKS=$((CHECKS + 1))
+  done
+  java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/roundtrip" || fail "roundtrip.sha (the re-derived sha of the PUBLISHED bytes must equal the statement — a tampered or partial upload bites here)"
+  CHECKS=$((CHECKS + 1))
+  EV_SRC="$PUBDIR/roundtrip/$EV_NAME"; PATCH_SRC="$PUBDIR/roundtrip/$PATCH_NAME"
+else
+  for NAME in "$EV_NAME" "$PATCH_NAME"; do
+    ASIZE=$(printf '%s' "$ASSETS_JSON" | python3 -c "
+import json, sys
+for a in json.load(sys.stdin):
+    if a['name'] == sys.argv[1]:
+        print(a['size']); break
+" "$NAME")
+    [ -n "$ASIZE" ] || fail "roundtrip.stale ($NAME is not on the release — the publication must be listed)"
+    [ "$ASIZE" = "$(wc -c < "$PUBDIR/$NAME")" ] || fail "roundtrip.size ($NAME listed $ASIZE != the statement's bytes $(wc -c < "$PUBDIR/$NAME"))"
+    CHECKS=$((CHECKS + 1))
+  done
+  java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/stage" || fail "roundtrip.sha (the staged bytes must satisfy the statement laws)"
+  CHECKS=$((CHECKS + 1))
+  EV_SRC="$PUBDIR/$EV_NAME"; PATCH_SRC="$PUBDIR/$PATCH_NAME"
+fi
 
 # ---- 6: التدقيق المعزول + تطبيق الرقعة على قاعدة المنشور -----------------------
-rm -rf "$PUBDIR/roundtrip-archive"
-java -cp "$OUTD" com.hark.neokey.PubSync unzip "$PUBDIR/roundtrip/$EV_NAME" "$PUBDIR/roundtrip-archive" || fail "evidence.unzip"
-AOUT=$(java -cp "$OUTD" com.hark.neokey.EvAudit check "$PUBDIR/roundtrip-archive" --expect-vc "$PUB_VC" --expect-vn "$PUB_VN" 2>&1); ARC=$?
-[ "$ARC" = "0" ] || fail "evidence.audit (the PUBLISHED archive must verify in isolation — EvAudit's own laws; got rc=$ARC: $(printf '%s' "$AOUT" | tail -1))"
+if [ "$MODE" = "remote" ]; then
+  rm -rf "$PUBDIR/roundtrip-archive"
+  java -cp "$OUTD" com.hark.neokey.PubSync unzip "$EV_SRC" "$PUBDIR/roundtrip-archive" || fail "evidence.unzip"
+  AUDIT_DIR="$PUBDIR/roundtrip-archive"
+else
+  AUDIT_DIR="$PUBDIR/archive"
+fi
+AOUT=$(java -cp "$OUTD" com.hark.neokey.EvAudit check "$AUDIT_DIR" --expect-vc "$PUB_VC" --expect-vn "$PUB_VN" 2>&1); ARC=$?
+[ "$ARC" = "0" ] || fail "evidence.audit (the archive must verify in isolation — EvAudit's own laws; got rc=$ARC: $(printf '%s' "$AOUT" | tail -1))"
 echo "[pubsync] $AOUT" | tail -1
 CHECKS=$((CHECKS + 1))
 
 rm -rf "$PUBDIR/base"
 git worktree add --detach -q "$PUBDIR/base" "$BASE_TAG" 2>/dev/null || fail "patch.base_worktree ($BASE_TAG)"
-git -C "$PUBDIR/base" apply --check "$(pwd)/$PUBDIR/roundtrip/$PATCH_NAME" 2>&1 | head -3
+git -C "$PUBDIR/base" apply --check "$(pwd)/$PATCH_SRC" 2>&1 | head -3
 ck "$?" 0 "patch.apply" "the cumulative patch must apply to the published base"
 git worktree remove --force "$PUBDIR/base" 2>/dev/null || true
 git diff --stat "$BASE_TAG" HEAD | tail -1 > "$PUBDIR/patch-stat.txt"
@@ -253,6 +288,8 @@ neg() { # $1 tag expected, $2.. the command
     *) echo "NEG-MISS want=$want rc=$rc out: $(printf '%s' "$out" | tail -2)"; NEG_FAIL=$((NEG_FAIL+1));; esac
 }
 NEG_PASS=0; NEG_FAIL=0
+RT_SRC="$PUBDIR/stage"
+[ "$MODE" = "remote" ] && RT_SRC="$PUBDIR/roundtrip"
 mkst() { cp "$PUBDIR/statement.json" "$PUBDIR/$1"; }
 
 mkst n1.json; sed -i 's/neokey-pubsync-1/neokey-pubsync-9/' "$PUBDIR/n1.json"
@@ -271,10 +308,11 @@ mkst n5.json; sed -i "s/\"asset_sha1\": \"$EV_SHA\"/\"asset_sha1\": \"$(printf '
 neg "pubsync.sha_mismatch" java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/n5.json" "$PUBDIR/stage"
 
 rm -rf "$PUBDIR/dl-missing"; mkdir -p "$PUBDIR/dl-missing"; cp "$PUBDIR/roundtrip/$PATCH_NAME" "$PUBDIR/dl-missing/"
+rm -rf "$PUBDIR/dl-missing"; mkdir -p "$PUBDIR/dl-missing"; cp "$RT_SRC/$PATCH_NAME" "$PUBDIR/dl-missing/"
 neg "pubsync.asset_missing" java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/dl-missing"
 
 rm -rf "$PUBDIR/dl-extra"; mkdir -p "$PUBDIR/dl-extra"
-cp "$PUBDIR/roundtrip/$EV_NAME" "$PUBDIR/roundtrip/$PATCH_NAME" "$PUBDIR/dl-extra/"; echo planted > "$PUBDIR/dl-extra/planted.bin"
+cp "$RT_SRC/$EV_NAME" "$RT_SRC/$PATCH_NAME" "$PUBDIR/dl-extra/"; echo planted > "$PUBDIR/dl-extra/planted.bin"
 neg "pubsync.extra_asset" java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/dl-extra"
 
 mkst n8.json; sed -i 's/"rel": "434872239"/"rel": "not-a-number"/' "$PUBDIR/n8.json"
@@ -291,7 +329,7 @@ with zipfile.ZipFile(sys.argv[1], "w") as z:
 PY
 neg "unzip.path_traversal" java -cp "$OUTD" com.hark.neokey.PubSync unzip "$PUBDIR/slip.zip" "$PUBDIR/slip-out"
 
-CZIP="$PUBDIR/corrupt.zip"; cp "$PUBDIR/roundtrip/$EV_NAME" "$CZIP"
+CZIP="$PUBDIR/corrupt.zip"; cp "$RT_SRC/$EV_NAME" "$CZIP"
 python3 - "$CZIP" <<'PY'
 import sys
 p = sys.argv[1]
@@ -306,20 +344,20 @@ o=$(n11out 2>&1); rc=$?
 case "$o" in *"unzip.path_traversal"*|*"unzip.member_truncated"*|*"unzip.zip_format"*|*PUBSYNC_FAILED*unzip.*) NEG_PASS=$((NEG_PASS+1));;
   *) [ "$rc" != "0" ] && { echo "NEG-MISS want=unzip.* rc=$rc out: $(printf '%s' "$o" | tail -2)"; NEG_FAIL=$((NEG_FAIL+1)); } || { echo "NEG-MISS want=unzip.* (rc=0)"; NEG_FAIL=$((NEG_FAIL+1)); };; esac
 
-rm -rf "$PUBDIR/dirty-archive"; cp -r "$PUBDIR/roundtrip-archive" "$PUBDIR/dirty-archive"
+rm -rf "$PUBDIR/dirty-archive"; cp -r "$AUDIT_DIR" "$PUBDIR/dirty-archive"
 DIRTY_MEMBER=$(ls "$PUBDIR/dirty-archive" | grep -v SHA256SUMS | head -1)
 rm "$PUBDIR/dirty-archive/$DIRTY_MEMBER"
 aout=$(java -cp "$OUTD" com.hark.neokey.EvAudit check "$PUBDIR/dirty-archive" --expect-vc "$PUB_VC" --expect-vn "$PUB_VN" 2>&1); arc=$?
 [ "$arc" != "0" ] && NEG_PASS=$((NEG_PASS+1)) || { echo "NEG-MISS want=evidence.audit (the archive audit went green on a truncated member)"; NEG_FAIL=$((NEG_FAIL+1)); }
 
-java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/roundtrip" || fail "negatives.restored (the real roundtrip must verify green after the battery)"
+java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$RT_SRC" || fail "negatives.restored (the real roundtrip must verify green after the battery)"
 [ "$NEG_FAIL" = "0" ] || fail "negatives ($NEG_PASS/12 — every negative must bite with its own tag)"
 CHECKS=$((CHECKS + 2))
 
 # ---- 8: الدفتر — upsert idempotent + الطازج == الدفتر + قانون السجل الخارجي ----
 [ -f "$STATE" ] || : > "$STATE"
 sed -i '/^PUBSYNC_/d' "$STATE"
-VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM proofs=$PRF rel=$REL base=$BASE_TAG vc=$PUB_VC vn=$PUB_VN"
+VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM proofs=$PRF rel=$REL base=$BASE_TAG roundtrip=$MODE vc=$PUB_VC vn=$PUB_VN"
 {
   echo "PUBSYNC_GATE=OK"
   echo "PUBSYNC_CHECKS=$CHECKS"
@@ -333,13 +371,14 @@ VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM 
   echo "PUBSYNC_VC=$PUB_VC"
   echo "PUBSYNC_VN=$PUB_VN"
   echo "PUBSYNC_PACK_LINE=$PACK_LINE"
+  echo "PUBSYNC_ROUNDTRIP=$MODE"
 } >> "$STATE"
 . "$STATE"
 [ "${PUBSYNC_CHECKS:-}" = "$CHECKS" ] || fail "env.pubsync_checks"
 [ "${PUBSYNC_MEMBERS:-}" = "$MEM" ] || fail "env.pubsync_members"
 [ "${PUBSYNC_VC:-}" = "$PUB_VC" ] || fail "env.pubsync_vc"
 CHECKS=$((CHECKS + 3))
-mask() { printf '%s' "$1" | sed -E 's/members=[0-9]+/members=M/; s/proofs=[0-9/]+/proofs=P/'; }
+mask() { printf '%s' "$1" | sed -E 's/members=[0-9]+/members=M/; s/proofs=[0-9/]+/proofs=P/; s/roundtrip=[a-z]+/roundtrip=R/'; }
 LOG_LINE=$(grep -oE 'PUBSYNC_OK [^"]*' "$LOGF" 2>/dev/null | head -1 || true)
 if [ -n "$LOG_LINE" ]; then
   [ "$(mask "$LOG_LINE")" = "$(mask "$VERDICT")" ] || fail "outer_log.pubsync (a prior PUBSYNC_OK line drifted from fresh — verdict fields are stable, members/proofs are monotonic)"
