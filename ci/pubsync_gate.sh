@@ -47,7 +47,7 @@ BASE_TAG=v2.7-week33
 EV_NAME="neokey-evidence-week${WEEK}.zip"
 PATCH_NAME="neokey-patch-week33-42.patch"
 CHECKS=0
-ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "0" ] || fail "$2 (${3:-})"; }
+ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
 
 # ---- 0: المراساة + الاعتماد — المرجع = المنشور --------------------------------
 PUB_VC=83
@@ -70,7 +70,7 @@ CHECKS=$((CHECKS + 4))
 rm -rf "$OUTD"; mkdir -p "$OUTD" "$PUBDIR"
 ECJ="java -jar tools/ecj.jar -nowarn -source 8 -target 8 -encoding UTF-8"
 command -v javac >/dev/null 2>&1 && ECJ="javac -nowarn -encoding UTF-8"
-$ECJ -cp . -d "$OUTD" tests/com/hark/neokey/SyncServerPack.java tests/com/hark/neokey/EvAudit.java tests/com/hark/neokey/PubSync.java 2>&1 | grep -v "^$" | head -5
+$ECJ -cp . -d "$OUTD" tests/com/hark/neokey/SyncServerPack.java tests/com/hark/neokey/EvAudit.java tests/com/hark/neokey/PubSync.java 2>&1 | head -30
 ck "$?" 0 "compile.tooling"
 [ -f "$OUTD/com/hark/neokey/PubSync.class" ] || fail "compile.tooling (PubSync.class missing)"
 CHECKS=$((CHECKS + 1))
@@ -119,100 +119,99 @@ java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDI
 CHECKS=$((CHECKS + 2))
 
 # ---- 4: الرفع — إضافة أحادية (أصول الأسبوع 33 تبقى) ----------------------------
-python3 - "$TOKEN" "$REPO" "$REL" "$PUBDIR" "$EV_NAME" "$PATCH_NAME" <<'PY' || fail "publish.upload (see the API output above)"
-import json, sys, urllib.request
-
-token, repo, rel, pubdir, ev_name, patch_name = sys.argv[1:7]
-base = f"https://api.github.com/repos/{repo}/releases/{rel}"
-upl = f"https://uploads.github.com/repos/{repo}/releases/{rel}/assets"
-H = {"Authorization": f"token {token}", "User-Agent": "neokey-pubsync", "Accept": "application/vnd.github+json"}
-
-def api(url, method="GET", data=None, headers=None):
-    req = urllib.request.Request(url, data=data, method=method)
-    for k, v in (headers or H).items():
-        req.add_header(k, v)
-    with urllib.request.urlopen(req) as r:
-        raw = r.read()
-        return (json.loads(raw) if raw and r.headers.get("Content-Type", "").startswith(("application/json", "text/json")) else raw)
-
-def find_asset(name):
-    url = f"{base}/assets?per_page=100"
-    while url:
-        js = api(url)
-        for a in js:
-            if a["name"] == name:
-                return a
-        url = None if not js else js[0].get("url") and None
-        # pagination (rel-next) — the release is small; two pages max
-        if js and "links" not in js:
-            break
-    return None
-
-def upload(path, name, ctype):
-    data = open(path, "rb").read()
-    req = urllib.request.Request(f"{upl}?name={name}", data=data, method="POST")
-    req.add_header("Authorization", f"token {token}")
-    req.add_header("Content-Type", ctype)
-    req.add_header("Content-Length", str(len(data)))
-    req.add_header("User-Agent", "neokey-pubsync")
-    with urllib.request.urlopen(req) as r:
-        return json.loads(r.read())
-
-for path, name, ctype in ((f"{pubdir}/{ev_name}", ev_name, "application/zip"),
-                          (f"{pubdir}/{patch_name}", patch_name, "text/plain; charset=utf-8")):
-    old = find_asset(name)
-    if old is not None:
-        api(f"{base}/assets/{old['id']}", method="DELETE")
-    a = upload(path, name, ctype)
-    if a.get("name") != name or a.get("state") not in ("uploaded", "start_upload"):
-        print(f"PUBSYNC_FAILED publish.upload (asset {name}: name={a.get('name')} state={a.get('state')})")
-        sys.exit(1)
-    print(f"[pubsync] uploaded {name} id={a['id']} size={a.get('size')}")
-print("PUBSYNC_UPLOAD_OK")
-PY
+PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
+PUB_UP="https://uploads.github.com/repos/$REPO/releases/$REL/assets"
+pub_gh() { curl -sSL -H "Authorization: token $TOKEN" -H "User-Agent: neokey-pubsync" "$@"; }
+# the API 404s FLAKILY on freshly-uploaded assets (eventual consistency —
+# measured live: a listed asset's DELETE returned 404 then 204 on retry) —
+# every HTTP step retries with backoff before the gate calls it a failure
+pub_retry() { # $1 tag, $2.. the curl args (the octet-stream GET 404s in
+  # intermittent multi-minute windows — the retry spread must ride them out)
+  local tag="$1"; shift
+  local url="${@: -1}"
+  local code try tries="${PUBSYNC_HTTP_TRIES:-6}"
+  for try in $(seq 1 "$tries"); do
+    code=$(pub_gh -o "$PUBDIR/.http-body" -w '%{http_code}' "$@")
+    case "$code" in 200|201|204) return 0;; esac
+    sleep $(( (try * 3) > 15 ? 15 : try * 3 ))
+  done
+  fail "$tag (http=$code after $tries tries, url=$url: $(head -c 140 "$PUBDIR/.http-body" 2>/dev/null))"
+}
+# list: python parses the JSON (house precedent ci/build_deploy.sh), curl does the HTTP
+ASSETS_JSON=""
+for try in 1 2 3; do
+  ASSETS_JSON=$(pub_gh "$PUB_API/assets?per_page=100")
+  [ -n "$ASSETS_JSON" ] && break
+  sleep 2
+done
+[ -n "$ASSETS_JSON" ] || fail "publish.list (empty asset listing)"
+UPLOADED=0
+for NAME in "$EV_NAME" "$PATCH_NAME"; do
+  AID=$(printf '%s' "$ASSETS_JSON" | python3 -c "
+import json, sys
+js = json.load(sys.stdin)
+for a in js:
+    if a['name'] == sys.argv[1]:
+        print(a['id']); break
+" "$NAME")
+  ASIZE=$(printf '%s' "$ASSETS_JSON" | python3 -c "
+import json, sys
+js = json.load(sys.stdin)
+for a in js:
+    if a['name'] == sys.argv[1]:
+        print(a['size']); break
+" "$NAME")
+  if [ -n "$AID" ] && [ "$ASIZE" = "$(wc -c < "$PUBDIR/$NAME")" ] && [ "${PUBSYNC_FORCE_REPLACE:-0}" != "1" ]; then
+    # idempotent publication: the release already carries an asset of THIS
+    # name and size — skip the churn; the ROUNDTRIP below is the law (it
+    # fetches the published bytes back and PubSync.verify re-derives their
+    # sha256 against the statement — a same-size drift bites there and
+    # PUBSYNC_FORCE_REPLACE=1 re-publishes through the delete path; the
+    # API 404s flakily on recently-touched assets, so the delete path
+    # retries with backoff)
+    echo "[pubsync] already published (name+size match): $NAME id=$AID"
+    continue
+  fi
+  if [ -n "$AID" ]; then
+    pub_retry "publish.delete ($NAME id=$AID — a drifted published copy must be replaceable)" -X DELETE "$PUB_API/assets/$AID"
+  fi
+  CT="application/zip"; [ "$NAME" = "$PATCH_NAME" ] && CT="text/plain; charset=utf-8"
+  UPLOADED=$((UPLOADED + 1))
+  pub_retry "publish.upload ($NAME)" -X POST -H "Content-Type: $CT" --data-binary @"$PUBDIR/$NAME" "$PUB_UP?name=$NAME"
+  python3 -c "
+import json, sys
+a = json.load(open(sys.argv[1]))
+name = sys.argv[2]
+if a.get('name') != name or a.get('state') not in ('uploaded', 'start_upload'):
+    print('PUBSYNC_FAILED publish.upload (asset ' + name + ': name=' + str(a.get('name')) + ' state=' + str(a.get('state')) + ')')
+    sys.exit(1)
+print('[pubsync] uploaded ' + a['name'] + ' id=' + str(a['id']) + ' size=' + str(a.get('size')))
+" "$PUBDIR/.http-body" "$NAME" || fail "publish.upload ($NAME — the upload response must name the asset uploaded)"
+  rm -f "$PUBDIR/.upload-resp.json"
+done
+# re-list AFTER the uploads: the roundtrip maps names to the NEW asset ids
+ASSETS_JSON=$(pub_gh "$PUB_API/assets?per_page=100")
+[ -n "$ASSETS_JSON" ] || fail "publish.relist (empty asset listing after upload)"
 CHECKS=$((CHECKS + 1))
 
 # ---- 5: جولة الذهاب والعودة — المنزَّل هو الذي يُتحقق منه ----------------------
 rm -rf "$PUBDIR/roundtrip"; mkdir -p "$PUBDIR/roundtrip"
-python3 - "$TOKEN" "$REPO" "$REL" "$PUBDIR/roundtrip" "$EV_NAME" "$PATCH_NAME" <<'PY' || fail "roundtrip.download (the published bytes must be fetchable back)"
-import json, sys, urllib.request
-
-token, repo, rel, outdir, ev_name, patch_name = sys.argv[1:7]
-base = f"https://api.github.com/repos/{repo}/releases/{rel}"
-H = {"Authorization": f"token {token}", "User-Agent": "neokey-pubsync"}
-
-def api_json(url):
-    req = urllib.request.Request(url)
-    for k, v in H.items():
-        req.add_header(k, v)
-    req.add_header("Accept", "application/vnd.github+json")
-    with urllib.request.urlopen(req) as r:
-        return json.loads(r.read())
-
-want = {ev_name, patch_name}
-got = 0
-url = f"{base}/assets?per_page=100"
-while url and got < len(want):
-    js = api_json(url)
-    for a in js:
-        if a["name"] in want:
-            req = urllib.request.Request(a["url"])
-            for k, v in H.items():
-                req.add_header(k, v)
-            req.add_header("Accept", "application/octet-stream")
-            with urllib.request.urlopen(req) as r:
-                data = r.read()
-            if len(data) != a["size"]:
-                print(f"PUBSYNC_FAILED roundtrip.download ({a['name']}: fetched {len(data)} != declared {a['size']})")
-                sys.exit(1)
-            open(f"{outdir}/{a['name']}", "wb").write(data)
-            got += 1
-    url = None
-if got != len(want):
-    print(f"PUBSYNC_FAILED roundtrip.stale (fetched {got} of {len(want)} declared assets — the release does not carry this week's publication)")
-    sys.exit(1)
-print("PUBSYNC_ROUNDTRIP_OK")
-PY
+rm -rf "$PUBDIR/roundtrip"; mkdir -p "$PUBDIR/roundtrip"
+for NAME in "$EV_NAME" "$PATCH_NAME"; do
+  AID=$(printf '%s' "$ASSETS_JSON" | python3 -c "
+import json, sys
+for a in json.load(sys.stdin):
+    if a['name'] == sys.argv[1]:
+        print(a['id']); break
+" "$NAME")
+  [ -n "$AID" ] || fail "roundtrip.stale ($NAME is not on the release — the publication must be fetchable back)"
+  # the retry budget is CAPPED so the stage stays inside the run's time
+  # envelope: a flaky window fails the stage honestly and the re-run re-verifies
+  PUBSYNC_HTTP_TRIES=6 pub_retry "roundtrip.download ($NAME id=$AID)" -H "Accept: application/octet-stream" -o "$PUBDIR/roundtrip/$NAME" "$PUB_API/assets/$AID"
+  GOT=$(wc -c < "$PUBDIR/roundtrip/$NAME")
+  WANT=$(wc -c < "$PUBDIR/$NAME")
+  [ "$GOT" = "$WANT" ] || fail "roundtrip.size ($NAME fetched $GOT != local $WANT — a partial or tampered fetch)"
+done
 java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/roundtrip" || fail "roundtrip.sha (the re-derived sha of the PUBLISHED bytes must equal the statement — a tampered or partial upload bites here)"
 CHECKS=$((CHECKS + 2))
 
@@ -225,10 +224,10 @@ echo "[pubsync] $AOUT" | tail -1
 CHECKS=$((CHECKS + 1))
 
 rm -rf "$PUBDIR/base"
-git clone -q --no-hardlinks . "$PUBDIR/base" 2>/dev/null || fail "patch.base_clone"
-git -C "$PUBDIR/base" checkout -q "$BASE_TAG" 2>/dev/null || fail "patch.base_checkout ($BASE_TAG)"
+git worktree add --detach -q "$PUBDIR/base" "$BASE_TAG" 2>/dev/null || fail "patch.base_worktree ($BASE_TAG)"
 git -C "$PUBDIR/base" apply --check "$(pwd)/$PUBDIR/roundtrip/$PATCH_NAME" 2>&1 | head -3
 ck "$?" 0 "patch.apply" "the cumulative patch must apply to the published base"
+git worktree remove --force "$PUBDIR/base" 2>/dev/null || true
 git diff --stat "$BASE_TAG" HEAD | tail -1 > "$PUBDIR/patch-stat.txt"
 CHECKS=$((CHECKS + 1))
 
