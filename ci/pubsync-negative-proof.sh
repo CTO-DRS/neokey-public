@@ -5,7 +5,7 @@
 #   attacks the gate's own inputs and demands each attack bite with its
 #   EXACT tag, then restores and demands green again. Four attacks:
 #
-#     1. manifest anchor tamper (versionCode 83 -> 81) — bump-independent,
+#     1. manifest anchor tamper (versionCode -> an always-wrong 81, bump-independent per the W36 lesson) — bump-independent,
 #        bites BEFORE anything is packed or uploaded (anchor.identity.vc).
 #     2. outer-log drift (the prior PUBSYNC_OK line's base tag flipped in
 #        build/pipeline.log) — the verdict-carrying log is evidence; a
@@ -46,9 +46,9 @@ printf '%s\n' "$BASE_OUT" | grep -E "^PUBSYNC_OK" | tee -a "$LOG"
 [ "$RC" = "0" ] || { note "PROOF-FAILED: baseline not green"; exit 1; }
 
 # ---- attack 1: manifest anchor tamper -----------------------------------------
-note "--- attack: manifest anchor tamper (versionCode 83 -> 81)"
+note "--- attack: manifest anchor tamper (versionCode -> an always-wrong 81, bump-independent per the W36 lesson)"
 cp AndroidManifest.xml "$OUTD-manifest.bak"
-sed -i 's/android:versionCode="83"/android:versionCode="81"/' AndroidManifest.xml
+sed -i 's/android:versionCode="[0-9]*"/android:versionCode="81"/' AndroidManifest.xml
 A1=$(run_gate); RC=$?
 expect "attack 1" "anchor.identity.vc" "$A1"
 cp "$OUTD-manifest.bak" AndroidManifest.xml

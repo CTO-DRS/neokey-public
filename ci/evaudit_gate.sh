@@ -29,7 +29,7 @@
 #        re-verifies green.
 #
 #   Verdict: `EVAUDITGATE_OK checks=N negatives=12/12 members=M proofs=P/P
-#   vc=82 vn=3.5 tests=T/F dex=D/512000` / `EVAUDITGATE_FAILED <reason>`
+#   vc=$PUB_VC vn=$PUB_VN tests=T/F dex=D/512000` / `EVAUDITGATE_FAILED <reason>`
 #   (exit 1). The verdict line carries NO run shape (mid/complete) so a
 #   standalone re-run after a pipeline byte-equals the pipeline's line
 #   (the equality law below). Keys are appended to gates.env idempotently

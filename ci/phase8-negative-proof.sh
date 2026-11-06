@@ -62,8 +62,8 @@ run_attack() { # $1 name, $2 attacker (bash), $3 expected rc!=0 + verdict grep, 
 #    week's identity (an honest-LOOKING wrong value, bump-independent — no
 #    identity literal in the proof's sed survives a later bump) and the anchor
 #    bites BEFORE the drill runs any inner pipeline
-run_attack "manifest anchor tamper (versionCode 82 -> 81)" \
-'sed -i "s/android:versionCode=\"82\"/android:versionCode=\"81\"/" AndroidManifest.xml' \
+run_attack "manifest anchor tamper (versionCode -> an always-wrong 81, bump-independent per the W36 lesson)" \
+'sed -i "s/android:versionCode=\"[0-9]*\"/android:versionCode=\"81\"/" AndroidManifest.xml' \
 'REBUILDGATE_FAILED anchor.identity.vc'
 
 # 2) flip a PREVIOUS-phase key in gates.env — the phase-8 sub-gate re-runs

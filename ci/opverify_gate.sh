@@ -31,7 +31,7 @@
 #   inputs), then the real inputs re-verify green.
 #
 #   Verdict: `OPVERIFYGATE_OK checks=N negatives=12/12 letters=2 packs=1
-#   swaps=1 vc=82 vn=3.5` / `OPVERIFYGATE_FAILED <reason>` (exit 1).
+#   swaps=1 vc=$PUB_VC vn=$PUB_VN` / `OPVERIFYGATE_FAILED <reason>` (exit 1).
 #   Keys are appended to gates.env idempotently (the week-33 hardening).
 #   The saved negative proof: ci/opverify-negative-proof.log.
 set -uo pipefail

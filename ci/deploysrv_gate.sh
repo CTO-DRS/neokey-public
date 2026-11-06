@@ -78,7 +78,7 @@ MEMBERS=$(echo "$VERDICT" | grep -oE 'members=[0-9]+' | cut -d= -f2)
 JARSHA=$(echo "$VERDICT" | grep -oE 'jar_sha256=[0-9a-f]+' | cut -d= -f2)
 [ "$JARSHA" = "${JAR_SHA:0:16}" ] || fail "anchor (gate's jar sha $JARSHA != the fresh build ${JAR_SHA:0:16})"
 [ -n "$CHECKS" ] && [ -n "$NEG" ] && [ -n "$MEMBERS" ] || fail "gate (verdict fields unparseable: $VERDICT)"
-echo "$VERDICT" | grep -q "vc=83 vn=3.6" || fail "anchor.identity (the pack statement must carry the week's identity 82 / 3.5 — got: $VERDICT)"
+echo "$VERDICT" | grep -q "vc=83 vn=3.6" || fail "anchor.identity (the pack statement must carry the week's identity $PUB_VC / $PUB_VN — got: $VERDICT)"
 echo "$VERDICT"
 
 # ---- 7: keys for the release manifest (idempotent upsert, week-33 hardening) ------

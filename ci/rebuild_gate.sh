@@ -32,7 +32,7 @@
 #        standalone re-run after a pipeline) must byte-equal fresh.
 #
 #   Verdict: `REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=39/39
-#   tests=T/F dex=D/512000 vc=82 vn=3.5` / `REBUILDGATE_FAILED <reason>`
+#   tests=T/F dex=D/512000 vc=$PUB_VC vn=$PUB_VN` / `REBUILDGATE_FAILED <reason>`
 #   (exit 1). The saved negative proof: ci/rebuild-negative-proof.log.
 set -uo pipefail
 cd "$(dirname "$0")/.."
