@@ -34,6 +34,15 @@ if [ -n "$APKSIG_JAR" ]; then
   APKSIG_SUITE="com.hark.neokey.SignedApkTest"
 fi
 
+# ---- measurement integrity (week 42 fix #2): the perf budgets in the vault
+# suites (the KDF wall-time budget, the stamp/unseal throughput) measure
+# PRODUCTION JIT throughput — an inherited JAVA_TOOL_OPTIONS (e.g. a
+# TieredStopAtLevel override from the operator's shell or a CI wrapper)
+# silently biases them (measured live: the KDF budget missed at 748ms vs 400
+# under C1-only). The runner strips inherited JVM overrides so the budgets
+# always measure what ships.
+unset JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS
+
 # ---- compile: javac when available, else Eclipse ECJ on plain JRE ----------
 rm -rf build/test && mkdir -p build/test
 SRC="src/com/hark/neokey/ClipItem.java src/com/hark/neokey/ClipRepo.java src/com/hark/neokey/ClipNorm.java src/com/hark/neokey/ClipText.java src/com/hark/neokey/ClipIO.java \
