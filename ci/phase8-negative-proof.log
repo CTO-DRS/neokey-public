@@ -1,0 +1,29 @@
+== phase8 negative proof — 2026-11-05T23:52:05Z ==
+
+--- baseline (untampered)
+rc=0
+verdict: PHASE8_OK gates=3/3 regressions=0/91 dex=505636/512000 vc=82 tests=1566/0 negatives=12/12+12/12+12/12 pins=7/7 letters=2 packs=1 swaps=1
+
+--- attack: manifest anchor tamper (versionCode 82 -> 81)
+rc=1
+verdict: PHASE8_FAILED rebuild (rc=1, verdict missing)
+restored: rc=0 PHASE8_OK gates=3/3 regressions=0/91 dex=505636/512000 vc=82 tests=1566/0 negatives=12/12+12/12+12/12 pins=7/7 letters=2 packs=1 swaps=1
+
+--- attack: gates.env tamper (KSDRILL_GATE OK -> NOT_OK)
+rc=1
+verdict: PHASE8 regression: KSDRILL_GATE not OK
+verdict: PHASE8_FAILED regressions=1/91 (see PHASE8 regression lines above)
+restored: rc=0 PHASE8_OK gates=3/3 regressions=0/91 dex=505636/512000 vc=82 tests=1566/0 negatives=12/12+12/12+12/12 pins=7/7 letters=2 packs=1 swaps=1
+
+--- attack: log+env double tamper (REBUILD negatives 12/12 -> 11/12 in both)
+rc=1
+verdict: PHASE8_FAILED rebuild (rc=1, verdict missing)
+restored: rc=0 PHASE8_OK gates=3/3 regressions=0/91 dex=505636/512000 vc=82 tests=1566/0 negatives=12/12+12/12+12/12 pins=7/7 letters=2 packs=1 swaps=1
+
+--- attack: phase-8 module hidden (OpVerify.java -> /tmp)
+rc=1
+verdict: PHASE8_FAILED opverify (rc=1, verdict missing)
+restored: rc=0 PHASE8_OK gates=3/3 regressions=0/91 dex=505636/512000 vc=82 tests=1566/0 negatives=12/12+12/12+12/12 pins=7/7 letters=2 packs=1 swaps=1
+
+== PROOF PASSED: all four attacks bit with their own tags, all files restored, final gate green ==
+PHASE8_OK gates=3/3 regressions=0/91 dex=505636/512000 vc=82 tests=1566/0 negatives=12/12+12/12+12/12 pins=7/7 letters=2 packs=1 swaps=1
