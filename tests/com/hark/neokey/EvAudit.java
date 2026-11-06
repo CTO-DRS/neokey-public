@@ -307,6 +307,7 @@ public class EvAudit {
     }
 
     /** طابع زمن التشغيل الوحيد في أعضاء النصوص — يُطبَّع عند الحزم. */
+    static final java.util.regex.Pattern TIMING = java.util.regex.Pattern.compile(" \\(\\d+s\\)$");
     static final java.util.regex.Pattern RUN_TS =
             java.util.regex.Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
 
@@ -315,36 +316,26 @@ public class EvAudit {
      *  متطابقة — الحتمية التي صُمِّم عليها الحزم، والنشر (W42) مستقرّ
      *  البايتات عبر التشغيلات. المحتوى (الصفوف والأحكام والأرقام) بايت-بايت. */
     /** عضو السجل: مثل textMember (إقالة التوقيت + تطابق الطوابع) زائد
-     *  قطع الذيل في الشكل الأوسط بعد آخر صف مرحلة مكتمل — مخرجات المرحلة
-     *  الجارية ليست دليلاً بعد، وقطعها يجعل حزمَ منتصف التشغيل مستقرة
-     *  البايتات أينما وقفت الحزمة داخل المرحلة (نتيجتان متطابقتان =
-     *  بايتات متطابقة). */
+     *  إسقاط سطور تشويش الـJVM («Picked up JAVA_TOOL_OPTIONS») — حديث
+     *  البيئة لا حديث الأنبوب؛ إسقاطها يجعل عضو السجل مستقرّ البايتات
+     *  عبر التشغيلات والبيئات (نتيجتان متطابقتان = بايتات متطابقة). */
     static void logMember(Path src, Path dst) throws IOException {
-        java.util.regex.Pattern ROW = java.util.regex.Pattern.compile("^\\[[a-z0-9]+\\] (PASS|FAIL|SKIP)( \\(\\d+s\\))?$");
-        List<String> in = Files.readAllLines(src, StandardCharsets.UTF_8);
-        boolean complete = false;
-        int lastRow = -1;
-        for (int i = 0; i < in.size(); i++) {
-            String ln = in.get(i);
-            if (ln.startsWith("PIPELINE_OK") || ln.startsWith("PIPELINE_FAILED")) complete = true;
-            if (ROW.matcher(ln).matches()) lastRow = i;
+        List<String> out = new ArrayList<String>();
+        for (String ln : Files.readAllLines(src, StandardCharsets.UTF_8)) {
+            if (ln.startsWith("Picked up ")) continue;
+            java.util.regex.Matcher m = TIMING.matcher(ln);
+            if (m.find()) ln = ln.substring(0, m.start());
+            java.util.regex.Matcher ts = RUN_TS.matcher(ln);
+            if (ts.find()) ln = ts.replaceAll("RUN-TIMESTAMP");
+            out.add(ln);
         }
-        Path cut = src;
-        List<String> trimmed = null;
-        if (!complete && lastRow >= 0 && lastRow < in.size() - 1) {
-            trimmed = new ArrayList<String>(in.subList(0, lastRow + 1));
-            cut = dst.resolveSibling("pipeline.log.tmp");
-            Files.write(cut, String.join("\n", trimmed).getBytes(StandardCharsets.UTF_8));
-        }
-        textMember(cut, dst);
-        if (trimmed != null) Files.deleteIfExists(cut);
+        Files.write(dst, String.join("\n", out).getBytes(StandardCharsets.UTF_8));
     }
 
     static void textMember(Path src, Path dst) throws IOException {
-        java.util.regex.Pattern T = java.util.regex.Pattern.compile(" \\(\\d+s\\)$");
         List<String> out = new ArrayList<String>();
         for (String ln : Files.readAllLines(src, StandardCharsets.UTF_8)) {
-            java.util.regex.Matcher m = T.matcher(ln);
+            java.util.regex.Matcher m = TIMING.matcher(ln);
             if (m.find()) ln = ln.substring(0, m.start());
             java.util.regex.Matcher ts = RUN_TS.matcher(ln);
             if (ts.find()) ln = ts.replaceAll("RUN-TIMESTAMP");
