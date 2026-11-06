@@ -130,7 +130,7 @@ CHECKS=$((CHECKS + 1))
 # the published ledger is PRUNED of the gate's own keys (the W39 self-proof
 # law: nothing carries its own verdict — otherwise every publication would
 # embed the previous publication's verdict and the bytes could never settle)
-rm -rf "$PUBDIR/relstage"; mkdir -p "$PUBDIR/relstage"
+rm -rf "$PUBDIR/relstage" "$PUBDIR/archive"; mkdir -p "$PUBDIR/relstage"
 grep -v '^PUBSYNC_' build/release/gates.env > "$PUBDIR/relstage/gates.env"
 cp build/release/release-manifest.json build/release/rollout-plan.json build/release/rollout-plan.txt "$PUBDIR/relstage/" 2>/dev/null || fail "pack.stage (the release members)"
 [ -f build/release/preflight-sheet.md ] && cp build/release/preflight-sheet.md "$PUBDIR/relstage/"
@@ -411,7 +411,7 @@ fi
 # ---- 8: الدفتر — upsert idempotent + الطازج == الدفتر + قانون السجل الخارجي ----
 [ -f "$STATE" ] || : > "$STATE"
 sed -i '/^PUBSYNC_/d' "$STATE"
-VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM proofs=$PRF rel=$REL base=$BASE_TAG roundtrip=$MODE vc=$PUB_VC vn=$PUB_VN"
+VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM proofs=$PRF rel=$REL base=$BASE_TAG roundtrip=$MODE published=$EV_SHA vc=$PUB_VC vn=$PUB_VN"
 {
   echo "PUBSYNC_GATE=OK"
   echo "PUBSYNC_CHECKS=$CHECKS"
@@ -435,7 +435,10 @@ VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM 
 [ "${PUBSYNC_MEMBERS:-}" = "$MEM" ] || fail "env.pubsync_members"
 [ "${PUBSYNC_VC:-}" = "$PUB_VC" ] || fail "env.pubsync_vc"
 CHECKS=$((CHECKS + 3))
-mask() { printf '%s' "$1" | sed -E 's/members=[0-9]+/members=M/; s/proofs=[0-9/]+/proofs=P/; s/roundtrip=[a-z]+/roundtrip=R/; s/negatives=[0-9]+\/[0-9]+/negatives=N/'; }
+# the mode-dependent fields are masked (the modes run different batteries
+# against the same publication); the identity core (assets/rel/base/vc/vn)
+# must byte-equal — a drifted re-run of the SAME mode still bites on checks
+mask() { printf '%s' "$1" | sed -E 's/members=[0-9]+/members=M/; s/proofs=[0-9/]+/proofs=P/; s/roundtrip=[a-z]+/roundtrip=R/; s/negatives=[0-9]+\/[0-9]+/negatives=N/; s/checks=[0-9]+/checks=C/; s/published=[0-9a-f]*/published=S/'; }
 LOG_LINE=$(grep -oE 'PUBSYNC_OK [^"]*' "$LOGF" 2>/dev/null | head -1 || true)
 if [ -n "$LOG_LINE" ]; then
   [ "$(mask "$LOG_LINE")" = "$(mask "$VERDICT")" ] || fail "outer_log.pubsync (a prior PUBSYNC_OK line drifted from fresh — verdict fields are stable, members/proofs are monotonic)"

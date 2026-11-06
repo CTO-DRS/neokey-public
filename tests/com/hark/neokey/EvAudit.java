@@ -286,7 +286,12 @@ public class EvAudit {
             String n = p.getFileName().toString();
             // لا إثبات ذاتي — انظر أعلاه: سجل المدقّق نفسه، ومنذ W41 سجل
             // إغلاق phase8 (الذي يعيد تشغيل المدقّق داخل كل استدعاء)
-            if (n.equals("evaudit-negative-proof.log") || n.equals("phase8-negative-proof.log")) continue;
+            // فئة الإثبات الذاتي (أعضاؤها الثلاثة): مدقق الأدلة نفسه، إغلاق
+            // phase8 (يعيد تشغيل المدقق داخل كل استدعائه)، وبوابة النشر (W42:
+            // إثباتها يُكتتب بتشغيلها نفسه عبر سكربت الإثبات) — لا بوابة
+            // تحمل إثباتها داخل الأرشيف الذي تنشره
+            if (n.equals("evaudit-negative-proof.log") || n.equals("phase8-negative-proof.log")
+                    || n.equals("pubsync-negative-proof.log")) continue;
             copies.add(new String[]{p.toString(), n});
         }
         List<String> names = new ArrayList<String>();
