@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight → phase7 close → rebuild → evaudit → opverify → phase8 (41 stages; phase 6 closed at stage 33 on week 33, phase 7 closed at stage 37 on week 37, phase 8 W1 = week 38 the REBUILD DRILL at 38, phase 8 W2 = week 39 the WEEK EVIDENCE AUDITOR: this run's evidence archive packed deterministically + four law layers (member integrity, log shape, verdict↔ledger cross-check, identity consensus + the saved-negative-proof law) + twelve exact-tag negatives — the archive is verified, not trusted; phase 8 W3 = week 40 the OPERATOR-OUTPUT VERIFIER LAST: the outputs of the documented outside steps (pendings #1/#2) become machine-verifiable — the Provision letter against the published deployment shape, the transferred pack re-verified before any run, the StoreActivity swap line as a gated line with its published identity + twelve exact-tag negatives; phase 8 W4 = week 41 the CLOSURE at 41, LAST: the three phase-8 gates re-run fresh in one line (rebuild = a fresh drill, evaudit, opverify) + three-way evidence integrity + zero regressions on 33 keys — NEOKEY_REBUILD_INNER=1 omits the drill AND the phase8 closer inside the inner run (both marked INNER_OMIT: the closer re-runs the drill, so inside an inner run it would recurse — a note, no row)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight → phase7 close → rebuild → evaudit → opverify → phase8 → pubsync (42 stages; phase 6 closed at stage 33 on week 33, phase 7 closed at stage 37 on week 37, phase 8 W1 = week 38 the REBUILD DRILL at 38, phase 8 W2 = week 39 the WEEK EVIDENCE AUDITOR: this run's evidence archive packed deterministically + four law layers (member integrity, log shape, verdict↔ledger cross-check, identity consensus + the saved-negative-proof law) + twelve exact-tag negatives — the archive is verified, not trusted; phase 8 W3 = week 40 the OPERATOR-OUTPUT VERIFIER LAST: the outputs of the documented outside steps (pendings #1/#2) become machine-verifiable — the Provision letter against the published deployment shape, the transferred pack re-verified before any run, the StoreActivity swap line as a gated line with its published identity + twelve exact-tag negatives; phase 8 W4 = week 41 the CLOSURE at 41, LAST: the three phase-8 gates re-run fresh in one line (rebuild = a fresh drill, evaudit, opverify) + three-way evidence integrity + zero regressions on 33 keys — NEOKEY_REBUILD_INNER=1 omits the drill AND the phase8 closer inside the inner run (both marked INNER_OMIT: the closer re-runs the drill, so inside an inner run it would recurse — a note, no row); phase 9 W1 = week 42 the PUBLICATION GATE at 42, LAST: the carry-out surface becomes a gated input — EvAudit.pack (the one derivation) → deterministic zip → upload to the published release → the ROUNDTRIP verifies the PUBLISHED bytes (sha re-derived from what was downloaded, the archive audited in isolation by EvAudit.check itself, the cumulative patch proven to apply to the published base) — no credential = fail closed (publish.credential), INNER_OMIT inside the drill (the clone carries no credentials and the drill never touches the network)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -267,7 +267,7 @@ collect_gates() {
   # standalone release.sh re-run) saw the closers as NOT_OK/defaults. The pass
   # now snapshots the closers' keys first and re-appends them at the end.
   local CLOSE_KEEP="build/release/.closer-keys.$$"
-  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_|PREFLIGHT_|PHASE7_|REBUILD_|EVAUDIT_|OPVERIFY_|PHASE8_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
+  grep -E '^(PHASE3_|PHASE4_|PHASE5_|PHASE6_|BILLING_|DEPLOYSRV_|PREFLIGHT_|PHASE7_|REBUILD_|EVAUDIT_|OPVERIFY_|PHASE8_|PUBSYNC_)' "$GATES" > "$CLOSE_KEEP" 2>/dev/null || : > "$CLOSE_KEEP"
   # tests totals: sum the RESULT lines of both suites
   local T=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOG" | awk '{p+=$2; f+=$4} END {print p+0, f+0}')
   {
@@ -678,6 +678,27 @@ elif [ -f tools/r8.jar ] && [ -f tools/android.jar ]; then
   run_stage "phase8" stage_phase8   # INNER_OMIT (guarded above: the closer re-runs the drill — W41)
 else
   skip_stage "phase8" "the closer re-runs the drill — it runs where the provisioned toolchain lives"   # INNER_OMIT (every call-site line of an inner-omitted stage carries the marker)
+fi
+
+# ---- 12: phase 9 W1 (week 42) — the PUBLICATION GATE runs LAST: the carry-out
+# surface becomes a gated input. The evidence archive is packed (EvAudit.pack —
+# the one derivation), zipped deterministically (two zips = identical bytes),
+# uploaded to the PUBLISHED release, and then the ROUNDTRIP is what gets
+# verified: the published bytes are fetched back, their sha256 re-derived from
+# what was DOWNLOADED (a tampered or partial upload bites), the fetched
+# archive is audited in isolation by EvAudit.check itself, and the cumulative
+# patch from the last published state (v2.7-week33) is proven to apply to that
+# base in a local clone. The owner's credential is a fail-closed condition
+# (publish.credential — no publication without it, no pretending), and inside
+# the drill the stage omits itself (INNER_OMIT): the clean clone carries no
+# credentials and the drill never touches the network (the W38 law).
+stage_pubsync() { ci/pubsync_gate.sh; }
+if [ "${NEOKEY_REBUILD_INNER:-0}" = "1" ]; then
+  note "REBUILD_INNER: the pubsync stage omits itself inside the inner run (the clone carries no credentials and the drill never touches the network — the omission is a note, not a row)"   # INNER_OMIT
+elif [ "${SKIP_BUILD:-0}" = "1" ]; then
+  skip_stage "pubsync" "SKIP_BUILD=1 (JVM gates only — the publication needs the run's own evidence)"   # INNER_OMIT
+else
+  run_stage "pubsync" stage_pubsync   # INNER_OMIT (guarded above: no credential inside the drill — W42)
 fi
 
 # ---- summary ------------------------------------------------------------------
