@@ -59,7 +59,7 @@ note "restored: $(printf '%s\n' "$R" | grep -E '^PUBSYNC_OK' | head -1)"
 # ---- attack 2: outer-log drift -------------------------------------------------
 note "--- attack: outer-log drift (the prior PUBSYNC_OK line's base tag flipped)"
 cp build/pipeline.log "$OUTD-pipeline.bak"
-sed -i 's/rel=434872239 base=v2.7-week33 vc=83/rel=434872239 base=v2.7-week32 vc=83/' build/pipeline.log
+sed -i "s/base=v2.7-week33/base=v2.7-week32/" build/pipeline.log
 A2=$(run_gate); RC=$?
 expect "attack 2" "outer_log.pubsync" "$A2"
 cp "$OUTD-pipeline.bak" build/pipeline.log

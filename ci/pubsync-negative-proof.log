@@ -1,0 +1,20 @@
+== pubsync negative proof — 2026-11-06T11:11:53Z ==
+--- baseline (untampered)
+rc=0
+PUBSYNC_OK checks=21 negatives=12/12 assets=2 members=28 proofs=22 rel=434872239 base=v2.7-week33 roundtrip=local published=92b89bfb2be113549387aaa5d3bc64ac44f8f7dd619c33fc0b13a83efc746905 vc=83 vn=3.6
+--- attack: manifest anchor tamper (versionCode -> an always-wrong 81, bump-independent per the W36 lesson)
+ok: attack 1 bit with its tag (anchor.identity.vc)
+restored: PUBSYNC_OK checks=21 negatives=12/12 assets=2 members=28 proofs=22 rel=434872239 base=v2.7-week33 roundtrip=local published=92b89bfb2be113549387aaa5d3bc64ac44f8f7dd619c33fc0b13a83efc746905 vc=83 vn=3.6
+--- attack: outer-log drift (the prior PUBSYNC_OK line's base tag flipped)
+ok: attack 2 bit with its tag (outer_log.pubsync)
+restored: PUBSYNC_OK checks=21 negatives=12/12 assets=2 members=28 proofs=22 rel=434872239 base=v2.7-week33 roundtrip=local published=92b89bfb2be113549387aaa5d3bc64ac44f8f7dd619c33fc0b13a83efc746905 vc=83 vn=3.6
+--- attack: module hidden (PubSync.java -> /tmp)
+ok: attack 3 bit with its tag (compile.tooling)
+restored: PUBSYNC_OK checks=21 negatives=12/12 assets=2 members=28 proofs=22 rel=434872239 base=v2.7-week33 roundtrip=local published=92b89bfb2be113549387aaa5d3bc64ac44f8f7dd619c33fc0b13a83efc746905 vc=83 vn=3.6
+--- attack: credential hidden (PUBSYNC_TOKEN_FILE -> empty temp file)
+ok: attack 4 bit with its tag (publish.credential)
+restored: PUBSYNC_OK checks=21 negatives=12/12 assets=2 members=28 proofs=22 rel=434872239 base=v2.7-week33 roundtrip=local published=92b89bfb2be113549387aaa5d3bc64ac44f8f7dd619c33fc0b13a83efc746905 vc=83 vn=3.6
+
+== PROOF PASSED: all four attacks bit with their own tags, all files restored, final gate green ==
+PUBSYNC_OK checks=21 negatives=12/12 assets=2 members=28 proofs=22 rel=434872239 base=v2.7-week33 roundtrip=local published=92b89bfb2be113549387aaa5d3bc64ac44f8f7dd619c33fc0b13a83efc746905 vc=83 vn=3.6
+PUBSYNC_OK checks=21 negatives=12/12 assets=2 members=28 proofs=22 rel=434872239 base=v2.7-week33 roundtrip=local published=92b89bfb2be113549387aaa5d3bc64ac44f8f7dd619c33fc0b13a83efc746905 vc=83 vn=3.6
