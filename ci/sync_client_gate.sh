@@ -18,6 +18,11 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
+# measurement integrity (week 42 fix #2, same law as tests/run.sh): this gate
+# enforces WALL-TIME budgets — an inherited JAVA_TOOL_OPTIONS (a JIT-tier
+# override) silently biases them; the budgets always measure what ships.
+unset JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS
+
 find_jar() {
   for d in "${NEOKEY_TOOLS:-}" ./tools /workspace/work "$HOME/.neokey/tools"; do
     [ -n "$d" ] && [ -f "$d/$1" ] && { echo "$d/$1"; return 0; }

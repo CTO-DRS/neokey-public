@@ -26,6 +26,11 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
+# measurement integrity (week 42 fix #2, same law as tests/run.sh): this gate
+# enforces WALL-TIME budgets — an inherited JAVA_TOOL_OPTIONS (a JIT-tier
+# override) silently biases them; the budgets always measure what ships.
+unset JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS
+
 DEX_CEILING=512000   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
 VC_MIN=66            # closing week must bump the manifest (65 was week 24)
 TESTS_MIN=1334       # shipped test total at phase-4 close (1,334 = week 24)
