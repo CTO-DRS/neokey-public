@@ -121,7 +121,7 @@ CHECKS=$((CHECKS + 2))
 # ---- 4: الرفع — إضافة أحادية (أصول الأسبوع 33 تبقى) ----------------------------
 PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
 PUB_UP="https://uploads.github.com/repos/$REPO/releases/$REL/assets"
-pub_gh() { curl -sSL -H "Authorization: token $TOKEN" -H "User-Agent: neokey-pubsync" "$@"; }
+pub_gh() { curl -sSL -H "Authorization: token $TOKEN" "$@"; }
 # the API 404s FLAKILY on freshly-uploaded assets (eventual consistency —
 # measured live: a listed asset's DELETE returned 404 then 204 on retry) —
 # every HTTP step retries with backoff before the gate calls it a failure
@@ -133,7 +133,11 @@ pub_retry() { # $1 tag, $2.. the curl args (the octet-stream GET 404s in
   for try in $(seq 1 "$tries"); do
     code=$(pub_gh -o "$PUBDIR/.http-body" -w '%{http_code}' "$@")
     case "$code" in 200|201|204) return 0;; esac
-    sleep $(( (try * 3) > 15 ? 15 : try * 3 ))
+    # sparse cadence: the API soft-404s DENSE retry bursts on the asset
+    # endpoints (measured live: a burst of 20 attempts over 5 minutes all 404
+    # while single probes minutes apart succeed) — the backoff SPACES the
+    # attempts instead of hammering
+    sleep $(( (try * 12) > 45 ? 45 : try * 12 ))
   done
   fail "$tag (http=$code after $tries tries, url=$url: $(head -c 140 "$PUBDIR/.http-body" 2>/dev/null))"
 }
@@ -192,6 +196,15 @@ done
 # re-list AFTER the uploads: the roundtrip maps names to the NEW asset ids
 ASSETS_JSON=$(pub_gh "$PUB_API/assets?per_page=100")
 [ -n "$ASSETS_JSON" ] || fail "publish.relist (empty asset listing after upload)"
+if [ "$UPLOADED" != "0" ]; then
+  # storage readiness: the bytes of a JUST-UPLOADED asset are not fetchable
+  # back for a few minutes, and a too-early GET poisons nothing but wastes
+  # the retry budget — a deliberate single wait, then the roundtrip fetches
+  # once (the deterministic pack makes the bytes stable, so future runs take
+  # the idempotent path and fetch only OLD, long-stable assets)
+  echo "[pubsync] waiting 90s for the storage backend to serve the fresh bytes"
+  sleep 90
+fi
 CHECKS=$((CHECKS + 1))
 
 # ---- 5: جولة الذهاب والعودة — المنزَّل هو الذي يُتحقق منه ----------------------

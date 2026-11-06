@@ -293,11 +293,36 @@ public class EvAudit {
         for (String[] c : copies) {
             Path src = Paths.get(c[0]);
             if (!Files.isRegularFile(src)) refuse("pack.source_missing " + c[1]);
-            Files.copy(src, archiveDir.resolve(c[1]), StandardCopyOption.REPLACE_EXISTING);
+            if (c[1].equals("gates.env")) {
+                Files.copy(src, archiveDir.resolve(c[1]), StandardCopyOption.REPLACE_EXISTING);
+            } else {
+                textMember(Paths.get(c[0]), archiveDir.resolve(c[1]));
+            }
             names.add(c[1]);
         }
         writeSums(archiveDir, names);
         return "EVAUDIT_PACK_OK members=" + names.size();
+    }
+
+    /** طابع زمن التشغيل الوحيد في أعضاء النصوص — يُطبَّع عند الحزم. */
+    static final java.util.regex.Pattern RUN_TS =
+            java.util.regex.Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
+
+    /** عضو نصي مُطبَّع: أزواج توقيت المراحل (jitter — قانون W38) وأطوابع
+     *  التشغيل ISO تُقلَع/تُطبَّع حتى تكون حزمُ نتيجتين متطابقتين بايتاتٍ
+     *  متطابقة — الحتمية التي صُمِّم عليها الحزم، والنشر (W42) مستقرّ
+     *  البايتات عبر التشغيلات. المحتوى (الصفوف والأحكام والأرقام) بايت-بايت. */
+    static void textMember(Path src, Path dst) throws IOException {
+        java.util.regex.Pattern T = java.util.regex.Pattern.compile(" \\(\\d+s\\)$");
+        List<String> out = new ArrayList<String>();
+        for (String ln : Files.readAllLines(src, StandardCharsets.UTF_8)) {
+            java.util.regex.Matcher m = T.matcher(ln);
+            if (m.find()) ln = ln.substring(0, m.start());
+            java.util.regex.Matcher ts = RUN_TS.matcher(ln);
+            if (ts.find()) ln = ts.replaceAll("RUN-TIMESTAMP");
+            out.add(ln);
+        }
+        Files.write(dst, String.join("\n", out).getBytes(StandardCharsets.UTF_8));
     }
 
     // ---- تحليل السجل: الصفوف والأرقام -----------------------------------------
