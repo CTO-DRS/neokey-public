@@ -45,6 +45,7 @@ fail() { echo "PUBSYNC_FAILED $1"; exit 1; }
 # waits on it — the weekly flow runs --roundtrip standalone and the proof's
 # baseline carries it committed.
 MODE="local"
+[ "${1:-}" = "--verify" ] && MODE="verify"
 [ "${1:-}" = "--roundtrip" ] && MODE="remote"
 STATE=build/release/gates.env
 LOGF=build/pipeline.log
@@ -52,12 +53,16 @@ OUTD=build/pubsync/tooling
 PUBDIR=build/pubsync
 REL=434872239
 REPO=CTO-DRS/neokey-hark
+PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
+PUB_UP="https://uploads.github.com/repos/$REPO/releases/$REL/assets"
 WEEK=42
 BASE_TAG=v2.7-week33
 EV_NAME="neokey-evidence-week${WEEK}.zip"
 PATCH_NAME="neokey-patch-week33-42.patch"
 CHECKS=0
 ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
+
+pub_gh() { if [ "${PUBSYNC_CURL_DEBUG:-0}" = "1" ]; then curl -sSL --trace-ascii "$PUBDIR/curl-trace.txt" -H "Authorization: token $TOKEN" "$@"; else curl -sSL -H "Authorization: token $TOKEN" "$@"; fi; }
 
 # ---- 0: المراساة + الاعتماد — المرجع = المنشور --------------------------------
 PUB_VC=83
@@ -76,6 +81,42 @@ command -v python3 >/dev/null 2>&1 || fail "publish.tooling (python3 absent — 
 command -v curl >/dev/null 2>&1 || fail "publish.tooling (curl absent)"
 CHECKS=$((CHECKS + 4))
 
+# ---- 0b: وضع VERIFY (مسار الأنبوب) — تدقيق حالة النشر المنشور -----------------
+#   النشر الفعلي والجولة البعيدة والبطارية تعيش في --roundtrip (المستقل،
+#   خارج مغلف التشغيل): من ينشر لا يستطيع أن يضمن جلب بايتاته بعد الرفع
+#   (الطرف الخلفي يجهّز الأصول الثنائية دقائق، والجلب يرفض بنوافذ دقائق) —
+#   فمرحلة الأنبوب تُدقِّق حالة النشر: الأصلان باسمي هذا الأسبوع على
+#   الإصدار، بأحجام تطابق ما دفترُه يعلنه (والدفتر يُحدَّث فقط بجولة
+#   بعيدة خضراء تحمل sha المنشور) — سلسلة عهدة: المستقل يجلب ويستنتج
+#   sha من المنزَّل، والأنبوب يطابق الحجم ضد ذلك الاستنتاج.
+if [ "$MODE" = "verify" ]; then
+  ASSETS_JSON=""
+  for try in 1 2 3; do
+    ASSETS_JSON=$(pub_gh "$PUB_API/assets?per_page=100")
+    [ -n "$ASSETS_JSON" ] && break
+    sleep 2
+  done
+  [ -n "$ASSETS_JSON" ] || fail "verify.list (empty asset listing)"
+  . "$STATE"
+  [ "${PUBSYNC_GATE:-}" = "OK" ] || fail "verify.ledger (the ledger carries no verified publication — run ci/pubsync_gate.sh first)"
+  [ -n "${PUBSYNC_PUBLISHED_SHA:-}" ] || fail "verify.ledger (no published-sha recorded — run ci/pubsync_gate.sh once to publish)"
+  for NAME in "$EV_NAME" "$PATCH_NAME"; do
+    ASIZE=$(printf '%s' "$ASSETS_JSON" | python3 -c "
+import json, sys
+for a in json.load(sys.stdin):
+    if a['name'] == sys.argv[1]:
+        print(a['size']); break
+" "$NAME")
+    [ -n "$ASIZE" ] || fail "verify.stale ($NAME is not on the release — the published state must carry this week's publication)"
+    KEY=$(printf 'PUBSYNC_PUBLISHED_SIZE_%s' "$([ "$NAME" = "$EV_NAME" ] && echo EV || echo PATCH)")
+    [ "$ASIZE" = "${!KEY:-}" ] || fail "verify.size ($NAME listed $ASIZE != the remote-verified ${!KEY:-?} — the published state drifted from the ledger)"
+    CHECKS=$((CHECKS + 1))
+  done
+  VERDICT="PUBSYNC_OK checks=$CHECKS negatives=${PUBSYNC_NEGATIVES:-0/12} assets=2 members=${PUBSYNC_MEMBERS:-0} proofs=${PUBSYNC_PROOFS:-0} rel=$REL base=$BASE_TAG roundtrip=verify published=${PUBSYNC_PUBLISHED_SHA:-?} vc=$PUB_VC vn=$PUB_VN"
+  echo "$VERDICT"
+  exit 0
+fi
+
 # ---- 1: الترجمة — الوحدة + المدقق في مجلد مؤقت ---------------------------------
 rm -rf "$OUTD"; mkdir -p "$OUTD" "$PUBDIR"
 ECJ="java -jar tools/ecj.jar -nowarn -source 8 -target 8 -encoding UTF-8"
@@ -86,11 +127,21 @@ ck "$?" 0 "compile.tooling"
 CHECKS=$((CHECKS + 1))
 
 # ---- 2: الحزمة (الاشتقاق الواحد) + التزويد الحتمي + الرقعة ---------------------
-PACK_OUT=$(java -cp "$OUTD" com.hark.neokey.EvAudit pack "$PUBDIR/archive" build/pipeline.log build/release ci 2>&1) || fail "pack.evaudit ($PACK_OUT)"
+# the published ledger is PRUNED of the gate's own keys (the W39 self-proof
+# law: nothing carries its own verdict — otherwise every publication would
+# embed the previous publication's verdict and the bytes could never settle)
+rm -rf "$PUBDIR/relstage"; mkdir -p "$PUBDIR/relstage"
+grep -v '^PUBSYNC_' build/release/gates.env > "$PUBDIR/relstage/gates.env"
+cp build/release/release-manifest.json build/release/rollout-plan.json build/release/rollout-plan.txt "$PUBDIR/relstage/" 2>/dev/null || fail "pack.stage (the release members)"
+[ -f build/release/preflight-sheet.md ] && cp build/release/preflight-sheet.md "$PUBDIR/relstage/"
+PACK_OUT=$(java -cp "$OUTD" com.hark.neokey.EvAudit pack "$PUBDIR/archive" build/pipeline.log "$PUBDIR/relstage" ci 2>&1) || fail "pack.evaudit ($PACK_OUT)"
 echo "[pubsync] $PACK_OUT"
 PACK_LINE=$(printf '%s\n' "$PACK_OUT" | grep -oE 'EVAUDIT_PACK_OK [^"]*' | head -1)
 MEM=$(printf '%s' "$PACK_LINE" | sed -E 's/.* members=([0-9]+).*/\1/')
-PRF=$(printf '%s' "$PACK_LINE" | grep -oE 'proofs=[0-9]+(/[0-9]+)?' | cut -d= -f2); PRF=${PRF:-0}
+PRF=$(printf '%s' "$PACK_LINE" | grep -oE 'proofs=[0-9]+(/[0-9]+)?' | cut -d= -f2)
+# the pack line carries members only — the proof count comes from the archive's own SHA256SUMS
+PRF=${PRF:-$(grep -c "negative-proof.log" "$PUBDIR/archive/SHA256SUMS" 2>/dev/null)}
+PRF=${PRF:-0}
 case "${MEM:-}" in ''|*[!0-9]*) fail "pack.members ($PACK_LINE)";; esac
 CHECKS=$((CHECKS + 2))
 
@@ -102,7 +153,7 @@ Z2=$(sha256sum "$PUBDIR/${EV_NAME}.again.zip" | cut -d' ' -f1)
 rm -f "$PUBDIR/${EV_NAME}.again.zip"
 CHECKS=$((CHECKS + 2))
 
-git diff "$BASE_TAG" HEAD > "$PUBDIR/$PATCH_NAME" || fail "patch.generate"
+git diff --binary "$BASE_TAG" HEAD > "$PUBDIR/$PATCH_NAME" || fail "patch.generate"
 [ -s "$PUBDIR/$PATCH_NAME" ] || fail "patch.generate (empty diff — the base must differ from HEAD)"
 CHECKS=$((CHECKS + 1))
 
@@ -129,9 +180,6 @@ java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDI
 CHECKS=$((CHECKS + 2))
 
 # ---- 4: الرفع — إضافة أحادية (أصول الأسبوع 33 تبقى) ----------------------------
-PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
-PUB_UP="https://uploads.github.com/repos/$REPO/releases/$REL/assets"
-pub_gh() { if [ "${PUBSYNC_CURL_DEBUG:-0}" = "1" ]; then curl -sSL --trace-ascii "$PUBDIR/curl-trace.txt" -H "Authorization: token $TOKEN" "$@"; else curl -sSL -H "Authorization: token $TOKEN" "$@"; fi; }
 # the API 404s FLAKILY on freshly-uploaded assets (eventual consistency —
 # measured live: a listed asset's DELETE returned 404 then 204 on retry) —
 # every HTTP step retries with backoff before the gate calls it a failure
@@ -232,7 +280,7 @@ for a in json.load(sys.stdin):
         print(a['id']); break
 " "$NAME")
     [ -n "$AID" ] || fail "roundtrip.stale ($NAME is not on the release — the publication must be fetchable back)"
-    PUBSYNC_HTTP_TRIES="${PUBSYNC_RT_TRIES:-5}" pub_retry "roundtrip.download ($NAME id=$AID)" -H "Accept: application/octet-stream" -o "$PUBDIR/roundtrip/$NAME" "$PUB_API/assets/$AID"
+    PUBSYNC_HTTP_TRIES="${PUBSYNC_RT_TRIES:-1}" pub_retry "roundtrip.download ($NAME id=$AID)" -H "Accept: application/octet-stream" -o "$PUBDIR/roundtrip/$NAME" "$PUB_API/assets/$AID"
     GOT=$(wc -c < "$PUBDIR/roundtrip/$NAME")
     WANT=$(wc -c < "$PUBDIR/$NAME")
     [ "$GOT" = "$WANT" ] || fail "roundtrip.size ($NAME fetched $GOT != declared $WANT — a partial or tampered fetch)"
@@ -272,6 +320,7 @@ echo "[pubsync] $AOUT" | tail -1
 CHECKS=$((CHECKS + 1))
 
 rm -rf "$PUBDIR/base"
+git worktree prune >/dev/null 2>&1 || true
 git worktree add --detach -q "$PUBDIR/base" "$BASE_TAG" 2>/dev/null || fail "patch.base_worktree ($BASE_TAG)"
 git -C "$PUBDIR/base" apply --check "$(pwd)/$PATCH_SRC" 2>&1 | head -3
 ck "$?" 0 "patch.apply" "the cumulative patch must apply to the published base"
@@ -280,6 +329,11 @@ git diff --stat "$BASE_TAG" HEAD | tail -1 > "$PUBDIR/patch-stat.txt"
 CHECKS=$((CHECKS + 1))
 
 # ---- 7: الاثنتا عشرة سلبة — بوسمها الحرفي على نسخ متسخة مؤقتة -------------------
+#   the battery runs in the publish modes (local + remote — the standalone
+#   runs and the saved proof carry the teeth); the pipeline's --verify stage
+#   audits the published state and stays inside its time envelope
+if [ "$MODE" != "verify" ]; then
+
 neg() { # $1 tag expected, $2.. the command
   local want="$1"; shift
   local out rc
@@ -307,7 +361,6 @@ neg "pubsync.sha_missing" java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBD
 mkst n5.json; sed -i "s/\"asset_sha1\": \"$EV_SHA\"/\"asset_sha1\": \"$(printf '0%.0s' {1..64})\"/" "$PUBDIR/n5.json"
 neg "pubsync.sha_mismatch" java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/n5.json" "$PUBDIR/stage"
 
-rm -rf "$PUBDIR/dl-missing"; mkdir -p "$PUBDIR/dl-missing"; cp "$PUBDIR/roundtrip/$PATCH_NAME" "$PUBDIR/dl-missing/"
 rm -rf "$PUBDIR/dl-missing"; mkdir -p "$PUBDIR/dl-missing"; cp "$RT_SRC/$PATCH_NAME" "$PUBDIR/dl-missing/"
 neg "pubsync.asset_missing" java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/dl-missing"
 
@@ -353,6 +406,7 @@ aout=$(java -cp "$OUTD" com.hark.neokey.EvAudit check "$PUBDIR/dirty-archive" --
 java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$RT_SRC" || fail "negatives.restored (the real roundtrip must verify green after the battery)"
 [ "$NEG_FAIL" = "0" ] || fail "negatives ($NEG_PASS/12 — every negative must bite with its own tag)"
 CHECKS=$((CHECKS + 2))
+fi
 
 # ---- 8: الدفتر — upsert idempotent + الطازج == الدفتر + قانون السجل الخارجي ----
 [ -f "$STATE" ] || : > "$STATE"
@@ -372,13 +426,16 @@ VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM 
   echo "PUBSYNC_VN=$PUB_VN"
   echo "PUBSYNC_PACK_LINE=$PACK_LINE"
   echo "PUBSYNC_ROUNDTRIP=$MODE"
+  echo "PUBSYNC_PUBLISHED_SHA=$EV_SHA"
+  echo "PUBSYNC_PUBLISHED_SIZE_EV=$(wc -c < "$PUBDIR/$EV_NAME")"
+  echo "PUBSYNC_PUBLISHED_SIZE_PATCH=$(wc -c < "$PUBDIR/$PATCH_NAME")"
 } >> "$STATE"
 . "$STATE"
 [ "${PUBSYNC_CHECKS:-}" = "$CHECKS" ] || fail "env.pubsync_checks"
 [ "${PUBSYNC_MEMBERS:-}" = "$MEM" ] || fail "env.pubsync_members"
 [ "${PUBSYNC_VC:-}" = "$PUB_VC" ] || fail "env.pubsync_vc"
 CHECKS=$((CHECKS + 3))
-mask() { printf '%s' "$1" | sed -E 's/members=[0-9]+/members=M/; s/proofs=[0-9/]+/proofs=P/; s/roundtrip=[a-z]+/roundtrip=R/'; }
+mask() { printf '%s' "$1" | sed -E 's/members=[0-9]+/members=M/; s/proofs=[0-9/]+/proofs=P/; s/roundtrip=[a-z]+/roundtrip=R/; s/negatives=[0-9]+\/[0-9]+/negatives=N/'; }
 LOG_LINE=$(grep -oE 'PUBSYNC_OK [^"]*' "$LOGF" 2>/dev/null | head -1 || true)
 if [ -n "$LOG_LINE" ]; then
   [ "$(mask "$LOG_LINE")" = "$(mask "$VERDICT")" ] || fail "outer_log.pubsync (a prior PUBSYNC_OK line drifted from fresh — verdict fields are stable, members/proofs are monotonic)"

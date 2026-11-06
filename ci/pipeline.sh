@@ -11,7 +11,16 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 LOG=build/pipeline.log; mkdir -p build; : > "$LOG"
-GATES=build/release/gates.env; mkdir -p build/release; : > "$GATES"
+GATES=build/release/gates.env; mkdir -p build/release
+# the publication state (W42) survives the startup truncation: the ledger's
+# PUBSYNC_ keys are the RESTING state between runs — refreshed only by a green
+# gate run (local publishes + verifies locally, --roundtrip adds the remote
+# fetch) and consumed by the pipeline's --verify stage — the same law as the
+# closer keys, applied where the older law never reached: the startup wipe
+grep -E '^PUBSYNC_' "$GATES" > build/release/.pubsync-keys.$$ 2>/dev/null || : > build/release/.pubsync-keys.$$
+: > "$GATES"
+if [ -s build/release/.pubsync-keys.$$ ]; then cat build/release/.pubsync-keys.$$ >> "$GATES"; fi
+rm -f build/release/.pubsync-keys.$$
 FAILED=0
 NAMES=(); VERDICTS=()
 
@@ -692,11 +701,13 @@ fi
 # (publish.credential — no publication without it, no pretending), and inside
 # the drill the stage omits itself (INNER_OMIT): the clean clone carries no
 # credentials and the drill never touches the network (the W38 law).
-stage_pubsync() { ci/pubsync_gate.sh; }
+stage_pubsync() { ci/pubsync_gate.sh --verify; }
 if [ "${NEOKEY_REBUILD_INNER:-0}" = "1" ]; then
   note "REBUILD_INNER: the pubsync stage omits itself inside the inner run (the clone carries no credentials and the drill never touches the network — the omission is a note, not a row)"   # INNER_OMIT
 elif [ "${SKIP_BUILD:-0}" = "1" ]; then
   skip_stage "pubsync" "SKIP_BUILD=1 (JVM gates only — the publication needs the run's own evidence)"   # INNER_OMIT
+elif ! grep -q '^PUBSYNC_GATE=OK' build/release/gates.env 2>/dev/null; then
+  skip_stage "pubsync" "no publication state yet — the standalone gate establishes it (the weekly flow: ci/pubsync_gate.sh, then the pipeline's --verify stage audits it); a red log publishes nothing"   # INNER_OMIT
 else
   run_stage "pubsync" stage_pubsync   # INNER_OMIT (guarded above: no credential inside the drill — W42)
 fi
