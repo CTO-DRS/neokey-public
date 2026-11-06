@@ -87,7 +87,7 @@ echo "[evaudit] $GATE_LINE"
 # ---- 4: ledger consistency — the idempotent upsert + the two equalities -------
 field() { echo "$1" | sed -E "s/.* $2=([^ ]+).*/\1/"; }
 CHK=$(field "$GATE_LINE" checks); NEG=$(echo "$GATE_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)
-MEM=$(field "$GATE_LINE" members); PRF=$(echo "$GATE_LINE" | grep -oE 'proofs=[0-9]+/[0-9]+' | cut -d= -f2)
+MEM=$(field "$GATE_LINE" members); PRF=$(echo "$GATE_LINE" | grep -oE 'proofs=[0-9]+(/[0-9]+)?' | cut -d= -f2)
 TPF=$(field "$GATE_LINE" tests); DEX=$(field "$GATE_LINE" dex | cut -d/ -f1)
 mkdir -p build/release; [ -f "$STATE" ] || : > "$STATE"
 sed -i '/^EVAUDIT_/d' "$STATE"
