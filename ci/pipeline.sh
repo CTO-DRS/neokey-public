@@ -1,7 +1,7 @@
 #!/bin/bash
 # NeoKey CI pipeline — roadmap Phase 0, item B "خط الإنتاج الآلي (CI/CD)".
 #
-#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight → phase7 close → rebuild → evaudit → opverify → phase8 → pubsync (42 stages; phase 6 closed at stage 33 on week 33, phase 7 closed at stage 37 on week 37, phase 8 W1 = week 38 the REBUILD DRILL at 38, phase 8 W2 = week 39 the WEEK EVIDENCE AUDITOR: this run's evidence archive packed deterministically + four law layers (member integrity, log shape, verdict↔ledger cross-check, identity consensus + the saved-negative-proof law) + twelve exact-tag negatives — the archive is verified, not trusted; phase 8 W3 = week 40 the OPERATOR-OUTPUT VERIFIER LAST: the outputs of the documented outside steps (pendings #1/#2) become machine-verifiable — the Provision letter against the published deployment shape, the transferred pack re-verified before any run, the StoreActivity swap line as a gated line with its published identity + twelve exact-tag negatives; phase 8 W4 = week 41 the CLOSURE at 41, LAST: the three phase-8 gates re-run fresh in one line (rebuild = a fresh drill, evaudit, opverify) + three-way evidence integrity + zero regressions on 33 keys — NEOKEY_REBUILD_INNER=1 omits the drill AND the phase8 closer inside the inner run (both marked INNER_OMIT: the closer re-runs the drill, so inside an inner run it would recurse — a note, no row); phase 9 W1 = week 42 the PUBLICATION GATE at 42, LAST: the carry-out surface becomes a gated input — EvAudit.pack (the one derivation) → deterministic zip → upload to the published release → the ROUNDTRIP verifies the PUBLISHED bytes (sha re-derived from what was downloaded, the archive audited in isolation by EvAudit.check itself, the cumulative patch proven to apply to the published base) — no credential = fail closed (publish.credential), INNER_OMIT inside the drill (the clone carries no credentials and the drill never touches the network); phase 9 W2 = week 43 the OWNER FETCH VERIFIER at 43, LAST: any published release verified from ANY machine without the write credential — the statement published as the third asset, the sha re-derived from the FETCHED bytes, the fetched archive audited in isolation, the fetched patch proven to rebuild HEAD's tree byte-exactly, the record (the committed proof line's full published sha) anchoring against the consistent forger, read-only enforced on the tool's own surface, INNER_OMIT inside the drill (no publication state there)
+#   probe → secrets audit → tests → performance → store → correction → nnet → dialect → assistant → sync-line → rest-wire → tls-pinning → deploy-bundle → ksdrill → payment-provider → phase-3 gates → phase3 close → build → r8 → trim → signedapk → phase4 close → phase5 close → release manifest → uploadbundle → phase6 close → billing → deploysrv → preflight → phase7 close → rebuild → evaudit → opverify → phase8 → pubsync (42 stages; phase 6 closed at stage 33 on week 33, phase 7 closed at stage 37 on week 37, phase 8 W1 = week 38 the REBUILD DRILL at 38, phase 8 W2 = week 39 the WEEK EVIDENCE AUDITOR: this run's evidence archive packed deterministically + four law layers (member integrity, log shape, verdict↔ledger cross-check, identity consensus + the saved-negative-proof law) + twelve exact-tag negatives — the archive is verified, not trusted; phase 8 W3 = week 40 the OPERATOR-OUTPUT VERIFIER LAST: the outputs of the documented outside steps (pendings #1/#2) become machine-verifiable — the Provision letter against the published deployment shape, the transferred pack re-verified before any run, the StoreActivity swap line as a gated line with its published identity + twelve exact-tag negatives; phase 8 W4 = week 41 the CLOSURE at 41, LAST: the three phase-8 gates re-run fresh in one line (rebuild = a fresh drill, evaudit, opverify) + three-way evidence integrity + zero regressions on 33 keys — NEOKEY_REBUILD_INNER=1 omits the drill AND the phase8 closer inside the inner run (both marked INNER_OMIT: the closer re-runs the drill, so inside an inner run it would recurse — a note, no row); phase 9 W1 = week 42 the PUBLICATION GATE at 42, LAST: the carry-out surface becomes a gated input — EvAudit.pack (the one derivation) → deterministic zip → upload to the published release → the ROUNDTRIP verifies the PUBLISHED bytes (sha re-derived from what was downloaded, the archive audited in isolation by EvAudit.check itself, the cumulative patch proven to apply to the published base) — no credential = fail closed (publish.credential), INNER_OMIT inside the drill (the clone carries no credentials and the drill never touches the network); phase 9 W2 = week 43 the OWNER FETCH VERIFIER at 43, LAST: any published release verified from ANY machine without the write credential — the statement published as the third asset, the sha re-derived from the FETCHED bytes, the fetched archive audited in isolation, the fetched patch proven to rebuild HEAD's tree byte-exactly, the record (the committed proof line's full published sha) anchoring against the consistent forger, read-only enforced on the tool's own surface, INNER_OMIT inside the drill (no publication state there); phase 9 W3 = week 44 the CLOSURE at 44, LAST: the publication line's two gates re-run fresh in one line — the publication gate in its PUBLISH mode (the week's assets join the additive set, the roundtrip re-derived from the fetched bytes) and the owner fetch verifier in its full local mode (the 24-check battery the pipeline stage skips) — fresh baselines pinned, gates.env consensus, 35-key whole-pipeline no-regression, the phase-7 AND phase-8 closes still 0-regressions, the close floor vc 85 / 3.8 pinned once in release-manifest.phase9Close; INNER_OMIT inside the drill (a closer may not run inside the drill)
 #
 # Every gate is hard: a FAIL aborts the pipeline with exit 1 and nothing is released.
 # Runs anywhere (JVM-only stages need no SDK); full log: build/pipeline.log
@@ -23,7 +23,7 @@ if [ -s build/release/.pubsync-keys.$$ ]; then cat build/release/.pubsync-keys.$
 rm -f build/release/.pubsync-keys.$$
 FAILED=0
 NAMES=(); VERDICTS=()
-WEEK=43  # the live week (the publication lifecycle guards read it — W43)
+WEEK=44  # the live week (the publication lifecycle guards read it — W43)
 
 note() { echo "$@" | tee -a "$LOG"; }
 
@@ -743,6 +743,24 @@ elif ! grep -q "^PUBSYNC_WEEK=$WEEK$" build/release/gates.env 2>/dev/null; then
   skip_stage "ownerverify" "no publication state for THIS week — the standalone gate establishes it (the weekly flow: ci/pubsync_gate.sh publishes, ci/ownerverify_gate.sh verifies, then the pipeline's stage audits the state); last week's state must not red this week's run"   # INNER_OMIT
 else
   run_stage "ownerverify" stage_ownerverify   # INNER_OMIT (guarded above: no publication state inside the drill — W43)
+fi
+
+# ---- 14: phase 9 W3 (week 44) — the CLOSURE at 44, LAST: the publication line's
+# two gates re-run fresh in one line (docs/PHASE9-W2-REPORT.md §5 derives the
+# week): the publication gate in its PUBLISH mode (the write credential is
+# fail-closed — no credential = a declared failure, never a skip, never a
+# pretending) and the owner fetch verifier in its full local mode (the battery).
+# The closer pins the close floor vc 85 / 3.8 ONCE in
+# release-manifest.phase9Close and guards the whole 35-key pipeline state.
+# Inside the drill the stage omits itself (INNER_OMIT, three stages deep —
+# W38/W41 pattern): a closer may not run inside the drill.
+stage_phase9() { ci/phase9_gate.sh; }
+if [ "${NEOKEY_REBUILD_INNER:-0}" = "1" ]; then
+  note "REBUILD_INNER: the phase9 closer omits itself inside the inner run (recursion guard three stages deep — a note, not a row)"   # INNER_OMIT
+elif [ -f tools/r8.jar ] && [ -f tools/android.jar ]; then
+  run_stage "phase9" stage_phase9   # INNER_OMIT (guarded above: the closer re-runs the gates — W44)
+else
+  skip_stage "phase9" "the closer re-runs the gates — it runs where the provisioned toolchain lives"   # INNER_OMIT (every call-site line of an inner-omitted stage carries the marker)
 fi
 
 # ---- summary ------------------------------------------------------------------

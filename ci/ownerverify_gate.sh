@@ -43,7 +43,7 @@
 #   Modes: الافتراضي local (الأنبوب: حالة النشر المحلية بلا شبكة) و
 #   --remote (جهاز المالك: جلب المنشور من الإصدار). Verdict:
 #   `OWNERVERIFY_OK checks=N negatives=n/12 assets=3 rel=R base=T
-#   week=W mode=M record=S vc=84 vn=3.7` / `OWNERVERIFY_FAILED <tag>`
+#   week=W mode=M record=S vc=85 vn=3.8` / `OWNERVERIFY_FAILED <tag>`
 #   (exit 1). المفاتيح تُربَد idempotently (تحصين W33) وتحملها
 #   CLOSE_KEEP.
 set -uo pipefail
@@ -60,7 +60,7 @@ REL=434872239
 REPO=CTO-DRS/neokey-hark
 PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
 BASE_TAG=v2.7-week33
-WEEK=43
+WEEK=44
 EV_NAME="neokey-evidence-week${WEEK}.zip"
 PATCH_NAME="neokey-patch-week33-${WEEK}.patch"
 ST_NAME="neokey-pubsync-week${WEEK}-statement.json"
@@ -68,8 +68,8 @@ CHECKS=0
 ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
 
 # ---- 0: المراساة — المرجع = المنشور -------------------------------------------
-PUB_VC=84
-PUB_VN=3.7
+PUB_VC=85
+PUB_VN=3.8
 MANIFEST="${OWNERVERIFY_MANIFEST:-AndroidManifest.xml}"
 VC=$(grep -o 'versionCode="[0-9]*"' "$MANIFEST" | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' "$MANIFEST" | cut -d'"' -f2)

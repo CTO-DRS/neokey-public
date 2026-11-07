@@ -36,7 +36,7 @@
 #                             bash anchor pins the PUBLISHED identity 84 / 3.7
 #
 #   Verdict: PREFLIGHTGATE_OK checks=N negatives=4/4 rows=10 checked=5
-#            outside=5 sheet=build/release/preflight-sheet.md vc=84 vn=3.7
+#            outside=5 sheet=build/release/preflight-sheet.md vc=85 vn=3.8
 #            / PREFLIGHTGATE_FAILED <reason> (exit 1). Keys appended to
 #            gates.env idempotently (the week-33 hardening).
 set -uo pipefail

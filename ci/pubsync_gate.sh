@@ -28,7 +28,7 @@
 #        والعضو المقطوع — ثم الأخضر يُعاد.
 #
 #   Verdict: `PUBSYNC_OK checks=N negatives=12/12 assets=2 members=M
-#   proofs=P rel=R base=T vc=84 vn=3.7` / `PUBSYNC_FAILED <tag>` (exit 1).
+#   proofs=P rel=R base=T vc=85 vn=3.8` / `PUBSYNC_FAILED <tag>` (exit 1).
 #   members/proofs أحادية النمو (حدود لا تساوٍ — تحصين W40). المفاتيح
 #   تُربَد idempotently (تحصين W33) وتحملها CLOSE_KEEP. الإثبات السلبي
 #   المحفوظ: ci/pubsync-negative-proof.log.
@@ -55,7 +55,7 @@ REL=434872239
 REPO=CTO-DRS/neokey-hark
 PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
 PUB_UP="https://uploads.github.com/repos/$REPO/releases/$REL/assets"
-WEEK=43
+WEEK=44
 BASE_TAG=v2.7-week33
 EV_NAME="neokey-evidence-week${WEEK}.zip"
 PATCH_NAME="neokey-patch-week33-${WEEK}.patch"
@@ -66,8 +66,8 @@ ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
 pub_gh() { if [ "${PUBSYNC_CURL_DEBUG:-0}" = "1" ]; then curl -sSL --trace-ascii "$PUBDIR/curl-trace.txt" -H "Authorization: token $TOKEN" "$@"; else curl -sSL -H "Authorization: token $TOKEN" "$@"; fi; }
 
 # ---- 0: المراساة + الاعتماد — المرجع = المنشور --------------------------------
-PUB_VC=84
-PUB_VN=3.7
+PUB_VC=85
+PUB_VN=3.8
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 [ "$VC" = "$PUB_VC" ] || fail "anchor.identity.vc (manifest declares $VC — the publication week is $PUB_VC)"
@@ -253,6 +253,18 @@ for a in js:
     # API 404s flakily on recently-touched assets, so the delete path
     # retries with backoff)
     echo "[pubsync] already published (name+size match): $NAME id=$AID"
+    continue
+  fi
+  if [ -n "$AID" ] && [ "${PUBSYNC_REPLACE_ON_DRIFT:-1}" = "0" ]; then
+    # the W44 lesson (the closer's segmented reality): a same-week re-run's
+    # fresh pack legitimately differs from the published copy — the run's own
+    # log rides the archive, so the bytes drift EVERY run, and the backend
+    # window 404s the delete path for stretches (the W2 lesson). With
+    # PUBSYNC_REPLACE_ON_DRIFT=0 the PUBLISHED SET IS IMMUTABLE within the
+    # week: the tamper layer is the ROUNDTRIP (--verify/--roundtrip re-derive
+    # the sha from the fetched bytes), not the re-publish path; =1 (the
+    # default) restores the W1 replace semantics for a deliberate correction.
+    echo "[pubsync] same-week asset already published (name match, fresh pack differs by design — the published set stays): $NAME id=$AID"
     continue
   fi
   if [ -n "$AID" ]; then

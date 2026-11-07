@@ -43,8 +43,8 @@ STATE=build/release/gates.env
 LOGF=build/pipeline.log
 
 # ---- 0: THE ANCHOR — المرجع = المنشور ----------------------------------------
-PUB_VC=84
-PUB_VN=3.7
+PUB_VC=85
+PUB_VN=3.8
 
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)

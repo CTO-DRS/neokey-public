@@ -1,0 +1,5 @@
+[PHASE9_NEGPROOF] ok neg.publish.credential — an emptied write credential fails the closer CLOSED before anything is packed or uploaded
+[PHASE9_NEGPROOF] restore + the authoritative verify audit of the published set…
+PUBSYNC_OK checks=7 negatives=12/12 assets=3 members=28 proofs=22 rel=434872239 base=v2.7-week33 week=44 roundtrip=verify published=929420b8e5e8342de21224fc1092e2d45027b873c04b3a4f57afb63bb34a7f54 vc=85 vn=3.8
+[PHASE9_NEGPROOF] PROOF PASSED — the attack bit its exact tag, the restore healed, the published set audits green (roundtrip=verify, the ledger's sha confirmed against the live listing)
+b34a7f54 vc=85 vn=3.8

@@ -44,8 +44,8 @@ LOGF=build/pipeline.log
 # ---- 0: THE ANCHOR — المرجع = المنشور ----------------------------------------
 # the week's published identity + the seven toolchain pins (single written
 # source: this file; the drill and RebuildGate.java receive them from here)
-PUB_VC=84
-PUB_VN=3.7
+PUB_VC=85
+PUB_VN=3.8
 PINS="r8.jar 4733945987ee0a840fafc34080b135259e01678412e07212b23f706334290294
 android.jar 96ccfdc84d15fad4e22d76cbb8ef38b150a4b56327957067875ca7e18113a424
 apksig.jar c4f6fdf2148490296f422a7eb37647ea11d1c3b02f1f2349c33ce257f3c29b1f
