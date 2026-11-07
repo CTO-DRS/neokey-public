@@ -184,9 +184,9 @@ public final class UploadBundleTest {
 
     private static void pos_manifestValue() throws Exception {
         String mf = manifest();
-        ok("pos.manifestValue.vc", "83".equals(UploadBundle.manifestValue(mf, "versionCode")),
+        ok("pos.manifestValue.vc", "84".equals(UploadBundle.manifestValue(mf, "versionCode")),
                 "vc=" + UploadBundle.manifestValue(mf, "versionCode"));
-        ok("pos.manifestValue.vn", "3.6".equals(UploadBundle.manifestValue(mf, "versionName")),
+        ok("pos.manifestValue.vn", "3.7".equals(UploadBundle.manifestValue(mf, "versionName")),
                 "vn=" + UploadBundle.manifestValue(mf, "versionName"));
     }
 

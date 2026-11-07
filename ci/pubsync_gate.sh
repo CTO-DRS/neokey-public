@@ -28,7 +28,7 @@
 #        والعضو المقطوع — ثم الأخضر يُعاد.
 #
 #   Verdict: `PUBSYNC_OK checks=N negatives=12/12 assets=2 members=M
-#   proofs=P rel=R base=T vc=83 vn=3.6` / `PUBSYNC_FAILED <tag>` (exit 1).
+#   proofs=P rel=R base=T vc=84 vn=3.7` / `PUBSYNC_FAILED <tag>` (exit 1).
 #   members/proofs أحادية النمو (حدود لا تساوٍ — تحصين W40). المفاتيح
 #   تُربَد idempotently (تحصين W33) وتحملها CLOSE_KEEP. الإثبات السلبي
 #   المحفوظ: ci/pubsync-negative-proof.log.
@@ -55,18 +55,19 @@ REL=434872239
 REPO=CTO-DRS/neokey-hark
 PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
 PUB_UP="https://uploads.github.com/repos/$REPO/releases/$REL/assets"
-WEEK=42
+WEEK=43
 BASE_TAG=v2.7-week33
 EV_NAME="neokey-evidence-week${WEEK}.zip"
-PATCH_NAME="neokey-patch-week33-42.patch"
+PATCH_NAME="neokey-patch-week33-${WEEK}.patch"
+ST_NAME="neokey-pubsync-week${WEEK}-statement.json"
 CHECKS=0
 ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
 
 pub_gh() { if [ "${PUBSYNC_CURL_DEBUG:-0}" = "1" ]; then curl -sSL --trace-ascii "$PUBDIR/curl-trace.txt" -H "Authorization: token $TOKEN" "$@"; else curl -sSL -H "Authorization: token $TOKEN" "$@"; fi; }
 
 # ---- 0: المراساة + الاعتماد — المرجع = المنشور --------------------------------
-PUB_VC=83
-PUB_VN=3.6
+PUB_VC=84
+PUB_VN=3.7
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 [ "$VC" = "$PUB_VC" ] || fail "anchor.identity.vc (manifest declares $VC — the publication week is $PUB_VC)"
@@ -100,7 +101,7 @@ if [ "$MODE" = "verify" ]; then
   . "$STATE"
   [ "${PUBSYNC_GATE:-}" = "OK" ] || fail "verify.ledger (the ledger carries no verified publication — run ci/pubsync_gate.sh first)"
   [ -n "${PUBSYNC_PUBLISHED_SHA:-}" ] || fail "verify.ledger (no published-sha recorded — run ci/pubsync_gate.sh once to publish)"
-  for NAME in "$EV_NAME" "$PATCH_NAME"; do
+  for NAME in "$EV_NAME" "$PATCH_NAME" "$ST_NAME"; do
     ASIZE=$(printf '%s' "$ASSETS_JSON" | python3 -c "
 import json, sys
 for a in json.load(sys.stdin):
@@ -108,11 +109,11 @@ for a in json.load(sys.stdin):
         print(a['size']); break
 " "$NAME")
     [ -n "$ASIZE" ] || fail "verify.stale ($NAME is not on the release — the published state must carry this week's publication)"
-    KEY=$(printf 'PUBSYNC_PUBLISHED_SIZE_%s' "$([ "$NAME" = "$EV_NAME" ] && echo EV || echo PATCH)")
+    KEY=$(printf 'PUBSYNC_PUBLISHED_SIZE_%s' "$([ "$NAME" = "$EV_NAME" ] && echo EV || { [ "$NAME" = "$PATCH_NAME" ] && echo PATCH || echo ST; })")
     [ "$ASIZE" = "${!KEY:-}" ] || fail "verify.size ($NAME listed $ASIZE != the remote-verified ${!KEY:-?} — the published state drifted from the ledger)"
     CHECKS=$((CHECKS + 1))
   done
-  VERDICT="PUBSYNC_OK checks=$CHECKS negatives=${PUBSYNC_NEGATIVES:-0/12} assets=2 members=${PUBSYNC_MEMBERS:-0} proofs=${PUBSYNC_PROOFS:-0} rel=$REL base=$BASE_TAG roundtrip=verify published=${PUBSYNC_PUBLISHED_SHA:-?} vc=$PUB_VC vn=$PUB_VN"
+  VERDICT="PUBSYNC_OK checks=$CHECKS negatives=${PUBSYNC_NEGATIVES:-0/12} assets=3 members=${PUBSYNC_MEMBERS:-0} proofs=${PUBSYNC_PROOFS:-0} rel=$REL base=$BASE_TAG week=$WEEK roundtrip=verify published=${PUBSYNC_PUBLISHED_SHA:-?} vc=$PUB_VC vn=$PUB_VN"
   echo "$VERDICT"
   exit 0
 fi
@@ -176,8 +177,14 @@ cat > "$PUBDIR/statement.json" <<EOF
 EOF
 rm -rf "$PUBDIR/stage"; mkdir -p "$PUBDIR/stage"
 cp "$PUBDIR/$EV_NAME" "$PUBDIR/$PATCH_NAME" "$PUBDIR/stage/"
+# the statement rides the publication as the THIRD asset (W2/43) — but it is
+# NOT a member of its own verify dir: its sha is self-referential by the W39
+# self-proof law (nothing carries its own verdict), so every field is
+# anchored transitively — the archive sha against the record, the patch sha
+# against the owner verifier's reconstruction
+cp "$PUBDIR/statement.json" "$PUBDIR/$ST_NAME"
 java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/stage" || fail "statement.local"
-CHECKS=$((CHECKS + 2))
+CHECKS=$((CHECKS + 3))
 
 # ---- 4: الرفع — إضافة أحادية (أصول الأسبوع 33 تبقى) ----------------------------
 # the API 404s FLAKILY on freshly-uploaded assets (eventual consistency —
@@ -208,7 +215,7 @@ for try in 1 2 3; do
 done
 [ -n "$ASSETS_JSON" ] || fail "publish.list (empty asset listing)"
 UPLOADED=0
-for NAME in "$EV_NAME" "$PATCH_NAME"; do
+for NAME in "$EV_NAME" "$PATCH_NAME" "$ST_NAME"; do
   AID=$(printf '%s' "$ASSETS_JSON" | python3 -c "
 import json, sys
 js = json.load(sys.stdin)
@@ -237,7 +244,7 @@ for a in js:
   if [ -n "$AID" ]; then
     pub_retry "publish.delete ($NAME id=$AID — a drifted published copy must be replaceable)" -X DELETE "$PUB_API/assets/$AID"
   fi
-  CT="application/zip"; [ "$NAME" = "$PATCH_NAME" ] && CT="text/plain; charset=utf-8"
+  CT="application/zip"; [ "$NAME" = "$PATCH_NAME" ] && CT="text/plain; charset=utf-8"; [ "$NAME" = "$ST_NAME" ] && CT="application/json"
   UPLOADED=$((UPLOADED + 1))
   pub_retry "publish.upload ($NAME)" -X POST -H "Content-Type: $CT" --data-binary @"$PUBDIR/$NAME" "$PUB_UP?name=$NAME"
   python3 -c "
@@ -252,6 +259,10 @@ print('[pubsync] uploaded ' + a['name'] + ' id=' + str(a['id']) + ' size=' + str
   rm -f "$PUBDIR/.upload-resp.json"
 done
 # re-list AFTER the uploads: the roundtrip maps names to the NEW asset ids
+# the statement rides the publication as the THIRD asset (W2/43: the owner's
+# fetch verifier needs it on the release — its own sha is self-referential by
+# the W39 law, so every field is anchored transitively: the archive sha
+# against the record, the patch sha against the reconstruction)
 ASSETS_JSON=$(pub_gh "$PUB_API/assets?per_page=100")
 [ -n "$ASSETS_JSON" ] || fail "publish.relist (empty asset listing after upload)"
 
@@ -271,8 +282,8 @@ if [ "$MODE" = "remote" ]; then
     echo "[pubsync] waiting ${READY_WAIT}s for the storage backend to serve the fresh bytes"
     sleep "$READY_WAIT"
   fi
-  rm -rf "$PUBDIR/roundtrip"; mkdir -p "$PUBDIR/roundtrip"
-  for NAME in "$EV_NAME" "$PATCH_NAME"; do
+  rm -rf "$PUBDIR/roundtrip"; mkdir -p "$PUBDIR/roundtrip/vdir"
+  for NAME in "$EV_NAME" "$PATCH_NAME" "$ST_NAME"; do
     AID=$(printf '%s' "$ASSETS_JSON" | python3 -c "
 import json, sys
 for a in json.load(sys.stdin):
@@ -286,11 +297,15 @@ for a in json.load(sys.stdin):
     [ "$GOT" = "$WANT" ] || fail "roundtrip.size ($NAME fetched $GOT != declared $WANT — a partial or tampered fetch)"
     CHECKS=$((CHECKS + 1))
   done
-  java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/roundtrip" || fail "roundtrip.sha (the re-derived sha of the PUBLISHED bytes must equal the statement — a tampered or partial upload bites here)"
+  cmp -s "$PUBDIR/roundtrip/$ST_NAME" "$PUBDIR/statement.json" || fail "roundtrip.statement (the fetched statement must byte-equal this publication's statement)"
+  CHECKS=$((CHECKS + 1))
+  ln "$PUBDIR/roundtrip/$EV_NAME" "$PUBDIR/roundtrip/vdir/$EV_NAME" 2>/dev/null || cp "$PUBDIR/roundtrip/$EV_NAME" "$PUBDIR/roundtrip/vdir/$EV_NAME"
+  ln "$PUBDIR/roundtrip/$PATCH_NAME" "$PUBDIR/roundtrip/vdir/$PATCH_NAME" 2>/dev/null || cp "$PUBDIR/roundtrip/$PATCH_NAME" "$PUBDIR/roundtrip/vdir/$PATCH_NAME"
+  java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/statement.json" "$PUBDIR/roundtrip/vdir" || fail "roundtrip.sha (the re-derived sha of the PUBLISHED bytes must equal the statement — a tampered or partial upload bites here)"
   CHECKS=$((CHECKS + 1))
   EV_SRC="$PUBDIR/roundtrip/$EV_NAME"; PATCH_SRC="$PUBDIR/roundtrip/$PATCH_NAME"
 else
-  for NAME in "$EV_NAME" "$PATCH_NAME"; do
+  for NAME in "$EV_NAME" "$PATCH_NAME" "$ST_NAME"; do
     ASIZE=$(printf '%s' "$ASSETS_JSON" | python3 -c "
 import json, sys
 for a in json.load(sys.stdin):
@@ -343,13 +358,13 @@ neg() { # $1 tag expected, $2.. the command
 }
 NEG_PASS=0; NEG_FAIL=0
 RT_SRC="$PUBDIR/stage"
-[ "$MODE" = "remote" ] && RT_SRC="$PUBDIR/roundtrip"
+[ "$MODE" = "remote" ] && RT_SRC="$PUBDIR/roundtrip/vdir"
 mkst() { cp "$PUBDIR/statement.json" "$PUBDIR/$1"; }
 
 mkst n1.json; sed -i 's/neokey-pubsync-1/neokey-pubsync-9/' "$PUBDIR/n1.json"
 neg "pubsync.statement_schema" java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/n1.json" "$PUBDIR/stage"
 
-mkst n2.json; sed -i 's/"vc": "83"/"vc": "99"/; s/"vn": "3.6"/"vn": "9.9"/' "$PUBDIR/n2.json"
+mkst n2.json; sed -i 's/"vc": "[0-9]*"/"vc": "99"/; s/"vn": "[0-9.]*"/"vn": "9.9"/' "$PUBDIR/n2.json"
 neg "pubsync.statement_identity" java -cp "$OUTD" com.hark.neokey.PubSync verify "$PUBDIR/n2.json" "$PUBDIR/stage"
 
 mkst n3.json; sed -i "s/$EV_NAME/neokey-evidence-week41.zip/" "$PUBDIR/n3.json"
@@ -411,12 +426,12 @@ fi
 # ---- 8: الدفتر — upsert idempotent + الطازج == الدفتر + قانون السجل الخارجي ----
 [ -f "$STATE" ] || : > "$STATE"
 sed -i '/^PUBSYNC_/d' "$STATE"
-VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM proofs=$PRF rel=$REL base=$BASE_TAG roundtrip=$MODE published=$EV_SHA vc=$PUB_VC vn=$PUB_VN"
+VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=3 members=$MEM proofs=$PRF rel=$REL base=$BASE_TAG week=$WEEK roundtrip=$MODE published=$EV_SHA vc=$PUB_VC vn=$PUB_VN"
 {
   echo "PUBSYNC_GATE=OK"
   echo "PUBSYNC_CHECKS=$CHECKS"
   echo "PUBSYNC_NEGATIVES=$NEG_PASS/12"
-  echo "PUBSYNC_ASSETS=2"
+  echo "PUBSYNC_ASSETS=3"
   echo "PUBSYNC_MEMBERS=$MEM"
   echo "PUBSYNC_PROOFS=$PRF"
   echo "PUBSYNC_REL=$REL"
@@ -429,6 +444,7 @@ VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM 
   echo "PUBSYNC_PUBLISHED_SHA=$EV_SHA"
   echo "PUBSYNC_PUBLISHED_SIZE_EV=$(wc -c < "$PUBDIR/$EV_NAME")"
   echo "PUBSYNC_PUBLISHED_SIZE_PATCH=$(wc -c < "$PUBDIR/$PATCH_NAME")"
+  echo "PUBSYNC_PUBLISHED_SIZE_STATEMENT=$(wc -c < "$PUBDIR/$ST_NAME")"
 } >> "$STATE"
 . "$STATE"
 [ "${PUBSYNC_CHECKS:-}" = "$CHECKS" ] || fail "env.pubsync_checks"
@@ -436,9 +452,11 @@ VERDICT="PUBSYNC_OK checks=$CHECKS negatives=$NEG_PASS/12 assets=2 members=$MEM 
 [ "${PUBSYNC_VC:-}" = "$PUB_VC" ] || fail "env.pubsync_vc"
 CHECKS=$((CHECKS + 3))
 # the mode-dependent fields are masked (the modes run different batteries
-# against the same publication); the identity core (assets/rel/base/vc/vn)
-# must byte-equal — a drifted re-run of the SAME mode still bites on checks
-mask() { printf '%s' "$1" | sed -E 's/members=[0-9]+/members=M/; s/proofs=[0-9/]+/proofs=P/; s/roundtrip=[a-z]+/roundtrip=R/; s/negatives=[0-9]+\/[0-9]+/negatives=N/; s/checks=[0-9]+/checks=C/; s/published=[0-9a-f]*/published=S/'; }
+# against the same publication; assets/week are monotonic — the set grows by
+# addition and the week moves — the W40 law); the identity core
+# (rel/base/vc/vn) must byte-equal — a drifted re-run of the SAME mode still
+# bites on checks
+mask() { printf '%s' "$1" | sed -E 's/members=[0-9]+/members=M/; s/proofs=[0-9/]+/proofs=P/; s/roundtrip=[a-z]+/roundtrip=R/; s/negatives=[0-9]+\/[0-9]+/negatives=N/; s/checks=[0-9]+/checks=C/; s/published=[0-9a-f]*/published=S/; s/assets=[0-9]+/assets=A/; s/week=[0-9]+/week=W/'; }
 LOG_LINE=$(grep -oE 'PUBSYNC_OK [^"]*' "$LOGF" 2>/dev/null | head -1 || true)
 if [ -n "$LOG_LINE" ]; then
   [ "$(mask "$LOG_LINE")" = "$(mask "$VERDICT")" ] || fail "outer_log.pubsync (a prior PUBSYNC_OK line drifted from fresh — verdict fields are stable, members/proofs are monotonic)"

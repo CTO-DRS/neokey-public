@@ -25,7 +25,7 @@ import java.nio.file.Paths;
  *      ثم إعادة تحقق خضراء للورقة الحقيقية.
  *
  * الحكم: `PREFLIGHTGATE_OK checks=N negatives=4/4 rows=10 checked=5
- * outside=5 sheet=build/release/preflight-sheet.md vc=83 vn=3.6`
+ * outside=5 sheet=build/release/preflight-sheet.md vc=84 vn=3.7`
  * / `PREFLIGHTGATE_FAILED <reason>` (exit 1).
  */
 public final class PreflightGate {
