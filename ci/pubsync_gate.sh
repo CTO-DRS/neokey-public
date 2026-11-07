@@ -28,7 +28,7 @@
 #        والعضو المقطوع — ثم الأخضر يُعاد.
 #
 #   Verdict: `PUBSYNC_OK checks=N negatives=12/12 assets=2 members=M
-#   proofs=P rel=R base=T vc=85 vn=3.8` / `PUBSYNC_FAILED <tag>` (exit 1).
+#   proofs=P rel=R base=T vc=86 vn=3.9` / `PUBSYNC_FAILED <tag>` (exit 1).
 #   members/proofs أحادية النمو (حدود لا تساوٍ — تحصين W40). المفاتيح
 #   تُربَد idempotently (تحصين W33) وتحملها CLOSE_KEEP. الإثبات السلبي
 #   المحفوظ: ci/pubsync-negative-proof.log.
@@ -55,7 +55,7 @@ REL=434872239
 REPO=CTO-DRS/neokey-hark
 PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
 PUB_UP="https://uploads.github.com/repos/$REPO/releases/$REL/assets"
-WEEK=44
+WEEK=45
 BASE_TAG=v2.7-week33
 EV_NAME="neokey-evidence-week${WEEK}.zip"
 PATCH_NAME="neokey-patch-week33-${WEEK}.patch"
@@ -66,12 +66,25 @@ ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
 pub_gh() { if [ "${PUBSYNC_CURL_DEBUG:-0}" = "1" ]; then curl -sSL --trace-ascii "$PUBDIR/curl-trace.txt" -H "Authorization: token $TOKEN" "$@"; else curl -sSL -H "Authorization: token $TOKEN" "$@"; fi; }
 
 # ---- 0: المراساة + الاعتماد — المرجع = المنشور --------------------------------
-PUB_VC=85
-PUB_VN=3.8
+PUB_VC=86
+PUB_VN=3.9
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 [ "$VC" = "$PUB_VC" ] || fail "anchor.identity.vc (manifest declares $VC — the publication week is $PUB_VC)"
 [ "$VN" = "$PUB_VN" ] || fail "anchor.identity.vn (manifest declares $VN — the publication week is $PUB_VN)"
+# قانون W45 — الشجرة النظيفة قبل النشر (عضة الاستعادة الرابعة، نمط نظامي):
+# الرقعة التراكمية تُولَّد بـ `git diff BASE..HEAD` — تفرّق التزامات فقط،
+# فتغييرات الأسبوع غير الملتزَمة تغيب عنها والبيان والأرشيف (يحزنان
+# الشجرة العاملة) يصفان حالةً لا تصفها الرقعة — وقانون إعادة البناء
+# (ownercheck.reconstruct: شجرة = شجرة) يمرّ لحظة النشر ثم يعضّ كل تحقق
+# لاحق ضد HEAD الأحدث. عضة حية: رقعة W44 أعادت بناء شجرة التزام W43
+# (eccfdcd3…) لا شجرة W44 (6f1ce438…) لأن الإغلاق نُشر قبل الالتزام.
+# القانون: وضعا النشر (local/roundtrip) يرفضان شجرة وسخة فشلاً مغلقاً —
+# التزام الأسبوع يهبط قبل النشر، وسجل الإثبات يهبط التزاماً ثانياً بعده.
+if [ "$MODE" != "verify" ]; then
+  DIRTY=$(git status --porcelain 2>/dev/null | head -5)
+  [ -z "$DIRTY" ] || fail "publish.dirty_tree (the working tree is dirty — the cumulative patch diffs COMMITS (BASE..HEAD) and would lag the packed state; commit the week first, then publish — the W44 bite: the week-44 patch rebuilt the pre-commit tree)"
+fi
 if [ "$MODE" = "verify" ]; then
   # the W2 separation law applied to the W1 gate itself: the --verify mode
   # only READS the listing — it takes the READ credential

@@ -43,7 +43,7 @@
 #   Modes: الافتراضي local (الأنبوب: حالة النشر المحلية بلا شبكة) و
 #   --remote (جهاز المالك: جلب المنشور من الإصدار). Verdict:
 #   `OWNERVERIFY_OK checks=N negatives=n/12 assets=3 rel=R base=T
-#   week=W mode=M record=S vc=85 vn=3.8` / `OWNERVERIFY_FAILED <tag>`
+#   week=W mode=M record=S vc=86 vn=3.9` / `OWNERVERIFY_FAILED <tag>`
 #   (exit 1). المفاتيح تُربَد idempotently (تحصين W33) وتحملها
 #   CLOSE_KEEP.
 set -uo pipefail
@@ -60,7 +60,7 @@ REL=434872239
 REPO=CTO-DRS/neokey-hark
 PUB_API="https://api.github.com/repos/$REPO/releases/$REL"
 BASE_TAG=v2.7-week33
-WEEK=44
+WEEK=45
 EV_NAME="neokey-evidence-week${WEEK}.zip"
 PATCH_NAME="neokey-patch-week33-${WEEK}.patch"
 ST_NAME="neokey-pubsync-week${WEEK}-statement.json"
@@ -68,8 +68,8 @@ CHECKS=0
 ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
 
 # ---- 0: المراساة — المرجع = المنشور -------------------------------------------
-PUB_VC=85
-PUB_VN=3.8
+PUB_VC=86
+PUB_VN=3.9
 MANIFEST="${OWNERVERIFY_MANIFEST:-AndroidManifest.xml}"
 VC=$(grep -o 'versionCode="[0-9]*"' "$MANIFEST" | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' "$MANIFEST" | cut -d'"' -f2)
@@ -103,13 +103,16 @@ CHECKS=$((CHECKS + 1))
 #   النشر نفسه قبل التعهيد) رُسِي الدفتر المحلي لحالة النشر الطازجة —
 #   والحقل record=git|ledger في الحكم يصرّح بالمصدر. الخطّاف
 #   OWNERVERIFY_RECORD_FILE يثبّت المصدر بلا رجوع (سطح الاختبار، وهو
-#   كذلك فشل-مغلق).
+#   كذلك فشل-مغلق). قانون W45: البحث يقرأ كل سجلات الإثبات الملتزَمة
+#   (ci/*-negative-proof.log) — كل أسبوع يضيف سجل إثباته الجديد ويجده
+#   البحث تلقائياً (عضة الاستعادة الرابعة: سجل W44 في
+#   phase9-negative-proof.log كان خارج القائمة فمات --remote مغلقاً).
 RECORD_SRC="git"
 RECORD_LINE=""
 if [ -n "${OWNERVERIFY_RECORD_FILE:-}" ]; then
   RECORD_LINE=$(grep -hE '^PUBSYNC_OK ' "$OWNERVERIFY_RECORD_FILE" 2>/dev/null | tail -1 || true)
   RECORD_SRC="pinned"
-elif RECORD_LINE=$(grep -hE '^PUBSYNC_OK ' ci/pubsync-negative-proof.log docs/PHASE9-W*-REPORT.md 2>/dev/null | grep " vc=$PUB_VC " | tail -1) && [ -n "$RECORD_LINE" ]; then
+elif RECORD_LINE=$(grep -hE '^PUBSYNC_OK ' ci/*-negative-proof.log docs/PHASE9-W*-REPORT.md docs/PHASE10-W*-REPORT.md 2>/dev/null | grep " vc=$PUB_VC " | tail -1) && [ -n "$RECORD_LINE" ]; then
   RECORD_SRC="git"
 else
   . "$STATE" 2>/dev/null || true

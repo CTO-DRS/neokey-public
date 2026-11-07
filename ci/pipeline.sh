@@ -23,7 +23,7 @@ if [ -s build/release/.pubsync-keys.$$ ]; then cat build/release/.pubsync-keys.$
 rm -f build/release/.pubsync-keys.$$
 FAILED=0
 NAMES=(); VERDICTS=()
-WEEK=44  # the live week (the publication lifecycle guards read it — W43)
+WEEK=45  # the live week (the publication lifecycle guards read it — W43)
 
 note() { echo "$@" | tee -a "$LOG"; }
 
