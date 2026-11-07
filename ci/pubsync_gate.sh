@@ -82,8 +82,8 @@ VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 # القانون: وضعا النشر (local/roundtrip) يرفضان شجرة وسخة فشلاً مغلقاً —
 # التزام الأسبوع يهبط قبل النشر، وسجل الإثبات يهبط التزاماً ثانياً بعده.
 if [ "$MODE" != "verify" ]; then
-  DIRTY=$(git status --porcelain 2>/dev/null | head -5)
-  [ -z "$DIRTY" ] || fail "publish.dirty_tree (the working tree is dirty — the cumulative patch diffs COMMITS (BASE..HEAD) and would lag the packed state; commit the week first, then publish — the W44 bite: the week-44 patch rebuilt the pre-commit tree)"
+  DIRTY=$(git status --porcelain 2>/dev/null | grep -v 'negative-proof\.log' | head -5)
+  [ -z "$DIRTY" ] || fail "publish.dirty_tree (the working tree is dirty — the cumulative patch diffs COMMITS (BASE..HEAD) and would lag the packed state; commit the week first, then publish — the W44 bite: the week-44 patch rebuilt the pre-commit tree. The monotonic exception: ci/*-negative-proof.log may grow after the commit by the W40 bounds law — the week's own proof lines land after the publish by design)"
 fi
 if [ "$MODE" = "verify" ]; then
   # the W2 separation law applied to the W1 gate itself: the --verify mode

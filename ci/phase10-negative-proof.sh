@@ -15,21 +15,27 @@
 #      the week's own proof log must kill the anchor fail-closed (the restore
 #      bite: W44's record lived in phase9-negative-proof.log, outside the old
 #      search list, and --remote died honestly).
-#   3. the green close — the publish re-verified on the clean tree (idempotent:
-#      the deterministic pack name+size-matches the published set) and the
+#   3. the green close — the publication audited in the ledger mode (--verify —
+#      the W44 pattern: no re-pack, the published set is immutable) and the
 #      owner verifier's FULL remote battery anchors record=git on THIS week's
-#      committed line and rebuilds HEAD from the fetched patch byte-exactly
-#      (the W44 bite can never repeat: the publish ran after the commit).
+#      line and rebuilds HEAD from the fetched patch byte-exactly (the W44 bite
+#      can never repeat: the publish ran after the commit).
+#
+# Modes: `attacks` (the two bites only — runs BEFORE the week's publication so
+# the archive packs a log carrying its bite lines), `green` (the ledger audit +
+# the remote battery — runs AFTER the publication), no-arg = both.
 #
 # Verdict: `PHASE10_NEGPROOF PROOF PASSED` (exit 0) / `NEG-FAILED <tag>` (exit 1).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 PROG=PHASE10_NEGPROOF
+MODE="${1:-all}"
 say() { echo "[$PROG] $1"; }
 ok()  { say "ok $1 — $2"; }
 die() { say "NEG-FAILED $1 — $2"; exit 1; }
 
 # ---- attack 1: the dirty tree refuses to publish ------------------------------
+if [ "$MODE" = "attacks" ] || [ "$MODE" = "all" ]; then
 echo "dirt $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> NOTES.md
 out=$(PUBSYNC_TOKEN_FILE=.secrets/pubsync.token ci/pubsync_gate.sh 2>&1); rc=$?
 git checkout -- NOTES.md
@@ -41,8 +47,10 @@ echo "$out" | grep -qE 'PUBSYNC_OK|\[pubsync\] uploaded' \
 git status --porcelain | grep -q NOTES.md \
   && die "attack1.restore" "the dirt was not healed"
 ok "neg.publish.dirty_tree" "a dirty working tree refuses to publish fail-closed before anything is packed or uploaded (the W44 bite replayed and refused)"
+fi
 
 # ---- attack 2: the record search reads every committed proof log --------------
+if [ "$MODE" = "attacks" ] || [ "$MODE" = "all" ]; then
 mv ci/phase9-negative-proof.log /tmp/phase9-negative-proof.log.hidden
 out=$(PUBVERIFY_TOKEN_FILE=.secrets/pubsync.token ci/ownerverify_gate.sh --remote 2>&1); rc=$?
 mv /tmp/phase9-negative-proof.log.hidden ci/phase9-negative-proof.log
@@ -51,16 +59,18 @@ echo "$out" | grep -q 'OWNERVERIFY_FAILED ownercheck.record' \
   || die "attack2.tag" "expected OWNERVERIFY_FAILED ownercheck.record, got: $(echo "$out" | tail -2 | tr '\n' ' ')"
 [ -f ci/phase9-negative-proof.log ] || die "attack2.restore" "the hidden record log was not restored"
 ok "neg.ownercheck.record" "hiding the week's committed proof log kills the anchor fail-closed — the search reads every ci/*-negative-proof.log (the restore bite, now guarded)"
+fi
 
-# ---- the green close: idempotent publish on the clean tree --------------------
-out=$(PUBSYNC_TOKEN_FILE=.secrets/pubsync.token ci/pubsync_gate.sh 2>&1); rc=$?
-if [ "$rc" -ne 0 ]; then echo "$out" | tail -4 >&2; die "green.publish" "the clean-tree publish did not come back green"; fi
+# ---- the green close: the ledger audit + the full remote battery ---------------
+if [ "$MODE" = "green" ] || [ "$MODE" = "all" ]; then
+out=$(PUBVERIFY_TOKEN_FILE=.secrets/pubsync.token ci/pubsync_gate.sh --verify 2>&1); rc=$?
+if [ "$rc" -ne 0 ]; then echo "$out" | tail -4 >&2; die "green.verify" "the ledger audit did not come back green"; fi
 PUB=$(echo "$out" | grep -E '^PUBSYNC_OK ' | tail -1)
 [ -n "$PUB" ] || die "green.verdict" "no PUBSYNC_OK verdict line"
 echo "$PUB" | grep -q 'week=45' || die "green.week" "the publication must carry week=45: $PUB"
 echo "$PUB"
 echo "$PUB" >> ci/phase10-negative-proof.log
-ok "green.publish" "$PUB"
+ok "green.verify" "$PUB"
 
 # ---- the full remote battery: record=git on THIS week's line ------------------
 out=$(PUBVERIFY_TOKEN_FILE=.secrets/pubsync.token ci/ownerverify_gate.sh --remote 2>&1); rc=$?
@@ -72,5 +82,6 @@ echo "$OV" | grep -q 'reconstruct' && die "green.reconstruct" "unexpected field"
 echo "$OV"
 echo "$OV" >> ci/phase10-negative-proof.log
 ok "green.remote" "$OV"
+fi
 
-say "PROOF PASSED — both laws bit their exact tags, the restores healed, the clean-tree publish is green (week=45) and the owner verifier anchors record=git with the byte-exact reconstruction"
+say "PROOF PASSED — both laws bit their exact tags, the restores healed, the publication audits green in the ledger mode (week=45) and the owner verifier anchors record=git with the byte-exact reconstruction"
