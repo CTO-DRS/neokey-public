@@ -109,7 +109,7 @@ RECORD_LINE=""
 if [ -n "${OWNERVERIFY_RECORD_FILE:-}" ]; then
   RECORD_LINE=$(grep -hE '^PUBSYNC_OK ' "$OWNERVERIFY_RECORD_FILE" 2>/dev/null | tail -1 || true)
   RECORD_SRC="pinned"
-elif RECORD_LINE=$(grep -hE '^PUBSYNC_OK ' ci/pubsync-negative-proof.log 2>/dev/null | grep " vc=$PUB_VC " | tail -1) && [ -n "$RECORD_LINE" ]; then
+elif RECORD_LINE=$(grep -hE '^PUBSYNC_OK ' ci/pubsync-negative-proof.log docs/PHASE9-W*-REPORT.md 2>/dev/null | grep " vc=$PUB_VC " | tail -1) && [ -n "$RECORD_LINE" ]; then
   RECORD_SRC="git"
 else
   . "$STATE" 2>/dev/null || true
@@ -343,14 +343,15 @@ neg "ownercheck.credential" SUB 9 env PUBVERIFY_TOKEN_FILE="$TOKTMP" bash "$0" -
 neg "ownercheck.stale" SUB 10 env OWNERVERIFY_STATE_DIR="$STDIRTMP" bash "$0"
 
 # n11: فعْل كتابة مزروع في سطح الأداة → الفحص الذاتي يرفض النسخة
-mkdir -p "$WORK/verbcopy"
-python3 - "$0" "$WORK/verbcopy/gate.sh" <<'PY'
+# (النسخة تعيش تحت ci/ — قانون cd الداخلي: dirname/.. = جذر المستودع)
+python3 - "$0" "ci/.ownerverify-verbcopy.sh" <<'PY'
 import sys
 s = open(sys.argv[1]).read()
 s = s.replace('ov_gh() { curl -sSL', 'ov_gh() { curl -sSL ' + chr(45) + chr(88) + chr(32) + chr(80) + chr(79) + chr(83) + chr(84))
 open(sys.argv[2], "w").write(s)
 PY
-neg "ownercheck.readonly" SUB 11 env OWNERVERIFY_WORK_DIR="$WORK/verbcopy/work" bash "$WORK/verbcopy/gate.sh"
+neg "ownercheck.readonly" SUB 11 env OWNERVERIFY_WORK_DIR="$WORK/verbcopy/work" bash "ci/.ownerverify-verbcopy.sh"
+rm -f "ci/.ownerverify-verbcopy.sh"
 
 # n12: مرساة الهوية منحرفة (مانيفست مؤقت دائم-الخطأ — درس W36)
 neg "anchor.identity.vc" SUB 12 env OWNERVERIFY_MANIFEST="$MNTMP" bash "$0"
@@ -366,6 +367,7 @@ fi
 # ---- 8: الدفتر — upsert idempotent + قانون السجل الخارجي ----------------------
 [ -f "$STATE" ] || : > "$STATE"
 NEG_FIELD="${NEG_PASS:-}"
+[ -n "$NEG_FIELD" ] && NEG_FIELD="$NEG_FIELD/12"
 [ -n "$NEG_FIELD" ] || NEG_FIELD=$(grep '^OWNERVERIFY_NEGATIVES=' "$STATE" 2>/dev/null | cut -d= -f2 | tail -1)
 NEG_FIELD="${NEG_FIELD:-0/12}"
 sed -i '/^OWNERVERIFY_/d' "$STATE"

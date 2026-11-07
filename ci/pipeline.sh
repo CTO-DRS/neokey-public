@@ -702,7 +702,7 @@ fi
 # (publish.credential — no publication without it, no pretending), and inside
 # the drill the stage omits itself (INNER_OMIT): the clean clone carries no
 # credentials and the drill never touches the network (the W38 law).
-stage_pubsync() { ci/pubsync_gate.sh --verify; }
+stage_pubsync() { PUBVERIFY_TOKEN_FILE="${PUBVERIFY_TOKEN_FILE:-${NEOKEY_PUBVERIFY_TOKEN_FILE:-.secrets/pubsync.token}}" ci/pubsync_gate.sh --verify; }
 if [ "${NEOKEY_REBUILD_INNER:-0}" = "1" ]; then
   note "REBUILD_INNER: the pubsync stage omits itself inside the inner run (the clone carries no credentials and the drill never touches the network — the omission is a note, not a row)"   # INNER_OMIT
 elif [ "${SKIP_BUILD:-0}" = "1" ]; then

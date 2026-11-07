@@ -72,12 +72,26 @@ VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 [ "$VC" = "$PUB_VC" ] || fail "anchor.identity.vc (manifest declares $VC — the publication week is $PUB_VC)"
 [ "$VN" = "$PUB_VN" ] || fail "anchor.identity.vn (manifest declares $VN — the publication week is $PUB_VN)"
-TOKEN_FILE="${PUBSYNC_TOKEN_FILE:-}"
+if [ "$MODE" = "verify" ]; then
+  # the W2 separation law applied to the W1 gate itself: the --verify mode
+  # only READS the listing — it takes the READ credential
+  # (PUBVERIFY_TOKEN_FILE, falling back to the write token's file); the
+  # reader is not the publisher
+  TOKEN_FILE="${PUBVERIFY_TOKEN_FILE:-${PUBSYNC_TOKEN_FILE:-}}"
+  CTAG="verify.credential"
+  CVAR="PUBVERIFY_TOKEN_FILE"
+  CMSG="the published-state audit needs a READ credential; the weekly flow exports it"
+else
+  TOKEN_FILE="${PUBSYNC_TOKEN_FILE:-}"
+  CTAG="publish.credential"
+  CVAR="PUBSYNC_TOKEN_FILE"
+  CMSG="no publication without the owner's credential; the weekly flow exports it, docs/PHASE9-PLAN.md"
+fi
 if [ -z "$TOKEN_FILE" ] || [ ! -f "$TOKEN_FILE" ] || [ ! -s "$TOKEN_FILE" ]; then
-  fail "publish.credential (PUBSYNC_TOKEN_FILE missing/empty — no publication without the owner's credential; the weekly flow exports it, docs/PHASE9-PLAN.md §3)"
+  fail "$CTAG ($CVAR missing/empty — $CMSG)"
 fi
 TOKEN=$(tr -d ' \r\n' < "$TOKEN_FILE")
-[ -n "$TOKEN" ] || fail "publish.credential (empty token file)"
+[ -n "$TOKEN" ] || fail "$CTAG (empty token file)"
 command -v python3 >/dev/null 2>&1 || fail "publish.tooling (python3 absent — the API client, house precedent ci/build_deploy.sh)"
 command -v curl >/dev/null 2>&1 || fail "publish.tooling (curl absent)"
 CHECKS=$((CHECKS + 4))
@@ -109,7 +123,7 @@ for a in json.load(sys.stdin):
         print(a['size']); break
 " "$NAME")
     [ -n "$ASIZE" ] || fail "verify.stale ($NAME is not on the release — the published state must carry this week's publication)"
-    KEY=$(printf 'PUBSYNC_PUBLISHED_SIZE_%s' "$([ "$NAME" = "$EV_NAME" ] && echo EV || { [ "$NAME" = "$PATCH_NAME" ] && echo PATCH || echo ST; })")
+    KEY=$(printf 'PUBSYNC_PUBLISHED_SIZE_%s' "$([ "$NAME" = "$EV_NAME" ] && echo EV || { [ "$NAME" = "$PATCH_NAME" ] && echo PATCH || echo STATEMENT; })")
     [ "$ASIZE" = "${!KEY:-}" ] || fail "verify.size ($NAME listed $ASIZE != the remote-verified ${!KEY:-?} — the published state drifted from the ledger)"
     CHECKS=$((CHECKS + 1))
   done
