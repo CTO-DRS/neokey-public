@@ -34,7 +34,7 @@
 #                             real pack re-verified green
 #
 #   Verdict: DEPLOYSRVGATE_OK checks=N negatives=4/4 jar_sha256=<16hex>
-#            members=N health_ms=<ms> vc=86 vn=3.9
+#            members=N health_ms=<ms> vc=1 vn=0.1.0
 #            / DEPLOYSRVGATE_FAILED <reason> (exit 1). Keys appended to
 #            gates.env idempotently (the week-33 hardening).
 set -uo pipefail
@@ -78,8 +78,8 @@ MEMBERS=$(echo "$VERDICT" | grep -oE 'members=[0-9]+' | cut -d= -f2)
 JARSHA=$(echo "$VERDICT" | grep -oE 'jar_sha256=[0-9a-f]+' | cut -d= -f2)
 [ "$JARSHA" = "${JAR_SHA:0:16}" ] || fail "anchor (gate's jar sha $JARSHA != the fresh build ${JAR_SHA:0:16})"
 [ -n "$CHECKS" ] && [ -n "$NEG" ] && [ -n "$MEMBERS" ] || fail "gate (verdict fields unparseable: $VERDICT)"
-PUB_VC=86
-PUB_VN=3.9
+PUB_VC=1
+PUB_VN=0.1.0
 echo "$VERDICT" | grep -q "vc=$PUB_VC vn=$PUB_VN" || fail "anchor.identity (the pack statement must carry the week's identity $PUB_VC / $PUB_VN — got: $VERDICT)"
 echo "$VERDICT"
 

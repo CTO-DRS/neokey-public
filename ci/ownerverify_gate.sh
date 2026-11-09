@@ -43,7 +43,7 @@
 #   Modes: الافتراضي local (الأنبوب: حالة النشر المحلية بلا شبكة) و
 #   --remote (جهاز المالك: جلب المنشور من الإصدار). Verdict:
 #   `OWNERVERIFY_OK checks=N negatives=n/12 assets=3 rel=R base=T
-#   week=W mode=M record=S vc=86 vn=3.9` / `OWNERVERIFY_FAILED <tag>`
+#   week=W mode=M record=S vc=1 vn=0.1.0` / `OWNERVERIFY_FAILED <tag>`
 #   (exit 1). المفاتيح تُربَد idempotently (تحصين W33) وتحملها
 #   CLOSE_KEEP.
 set -uo pipefail
@@ -68,8 +68,8 @@ CHECKS=0
 ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
 
 # ---- 0: المراساة — المرجع = المنشور -------------------------------------------
-PUB_VC=86
-PUB_VN=3.9
+PUB_VC=1
+PUB_VN=0.1.0
 MANIFEST="${OWNERVERIFY_MANIFEST:-AndroidManifest.xml}"
 VC=$(grep -o 'versionCode="[0-9]*"' "$MANIFEST" | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' "$MANIFEST" | cut -d'"' -f2)

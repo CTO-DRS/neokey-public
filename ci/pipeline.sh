@@ -208,10 +208,10 @@ stage_uploadbundle() { ci/uploadbundle_gate.sh; }
 # field pinned (anchors literal, checks/negatives exact, the artifact sha256
 # three-way), three-way evidence integrity (fresh == pipeline.log ==
 # gates.env), zero regressions on all 25 previous gate keys, and the measured
-# exit criteria (tests >= 1,424, dex <= the lowered 512,000B ceiling, vc >= 74,
-# vn >= 2.7 — the exact close measurement is pinned once in
-# release-manifest.phase6Close; the live check is a non-regression floor from
-# day one, the W30 lesson applied proactively).
+# exit criteria (tests >= 1,424, dex <= the lowered 512,000B ceiling, vc >= 1,
+# vn >= 0.1.0 — the floor re-based at the v0.1.0 identity reset; the historical
+# close measurement is pinned once in release-manifest.phase6Close; the live
+# check is a non-regression floor from day one, the W30 lesson applied).
 stage_phase6() { ci/phase6_gate.sh; }
 
 # ---- 4: the phase-7 opener (phase 7 W1, week 34) — the billing adapter -------

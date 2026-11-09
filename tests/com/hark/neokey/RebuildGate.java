@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  *      (SyncServerPack.VC/VN).
  *
  * الحكم: `REBUILDGATE_OK checks=N negatives=M/12 pins=7/7 stages=37/37
- * tests=T/F dex=D/512000 vc=86 vn=3.9` / `REBUILDGATE_FAILED <reason>` (exit 1).
+ * tests=T/F dex=D/512000 vc=1 vn=0.1.0` / `REBUILDGATE_FAILED <reason>` (exit 1).
  * السلبيات الاثنتا عشرة تعضّ بأوسامها الحرفية على نسخ متسخة مؤقتة ثم
  * يُعاد التحقق أخضر على المدخلات الحقيقية — والحفرية نفسها (ci/rebuild.sh)
  * هي التي تُنتج المدخلات الحية.

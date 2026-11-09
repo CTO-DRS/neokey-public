@@ -36,8 +36,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 DEX_CEILING=512000   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
-VC_MIN=74            # phase-6 close floor — every later week rides at or above
-VN_MIN=2.7           # phase-6 close FLOOR from day one (W30 lesson applied proactively: the exact vc74/2.7 measurement stays pinned in release-manifest.phase6Close; the live check is a non-regression floor)
+VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-6 close floor (was 74)
+VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-6 close floor (was 2.7); the historical close measurement stays pinned in release-manifest.phase6Close
 TESTS_MIN=1424       # shipped test total at phase-6 close (the mass lives in the gates)
 STATE=build/release/gates.env
 LOGF=build/pipeline.log
@@ -93,8 +93,8 @@ SA_SHA=$(field "$SA" apk_sha256)
 [ "${SA_FP:-none}" = a80e71b9a5d15546 ]       || fail "signedapk fp16 ${SA_FP:-none} != a80e71b9a5d15546 (the identity anchor moved — المرجع = المنشور)"
 [ "${SA_V1:-0}"    = 1 ]                     || fail "signedapk v1 ${SA_V1:-0} != 1"
 [ "${SA_V2:-0}"    = 1 ]                     || fail "signedapk v2 ${SA_V2:-0} != 1"
-[ "${SA_VC:-0}"    -ge 74 ]                  || fail "signedapk artifact vc ${SA_VC:-0} < 74"
-case "${SA_VN:-0}" in 2.[7-9]|2.[1-9][0-9]|[3-9].*) ;; *) fail "signedapk artifact vn ${SA_VN:-?} < 2.7";; esac
+[ "${SA_VC:-0}"    -ge 1 ]                  || fail "signedapk artifact vc ${SA_VC:-0} < 1"
+case "${SA_VN:-0}" in 0.[1-9]*|[1-9].*) ;; *) fail "signedapk artifact vn ${SA_VN:-?} < 0.1.0";; esac
 # the dex field has the form 505636/512000 — split and pin both halves
 SA_DEX_B=$(echo "${SA_DEX:-0/0}" | cut -d/ -f1); SA_DEX_C=$(echo "${SA_DEX:-0/0}" | cut -d/ -f2)
 [ "${SA_DEX_C:-0}" = "$DEX_CEILING" ]         || fail "signedapk dex ceiling ${SA_DEX_C:-?} != $DEX_CEILING (the ceiling moved silently)"
@@ -109,7 +109,7 @@ UB_VC=$(field "$UB" vc);        UB_SHA=$(field "$UB" apk_sha256)
 [ "${UB_NEG:-0/0}" = "6/6" ]             || fail "uploadbundle negatives $UB_NEG != 6/6 (a check stopped biting)"
 [ "${UB_MEM:-0}"   = 8 ]                 || fail "uploadbundle members ${UB_MEM:-0} != 8 (the bundle inventory moved)"
 [ "${UB_EVD:-0}"   = 8 ]                 || fail "uploadbundle ui evidence ${UB_EVD:-0} != 8 (the live-key coupling weakened)"
-[ "${UB_VC:-0}"    -ge 74 ]              || fail "uploadbundle artifact vc ${UB_VC:-0} < 74"
+[ "${UB_VC:-0}"    -ge 1 ]              || fail "uploadbundle artifact vc ${UB_VC:-0} < 1"
 [ "${UB_SHA:-none}" = "${SA_SHA:-other}" ] || fail "uploadbundle apk_sha256 != signedapk apk_sha256 (the bundle stopped carrying THE proven artifact)"
 
 # ---- 3: evidence integrity — fresh == pipeline log == gates.env ----------------

@@ -22,7 +22,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 DEX_CEILING=512000   # R8 budget — LOWERED by the week-22 real trim (was 520,000); overflow means trim, never raise
-VC_MIN=62            # closing week must bump the manifest (61 was week 20)
+VC_MIN=1             # v0.1.0 identity reset (re-based from the phase-3 close floor 62; the closing week still must carry the manifest identity)
 TESTS_MIN=1251       # shipped test total at phase-3 close
 STATE=build/release/gates.env
 LOGF=build/pipeline.log

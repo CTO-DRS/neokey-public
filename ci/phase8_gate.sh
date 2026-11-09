@@ -45,8 +45,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 DEX_CEILING=512000   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
-VC_MIN=82            # phase-8 close floor — every later week rides at or above
-VN_MIN=3.5           # phase-8 close FLOOR from day one (W30 lesson, fourth closure running: the exact vc82/3.5 measurement stays pinned in release-manifest.phase8Close; the live check is a non-regression floor)
+VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-8 close floor (was 82)
+VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-8 close floor (was 3.5); the historical close measurement stays pinned in release-manifest.phase8Close
 TESTS_MIN=1561       # shipped test total at phase-8 close (the mass lives in the gates)
 INNER_STAGES=39      # the drill's inner stage count at the close: 37 pre-drill rows + evaudit + opverify (the drill and this closer omit themselves inside — INNER_OMIT); frozen here so a shape change re-pins consciously
 STATE=build/release/gates.env
@@ -91,7 +91,7 @@ RB_VC=$(field "$RB" vc);           RB_VN=$(field "$RB" vn)
 [ "${RB_PINS:-0/0}"  = "7/7" ]     || fail "rebuild pins ${RB_PINS:-0/0} != 7/7 (the toolchain anchor moved)"
 [ "${RB_STAGES:-0}"  = "$INNER_STAGES" ] || fail "rebuild stages ${RB_STAGES:-0} != $INNER_STAGES (the inner shape moved — re-pin the close consciously)"
 [ "${RB_VC:-0}"      -ge "$VC_MIN" ] || fail "rebuild artifact vc ${RB_VC:-0} < $VC_MIN"
-case "${RB_VN:-0}" in 3.[5-9]|3.[5-9][0-9]|[4-9].*) ;; *) fail "rebuild artifact vn ${RB_VN:-?} < $VN_MIN";; esac
+case "${RB_VN:-0}" in 0.[1-9]*|[1-9].*) ;; *) fail "rebuild artifact vn ${RB_VN:-?} < $VN_MIN";; esac
 
 # the week-evidence auditor (W2/week 39): the check inventory is exact; the
 # archive is MONOTONIC — the week's own proof log legitimately lands after the
@@ -103,7 +103,7 @@ EA_VC=$(field "$EA" vc);           EA_VN=$(field "$EA" vn)
 [ "${EA_CHK:-0}"     = 19 ]        || fail "evaudit checks ${EA_CHK:-0} != 19 (the gate's check inventory moved)"
 [ "${EA_NEG:-0/0}"   = "12/12" ]   || fail "evaudit negatives $EA_NEG != 12/12 (a check stopped biting)"
 [ "${EA_VC:-0}"      -ge "$VC_MIN" ] || fail "evaudit artifact vc ${EA_VC:-0} < $VC_MIN"
-case "${EA_VN:-0}" in 3.[5-9]|3.[5-9][0-9]|[4-9].*) ;; *) fail "evaudit artifact vn ${EA_VN:-?} < $VN_MIN";; esac
+case "${EA_VN:-0}" in 0.[1-9]*|[1-9].*) ;; *) fail "evaudit artifact vn ${EA_VN:-?} < $VN_MIN";; esac
 
 # the operator-output verifier (W3/week 40): the published identities are
 # exact — two letters, one pack, one gated swap line
@@ -117,7 +117,7 @@ OV_VC=$(field "$OV" vc);           OV_VN=$(field "$OV" vn)
 [ "${OV_PACKS:-0}"   = 1 ]         || fail "opverify packs ${OV_PACKS:-0} != 1 (the published pack set moved)"
 [ "${OV_SWAPS:-0}"   = 1 ]         || fail "opverify swaps ${OV_SWAPS:-0} != 1 (the gated swap line moved)"
 [ "${OV_VC:-0}"      -ge "$VC_MIN" ] || fail "opverify artifact vc ${OV_VC:-0} < $VC_MIN"
-case "${OV_VN:-0}" in 3.[5-9]|3.[5-9][0-9]|[4-9].*) ;; *) fail "opverify artifact vn ${OV_VN:-?} < $VN_MIN";; esac
+case "${OV_VN:-0}" in 0.[1-9]*|[1-9].*) ;; *) fail "opverify artifact vn ${OV_VN:-?} < $VN_MIN";; esac
 
 # ---- 3: evidence integrity — fresh == pipeline log == gates.env ----------------
 if [ ! -f "$STATE" ] || [ ! -f "$LOGF" ]; then

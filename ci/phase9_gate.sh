@@ -21,11 +21,11 @@
 #     4. Whole-pipeline state: every previous gate key still OK (35 keys — the
 #        33 the phase-8 close guarded + the two phase-9 gates), the phase-7
 #        AND phase-8 closes still 0-regressions, tests >= 1,581 with 0
-#        failures, R8 dex <= the 512,000B ceiling, versionCode >= 85 AND
-#        versionName >= 3.8 (the W30 lesson, fifth closing week in a row: the
-#        exact close measurement vc 85 / 3.8 is pinned ONCE in
-#        release-manifest.phase9Close; the live check is a non-regression
-#        floor from day one — no week may ship below the phase-9 close).
+#        failures, R8 dex <= the 512,000B ceiling, versionCode >= 1 AND
+#        versionName >= 0.1.0 — the floor RE-BASED at the v0.1.0 identity
+#        reset; the historical phase-9 close measured vc 85 / 3.8 and stays
+#        pinned ONCE in release-manifest.phase9Close (never rewritten);
+#        no week may ship below the v0.1.0 integrated baseline.
 #
 #   RECURSION NOTE (the W38/W41 pattern, three stages deep): inside an inner
 #   run (NEOKEY_REBUILD_INNER=1) this stage omits itself in ci/pipeline.sh
@@ -44,8 +44,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 DEX_CEILING=512000
-VC_MIN=85            # phase-9 close floor — every later week rides at or above
-VN_MIN=3.8           # phase-9 close FLOOR from day one (W30 lesson, fifth closure running: the exact vc85/3.8 measurement stays pinned in release-manifest.phase9Close; the live check is a non-regression floor)
+VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-9 close floor (was 85)
+VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-9 close floor (was 3.8); the historical close measurement stays pinned in release-manifest.phase9Close
 TESTS_MIN=1581       # shipped test total at phase-9 close
 STATE=build/release/gates.env
 LOGF=build/pipeline.log
@@ -88,14 +88,14 @@ PUB_VC=$(field "$PUB" vc);         PUB_VN=$(field "$PUB" vn)
 [ "${PUB_NEG:-0/0}"   = "12/12" ]  || fail "pubsync negatives $PUB_NEG != 12/12 (a check stopped biting)"
 [ "${PUB_ASSETS:-0}"  -ge 3 ]      || fail "pubsync assets ${PUB_ASSETS:-0} < 3 (the additive set lost a published week)"
 [ "${PUB_VC:-0}"      -ge "$VC_MIN" ] || fail "pubsync artifact vc ${PUB_VC:-0} < $VC_MIN"
-case "${PUB_VN:-0}" in 3.[8-9]|3.[8-9][0-9]|[4-9].*) ;; *) fail "pubsync artifact vn ${PUB_VN:-?} < $VN_MIN";; esac
+case "${PUB_VN:-0}" in 0.[1-9]*|[1-9].*) ;; *) fail "pubsync artifact vn ${PUB_VN:-?} < $VN_MIN";; esac
 
 OV_CHK=$(field "$OV" checks);      OV_NEG=$(negof "$OV" negatives)
 OV_VC=$(field "$OV" vc);           OV_VN=$(field "$OV" vn)
 [ "${OV_CHK:-0}"      -ge 24 ]     || fail "ownerverify checks ${OV_CHK:-0} < 24 (the battery the pipeline stage skips must run in full here)"
 [ "${OV_NEG:-0/0}"    = "12/12" ]  || fail "ownerverify negatives $OV_NEG != 12/12 (a check stopped biting)"
 [ "${OV_VC:-0}"       -ge "$VC_MIN" ] || fail "ownerverify artifact vc ${OV_VC:-0} < $VC_MIN"
-case "${OV_VN:-0}" in 3.[8-9]|3.[8-9][0-9]|[4-9].*) ;; *) fail "ownerverify artifact vn ${OV_VN:-?} < $VN_MIN";; esac
+case "${OV_VN:-0}" in 0.[1-9]*|[1-9].*) ;; *) fail "ownerverify artifact vn ${OV_VN:-?} < $VN_MIN";; esac
 [ "${PUB_VC:-0}" = "${OV_VC:-1}" ] || fail "identity consensus: pubsync vc $PUB_VC != ownerverify vc ${OV_VC:-?}"
 [ "${PUB_VN:-0}" = "${OV_VN:-1}" ] || fail "identity consensus: pubsync vn $PUB_VN != ownerverify vn ${OV_VN:-?}"
 
@@ -133,9 +133,9 @@ echo "${PHASE8_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE8_REGRESSIONS ${P
 [ "${R8_DEX_BYTES:-999999}" -le "$DEX_CEILING" ] || fail "dex ${R8_DEX_BYTES:-?} > ceiling $DEX_CEILING"
 [ "${R8_COMPONENTS_KEPT:-0/0}" = "10/10" ] || fail "components kept ${R8_COMPONENTS_KEPT:-0/0} != 10/10"
 
-# versionCode >= the phase-9 close floor AND versionName >= 3.8 (non-regression
-# floor from day one — the exact vc85/3.8 close measurement stays pinned in
-# release-manifest.phase9Close and can never be rewritten)
+# versionCode >= the v0.1.0 baseline AND versionName >= 0.1.0 (non-regression
+# floor re-based at the v0.1.0 identity reset — the historical vc85/3.8 close
+# measurement stays pinned in release-manifest.phase9Close and can never be rewritten)
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 [ "${VC:-0}" -ge "$VC_MIN" ] || fail "versionCode $VC < $VC_MIN (the phase-9 close floor)"

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.hark.neokey"
-    android:versionCode="86"
-    android:versionName="3.9">
+    android:versionCode="1"
+    android:versionName="0.1.0">
 
     <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35" />
     <!-- week 32 (phase 6 W3): the duplicate VIBRATE declaration (lines 8+11, a

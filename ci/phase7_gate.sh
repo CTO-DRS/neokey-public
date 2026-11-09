@@ -38,8 +38,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 DEX_CEILING=512000   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
-VC_MIN=78            # phase-7 close floor — every later week rides at or above
-VN_MIN=3.1           # phase-7 close FLOOR from day one (W30 lesson, third closure running: the exact vc78/3.1 measurement stays pinned in release-manifest.phase7Close; the live check is a non-regression floor)
+VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-7 close floor (was 78)
+VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-7 close floor (was 3.1); the historical close measurement stays pinned in release-manifest.phase7Close
 TESTS_MIN=1479       # shipped test total at phase-7 close (the mass lives in the gates)
 STATE=build/release/gates.env
 LOGF=build/pipeline.log
@@ -85,8 +85,8 @@ BL_PROV=$(field "$BL" providers)
 [ "${BL_CHK:-0}"   = 24 ]          || fail "billing checks ${BL_CHK:-0} != 24 (the parity suite's check inventory moved)"
 [ "${BL_NEG:-0/0}" = "10/10" ]     || fail "billing negatives $BL_NEG != 10/10 (a check stopped biting)"
 [ "${BL_PROV:-0}"  = 2 ]           || fail "billing providers ${BL_PROV:-0} != 2 (contract parity lost a provider)"
-[ "${BL_VC:-0}"    -ge 78 ]        || fail "billing artifact vc ${BL_VC:-0} < 78"
-case "${BL_VN:-0}" in 3.[1-9]|3.[1-9][0-9]|[4-9].*) ;; *) fail "billing artifact vn ${BL_VN:-?} < 3.1";; esac
+[ "${BL_VC:-0}"    -ge 1 ]        || fail "billing artifact vc ${BL_VC:-0} < 1"
+case "${BL_VN:-0}" in 0.[1-9]*|[1-9].*) ;; *) fail "billing artifact vn ${BL_VN:-?} < 0.1.0";; esac
 
 # the deployable sync-server pack (W2/week 35): the pack inventory is exact and
 # the jar sha must agree with the jar the gate JUST rebuilt (deterministic
@@ -98,8 +98,8 @@ DS_HEALTH=$(field "$DS" health_ms)
 [ "${DS_CHK:-0}"   = 24 ]          || fail "deploysrv checks ${DS_CHK:-0} != 24 (the gate's check inventory moved)"
 [ "${DS_NEG:-0/0}" = "5/5" ]       || fail "deploysrv negatives $DS_NEG != 5/5 (a check stopped biting)"
 [ "${DS_MEM:-0}"   = 6 ]           || fail "deploysrv members ${DS_MEM:-0} != 6 (the pack inventory moved)"
-[ "${DS_VC:-0}"    -ge 78 ]        || fail "deploysrv pack vc ${DS_VC:-0} < 78"
-case "${DS_VN:-0}" in 3.[1-9]|3.[1-9][0-9]|[4-9].*) ;; *) fail "deploysrv pack vn ${DS_VN:-?} < 3.1";; esac
+[ "${DS_VC:-0}"    -ge 1 ]        || fail "deploysrv pack vc ${DS_VC:-0} < 1"
+case "${DS_VN:-0}" in 0.[1-9]*|[1-9].*) ;; *) fail "deploysrv pack vn ${DS_VN:-?} < 0.1.0";; esac
 [ -f build/deploy/neokey-sync-server.jar ] || fail "deploysrv jar missing after the fresh re-run"
 [ "${DS_JAR:-none}" = "${DS_JAR_AT_RUN:0:16}" ] || fail "deploysrv jar_sha256 ${DS_JAR:-none} != the jar the verdict measured ${DS_JAR_AT_RUN:0:16} (the pack stopped being the tested thing)"
 case "${DS_HEALTH:-0}" in ''|*[!0-9]*) fail "deploysrv health_ms ${DS_HEALTH:-?} not a number";; *) [ "${DS_HEALTH:-0}" -ge 1 ] && [ "${DS_HEALTH:-0}" -le 10000 ] || fail "deploysrv health_ms ${DS_HEALTH:-?} outside 1..10000";; esac
@@ -117,8 +117,8 @@ PF_VC=$(field "$PF" vc);           PF_VN=$(field "$PF" vn)
 [ "${PF_CHECKED:-0}" = 5 ]         || fail "preflight checked ${PF_CHECKED:-0} != 5 (the CHECKED/OUTSIDE bound drifted)"
 [ "${PF_OUTSIDE:-0}" = 5 ]         || fail "preflight outside ${PF_OUTSIDE:-0} != 5 (the CHECKED/OUTSIDE bound drifted)"
 [ "${PF_SHEET:-none}" = build/release/preflight-sheet.md ] || fail "preflight sheet ${PF_SHEET:-none} moved"
-[ "${PF_VC:-0}"      -ge 78 ]      || fail "preflight sheet vc ${PF_VC:-0} < 78"
-case "${PF_VN:-0}" in 3.[1-9]|3.[1-9][0-9]|[4-9].*) ;; *) fail "preflight sheet vn ${PF_VN:-?} < 3.1";; esac
+[ "${PF_VC:-0}"      -ge 1 ]      || fail "preflight sheet vc ${PF_VC:-0} < 1"
+case "${PF_VN:-0}" in 0.[1-9]*|[1-9].*) ;; *) fail "preflight sheet vn ${PF_VN:-?} < 0.1.0";; esac
 
 # ---- 3: evidence integrity — fresh == pipeline log == gates.env ----------------
 if [ ! -f "$STATE" ] || [ ! -f "$LOGF" ]; then

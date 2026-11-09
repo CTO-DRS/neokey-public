@@ -32,7 +32,7 @@ cd "$(dirname "$0")/.."
 unset JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS
 
 DEX_CEILING=512000   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
-VC_MIN=66            # closing week must bump the manifest (65 was week 24)
+VC_MIN=1             # v0.1.0 identity reset (re-based from the phase-4 close floor 66; the closing week still must carry the manifest identity)
 TESTS_MIN=1334       # shipped test total at phase-4 close (1,334 = week 24)
 STATE=build/release/gates.env
 LOGF=build/pipeline.log

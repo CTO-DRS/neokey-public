@@ -32,8 +32,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 DEX_CEILING=512000   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
-VC_MIN=70            # phase-5 close floor — every later week rides at or above
-VN_MIN=2.3           # phase-5 close FLOOR (W30 amendment: the exact vc70/2.3 measurement stays pinned in release-manifest.phase5Close; the live check is a non-regression floor like phase3/phase4 VC_MIN)
+VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-5 close floor (was 70)
+VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-5 close floor (was 2.3); the historical close measurement stays pinned in release-manifest.phase5Close
 TESTS_MIN=1354       # shipped test total at phase-5 close (1,354 = weeks 26-28; the mass lives in the gates)
 STATE=build/release/gates.env
 LOGF=build/pipeline.log
