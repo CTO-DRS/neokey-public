@@ -47,6 +47,7 @@ echo "$out" | grep -qE 'PUBSYNC_OK|\[pubsync\] uploaded' \
 git status --porcelain | grep -q NOTES.md \
   && die "attack1.restore" "the dirt was not healed"
 ok "neg.publish.dirty_tree" "a dirty working tree refuses to publish fail-closed before anything is packed or uploaded (the W44 bite replayed and refused)"
+echo "$out" | grep -m1 '^PUBSYNC_FAILED publish.dirty_tree' >> ci/phase10-negative-proof.log
 fi
 
 # ---- attack 2: the record search reads every committed proof log --------------
@@ -59,6 +60,7 @@ echo "$out" | grep -q 'OWNERVERIFY_FAILED ownercheck.record' \
   || die "attack2.tag" "expected OWNERVERIFY_FAILED ownercheck.record, got: $(echo "$out" | tail -2 | tr '\n' ' ')"
 [ -f ci/phase9-negative-proof.log ] || die "attack2.restore" "the hidden record log was not restored"
 ok "neg.ownercheck.record" "hiding the week's committed proof log kills the anchor fail-closed — the search reads every ci/*-negative-proof.log (the restore bite, now guarded)"
+echo "$out" | grep -m1 '^OWNERVERIFY_FAILED ownercheck.record' >> ci/phase10-negative-proof.log
 fi
 
 # ---- the green close: the ledger audit + the full remote battery ---------------
@@ -67,7 +69,7 @@ out=$(PUBVERIFY_TOKEN_FILE=.secrets/pubsync.token ci/pubsync_gate.sh --verify 2>
 if [ "$rc" -ne 0 ]; then echo "$out" | tail -4 >&2; die "green.verify" "the ledger audit did not come back green"; fi
 PUB=$(echo "$out" | grep -E '^PUBSYNC_OK ' | tail -1)
 [ -n "$PUB" ] || die "green.verdict" "no PUBSYNC_OK verdict line"
-echo "$PUB" | grep -q 'week=45' || die "green.week" "the publication must carry week=45: $PUB"
+echo "$PUB" | grep -q 'week=46' || die "green.week" "the publication must carry week=46: $PUB"
 echo "$PUB"
 echo "$PUB" >> ci/phase10-negative-proof.log
 ok "green.verify" "$PUB"
@@ -84,4 +86,8 @@ echo "$OV" >> ci/phase10-negative-proof.log
 ok "green.remote" "$OV"
 fi
 
-say "PROOF PASSED — both laws bit their exact tags, the restores healed, the publication audits green in the ledger mode (week=45) and the owner verifier anchors record=git with the byte-exact reconstruction"
+if [ "$MODE" = "attacks" ]; then
+  say "PROOF PASSED (attacks) — both laws bit their exact tags and the restores healed; the bite lines are saved above (the W19-21 evidence shape). The green close (the ledger audit + the remote battery) lands with the owner's first vc=1 publication — the documented external pending #1; this environment carries no vault and nothing is pretended"
+else
+  say "PROOF PASSED — both laws bit their exact tags, the restores healed, the publication audits green in the ledger mode (week=46) and the owner verifier anchors record=git with the byte-exact reconstruction"
+fi
