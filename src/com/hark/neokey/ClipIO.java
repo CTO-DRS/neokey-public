@@ -117,9 +117,22 @@ final class ClipIO {
     static void writeTxt(List<Rec> items, Writer w) throws IOException {
         for (int k = 0; k < items.size(); k++) {
             if (k > 0) w.write("\n\n" + TXT_SEP + "\n\n");
-            w.write(items.get(k).text);
+            w.write(escapeTxt(items.get(k).text));
         }
         if (!items.isEmpty()) w.write("\n");
+    }
+
+    /** A line equal to TXT_SEP inside an item's text would enter the parse
+     *  split path (parseTxt guards on "\nSEP\n" or a leading SEP) and silently
+     *  split the item into two on re-import — and because the split regex
+     *  matches the bare separator substring with no context required, a mere
+     *  prefix space is NOT enough. TXT escapes every occurrence by inserting a
+     *  ZERO-WIDTH SPACE inside the dash run, breaking the literal match
+     *  (visually identical, documented delta). JSON is the fidelity-preserving
+     *  format and stays byte-exact. */
+    static String escapeTxt(String text) {
+        if (!text.contains(TXT_SEP)) return text;
+        return text.replace(TXT_SEP, "-\u200B" + TXT_SEP.substring(1));
     }
 
     static final String[] CSV_HEAD = {"text", "title", "pinned", "favorite", "archived", "template", "pin_order", "created", "modified", "categories"};

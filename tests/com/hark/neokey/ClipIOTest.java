@@ -83,7 +83,10 @@ final class ClipIOTest {
 
         // invalid / hostile input
         ClipRepoTest.check("broken json rejected", ClipIO.parse("{\"format\": \"neokey-clipboard\", \"schema\": 1, \"items\": [", "a.json", false).error != null);
-        ClipRepoTest.check("wrong format rejected", ClipIO.parse("{\"format\": \"other\", \"schema\": 1, \"items\": []}", "a.json", false).error != null);
+        // the wrong-format probe carries a VALID item: only the format check can
+        // reject it (an empty items list would trip the no-texts path instead —
+        // the W47 negative proof caught exactly this masking)
+        ClipRepoTest.check("wrong format rejected", ClipIO.parse("{\"format\": \"other\", \"schema\": 1, \"items\": [{\"text\":\"س\"}]}", "a.json", false).error != null);
         ClipRepoTest.check("newer schema rejected", ClipIO.parse("{\"format\": \"neokey-clipboard\", \"schema\": 9, \"items\": [{\"text\":\"x\"}]}", "a.json", false).error != null);
         StringBuilder deep = new StringBuilder();
         for (int i = 0; i < 5000; i++) deep.append('[');
@@ -97,6 +100,35 @@ final class ClipIOTest {
         huge.append("\"]");
         ClipIO.Parsed ph = ClipIO.parse(huge.toString(), "h.json", false);
         ClipRepoTest.check("oversized item marked invalid", ph.items.size() == 1 && ph.items.get(0).status == ClipIO.INVALID);
+
+        // TXT separator-line escape: an item containing the separator line must
+        // NOT be silently split into two items on re-import (W47 integrity law).
+        // The escape inserts a zero-width space inside the dash run.
+        String esc = "-\u200B" + ClipIO.TXT_SEP.substring(1);
+        String sepText = "قبل الفاصل\n" + ClipIO.TXT_SEP + "\nبعد الفاصل";
+        ClipRepo rSep = ClipRepoTest.fresh();
+        rSep.add(sepText, now, id);
+        rSep.add(ClipIO.TXT_SEP, now + 1, id);          // item that IS the separator
+        rSep.add("عنصر عادي", now + 2, id);
+        List<ClipIO.Rec> sepAll = ClipIO.load(rSep, ClipIO.SCOPE_ALL, null);
+        String sepTxt = out(ClipIO.F_TXT, sepAll);
+        ClipIO.Parsed ps = ClipIO.parse(sepTxt, "s.txt", false);
+        ClipRepoTest.check("txt separator-line escape keeps item count", ps.error == null && ps.items.size() == 3);
+        ClipRepoTest.check("txt escaped occurrences carry the documented ZWSP delta", ps.items.size() == 3
+                && containsRec(ps, sepText.replace(ClipIO.TXT_SEP, esc))
+                && containsRec(ps, esc)
+                && containsRec(ps, "عنصر عادي"));
+        String sepJson = out(ClipIO.F_JSON, sepAll);
+        ClipRepoTest.check("json stays exact for separator items", ClipIO.parse(sepJson, "s.json", false).items.size() == 3
+                && containsRec(ClipIO.parse(sepJson, "s.json", false), sepText)
+                && containsRec(ClipIO.parse(sepJson, "s.json", false), ClipIO.TXT_SEP));
+
+        // MAX_ITEMS: a file over the 50,000-item cap is rejected, not truncated
+        StringBuilder over = new StringBuilder("{\"format\":\"neokey-clipboard\",\"schema\":1,\"items\":[");
+        for (int i = 0; i <= ClipIO.MAX_ITEMS; i++) over.append(i > 0 ? "," : "").append("{\"text\":\"ع\"}");
+        over.append("]}");
+        ClipIO.Parsed po = ClipIO.parse(over.toString(), "over.json", false);
+        ClipRepoTest.check("over-MAX_ITEMS file rejected", po.error != null && po.error.contains("أكثر من"));
 
         // pin limit respected on import
         ClipRepo r4 = ClipRepoTest.fresh();

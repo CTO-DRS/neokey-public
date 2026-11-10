@@ -16,7 +16,7 @@
 #        the additive asset set (>= 3 — weeks 33/42/43 stay, the week's assets
 #        join), the identity floors.
 #     3. State consistency: the gates' own keys in gates.env must be OK and
-#        agree with the fresh lines (PUBSYNC_WEEK=46 — a stale week's
+#        agree with the fresh lines (PUBSYNC_WEEK=47 — a stale week's
 #        publication state must not pass as this week's close).
 #     4. Whole-pipeline state: every previous gate key still OK (35 keys — the
 #        33 the phase-8 close guarded + the two phase-9 gates), the phase-7
@@ -106,7 +106,7 @@ fi
 . "$STATE"
 [ "${PUBSYNC_GATE:-NOT_OK}" = "OK" ]     || fail "pubsync gate key ${PUBSYNC_GATE:-NOT_OK} not OK"
 [ "${OWNERVERIFY_GATE:-NOT_OK}" = "OK" ] || fail "ownerverify gate key ${OWNERVERIFY_GATE:-NOT_OK} not OK"
-[ "${PUBSYNC_WEEK:-?}" = "46" ]          || fail "pubsync.week ${PUBSYNC_WEEK:-?} != 46 (a stale week's publication state must not pass as this week's close)"
+[ "${PUBSYNC_WEEK:-?}" = "47" ]          || fail "pubsync.week ${PUBSYNC_WEEK:-?} != 46 (a stale week's publication state must not pass as this week's close)"
 [ "${PUBSYNC_NEGATIVES:-?}" = "$PUB_NEG" ] || fail "pubsync.negatives gates.env ${PUBSYNC_NEGATIVES:-?} != fresh $PUB_NEG"
 [ "${PUBSYNC_ASSETS:-0}" = "${PUB_ASSETS:-1}" ] || fail "pubsync.assets gates.env ${PUBSYNC_ASSETS:-?} != fresh ${PUB_ASSETS:-?}"
 

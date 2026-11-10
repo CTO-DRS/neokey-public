@@ -69,7 +69,7 @@ out=$(PUBVERIFY_TOKEN_FILE=.secrets/pubsync.token ci/pubsync_gate.sh --verify 2>
 if [ "$rc" -ne 0 ]; then echo "$out" | tail -4 >&2; die "green.verify" "the ledger audit did not come back green"; fi
 PUB=$(echo "$out" | grep -E '^PUBSYNC_OK ' | tail -1)
 [ -n "$PUB" ] || die "green.verdict" "no PUBSYNC_OK verdict line"
-echo "$PUB" | grep -q 'week=46' || die "green.week" "the publication must carry week=46: $PUB"
+echo "$PUB" | grep -q 'week=47' || die "green.week" "the publication must carry week=47: $PUB"
 echo "$PUB"
 echo "$PUB" >> ci/phase10-negative-proof.log
 ok "green.verify" "$PUB"
@@ -89,5 +89,5 @@ fi
 if [ "$MODE" = "attacks" ]; then
   say "PROOF PASSED (attacks) — both laws bit their exact tags and the restores healed; the bite lines are saved above (the W19-21 evidence shape). The green close (the ledger audit + the remote battery) lands with the owner's first vc=1 publication — the documented external pending #1; this environment carries no vault and nothing is pretended"
 else
-  say "PROOF PASSED — both laws bit their exact tags, the restores healed, the publication audits green in the ledger mode (week=46) and the owner verifier anchors record=git with the byte-exact reconstruction"
+  say "PROOF PASSED — both laws bit their exact tags, the restores healed, the publication audits green in the ledger mode (week=47) and the owner verifier anchors record=git with the byte-exact reconstruction"
 fi
