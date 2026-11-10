@@ -1,0 +1,1023 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 24edb18..40765a5 100755
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -1,8 +1,8 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     package="com.hark.neokey"
+-    android:versionCode="60"
+-    android:versionName="1.3">
++    android:versionCode="61"
++    android:versionName="1.4">
+ 
+     <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35" />
+     <uses-permission android:name="android.permission.VIBRATE" />
+diff --git a/CI.md b/CI.md
+index 133bccb..db89531 100644
+--- a/CI.md
++++ b/CI.md
+@@ -1,4 +1,88 @@
++# خط الإنتاج الآلي — CI/CD (المرحلة 0، البند B)
+ 
+-### `storeui` (المرحلة 3، الأسبوع 1)
++> المرجع في خارطة الطريق: «هجرة البناء من build.sh اليدوي المرتبط بمسارات جهاز واحد إلى خط إنتاج قياسي… الإصدار التدريجي (10% ← 50% ← 100%) يصبح إجراءً افتراضياً لا استثناءً».
++> معيار الخروج من المرحلة 0: «بنية CI تعمل من دمج نظيف: اختبارات + بناء + توقيع + نشر تدريجي بلا تدخل يدوي».
+ 
+-| `storeui` | `ci/store_ui_gate.sh` → `tests/com/hark/neokey/StoreUiGate.java` — بوابة المتجر داخل التطبيق: الأصل المشحون يُحمّل بعقد الكتالوج الصارم ويساوي المصدر المرجَع بايت-بايت، 25/25 حزمة تُشترى وتُثبّت من سلسلة الحرس كاملة (ملكية ← دبوس sha256 ← مراجعة ThemePack بموردين مسجلين)، شهر كامل 7,325c ينغلق إلى السنت عبر Economy وحدها، 16/16 سلبيات بأوسمة دقيقة (شراء مزدوج/رصيد ناقص/سقوف/تثبيت بلا ملكية/دبوس مقلوب/مورد غير مسجل/كتالوج مسموم بكل أشكاله)، p50 تثبيت مقاس، سطر الاستحقاقات حتمي عبر 30 بذرة؛ إخفاء StoreUi.java = FAILED compile exit 1 | أي قبول سلبي، دفتر لا ينغلق إلى السنت، دبوس كتالوج لا يُرفض، أو وسم رفض خاطئ |
++## 1. المشهد الكامل
++
++```
++دمج/دفع  ──►  ci.yml (GitHub Actions)
++              ├─ job gates:    ci/pipeline.sh  →  تدقيق أسرار + 455 اختباراً + بوابات أداء   (JVM خالص، بلا SDK)
++              └─ job compile:  ci/build_unsigned.sh  →  aapt2 → javac → d8 → zipalign  (بلا توقيع)
++
++وسم v*    ──►  release.yml (GitHub Actions)
++              ├─ job gates:    نفس البوابات قبل توقيع أي شيء
++              ├─ job release:  استرجاع الخزنة من GitHub Secrets → build.sh + build_aab.sh
++              │                → رفع إلى مسار internal → إنتاج بنسبة 10%
++              └─ job promote:  workflow_dispatch + اعتماد بيئة (0.5 ثم 1.0)
++
++أي جهاز  ──►  ci/pipeline.sh      (نفس البوابات محلياً، تسجيل كامل في build/pipeline.log)
++```
++
++## 2. `ci/pipeline.sh` — البوابات والحدود
++
++| المرحلة | ما تفعله | بوابة الإخفاق |
++|---|---|---|
++| `probe` | java / rg / SDK / jars | غياب java أو rg |
++| `audit` | `tests/audit_secrets.sh` — أنماط أسرار + ملفات keystore خارج الخزنة (find حقيقي لا مسح نصي) | أي إصابة |
++| `tests` | `tests/run.sh` — 1,251 اختباراً على JVM (SQLite حقيقي + قاموس 150 ألف كلمة) | أي إخفاق |
++| `perf`  | `tests/com/hark/neokey/PerfGate.java` — 10 بوابات أداء | تجاوز أي حد |
++| `playstore` | `ci/play_gate.sh` → `tests/com/hark/neokey/PlayGate.java` — حدود قائمة المتجر (الاسم ≤30، المختصر ≤80، الكامل ≤4000 لكل لغة، تطابق التعليقات (n/m)) + الأصول (8 لقطات 1080×1920، رسم 1024×500، أيقونة 512×512 ≤1MB، فيديو 25–40 ثانية، privacy.html) + تطابق البريد/الموقع مع Feedback.java | أي خرق حدّ أو أصل ناقص |
++| `correction` | `tests/com/hark/neokey/CorrectionGate.java` — دقة التصحيح v2 على أخطاء محقونة واقعياً (جدول الالتباسات) مع الجملة الكاملة (السابقة + التالية)، مقارنة مقاسة ضد v1، قاعدة الإزعاج الصفري، فئتا الفاصلة المنقوطة والأرقام العربية (10 حالات)، وسياسة الحقول الحرجة | دقة < 96% (حدّ البند النهائي)، أو أي تصحيح خاطئ لكلمة سليمة، أو فشل ترقيم/أرقام أو سياسة، أو p50 > 8ms |
++| `nnet` | `ci/nnet_gate.sh` → `tests/com/hark/neokey/NNetGate.java` — بوابة البند A1: تنسيق NQF int8 الكمّي (كاتب + قارئ صارم مزدوج CRC)، محرك استدلال نقي Java بضرب كمّي int8×int8→int32 بلا أي مكتبة، استدلال p50 على نموذج اختباري حتمي (1.64M معامل)، حجم الملف محاسب بايت-بايت (فوقية < 2%، < 8MB)، خطأ كمّي مقابل fp32 < 3%، و5 إثباتات سلبية (سحر/إصدار/بتر/قلب كتلة/قلب ميتا) يجب رفضها كلها | p50 > 8ms، أو حجم غير محاسب، أو خطأ > 3%، أو قبول أي نموذج مشوه |
++| `dialect` | `ci/dialect_gate.sh` → `tests/com/hark/neokey/DialectGate.java` — بوابة البند C1 (المرحلة 1، الأسبوع 5): QC القواميس الثلاثة (assets/ar_hijazi.txt 370، ar_najdi.txt 361، ar_gulf.txt 371 كلمة: ≥300، أحرف عربية فقط، بلا تكرار حرفي أو normAr، تغطية النواة ≥250)، الاتساق الثلاثي dictsrc/dialect_markers.tsv ↔ Dialect.markers() ↔ الأصول خلية-خلية (81 علامة)، دقة الكشف على 64 جملة منسقة ≥85% كلياً و≥75% لكل فئة، p50 <1ms، حتمية المجموعة كاملة، وإثباتات سلبية: قاموس مُسلَّط من علاماته يُطبَح، خلط الفئات ينهار تحت 60%، والفصحى لا تدعي لهجة | قاموس ناقص/مكرر، انحراف جدول، دقة < 85% أو فئة < 75%، p50 ≥ 1ms، عدم حتمية، أو قبول أي إثبات سلبي |
++| `assistant` | `ci/assistant_gate.sh` → `tests/com/hark/neokey/AssistantGate.java` — بوابة البندين C2+D1 (المرحلة 1، الأسبوع 6): دقة التبديل الذكي على 48 جملة منسقة (assets/testset_switch.txt) — المبدّل يختار القاموس الصحيح (ar/ar_hijazi/ar_najdi/ar_gulf) وصفوف التهرمون تبقى فصحى — ≥95% كلياً و100% لكل فئة، p50 <1ms، حتمية؛ قدرات المساعد المحلي: تلخيص (أقصر + الجملة المفصلية محفوظة + الدرجة ترددية لا تموضعية + حتمية + p50 <2ms على 8 نصوص منسقة)، إعادة صياغة بالاتجاهين (11 مسباراً: كل قاعدة تطلق، لا بقايا مصدر، حدود كلمة سليمة)، ثلاث نبرات (3 مخارج متميزة + بطاقات النبرات + 6 نوايا)؛ NetGate: مصفوفة الفشل المغلق كاملة (كل غموض = منع، قدرة مجهولة = منع، القائمة البيضاء ترفض المضيف المشابه، سطر تدقيق 5 حقول بلا نص مستخدم)؛ 6 أوضاع إعداد صالحة؛ إثباتات سلبية داخلية (5) + إخفاء أي مصدر من الثلاثة = FAILED compile exit 1 | دقة تبديل < 95% أو فئة < 100%، p50 فوق الحد، تلخيص غير حتمي أو غير أقصر، قاعدة لا تطلق، مخارج نبرات متطابقة، أي حالة غموض تفتح في NetGate، أو قبول أي إثبات سلبي |
++| `sync` | `ci/sync_gate.sh` → `tests/com/hark/neokey/SyncGate.java` — بوابة نواة المزامنة المشفرة (المرحلة 2، البند A، الأسبوع 1): البروتوكول الكامل بجهازين على خادم محاكي غير موثوق (تسجيل بملح علني ← 3 دفعات ← استعادة كاملة على جهاز جديد = الحالة نفسها، وكلمة سر خاطئة = auth_failed)، فحص الصفر-المعرفة على مخزون الخادم نفسه (بلا كلمات عربية من الحالة، بلا أنواع سجلات ولا JSON ولا كلمة السر، السحر NSF1 مرئي فقط عند بدايات الكتل وعدده = عدد الكتل، إنتروبيا ≥ 7.5 بت/بايت)، متجهات PBKDF2-HMAC-SHA256 (c=1/2/4096) وHKDF RFC 5869 (TC1+TC3) مطابقة حرفياً، محاسبة المغلف بالبايت (50 ترويسة + pt + 16 وسم؛ فوقية < 2%)، ختم+فتح < 5ms/100KB (p50 بعد تسخين)، KDF في ميزانية فتح الجلسة (< 400ms)، سلبيات التلاعب في 7 مناطق + مقصوص/فارغ، حصص فشلة-مغلقة على الخادم (سقف كتلة + حصة حساب، وغموض = رفض)؛ إخفاء SyncVault.java = FAILED compile exit 1 | أي فشل بروتوكول أو فحص صفري-المعرفة أو متجه تشفير أو محاسبة أو أداء، أو قبول أي منطقة تلاعب أو تجاوز حصة |
++| `syncclient` | `ci/sync_client_gate.sh` → `tests/com/hark/neokey/SyncClientGate.java` — بوابة التوصيل (المرحلة 2، البند A2): جمع حي من أشكال المخازن الحقيقية (460 كلمة/40 استثناء/30 عبارة/20 اختصار/25 تثبيتاً/4 إعدادات)، جولة جهازين كاملة (دفع ← دخول جهاز جديد ← سحب ← عدد خطة صحيح) وجولة عكسية، فحص صفري-المعرفة بعد الدفع، مصفوفة NetGate كاملة للقدرة sync، سطر تدقيق بلا محتوى، نسخة ملفية NSF1 ذهاباً وعوداً وسلبياتها، دفاع القائمة البيضاء عند التفكيك (سجلات مزروعة تُتجاهل)، جمع+ختم 3000 كلمة ≤ 150ms وKDF ≤ 400ms | أي انحراف جولة أو تسريب محتوى أو قبول سجل مزروع أو تجاوز أداء |
++| `nqfport` | `ci/nqfport_gate.sh` → `tests/com/hark/neokey/NqfPortGate.java` — حياد المنصة (المرحلة 2، البند C): دبابيس 15 أصلاً منشوراً تطابق البايتات الحية، اتفاق القارئين المستقلين bit-exact 8/8 موترات، إعادة فحص محرك 512/512 سطراً، عقد النصوص، p50 قراءة < 50ms، 103/103 سلبيات يرفضها القارئان | أي انحراف دبس أو عدم اتفاق بين القارئين أو قبول ملف مشوه |
++| `community` | `ci/community_gate.sh` → `tests/com/hark/neokey/CommunityDictGate.java` — خط الإثراء المجتمعي (المرحلة 2، البند D): مراجعة CSV صارمة بوسوم مرتبة، 9 دفعات سموم بأوسمة دقيقة، 110 سلبيات مزروعة في دفعة 220 صفاً (كل صف مسموم يُرفض وكل سليم يُقبل)، p50 فحص < 5ms على 800 صف، صفحة شكر حتمية | أي قبول صف مسموم أو وسم خاطئ أو دفتر مساهمين غير حتمي |
++| `dictsign` | `ci/dictsign_gate.sh` → `tests/com/hark/neokey/DictSignGate.java` — الدمج الموقّع للقاموس (المرحلة 3، الأسبوع 2): إعادة النشر من الدفعة المراجَعة = بايتات الأصل المشار حرفاً بحرف، الدبس الذهبي في NQF-GOLDEN (assets=15)، استهلاك المحرك على المدونة الحقيقية (راونك من 150,123، أرضية 3000، المكرر يُسقط)، 12/12 سلبية بأوسمة دقيقة (عبث/استبدال ما بعد المراجعة/عدّاد مزوّر/دفعة أجنبية/دبوس فاسد/schema/قطع/BOM/سم معاد التوقيع/مكرر مثبت)، p50 نشر/تحميل مقاس؛ إخفاء DictSign.java = FAILED compile exit 1 | أي انحراف بايت عن إعادة النشر، أو دبس ذهبي غير مطابق، أو قبول أي سلبية |
++| `storeui` | `ci/store_ui_gate.sh` → `tests/com/hark/neokey/StoreUiGate.java` — المتجر داخل التطبيق (المرحلة 3، الأسبوع 1): الأصل المشحون يطابق مصدره المراجَع بايت-بايت، 25/25 حزمة تمر بسلسلة الحرس (ملكية ← دبوس sha256 ← مراجعة ThemePack بموردين مسجلين)، شهر كامل 7,325c ينغلق إلى السنت عبر Economy وحدها، 16/16 سلبيات بأوسمة دقيقة، p50 تثبيت مقاس، سطر الاستحقاقات حتمي؛ إخفاء StoreUi.java = FAILED compile exit 1 | أي قبول سلبي، دفتر لا ينغلق، دبس لا يُرفض، أو وسم خاطئ |
++| `entitlement` | `ci/entitlement_gate.sh` → `tests/com/hark/neokey/EntitlementGate.java` — الاستحقاقات عبر الأجهزة (المرحلة 3، الأسبوع 3): جهازان حقيقيان على محاكي الخادم غير الموثوق — شراء فعلي من الكتالوج المثبت ← سجل entitlement لكل حزمة (الدبيس فقط) ← دفع مشفر طرف-لطرف ← جهاز جديد يستعيد الملكية ويثبّت الثنائيات من الكتالوج حصراً، وجولة عكسية، الصفر-المعرفة مقياساً على المخزون الكامل (إنتروبيا ≥ 7.9 + لا معرف حزمة ولا سطر استحقاق نصي)، سجل مزروع من نوع مجهول يُتجاهل بلا تسميم الكتلة والإنشاء المحلي لأنواع مجهولة مرفوض، حصص الحساب تُحترم مع حمل استحقاقات (quota_free)، المنح idempotent بالدبيس (PIN_MISMATCH/NO_PACK/شاهد لا يمنح/إزالة تثبيت لا تبطل ملكية)، p50 تجميع/تفكيك/منح مقاس؛ إخفاء StoreUi.java = FAILED compile exit 1 | أي ثنائي في المزامنة، تسريب لمعرفات على الخادم، قبول سجل مجهول، تجاوز حصة، منح بدبيس غير مطابق، أو قبول أي سلبية |
++| `themestore` | `ci/theme_store_gate.sh` → `tests/com/hark/neokey/ThemeStoreGate.java` — بوابة البند B (المرحلة 2، الأسبوع 3): مدقّق حزم .neokey الآلي على كتالوج المؤسسين كاملاً (10 مبدعين × 25 حزمة زجاج/نيون: JSON صارم بلا مفاتيح مكررة/محارف تحكم/لاحق زائد/عمق >8، قائمة مفاتيح أعلى مسموحة فقط فتُقطع المفاتيح المزروعة api_key/webhook_url عند الشكل، مورد معلن ومسجَّل، جودة عربية في الاسم: 1..40 محرفاً بلا محارف اتجاه أو تطويل أو تشكيل أو فراغ طرفي، ألوان hex صالحة وشفافية bg ≥ 0x40، نطاقات المتجر أشد من تسامح العميل font 0..5 / anim -1..29 / borderW 0.5..8 / layout محدود، تباين WCAG ≥ 3.0 على الزوج المركّب فوق الخلفية، نيون بلا توهج مرفوض) — 25/25 تمرّ ودبوس sha256 لكل حزمة مطابق (البايتات المراجَعة = المنشورة)، زمن المراجعة p50 < 5ms، 23 حزمة ضارة مصممة تُرفض كلها بالوسم الصحيح، عبث ما بعد المراجعة يصطاد بالدبوس؛ اقتصاد 70/30 (Economy.java) على شهر كامل محاكى: تقسيم سنت-دقيق (149→104/45، 1→0/1)، الدفتر ينغلق Σcreator+platform = gross−refunds، استرداد يفوق الإجمالي تمتصه المنصة وتُبلَّغ، حد أدنى $10 على نصيب المبدع مع حمل للشهر التالي، دفعة idempotent؛ إخفاء ThemePack.java = FAILED compile exit 1 | أي قبول لحزمة ضارة أو انحراف دبوس، p50 > 5ms، دفتر لا ينغلق أو تقسيم غير دقيق، أو قبول أي إثبات سلبي |
++| `build` | `ci/build_unsigned.sh` — سلسلة أندرويد كاملة **بلا توقيع** (يتخطى نفسه بوضوح إن غاب SDK) | خطأ ترجمة |
++| `release` | `ci/release.sh` — ملف إصدار JSON + خطة نشر تدريجي | — |
++
++بوابات الأداء (JVM، قاموس كامل):
++
++| البوابة | الحد | القياس المرجعي |
++|---|---|---|
++| suggest(سلام,10) P50 | < 8ms | ~0.5ms |
++| predict(في,5) P50 | < 1ms | ~0.002ms |
++| correction(السلآم) P50 | < 8ms | ~0.002ms |
++| إدراج 1000 عنصر حافظة | < 900ms | ~300-400ms |
++| list(400) ×10 | < 200ms | ~28ms |
++| 20 بحثاً في نص 100 ألف محرف | < 60ms | ~16-42ms |
++| بحث إصابة عميقة | < 120ms | ~2.8ms |
++| تصدير / تحليل / فحص تكرار 1000 | < 400ms لكل واحدة | 52-139ms |
++
++النتيجة النهائية دائماً `PIPELINE_OK` أو `PIPELINE_FAILED` (خروج 1)، وحالة البوابات تُكتب في `build/release/gates.env` **قبل** مرحلة release حتى يحمل ملف الإصدار أرقاماً حقيقية.
++
++## 3. ملف الإصدار وخطة النشر التدريجي
++
++`ci/release.sh` ينتج ثلاثة ملفات في `build/release/`:
++- **release-manifest.json**: versionCode/Name من المانيفست (مصدر الحقيقة الوحيد)، بصمة مفتاح الرفع SHA-256 من الخزنة، حالة كل البوابات، أرقام الأداء، مسارات المخرجات.
++- **rollout-plan.json / rollout-plan.txt**: المراحل 10% → 50% → 100% بشروطها: 48 ساعة مستقرة لكل مرحلة، معدل أعطال < 1%، ANR < 0.47%، بلا عنقود أعطال جديد، وإجراء الإيقاف (Play Console → Halt rollout).
++
++## 4. الأسرار — الدائرة الكاملة
++
++- تخزين: `.secrets/` خارج git (700/600). انظر `docs/SECURITY.md`.
++- المرور إلى أدوات التوقيع عبر `env:` فقط.
++- في CI: يُفكّ `ANDROID_KEYSTORE_B64` إلى نفس تخطيط الخزنة، والبصمة تُستخرج وتُطبع **وتُقارن** بما هو مسجل قبل أي رفع.
++- **بوابة التغليف** `ci/package.sh` (درس الأسبوع 2: ملف تطبيق الأسبوع الثاني تضمن الخزنة الحية):
++  - `neokey-app.zip` — نظيف للمشاركة، ومسح ما بعد الحزم يرفض أي `neokey.keystore` أو `.secrets/neokey.env` داخله.
++  - `neokey-secrets.zip` — الخزنة وحدها بتصريح 600، للنسخ الاحتياطي المشفّر خارج الجهاز فقط.
++
++## 5. هجرة Gradle — مُحضَّرة غير مُفعَّلة
++
++`gradle-migration/` يلف نفس المصادر (`src/`, `res/`, `assets/`) بلا تغيير منطق، ويقرأ الإصدار من المانيفست. سبب عدم التفعيل الفوري وخطواته الثلاث: `gradle-migration/README.md`. خط CI يعمل اليوم على السلسلة اليدوية المُثبَّتة.
++
++## 6. الأسرار المطلوبة في GitHub (عند أول دفع للسلسلة)
++
++| السر | المحتوى |
++|---|---|
++| `ANDROID_KEYSTORE_B64` | `base64 -w0 .secrets/neokey.keystore` |
++| `NEOKEY_KS_PASS` | كلمة المرور المُدارَة (40 محرفاً) |
++| `PLAY_SERVICE_ACCOUNT_JSON` | حساب خدمة Play بصلاحية إصدار |
++
++بيئة `production-rollout` تُضبَط في إعدادات المستودع بمراجعين إلزاميين — هي بوابة الإيقاف البشرية بين 10% و50% و100%.
+diff --git a/HISTORY.md b/HISTORY.md
+index 2ca3314..332110d 100755
+--- a/HISTORY.md
++++ b/HISTORY.md
+@@ -68,3 +68,6 @@
+ - 2026-11-03 (Roadmap Phase 2 — week 3, item B: theme store + review line PRODUCTION, no app version bump): the .neokey pack format the studio has shipped since v16 became a measured production line. ThemePack.java (pure JVM, zero android.*): the automated reviewer the store runs BEFORE publish — strict hand-rolled JSON (dup keys / raw control chars / trailing bytes / depth>8 refused), a top-level key ALLOWLIST (planted api_key/webhook_url/tracking fields = instant refusal, the smuggling is cut at shape not behaviour), vendor declared AND registered (مورد غير معلن refused), Arabic copy quality as code (name 1..40 chars, bidi overrides U+202A..202E/U+2066..2069/U+200E/200F refused, tatweel refused, tashkeel in a theme NAME refused, no edge whitespace), colour parsing (#RGB/#RRGGBB/#AARRGGBB, bg alpha >= 0x40), store ranges STRICTER than the tolerant client fromSpec (font 0..5, anim -1..29, borderW 0.5..8, layout ints bounded), WCAG 2.1 contrast >= 3.0 measured on the ALPHA-COMPOSITED pair (translucent glass keys blended over bg — measured, not cosmetic), neon packs must declare glow+glow2, and hash-pinned publish: sha256 of the exact reviewed bytes is the publish pin, so a post-review byte flip is refused even when the tampered pack would itself pass review. Economy.java (pure JVM): creator economy in LONG CENTS only — split = floor(price*70/100) creator + remainder platform so the sum is ALWAYS the price (1 cent -> 0/1); monthClose aggregates per vendor, refunds reverse cent-for-cent, a refund exceeding a vendor's gross is an adjustment the platform absorbs AND reports (creator never negative), MIN_PAYOUT $10 applies to the creator share (below it carries to next month), pay() idempotent (second call pays exactly zero), statements sorted by vendor id — deterministic ledger on any device. Founders catalog: dictsrc/make_founders.py (seed 20261103) -> dictsrc/founders_catalog.json, 10 founding creators x 25 exclusive glass/neon packs (22,499 bytes), each pack canonical sorted-key JSON + sha256 pin + price; the generator PROVES the contrast pairs with the same math as ThemePack before writing (the gate re-proves in Java — no coincidence agreement). Gate 15 of the pipeline (ci/theme_store_gate.sh + ThemeStoreGate.java, 112 checks): all 25 packs PASS with hash pins verified, review latency p50 0.096ms (bar 5ms, ~52x headroom), 23 designed harmful packs ALL refused with the right tag, post-review byte flip caught by the pin, full simulated month over the catalog: gross 125,080c, refunds 5,633c, creator 83,609c = 70.00% / platform 35,838c = 30.00% — the ledger closes to the cent. Tests 843 -> 923 (+52 ThemePackTest, +28 EconomyTest; suites now emit the pipeline's RESULT convention). NEGATIVE PROOF: hiding ThemePack.java -> THEME_STORE_GATE_FAILED compile exit 1 (restored, re-verified OK). Environment lesson measured: the recycled sandbox lost javac/tools(android,r8) — JVM gates held via the documented ECJ path, and sync_client_gate gained the run.sh stub fallback (tests/stubs/android/** — compile-time-only types) when tools/android.jar is absent; contract documented in the script. dex unchanged (ThemePack/Economy unreachable from manifest paths -> R8-stripped, zero-byte cost until the store UI week; r8 gate ran where the tools exist). Contract: docs/STORE.md. Full doc: docs/PHASE2-W3-REPORT.md. Next: week 4 = item C (iOS readiness — pure reference NQF reader, golden vectors, Swift spec).
+ - 2026-11-03 (Roadmap Phase 2 — week 4, item C: iOS readiness / platform neutrality, vc 58 unchanged — pure-JVM week, no manifest path): the port PROVED, not claimed. NqfPort.java (pure JVM, zero android.*, ~260 lines): a SECOND complete NQF v1 reader written ONLY from docs/NQF.md §2/§3 — zero code shared with NQF.java — the exact exercise a Swift implementer performs; the port exercise caught a REAL spec ambiguity (tensor dataOffset documented as "absolute, inside the blob region" was misread as blob-relative by the independent reader and refused a valid file; the writer emits FILE-absolute offsets from blobStart — docs/NQF.md §3.7 now states the semantics decisively; this is the difference between a spec that transfers and one that gets guessed). docs/NQF-PORT.md: the platform-neutral reader contract — byte-exact NQF v1 table with 13 numbered strictness rules each carrying its refusal tag, the text-asset contract (dictionary rank-lines / bigram+emoji single-TAB), dequantization law (Int8×Float32 multiply, Float32 ONLY — never Double; IEEE-754 bits are the reference), and the golden-vector binding. docs/NQF-GOLDEN.json via tools/MakeGolden.java: 13 shipping assets pinned (bytes+sha256, lines/unique for text), model pinned per-tensor (8 tensors, dims/scaleBits/crc32/sha256/deqSha256): emb [9300,64] Q8, fc0.w [240,128] Q8, out.w [9300,240] Q8, vocab.words [105663] Q8, fc0.b/ln.g/ln.b/out.b F32 — 2,963,583 Q8 params in 3,004,240 bytes (<3MB whole model). NqfPortGate (stage 16 of the line, ci/nqfport_gate.sh → NQFPORT_GATE_OK): 13/13 asset pins match live bytes (reviewed==published, store-pin pattern), dual-reader bit-exact agreement 8/8 tensors (dtype/dims/IEEE-754 scaleBits/crc32/raw-sha256/deq-digest — the port digest compared against the OFFICIAL reader's tensors through the same canonical algorithm), engine cross-check 512/512 real emb rows deqRow-vs-port bit-exact, text contract 12/12 (+2/2 TAB-structured), port read p50 0.885ms (bar 50ms, ~56× margin), negatives 103/103 refused by BOTH readers (7 targeted with expected tags + 96 deterministic seed-1616 flips — independence enforced from both sides). NqfPortTest 35 checks: synthetic model writer→port bit-exact, deq digest stability, scale-bits-are-reference, text contract, 11 targeted refusals + 128-flip fuzz. docs/NQF-SWIFT.md: the Swift reader spec — 5 non-negotiable rules (little-endian manual loads, Float32-only deq, bitPattern reference, throws-not-partial, CRC32 table 0xEDB88320 matching java.util.zip), full Swift parse algorithm + types + deqBitPatterns/deqSha256, and a 10-row XCTest acceptance table with REAL numbers from the shipping model (gate binds: iOS acceptance == reproduce the numbers). Pipeline now 16 stages; tests 923→958 (+35); versionCode 58 unchanged (nothing walks the manifest — same rule as the pure-core weeks).
+ - 2026-11-03 (Roadmap Phase 2 — week 5, item D: المجتمع وخط الإثراء، no app version bump): community dictionary enrichment pipeline as one measured line, pure JVM. CommunityDict.java: unified CSV contract (exact header word,diacritized,lemma,pos,gloss,contributor,license; strict UTF-8 decoder REPORTs malformed bytes; BOM rejects the whole batch; CRLF ok; quoted fields with "" escape; blank lines tolerated), strict deterministic reviewer — 13 ordered per-row refusal tags (ROW_FIELDS/EMPTY_WORD/HAS_TASHKEEL_IN_WORD/NOT_ARABIC/BAD_DIACRITICS+NO_DIACRITICS/FORBIDDEN/DUPLICATE/BAD_POS/BAD_LEMMA/BAD_GLOSS/BAD_CONTRIB/BAD_LICENSE) + 2 whole-file tags (BAD_ENCODING/BAD_HEADER refuse every row), structural-diacritics contract (stripDiac(diacritized)==word char-for-char catches missing marks AND broken skeletons; partial vocalization accepted), FORBIDDEN checked BEFORE duplicates (the gate itself caught حقير being reported DUPLICATE because it exists in the installed dict — security over dedup reporting), burned-in profanity/spam list matched after normAr on word+diacritized+lemma+gloss, double duplicate check (in-batch via normAr so ة/ه tricks fail + installed set of 134,188 normalized words from assets/ar.txt), Report with SHA-256 batchId (same bytes always same report), tag histogram, per-row check nanos → p50, toJson + contributorsMd (thanks page sorted count-desc then alpha, rejected contributors never appear, rejected rows zero contribution). ci/community_gate.sh + CommunityDictGate.java = pipeline stage 17 (JVM-only, compiles exactly 2 files so hiding the core fails the gate): clean 40-row/4-contributor batch 40/40 → review-clean40.json + CONTRIBUTORS.md; 9 designed poison batches one per refusal class with EXACT expected tags (dup-internal, dup-installed, no-diac, broken-skeleton, latin, forbidden, bad-license, bad-header whole-file, BOM whole-file); 110 seeded negatives (seed 1703) inside a 220-row batch — every sabotaged row refused, every clean row accepted; p50 check time measured on an 800-row batch: 10–21µs (bar 5000µs, ×250 headroom). Negative proof: hiding CommunityDict.java → COMMUNITY_GATE_FAILED compile, exit 1 (evidence/community-negative-proof.log). release.sh: community block in release-manifest.json (batchesReviewed/rowsAccepted/rowsRejected/negativesRefused/p50CheckUs/thanksPage) + CONTRIBUTORS.md copied into build/release/. pipeline.sh: COMMUNITY_* keys into gates.env. Measured: COMMUNITY_GATE_OK accepted=157 rejected=112 negatives=110/110 p50=10µs batches=11 installed=134188; tests 958→1145 (+187, 0 fail); PIPELINE_OK 17 stages. Docs: docs/COMMUNITY-DICT.md (unified-table contract + rule order + honest limits), docs/PHASE2-W5-REPORT.md. PHASE 2 items A1/A2/B/C/D all closed with measured local equivalents; phase-exit criteria remain bound to the real world (live server/store/iOS/payments/devices) by design.
++- 2026-11-03 (Roadmap Phase 3 — week 1, item: in-app store UI, vc 58→59 / versionName 1.2 — the feature walks the manifest as StoreActivity component #10): the economy met the user. StoreUi.java (pure JVM, zero android.*): founders catalog loaded as an asset under the strict contract (catalog bytes must equal their own declared sha256 pins or the WHOLE catalog is refused), local cents wallet with a text audit journal (topUp simulated — the real payment provider stays a documented deployment decision, topUp is the only swap point), idempotent purchase (second buy = zero sale, no debit), sha256-pinned ownership map, install guarded by ownership → exact pin → ThemePack.review with REGISTERED vendors only → LIBRARY_CAP 200, monthly 70/30 close delegated exclusively to Economy.monthClose (7,325c over the full founders catalog → 5,120c creators / 2,205c platform, floor 70%), and the deterministic restoreCode() "STOREENT1|packId:pin8" (sorted) prepared for the entitlements week. StoreActivity wired into the service with store/library tabs. Gate ci/store_ui_gate.sh → StoreUiGate (79 checks): asset==reviewed source byte-for-byte, 25/25 purchase+install through the full guard chain, 16/16 designed negatives with exact tags (double purchase / insufficient / caps / install-without-ownership / flipped pin / unregistered vendor / poisoned catalog in every shape), install p50 ~195µs. NEGATIVE PROOF: hiding StoreUi.java → STOREUI_GATE_FAILED compile, exit 1. release-manifest gained the store block (catalog/ledger/negatives/p50). Tests 1145→1216; PIPELINE_OK 19 stages; R8 dex 513,020B (+13.4KB measured: ThemePack+Economy became reachable exactly as the dex-ceiling doctrine predicted) — ceiling raised ONCE, documented, to 520,000B. Docs: docs/STORE.md + docs/PHASE3-W1-REPORT.md + docs/PHASE3-PLAN.md (the phase-3 plan derived from documented pending items, not external assumptions).
++- 2026-11-03 (Roadmap Phase 3 — week 2, item: signed community-dictionary merge, vc 59→60 / versionName 1.3): the "separate publishing step signed by a human" (phase-2 W5 §6) became a measured pipeline stage. DictSign.java (pure JVM, ~300 lines): publish(reviewed batch + review report) → deterministic signed dpack carrying batchId=sha256(batch bytes), accepted counter, WORDS pin, review-STATEMENT pin (canonical JSON re-generated from the body and compared byte-for-byte — the 1:1 clean-word-swap hole was closed by pinning ROWS not counters), and signature = sha256 of the dpack bytes themselves (the plan's literal gate: post-review tampering is caught, no second key layer next to the keystore-signed release). load(dpack, statement?, installedNorms) strict order: shape → signature → words pin → counter → statement byte-match → RE-JUDGE every row through CommunityDict.judge (defense in depth: a fully reforged poisonous pack dies at NOT_ARABIC even with no statement on device). Engine merge documented order (Dictionary.mergePack): pack consumed AFTER the installed corpus — ranks start at 150,123 in pack order (deterministic regardless of device state), floor score 3000 (below exact-match 22000 → no export), installed duplicates dropped (installed always wins), missing asset = normal state ("no enrichment" never a broken dictionary). Shipped assets/community_ar.dpack (13 words, 7 contributors, CC0/CC-BY, batch bfa20a99…, sig 61804e37…, 1,018 bytes) pinned in NQF-GOLDEN (assets 14→15 via MakeGolden — reference = published). Gate ci/dictsign_gate.sh → DictSignGate: re-publish == shipped bytes literally, 12/12 designed negatives with exact tags (byte tamper SIG / post-review swap REPORT / forged counter SIG+COUNT / foreign batch REPORT / corrupted words pin WORDS / bad schema SCHEMA / truncation WORDS+REPORT / BOM SCHEMA / reforged poison WORD / installed duplicate WORD), p50 publish 375µs / load 231µs on the real 150k corpus. Race lesson measured: merging the pack widened the gap between matrix assignment and loaded=true — the correction gate's knows("من") proxy wait exposed it (v2_acc 0.0% flaky); fixed by waiting on isLoaded() itself (the honest tool, not a brittle proxy) — six consecutive runs 100%. NEGATIVE PROOF: hiding DictSign.java → DICTSIGN_GATE_FAILED compile, exit 1. Tests 1216→1231 (+38 DictSignTest); PIPELINE_OK 19 stages; R8 dex 513,020→518,200B (+5,180B, 1,800B left — trim-forecast documented for the entitlements week). Docs: docs/PHASE3-W2-REPORT.md.
++- 2026-11-03 (Roadmap Phase 3 — week 3, item: entitlements across devices, vc 60→61 / versionName 1.4 — the ownership record crosses devices): purchases now follow their owner, by ownership not binaries. SyncVault gained KIND_ENTITLEMENT ("entitlement"): one record per owned pack — id ent:<packId>, body = the FULL purchase pin (sha256 64-hex, not the pin8 display code — grant must match the catalog literally). SyncState: collect() builds entitlement records from StoreUi.Store.ownedPins() (shape-filtered: no valid 64-hex pin → no record; cap = MAX_LIBRARY 200), apply() emits Plan.entitlements for the bridge — the vault stays store-illiterate and the store stays sync-illiterate, only the plan crosses. StoreUi.grantFromSync(packId, pin): the ONLY grant path — pin must equal THIS device's catalog pack sha256 verbatim (binaries come exclusively from the golden-pinned catalog asset; version skew fails closed NO_PACK/PIN_MISMATCH), fully idempotent by pin, and MONEY IS NEVER TOUCHED (no debit/sale/journal — the ledger stays device-local truth; measured: grant leaves wallet/paidCents/sales at zero while restoreCode() matches the buyer's byte-for-byte). Read-tolerance/write-strictness split: bytesToState now IGNORES a planted record of unknown kind (forward-compat, never poisons the blob; all-unknown blob = harmless empty state) while local construction of unknown kinds stays refused (rec_kind). Two-device protocol MEASURED over the untrusted sim: A buys 4 packs from the real catalog → entitlement records + theme/word/setting → E2E push → fresh B login/pull/apply → grant → install FROM CATALOG bytes → 4/4 installed, restoreCode identical; reverse round: B's 5th purchase crosses back to A. Zero-knowledge re-measured WITH the entitlement payload: full-server-dump entropy 8.00 (bar 7.9), pack ids and STOREENT1 text absent from the dump (probed by real id strings). Quotas respected: entitlement-bearing pushes refuse quota_free at the free cap. Gate 17 of the line: ci/entitlement_gate.sh → EntitlementGate (52 checks, negatives 3/3, p50 collect 5.0ms / apply 1.0ms / grant 35µs per 200). NEGATIVE PROOF: hiding StoreUi.java → ENTGATE_FAILED compile, exit 1 (ci/entitlement-negative-proof.log). dex: the forecast said it would not fit — measured +544B gross, isHex64 deduplicated to one reference → 518,688B ≤ 520,000 with NO raise (documented in ci/build_r8.sh; W4 close-out gate = no regression under the same ceiling). Tests 1231→1251 (+20 EntitlementTest); PIPELINE_OK 20 stages; release-manifest gained the entitlements block (record contract + trust chain + gate numbers). Docs: docs/PHASE3-W3-REPORT.md. Next: week 4 = الإغلاق والتحصين (phase-3 close-out: all gates in one line, exit criteria measured, CI.md/HISTORY inventory upgrade).
+diff --git a/ci/build_r8.sh b/ci/build_r8.sh
+index 54e323d..90fe5e7 100755
+--- a/ci/build_r8.sh
++++ b/ci/build_r8.sh
+@@ -82,6 +82,11 @@ TOTAL=$(grep -o 'android:name="[^"]*"' AndroidManifest.xml | cut -d'"' -f2 | gre
+ # Phase 3 W2 (vc 60, signed dictionary merge) measured: 513,020 -> 518,200B
+ # (+5,180B for DictSign + engine merge + gate) — 1,800B remain. W3 entitlements
+ # must TRIM, not raise.
++# Phase 3 W3 (vc 61, entitlements across devices) measured: 518,200 -> 518,744B
++# (+544B for the entitlement record type + collect/apply + grantFromSync bridge;
++# prediction said it would not fit — it did, so NO raise and the trim lever was
++# still pulled: isHex64 deduplicated to one reference). W4 close-out gate: no
++# regression under the same ceiling with all features reachable.
+ [ "$R8D" -le 520000 ] || { echo "R8_GATE_FAILED: dex $R8D > 520000 budget — trim before shipping" >&2; exit 1; }
+ echo "R8_OK dex=$R8D bytes, mapping=$MAPPED program classes, manifest components kept=$KEPT/$TOTAL"
+ [ "$FAILS" = "0" ] || exit 1
+diff --git a/ci/entitlement-negative-proof.log b/ci/entitlement-negative-proof.log
+new file mode 100644
+index 0000000..9290b89
+--- /dev/null
++++ b/ci/entitlement-negative-proof.log
+@@ -0,0 +1,8 @@
++# negative proof — week 20 (phase 3, week 3): the entitlements gate must FAIL
++# when the entitlements bridge is hidden (no silent pass without StoreUi —
++# SyncState.CAP_ENTITLEMENTS + EntitlementGate both compile against it).
++# procedure: mv src/com/hark/neokey/StoreUi.java /tmp/ && ci/entitlement_gate.sh && mv back
++$ mv src/com/hark/neokey/StoreUi.java /tmp/
++$ ci/entitlement_gate.sh
++ENTGATE_FAILED compile
++$ mv /tmp/StoreUi.java src/com/hark/neokey/StoreUi.java   (restored — gate green again)
+diff --git a/ci/entitlement_gate.sh b/ci/entitlement_gate.sh
+new file mode 100644
+index 0000000..489fb22
+--- /dev/null
++++ b/ci/entitlement_gate.sh
+@@ -0,0 +1,51 @@
++#!/bin/bash
++# Entitlements-across-devices gate (roadmap Phase 3, week 3) — ci/entitlement_gate.sh
++#
++#   Measures the PROTOCOL, not the claim, on the untrusted-server simulator:
++#     • two real devices over SyncServerSim: real catalog purchase on A ->
++#       entitlement records (pins only) -> E2E sealed push -> fresh device B
++#       login/pull/apply -> grantFromSync -> install binaries FROM THE CATALOG
++#     • reverse round: B's purchase crosses back to A (last-writer-wins merge)
++#     • zero-knowledge stays MEASURED on server storage: entropy + no pack id
++#       and no restore-code text anywhere in what the server sees
++#     • planted record of unknown KIND is ignored: never poisons the blob,
++#       never reaches state; local construction of unknown kinds stays refused
++#     • account quotas respected with an entitlement-bearing payload (quota_free)
++#     • grant contract: idempotent by pin, PIN_MISMATCH / NO_PACK refused,
++#       tombstones grant nothing, uninstall never revokes ownership
++#     • perf: collect/apply over 3000 dict words + 200 entitlements, grant p50
++#
++#   Verdict: ENTGATE_OK … (exit 0) / ENTGATE_FAILED <reason> (exit 1).
++#   JVM-only (com.hark.neokey.EntitlementGate has zero android.*) — runs anywhere.
++set -uo pipefail
++cd "$(dirname "$0")/.."
++
++find_jar() {
++  for d in "${NEOKEY_TOOLS:-}" ./tools /workspace/work "$HOME/.neokey/tools"; do
++    [ -n "$d" ] && [ -f "$d/$1" ] && { echo "$d/$1"; return 0; }
++  done
++  return 1
++}
++
++OUT=build/entgate; mkdir -p "$OUT"
++# StoreUi intentionally reuses ThemePack's strict reviewer + sha256 pin and
++# Economy's single ledger; SyncState reuses Dictionary.norm. The gate compiles
++# against android.jar when present (build machine), else the JVM stubs.
++AJ=""
++[ -f tools/android.jar ] && AJ=tools/android.jar
++CP=""
++[ -n "$AJ" ] && CP="-cp $AJ"
++STUBS=""
++[ -z "$AJ" ] && STUBS=$(find tests/stubs -name '*.java' | tr '\n' ' ')
++SRC="tests/com/hark/neokey/EntitlementGate.java src/com/hark/neokey/StoreUi.java src/com/hark/neokey/Economy.java src/com/hark/neokey/ThemePack.java src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java src/com/hark/neokey/SyncServerSim.java src/com/hark/neokey/NetGate.java src/com/hark/neokey/Dictionary.java src/com/hark/neokey/DictSign.java src/com/hark/neokey/CommunityDict.java src/com/hark/neokey/ArabicFixes.java src/com/hark/neokey/Exceptions.java $STUBS"
++if command -v javac >/dev/null 2>&1; then
++  javac -nowarn -encoding UTF-8 $CP -d "$OUT" $SRC 2>&1
++else
++  ECJ_JAR=$(find_jar ecj.jar) || { echo "ENTGATE_FAILED no javac and no ecj.jar in ./tools"; exit 1; }
++  java -jar "$ECJ_JAR" -nowarn -source 8 -target 8 -encoding UTF-8 $CP -d "$OUT" $SRC 2>&1
++fi || { echo "ENTGATE_FAILED compile"; exit 1; }
++
++java -cp "$OUT" com.hark.neokey.EntitlementGate
++rc=$?
++[ $rc -eq 0 ] && echo "ENTGATE OK" || echo "ENTGATE FAILED (rc=$rc)"
++exit $rc
+diff --git a/ci/pipeline.sh b/ci/pipeline.sh
+index 2e38db0..f4cc86a 100755
+--- a/ci/pipeline.sh
++++ b/ci/pipeline.sh
+@@ -101,6 +101,9 @@ stage_dictsign() { ci/dictsign_gate.sh; }
+ # ---- 3o: in-app store gate (roadmap phase 3, week 1) ----------------------------
+ stage_storeui() { ci/store_ui_gate.sh; }
+ 
++# ---- 3p: entitlements-across-devices gate (roadmap phase 3, week 3) -------------
++stage_entitlement() { ci/entitlement_gate.sh; }
++
+ # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
+ stage_build() { ci/build_unsigned.sh; }
+ 
+@@ -252,6 +255,15 @@ collect_gates() {
+   echo "STOREUI_P50_US=$(echo "$SU_LINE" | sed -E 's/.*p50_install_us=([0-9]+).*/\1/')" >> "$GATES"
+   echo "STOREUI_CATALOG_CENTS=$(echo "$SU_LINE" | sed -E 's/.*catalog_cents=([0-9]+).*/\1/')" >> "$GATES"
+   echo "STOREUI_LEDGER_CENTS=$(echo "$SU_LINE" | sed -E 's/.*ledger_closes=([0-9]+).*/\1/')" >> "$GATES"
++  # entitlements-across-devices gate numbers (phase 3, week 3)
++  echo "ENTGATE=$(grep -q '^ENTGATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
++  EN_LINE=$(grep '^ENTGATE_OK' "$LOG" | tail -1)
++  echo "ENTGATE_GRANTED=$(echo "$EN_LINE" | sed -E 's/.*granted=([0-9]+).*/\1/')" >> "$GATES"
++  echo "ENTGATE_NEGATIVES=$(echo "$EN_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
++  echo "ENTGATE_P50_COLLECT_US=$(echo "$EN_LINE" | sed -E 's/.*p50_collect_us=([0-9]+).*/\1/')" >> "$GATES"
++  echo "ENTGATE_P50_APPLY_US=$(echo "$EN_LINE" | sed -E 's/.*p50_apply_us=([0-9]+).*/\1/')" >> "$GATES"
++  echo "ENTGATE_ENTROPY=$(echo "$EN_LINE" | sed -E 's/.*entropy_x100=([0-9]+).*/\1/')" >> "$GATES"
++  echo "ENTGATE_CHECKS=$(echo "$EN_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+ }
+ 
+ # ---- run the line -------------------------------------------------------------
+@@ -272,6 +284,7 @@ run_stage "nqfport" stage_nqfport
+ run_stage "community" stage_community
+ run_stage "dictsign" stage_dictsign
+ run_stage "storeui" stage_storeui
++run_stage "entitlement" stage_entitlement
+ if [ "${SKIP_BUILD:-0}" = "1" ]; then
+   skip_stage "build" "SKIP_BUILD=1 (JVM gates only)"
+ else
+diff --git a/ci/release.sh b/ci/release.sh
+index 97e9c3b..5178f81 100755
+--- a/ci/release.sh
++++ b/ci/release.sh
+@@ -69,6 +69,12 @@ if [ "${DICTSIGN_GATE:-}" = "OK" ]; then
+   DICTSIGN_BLOCK=$',\n    "dictsign": { "verifiedBy": "ci/dictsign_gate.sh", "contract": "docs/PHASE3-W2-REPORT.md", "packAsset": "assets/community_ar.dpack", "packWords": '"${DICTSIGN_WORDS:-0}"', "negativesRefused": "'"${DICTSIGN_NEGATIVES:-0}"'", "publishP50Us": '"${DICTSIGN_P50_PUBLISH_US:-0}"', "loadP50Us": '"${DICTSIGN_P50_LOAD_US:-0}"', "trustChain": "review -> statement -> sha256 signature -> golden pin -> engine merge after installed corpus" }'
+ fi
+ 
++# Entitlements-across-devices gate (phase 3, week 3) — present when the gate ran
++ENTGATE_BLOCK=""
++if [ "${ENTGATE:-}" = "OK" ]; then
++  ENTGATE_BLOCK=$',\n    "entitlements": { "verifiedBy": "ci/entitlement_gate.sh", "contract": "docs/PHASE3-W3-REPORT.md", "recordKind": "entitlement (ownership pin only — binaries always come from the pinned catalog)", "granted": '"${ENTGATE_GRANTED:-0}"', "negativesRefused": "'"${ENTGATE_NEGATIVES:-0}"'", "collectP50Us": '"${ENTGATE_P50_COLLECT_US:-0}"', "applyP50Us": '"${ENTGATE_P50_APPLY_US:-0}"', "serverEntropyX100": '"${ENTGATE_ENTROPY:-0}"', "trustChain": "catalog purchase -> entitlement record -> E2E sealed sync -> grantFromSync by exact pin -> install from catalog" }'
++fi
++
+ cat > "$OUT/release-manifest.json" <<EOF
+ {
+   "app": "com.hark.neokey",
+@@ -79,7 +85,7 @@ cat > "$OUT/release-manifest.json" <<EOF
+   "gates": {
+     "secretsAudit": "$AUDIT",
+     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
+-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK
++    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK$ENTGATE_BLOCK
+   },
+   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
+   "signedBy": "release workflow only — signing secrets never leave the vault"
+diff --git a/ci/sync_client_gate.sh b/ci/sync_client_gate.sh
+index 0884ac9..77c936a 100755
+--- a/ci/sync_client_gate.sh
++++ b/ci/sync_client_gate.sh
+@@ -38,7 +38,7 @@ CP=""
+ # behaviour comes from the pure classes under test either way.
+ STUBS=""
+ [ -z "$AJ" ] && STUBS=$(find tests/stubs -name '*.java' | tr '\n' ' ')
+-SRC="tests/com/hark/neokey/SyncClientGate.java src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncServerSim.java src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java src/com/hark/neokey/NetGate.java src/com/hark/neokey/Dictionary.java src/com/hark/neokey/DictSign.java src/com/hark/neokey/CommunityDict.java src/com/hark/neokey/ArabicFixes.java src/com/hark/neokey/Exceptions.java $STUBS"
++SRC="tests/com/hark/neokey/SyncClientGate.java src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncServerSim.java src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java src/com/hark/neokey/NetGate.java src/com/hark/neokey/Dictionary.java src/com/hark/neokey/DictSign.java src/com/hark/neokey/CommunityDict.java src/com/hark/neokey/ArabicFixes.java src/com/hark/neokey/Exceptions.java src/com/hark/neokey/StoreUi.java src/com/hark/neokey/Economy.java src/com/hark/neokey/ThemePack.java $STUBS"
+ if command -v javac >/dev/null 2>&1; then
+   javac -nowarn -encoding UTF-8 $CP -d "$OUT" $SRC 2>&1
+ else
+diff --git a/docs/PHASE3-W3-REPORT.md b/docs/PHASE3-W3-REPORT.md
+new file mode 100644
+index 0000000..0b7fdf2
+--- /dev/null
++++ b/docs/PHASE3-W3-REPORT.md
+@@ -0,0 +1,86 @@
++# تقرير المرحلة 3 — الأسبوع 3 (البند: الاستحقاقات عبر الأجهزة)
++
++**التاريخ:** 2026-11-03 · **النسخة:** versionCode 61 / versionName 1.4 ·
++**البوابة:** `ENTGATE_OK` (المرحلة 17 من 20 في الـ pipeline)
++
++## 1. ما أُسلّم
++
++المشتريات صارت تتبع مالكها عبر الأجهزة — **بالملكية لا بالثنائيات**، على بروتوكول
++مقاس بجهازين حقيقيين فوق محاكي الخادم غير الموثوق نفسه:
++
++- **نوع سجل جديد في الخزنة:** `SyncVault.KIND_ENTITLEMENT` — سجل لكل حزمة مملوكة:
++  `id = ent:<packId>`، `key = packId`، `body = دبوس الشراء (sha256 كامل 64-hex)`.
++  المزامنة كلها كانت مشفرة طرف-لطرف (NSF1/AES-256-GCM) — الاستحقاقات ترث ذلك
++  بلا أي مسار جانبي: الخادم يرى بايتات عشوائية كما كان.
++- **`SyncState`**: التجميع يبني سجل الاستحقاق من `StoreUi.Store.ownedPins()` مع
++  مرشح شكل (دبيس 64-hex وإلا لا سجل) وسقف = سقف مكتبة المتجر (`MAX_LIBRARY`
++  = 200). التفكيك يخرج `Plan.entitlements` (packId → دبوس) — الخطة ملكية قابلة
++  للمنح، لا كتابة ثنائيات. الشاهد (tomb) لا يمنح، والدبيس الفاسد لا يصل الخطة.
++- **جسر المتجر `StoreUi.grantFromSync(packId, pin)`**: منح ملكية من جهاز آخر —
++  الدبيس يجب أن يطابق كتالوج هذا الجهاز **حرفياً** (المصدر الوحيد للثنائيات هو
++  الكتالوج المثبت بدبوسه الذهبي)، وإلا فشل مغلق (`NO_PACK`/`PIN_MISMATCH`).
++  idempotent بالدبيس: إعادة المنح نفسها نجاح بلا أثر ثانٍ. **المال لا يُلمس**:
++  لا خصم ولا بيع ولا قيد دفتر — المشترى دفع على جهازه (الدفتر محلي الحقيقة)،
++  و`paidCents`/`sales` يبقيان مشتريات الجهاز المحلية فقط.
++- **التسامح عند القراءة، الفشل المغلق عند الكتابة:** `bytesToState` يتجاهل سجلاً
++  مزروعاً من نوع مجهول (توافق مستقبلي + لا تسميم للكتلة)، بينما الإنشاء المحلي
++  لنوع مجهول يبقى مرفوضاً حصرياً في `Rec` (`rec_kind`). كتلة كلها أنواع مجهولة
++  = حالة فارغة غير ضارة.
++- **بروتوكول الجهازين مقاساً:** جهاز A يشتري 4 حزم من الكتالوج الحقيقي ويثبّتها
++  → جمع (سجلات entitlement + سجل سمة + كلمة + إعداد) → دفع مشفر → جهاز B جديد
++  يدخل بنفس العبارة → سحب ودمج → خطة بـ 4 استحقاقات → منح ← تثبيت من بايتات
++  الكتالوج → 4/4 مثبتة و`restoreCode()` متطابق حرفاً بحرف بين الجهازين. جولة
++  عكسية: B يشتري الخامسة → تعبر إلى A (آخر-كاتب-يفوز بالترتيب الكلي نفسه).
++
++## 2. الأرقام المقاسة (بوابة `ENTGATE_OK`)
++
++| الشاهد | المقاس |
++|---|---|
++| سطر البوابة | `ENTGATE_OK devices=2 granted=4 negatives=3/3 p50_collect_us=5015 p50_apply_us=995 p50_grant_us=35 entropy_x100=800 checks=52` |
++| الصفر-المعرفة على المخزون الكامل | إنتروبيا **8.00** بت/بايت بعد حمل الاستحقاقات (≥ 7.9)، ولا معرف حزمة ولا `STOREENT1` في كل ما يراه الخادم (فحص بالسلاسل الفعلية لمعرفات الحزم) |
++| «الاستعادة تعيد الملكية لا الثنائيات» | بايتات مواصفات الحزم غريبة عن الحالة المتزامنة (فحص مسبار 60-محرفاً من المواصفة)؛ التثبيت على B تم من بايتات الكتالوج حصراً |
++| لا مال في الاستعادة | محفظة B صفرية بعد المنح، `paidCents=0`، ولا سطر بيع؛ دفتر A يبقى مشترياته الأربع فقط |
++| سجل نوع مجهول | مزروع في كتلة حية → يُتجاهل (الحالة = حجمها الصحيح)، كتلة كلها أنواع مجهولة → فارغة، إنشاء محلي → `rec_kind` |
++| حصص الحساب | دفعات بحمل استحقاقات حتى الامتلاء → رفض `quota_free` بالوسم، و`checkQuota` يسمح VIP |
++| المنح | idempotent (ثاني منح = OK بلا ازدواج)، دبيس غريب `PIN_MISMATCH`، حزمة غريبة `NO_PACK`، شاهد لا يمنح، إزالة تثبيت لا تبطل الملكية |
++| الأداء | تجميع 3000 كلمة + 200 استحقاق p50 **5.0ms** (الحد 150)، تفكيك p50 **1.0ms**، منح 200 ملكية p50 **35µs** |
++| الاختبارات | 1,231 → **1,251** (+20: `EntitlementTest` 20/20) |
++| الـ pipeline | **PIPELINE_OK — 20 مرحلة** (entitlement = المرحلة 17)، دفعة dictsign/storeui/community/nqfport بلا تراجع |
++
++## 3. الإثبات السلبي (إلزامي — محفوظ)
++
++إخفاء `src/com/hark/neokey/StoreUi.java` (جسر المنح وسقف الاستحقاقات) → فشل
++ترجمة البوابة `ENTGATE_FAILED compile`، exit 1 — محفوظ في
++`ci/entitlement-negative-proof.log` مع استعادة الملف وإعادة التحقق أخضر.
++داخل البوابة نفسها 3 سلبيات بأوسمة دقيقة في كل تشغيل، وفحوص السجل المزروع
++والسموم الثلاثة جزء من المسار الدائم.
++
++## 4. القرارات الهندسية
++
++1. **الدبيس كامل لا pin8:** سجل المزامنة يحمل sha256 كاملاً (64 hex) لا أول 8
++   محارف من `restoreCode()` — المنح يطابق الكتالوج حرفاً بحرف، و`restoreCode`
++   يبقى سطر عرض/إدخال بشري فوق الحالة نفسها لا بديلاً عنها.
++2. **المنح عند الجسر لا في الخزنة:** `SyncState.apply` لا يكتب في المتجر —
++   يخرج خطة، و`StoreUi.grantFromSync` هو الوحيد الذي يمنح، بشروط الكتالوج.
++   فصل القرار عن النقل يبقي الخزنة جهلة بالمتجر والعكس — الدمج الحتمي الوحيد
++   هو ما يعبُر.
++3. **تسامح القراءة مع الأنواع المجهولة** (لا الرفض الكلي): كتلة من إصدار أحدث
++   بنوع سجل جديد لا تكسر جهازاً أقدم — السجل الغريب يُهمل ولا يُمسّ شيء، وهذا
++   هو نفسه اختبار «السجل المزروع» في البوابة. الكتابة المحلية تبقى صارمة.
++4. **الحصص قبل الأناقة:** حمل الاستحقاقات دفعات حتى `quota_free` داخل البوابة —
++   الملكية لا تشتري بايتات لا حصة لها، وVIP يبقى المخرج الوحيد.
++5. **dex: التنبؤ لم يقع والسقف لم يُرفع:** التنبؤ كان «لن يتسع الهامش — التقليم
++   شرط»؛ القياس الفعلي **+544B فقط** (518,200 → 518,744 ثم التقليم إلى
++   **518,688B** من 520,000 — متبقٍ 1,312B). التقليم المنفذ: إزالة ازدواج
++   `isHex64` (مرجع واحد في StoreUi يستخدمه مرشح شكل SyncState). سقف 520,000B
++   باقياً كما هو — لا رفع في هذا الأسبوع، والأسبوع 4 (الإغلاق) شرطه صفر تراجع
++   تحت السقف نفسه بكل الميزات قابلة للوصول. موثق في `ci/build_r8.sh`.
++6. **release-manifest يحمل قسم الاستحقاقات:** `entitlements` block جديد يوثق
++   عقد السجل وسلسلة الثقة وأرقام البوابة (كما فعل store/dictsign قبله).
++
++## 5. ما بقي في البند (موثق لا منسي)
++
++- الخادم الحي: العقد REST موثق (`docs/SYNC-REST.md`) والبروتوكول مثبت على
++  المحاكي — النشر الحقيقي بلا سيرفر يبقى خارج هذه البيئة كما هو.
++- أجهزة حقيقية على Android: البروتوكول مقاس JVM-خالص (نفس قيود بوابة المزامنة
++  السابقة)؛ التحقق على عتاد حقيقي يبقى بند نشر.
+diff --git a/src/com/hark/neokey/StoreUi.java b/src/com/hark/neokey/StoreUi.java
+index d8d5ca6..9876142 100755
+--- a/src/com/hark/neokey/StoreUi.java
++++ b/src/com/hark/neokey/StoreUi.java
+@@ -70,7 +70,8 @@ public final class StoreUi {
+         public int packCount() { return byId.size(); }
+     }
+ 
+-    private static boolean isHex64(String s) {
++    /** فحص دبيس 64-hex — مرجع واحد (يستخدمه أيضاً مرشح شكل SyncState). */
++    static boolean isHex64(String s) {
+         if (s == null || s.length() != 64) return false;
+         for (int i = 0; i < 64; i++) {
+             char c = s.charAt(i);
+@@ -221,10 +222,28 @@ public final class StoreUi {
+             return t;
+         }
+ 
++        /** حالة الملكية للمزامنة (المرحلة 3، الأسبوع 3): packId → دبوس الشراء. */
++        public Map<String, String> ownedPins() { return new LinkedHashMap<>(owned); }
++
+         /** الإغلاق الشهري مفوَّض حصراً للاقتصاد الوحيد (70/30 سنت-دقيق). */
+         public Economy.Month monthClose() { return Economy.monthClose(sales); }
+ 
+-        /** سطر استحقاقات حتمي (تزامن لاحقاً كنوع سجل): packId:pin8 مرتبة. */
++        /**
++         * منح ملكية من مزامنة جهاز آخر (المرحلة 3، الأسبوع 3): الاستعادة تعيد
++         * الملكية لا الثنائيات — الدبيس يجب أن يطابق كتالوج هذا الجهاز حرفياً
++         * (المصدر الوحيد للثنائيات هو الكتالوج المثبت بدبوسه الذهبي)، وإلا فشل
++         * مغلق. idempotent بالكامل: إعادة منح نفس الملكية = نجاح بلا أثر ثانٍ،
++         * لا بيع ولا قيد في الدفتر — المال لا يُلمس هنا (المشترى دفع على جهازه).
++         */
++        public Result grantFromSync(String packId, String pin) {
++            Pack p = catalog.pack(packId);
++            if (p == null) return Result.no("NO_PACK");
++            if (!p.sha256.equals(pin)) return Result.no("PIN_MISMATCH");
++            if (!owned.containsKey(packId)) owned.put(packId, p.sha256);
++            return Result.ok();
++        }
++
++        /** سطر استحقاقات حتمي (مُزامن كنوع سجل entitlement منذ الأسبوع 3): packId:pin8 مرتبة. */
+         public String restoreCode() {
+             List<String> ids = new ArrayList<>(owned.keySet());
+             Collections.sort(ids);
+diff --git a/src/com/hark/neokey/SyncState.java b/src/com/hark/neokey/SyncState.java
+index b512194..2b028b3 100755
+--- a/src/com/hark/neokey/SyncState.java
++++ b/src/com/hark/neokey/SyncState.java
+@@ -27,8 +27,9 @@ import java.util.Map;
+  *
+  * ما لا يُزامن أبداً (فشل مغلق): مفتاح الذكاء الاصطناعي (ai_key)، حالة بوابة
+  * الشبكة وسطور التدقيق (net_*)، أسرار الجلسة (sync_*)، الحافظة المؤقتة نفسها،
+- * سجل الأعطال، عدادات الإحصاء المحلية، صورة الخلفية، ومكتبة السمات (تُزامن لاحقاً
+- * كسجلات سمات كاملة بعد قياس حصتها من الحصة).
++ * سجل الأعطال، عدادات الإحصاء المحلية، وصورة الخلفية. مكتبة السمات تُزامن
++ * بصيغة ملكية فقط منذ المرحلة 3/الأسبوع 3: سجل entitlement لكل حزمة مملوكة
++ * (الدبوس) — الثنائيات لا تُزامن إطلاقاً، فهي من الكتالوج المثبت بدبوسه الذهبي.
+  */
+ public final class SyncState {
+ 
+@@ -38,6 +39,8 @@ public final class SyncState {
+     static final int CAP_SHORTCUTS = 100;
+     static final int CAP_DICT_WORDS = 3000;   // يبقى JSON ضمن الحصة المجانية 1MB
+     static final int CAP_SETTINGS = 120;
++    /** سقف سجلات الملكية المتزامنة = سقف مكتبة المتجر نفسه. */
++    static final int CAP_ENTITLEMENTS = StoreUi.MAX_LIBRARY;
+ 
+     /** مفاتيح الإعدادات القابلة للمزامنة — قائمة بيضاء صريحة (أي شيء آخر يُرفض).
+      *  السمة الحالية مستبعدة عمداً — تُزامن كسجل theme:current وحده (لا تكرار
+@@ -68,6 +71,8 @@ public final class SyncState {
+         public final Map<String, String> shortcuts = new LinkedHashMap<>(); // pref "shortcuts"
+         public final List<String> pinTexts = new ArrayList<>();             // الحافظة المثبتة بالترتيب
+         public final Map<String, String> settings = new LinkedHashMap<>();  // من القائمة البيضاء فقط
++        /** الملكية المشتراة: packId → دبوس الشراء (sha256 للحزمة المراجَعة). */
++        public final Map<String, String> entitlements = new LinkedHashMap<>();
+     }
+ 
+     // ---- التجميع: Snapshot → سجلات ----------------------------------------------
+@@ -117,6 +122,17 @@ public final class SyncState {
+                     e.getKey(), e.getValue(), rev, ts, false));
+             n++;
+         }
++        // الملكية المشتراة: سجل لكل حزمة، الدبيس كاملاً (64 hex) — مرتب بإدراج
++        // المخزن (حتمي)، والمكرر عبر معرف الحزمة مستحيل بنيوياً (Map).
++        n = 0;
++        for (Map.Entry<String, String> e : s.entitlements.entrySet()) {
++            if (n >= CAP_ENTITLEMENTS) break;
++            String pin = e.getValue();
++            if (pin == null || !isHex64(pin)) continue;             // بلا دبيس سليم لا سجل
++            out.add(new SyncVault.Rec("ent:" + e.getKey(), SyncVault.KIND_ENTITLEMENT,
++                    e.getKey(), pin, rev, ts, false));
++            n++;
++        }
+         return out;
+     }
+ 
+@@ -132,10 +148,13 @@ public final class SyncState {
+         public final Map<String, String> shortcuts = new LinkedHashMap<>();
+         public final List<String> pins = new ArrayList<>();        // نصوص بالترتيب (استبدال قائمة التثبيت)
+         public final Map<String, String> settings = new LinkedHashMap<>(); // من القائمة البيضاء فقط
++        /** ملكية مستعادة: packId → دبيس مطابق للكتالوج — المنح عند الجسر لا هنا. */
++        public final Map<String, String> entitlements = new LinkedHashMap<>();
+ 
+         public int count() {
+             return (themeIdx >= 0 ? 1 : 0) + dictAr.size() + dictEn.size() + exceptions.size()
+-                    + phrases.size() + shortcuts.size() + pins.size() + settings.size();
++                    + phrases.size() + shortcuts.size() + pins.size() + settings.size()
++                    + entitlements.size();
+         }
+     }
+ 
+@@ -164,6 +183,11 @@ public final class SyncState {
+                 try { pinsByPos.put(Integer.parseInt(r.key), r.body); } catch (NumberFormatException ignored) { }
+             } else if (r.id.startsWith("st:")) {
+                 if (syncable(r.key)) p.settings.put(r.key, r.body);
++            } else if (r.id.startsWith("ent:")) {
++                // الدبيس يُتحقق منه عند المنح ضد الكتالوج (StoreUi.grantFromSync) —
++                // هنا مرشح شكل فقط: بلا دبيس 64-hex لا يصل الخطة.
++                if (isHex64(r.body) && r.key != null && !r.key.isEmpty())
++                    p.entitlements.put(r.key, r.body);
+             }
+         }
+         for (Map.Entry<Integer, String> e : pinsByPos.entrySet()) p.pins.add(e.getValue());
+@@ -187,5 +211,10 @@ public final class SyncState {
+         return in.size() <= cap ? in : in.subList(in.size() - cap, in.size());
+     }
+ 
++    /** فحص دبيس 64-hex (مرجع واحد: StoreUi.isHex64 — هنا مرشح شكل لا مرجع ثقة). */
++    private static boolean isHex64(String s) {
++        return StoreUi.isHex64(s);
++    }
++
+     private SyncState() { }
+ }
+diff --git a/src/com/hark/neokey/SyncVault.java b/src/com/hark/neokey/SyncVault.java
+index e2d28db..2062e88 100755
+--- a/src/com/hark/neokey/SyncVault.java
++++ b/src/com/hark/neokey/SyncVault.java
+@@ -238,7 +238,11 @@ public final class SyncVault {
+     public static final String KIND_DICT_WORD = "dict_word";
+     public static final String KIND_SHORTCUT = "shortcut";
+     public static final String KIND_SETTING = "setting";
+-    static final String[] KINDS = {KIND_THEME, KIND_CLIP_PIN, KIND_DICT_WORD, KIND_SHORTCUT, KIND_SETTING};
++    /** المرحلة 3، الأسبوع 3: الملكية المشتراة تعبر الأجهزة (لا الثنائيات —
++     *  الثنائيات من الكتالوج المثبت بدبوسه الذهبي). */
++    public static final String KIND_ENTITLEMENT = "entitlement";
++    static final String[] KINDS = {KIND_THEME, KIND_CLIP_PIN, KIND_DICT_WORD, KIND_SHORTCUT,
++            KIND_SETTING, KIND_ENTITLEMENT};
+ 
+     public static boolean knownKind(String k) {
+         for (String x : KINDS) if (x.equals(k)) return true;
+@@ -355,7 +359,10 @@ public final class SyncVault {
+             p.ws(); long ts = p.num(); p.ws(); p.expect(',');
+             p.ws(); boolean tomb = p.take() == '1'; p.ws(); p.expect(',');
+             p.ws(); String body = p.str(); p.ws(); p.expect(']');
+-            out.add(new Rec(id, kind, key, body, rev, ts, tomb));
++            // سجل مزروع من نوع مجهول يُتجاهل (توافق مستقبلي + دفاع في العمق):
++            // لا يسمّم الكتلة كلها ولا يصل الحالة — الإنشاء المحلي لأنواع مجهولة
++            // يبقى مرفوضاً حصرياً في Rec (فشل مغلق عند الكتابة، تسامح عند القراءة).
++            if (knownKind(kind)) out.add(new Rec(id, kind, key, body, rev, ts, tomb));
+             p.ws();
+             char c = p.take();
+             if (c == ']') break;
+diff --git a/tests/com/hark/neokey/EntitlementGate.java b/tests/com/hark/neokey/EntitlementGate.java
+new file mode 100644
+index 0000000..bd93efe
+--- /dev/null
++++ b/tests/com/hark/neokey/EntitlementGate.java
+@@ -0,0 +1,331 @@
++package com.hark.neokey;
++
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Paths;
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.Collections;
++import java.util.List;
++import java.util.Map;
++
++/**
++ * بوابة الاستحقاقات عبر الأجهزة — المرحلة 3، الأسبوع 3.
++ *
++ * تقيس البروتوكول لا الادعاء، على محاكي الخادم غير الموثوق (SyncServerSim):
++ *   • جهازان حقيقيان: شراء فعلي من الكتالوج المثبت → سجل entitlement لكل حزمة
++ *     (الدبيس فقط) → دفع مشفر طرف-لطرف → جهاز جديد يستعيد الملكية ويثبّت
++ *     الثنائيات من الكتالوج حصراً — لا بايت ثنائي يمر في المزامنة.
++ *   • جولة عكسية: شراء الجهاز الثاني يعبر للجهاز الأول (merge آخر-كاتب-يفوز).
++ *   • الصفر-المعرفة يبقى مقياساً على مخزون الخادم: إنتروبيا + لا معرف حزمة
++ *     ولا سطر استحقاق نصي في كل ما يراه الخادم.
++ *   • سجل مزروع من نوع مجهول يُتجاهل: لا يسمّم الكتلة ولا يصل الحالة، والإنشاء
++ *     المحلي لأنواع مجهولة يبقى مرفوضاً (فشل مغلق عند الكتابة، تسامح عند القراءة).
++ *   • حصص الحساب تحترم: الدفع بحمل استحقاقات يرفض quota_free عند الامتلاء.
++ *   • المنح idempotent مضبوطاً بالدبيس: نفس الدبيس نجاح بلا أثر ثانٍ، دبيس
++ *     غريب PIN_MISMATCH، حزمة غريبة NO_PACK، وشاهد الحذف لا يمنح.
++ *
++ * Verdict: ENTGATE_OK … (exit 0) / ENTGATE_FAILED <reason> (exit 1).
++ * نقية JVM (صفر android.*) — تعمل في أي بيئة.
++ */
++public final class EntitlementGate {
++
++    static int passed = 0, failed = 0;
++    static int NEG_OK = 0, NEG_TOTAL = 0;
++    static long P50_COLLECT_US = -1, P50_APPLY_US = -1, P50_GRANT_US = -1;
++    static int GRANTED = -1;
++    static int ENTROPY_X100 = -1;
++
++    static void check(String name, boolean cond) {
++        if (cond) passed++;
++        else { failed++; System.out.println("GATEFAIL: " + name); }
++    }
++
++    /** سلبية مصممة: يجب أن يُرفض السلوك بالوسم المحدد. */
++    static void neg(String name, String expectedTag, String actualTag) {
++        NEG_TOTAL++;
++        if (expectedTag.equals(actualTag)) NEG_OK++;
++        else System.out.println("GATEFAIL(neg): " + name + " expected=" + expectedTag + " got=" + actualTag);
++    }
++
++    public static void main(String[] args) throws Exception {
++        try {
++            run();
++        } catch (Exception e) {
++            System.out.println("ENTGATE_FAILED exception " + e.getClass().getSimpleName() + ": " + e.getMessage());
++            e.printStackTrace(System.out);
++            System.exit(1);
++        }
++        if (failed > 0 || NEG_OK != NEG_TOTAL) {
++            System.out.println("ENTGATE_FAILED checks=" + failed + " negatives=" + NEG_OK + "/" + NEG_TOTAL);
++            System.exit(1);
++        }
++        System.out.println("ENTGATE_OK devices=2 granted=" + GRANTED
++                + " negatives=" + NEG_OK + "/" + NEG_TOTAL
++                + " p50_collect_us=" + P50_COLLECT_US
++                + " p50_apply_us=" + P50_APPLY_US
++                + " p50_grant_us=" + P50_GRANT_US
++                + " entropy_x100=" + ENTROPY_X100
++                + " checks=" + passed);
++    }
++
++    // ---- أدوات -------------------------------------------------------------
++
++    static byte[] catBytes() throws Exception {
++        return Files.readAllBytes(Paths.get("assets/founders_catalog.json"));
++    }
++
++    static double entropy(byte[] d) {
++        if (d.length == 0) return 0;
++        int[] f = new int[256];
++        for (byte b : d) f[b & 0xFF]++;
++        double e = 0;
++        for (int v : f) {
++            if (v == 0) continue;
++            double p = (double) v / d.length;
++            e -= p * (Math.log(p) / Math.log(2));
++        }
++        return e;
++    }
++
++    static long medianUs(List<Long> xs) {
++        Collections.sort(xs);
++        return xs.get(xs.size() / 2) / 1000;
++    }
++
++    static boolean contains(byte[] hay, byte[] needle) {
++        if (needle.length == 0 || needle.length > hay.length) return false;
++        outer:
++        for (int i = 0; i <= hay.length - needle.length; i++) {
++            for (int j = 0; j < needle.length; j++) if (hay[i + j] != needle[j]) continue outer;
++            return true;
++        }
++        return false;
++    }
++
++    static String refusalTag(Runnable r) {
++        try {
++            r.run();
++            return "NO_REFUSAL";
++        } catch (SyncVault.SyncRefused e) {
++            return e.getMessage();
++        }
++    }
++
++    /** أرخص N حزمة بالسعر ثم بالمعرف — حتمية. */
++    static List<StoreUi.Pack> cheapest(StoreUi.Catalog c, int n) {
++        List<StoreUi.Pack> all = new ArrayList<>(c.byId.values());
++        Collections.sort(all, (x, y) -> x.priceCents != y.priceCents
++                ? Long.compare(x.priceCents, y.priceCents) : x.id.compareTo(y.id));
++        return all.subList(0, Math.min(n, all.size()));
++    }
++
++    // ---- الجولة الكاملة ------------------------------------------------------
++
++    static void run() throws Exception {
++        // 0) الكتالوج الحقيقي المثبت (مصدر الثنائيات الوحيد) ببنية صارمة
++        byte[] asset = catBytes();
++        StoreUi.Catalog cat = StoreUi.loadCatalog(new String(asset, StandardCharsets.UTF_8));
++        check("catalog.strict", cat.packCount() == 25 && cat.vendorIds.size() == 10);
++
++        List<StoreUi.Pack> first4 = cheapest(cat, 4);
++        check("picked4", first4.size() == 4);
++
++        // 1) جهاز A: محفظة حقيقية، شراء فعلي، تثبيت من بايتات الكتالوج
++        StoreUi.Wallet walletA = new StoreUi.Wallet();
++        check("walletA.topup", walletA.topUp(100_00, 1000L).ok);
++        StoreUi.Store storeA = new StoreUi.Store(cat, walletA);
++        for (StoreUi.Pack p : first4) {
++            check("A.buy." + p.id, storeA.purchase(p.id, 1000L).ok);
++            check("A.install." + p.id, storeA.install(p.id, p.specJson.getBytes(StandardCharsets.UTF_8), 1001L).ok);
++        }
++        check("A.owned", storeA.ownedCount() == 4 && storeA.installedCount() == 4);
++
++        // 2) التجميع: سجل entitlement لكل حزمة (الدبيس فقط) — بلا أي ثنائيات
++        SyncState.Snapshot snapA = new SyncState.Snapshot();
++        snapA.themeIdx = 7;
++        snapA.entitlements.putAll(storeA.ownedPins());
++        snapA.dictWords.put("مفتاحية", "ar");
++        snapA.settings.put("haptics", "on");
++        long t0 = System.nanoTime();
++        List<SyncVault.Rec> stateA = SyncState.collect(snapA, 1, 5000L);
++        P50_COLLECT_US = Math.max(1, (System.nanoTime() - t0) / 1000); // وسطي نهائي أدناه
++        int entCount = 0;
++        for (SyncVault.Rec r : stateA) if (SyncVault.KIND_ENTITLEMENT.equals(r.kind)) entCount++;
++        check("A.collect.ents", entCount == 4);
++        for (SyncVault.Rec r : stateA) {
++            if (!SyncVault.KIND_ENTITLEMENT.equals(r.kind)) continue;
++            check("A.ent.pin64." + r.key, r.body.length() == 64 && r.id.equals("ent:" + r.key)
++                    && cat.pack(r.key) != null && cat.pack(r.key).sha256.equals(r.body));
++        }
++
++        // لا بايت ثنائي في الحالة المتزامنة: مواصفة أي حزمة غريبة عن السجل
++        byte[] stateBytesA = SyncVault.stateToBytes(stateA);
++        String probe = first4.get(0).specJson.substring(30, 90);
++        check("sync.noBinaries", !contains(stateBytesA, probe.getBytes(StandardCharsets.UTF_8)));
++
++        // 3) الخادم غير الموثوق: صفر-معرفة مقاساً على مخزونه
++        SyncServerSim sim = SyncServerSim.fresh();
++        SyncClient.Session sessA = SyncClient.register("عبارة-الجهازين", null);
++        sim.register(sessA.keys.accountId, sessA.salt);
++        SyncClient.PushResult pr = SyncClient.push(sessA, sim, stateA, "on", "on", true, false);
++        check("A.push", pr.bytes > 0);
++        byte[] seen = sim.dump();
++        // عينة أولى صغيرة: أثر العينة المحدودة يُحسب بحد أدنى أخف (7.5)
++        int entSmall = (int) Math.round(entropy(seen) * 100);
++        check("server.entropy.first", entSmall >= 750);
++        boolean leaks = false;
++        for (StoreUi.Pack p : first4) if (contains(seen, p.id.getBytes(StandardCharsets.UTF_8))) leaks = true;
++        check("server.noPackIds", !leaks && !contains(seen, "STOREENT1".getBytes(StandardCharsets.UTF_8)));
++
++        // 4) جهاز B جديد: دخول بنفس العبارة → سحب → خطة → منح → تثبيت من الكتالوج
++        SyncClient.Session sessB = SyncClient.login(sim, "عبارة-الجهازين", sessA.keys.accountId);
++        check("B.sameAccount", sessB.keys.accountId.equals(sessA.keys.accountId));
++        List<SyncVault.Rec> mergedB = SyncClient.pull(sessB, sim, new ArrayList<SyncVault.Rec>(), "on", "on", true);
++        SyncState.Plan planB = SyncState.apply(mergedB);
++        check("B.plan.ents", planB.entitlements.size() == 4);
++        check("B.plan.theme", planB.themeIdx == 7 && "مفتاحية".equals(planB.dictAr.get(0)));
++
++        StoreUi.Wallet walletB = new StoreUi.Wallet();
++        StoreUi.Store storeB = new StoreUi.Store(cat, walletB);
++        int granted = 0;
++        for (Map.Entry<String, String> e : planB.entitlements.entrySet()) {
++            if (storeB.grantFromSync(e.getKey(), e.getValue()).ok) {
++                granted++;
++                StoreUi.Pack p = cat.pack(e.getKey());
++                check("B.install." + e.getKey(), storeB.install(e.getKey(),
++                        p.specJson.getBytes(StandardCharsets.UTF_8), 2000L).ok);
++            }
++        }
++        GRANTED = granted;
++        check("B.granted4", granted == 4 && storeB.ownedCount() == 4 && storeB.installedCount() == 4);
++        check("B.wallet.intact", walletB.balance() == 0 && storeB.paidCents() == 0); // لا مال في الاستعادة
++        check("B.restoreCode", storeB.restoreCode().equals(storeA.restoreCode()));
++
++        // 5) جولة عكسية: B يشتري خامسة → تعبر إلى A
++        List<StoreUi.Pack> all5 = cheapest(cat, 5);
++        StoreUi.Pack fifth = all5.get(4);
++        check("B.topup", walletB.topUp(100_00, 3000L).ok);
++        check("B.buy5", storeB.purchase(fifth.id, 3000L).ok);
++        SyncState.Snapshot snapB = new SyncState.Snapshot();
++        snapB.entitlements.putAll(storeB.ownedPins());
++        SyncClient.push(sessB, sim, SyncState.collect(snapB, 2, 6000L), "on", "on", true, false);
++        List<SyncVault.Rec> mergedA = SyncClient.pull(sessA, sim, stateA, "on", "on", true);
++        SyncState.Plan planA = SyncState.apply(mergedA);
++        check("A.plan.ents5", planA.entitlements.size() == 5);
++        check("A.grant5", storeA.grantFromSync(fifth.id, planA.entitlements.get(fifth.id)).ok
++                && storeA.ownedCount() == 5);
++        long sumFirst4 = 0;
++        for (StoreUi.Pack p : first4) sumFirst4 += p.priceCents;
++        check("ledger.restoreNotPurchase", storeA.paidCents() == sumFirst4
++                && storeB.paidCents() == fifth.priceCents);
++
++        // 6) سجل مزروع من نوع مجهول يُتجاهل — ولا يسمّم الكتلة
++        String good = new String(SyncVault.stateToBytes(stateA), StandardCharsets.UTF_8);
++        String planted = good.substring(0, good.length() - 2)
++                + ",[\"zz:evil\",\"walletx\",\"k\",3,50,0,\"payload\"]]}";
++        List<SyncVault.Rec> tolerated = SyncVault.bytesToState(planted.getBytes(StandardCharsets.UTF_8));
++        check("planted.ignored", tolerated.size() == stateA.size());
++        boolean plantedIn = false;
++        for (SyncVault.Rec r : tolerated) if (r.id.equals("zz:evil")) plantedIn = true;
++        check("planted.absent", !plantedIn);
++        List<SyncVault.Rec> allUnknown = SyncVault.bytesToState(
++                "{\"v\":1,\"recs\":[[\"a\",\"walletx\",\"k\",1,1,0,\"x\"],[\"b\",\"ghost\",\"k\",1,1,0,\"y\"]]}"
++                        .getBytes(StandardCharsets.UTF_8));
++        check("allUnknown.empty", allUnknown.isEmpty());
++        neg("local.unknownKind", "rec_kind", refusalTag(() -> {
++            new SyncVault.Rec("x", "walletx", "k", "v", 1, 1, false);
++        }));
++        // الاستعادة عبر السحب مع كتلة مسمومة بنوع مجهول + سليمة: تعمل وتتجاهل
++        byte[] poisonBlob = SyncVault.seal(sessA.keys,
++                planted.getBytes(StandardCharsets.UTF_8), new byte[SyncVault.NONCE_LEN]);
++        List<SyncVault.Rec> restored = SyncVault.restore(stateA, sessA.keys, Arrays.asList(poisonBlob));
++        check("poisonBlob.mergeSafe", restored.size() >= stateA.size());
++
++        // 7) حصص الحساب تحترم مع حمل استحقاقات — فشل مغلق بالوسم
++        SyncState.Snapshot big = new SyncState.Snapshot();
++        for (int i = 0; i < 3000; i++) big.dictWords.put("كلمة" + i, "ar");
++        big.entitlements.putAll(storeA.ownedPins());
++        List<SyncVault.Rec> bigState = SyncState.collect(big, 3, 7000L);
++        boolean hitQuota = false;
++        int pushes = 0;
++        try {
++            while (pushes < 40) {
++                SyncClient.push(sessA, sim, bigState, "on", "on", true, false);
++                pushes++;
++            }
++        } catch (SyncVault.SyncRefused e) {
++            if ("quota_free".equals(e.getMessage())) hitQuota = true;
++        }
++        check("quota.enforced", hitQuota && pushes >= 1);
++        check("quota.vipWouldPass", SyncVault.checkQuota(200_000, sim.usedBytes(sessA.keys.accountId), true).allowed);
++        // الصفر-المعرفة على المخزون الكامل بعد حمل الاستحقاقات — القياس الأقوى
++        byte[] fullDump = sim.dump();
++        ENTROPY_X100 = (int) Math.round(entropy(fullDump) * 100);
++        check("server.entropy.full", ENTROPY_X100 >= 790);
++        boolean leakFull = false;
++        for (StoreUi.Pack p : cheapest(cat, 5)) if (contains(fullDump, p.id.getBytes(StandardCharsets.UTF_8))) leakFull = true;
++        check("server.noPackIds.full", !leakFull && !contains(fullDump, "STOREENT1".getBytes(StandardCharsets.UTF_8)));
++
++        // 8) سلوك المنح: idempotent بالدبيس، ورفض بالأوسمة
++        StoreUi.Store storeC = new StoreUi.Store(cat, new StoreUi.Wallet());
++        StoreUi.Pack p0 = first4.get(0);
++        check("C.grant1", storeC.grantFromSync(p0.id, p0.sha256).ok);
++        check("C.grant.idempotent", storeC.grantFromSync(p0.id, p0.sha256).ok && storeC.ownedCount() == 1);
++        neg("C.grant.wrongPin", "PIN_MISMATCH", tag(() -> storeC.grantFromSync(p0.id,
++                "0000000000000000000000000000000000000000000000000000000000000000")));
++        neg("C.grant.unknownPack", "NO_PACK", tag(() -> storeC.grantFromSync("pack:غريب", p0.sha256)));
++        // شاهد الحذف لا يمنح: سجل ent مع tomb يُهمل في الخطة
++        List<SyncVault.Rec> withTomb = new ArrayList<>(stateA);
++        withTomb.add(new SyncVault.Rec("ent:" + p0.id, SyncVault.KIND_ENTITLEMENT, p0.id, p0.sha256, 9, 9999L, true));
++        SyncState.Plan planTomb = SyncState.apply(withTomb);
++        check("tomb.noGrant", !planTomb.entitlements.containsKey(p0.id));
++        // الملكية ≠ التثبيت: إزالة التثبيت لا تُبطل الملكية المتزامنة
++        check("A.uninstall", storeA.uninstall(first4.get(1).id).ok);
++        check("A.ownedAfterUninstall", storeA.ownedCount() == 5
++                && storeA.ownedPins().containsKey(first4.get(1).id));
++
++        // 9) p50 قياسات: تجميع وتفكيك بعبء حقيقي (3000 كلمة + 200 استحقاق)
++        SyncState.Snapshot heavy = new SyncState.Snapshot();
++        for (int i = 0; i < 3000; i++) heavy.dictWords.put("كلمة" + i, "ar");
++        StoreUi.Catalog catF = cat;
++        List<StoreUi.Pack> all = new ArrayList<>(catF.byId.values());
++        for (int i = 0; i < 200; i++) {
++            StoreUi.Pack p = all.get(i % all.size());
++            heavy.entitlements.put(p.id + ":v" + i, p.sha256);   // مفاتيح فريدة لقياس السقف
++        }
++        List<Long> cs = new ArrayList<>(), as = new ArrayList<>();
++        for (int i = 0; i < 15; i++) {
++            long a = System.nanoTime();
++            List<SyncVault.Rec> st = SyncState.collect(heavy, 5, 100L);
++            long b = System.nanoTime();
++            SyncState.apply(st);
++            long c = System.nanoTime();
++            cs.add(b - a); as.add(c - b);
++        }
++        P50_COLLECT_US = medianUs(cs);
++        P50_APPLY_US = medianUs(as);
++        check("perf.collect", P50_COLLECT_US <= 150_000);   // نفس ميزانية بوابة syncclient
++        check("perf.apply", P50_APPLY_US <= 150_000);
++        long g50 = 0;
++        List<Long> gs = new ArrayList<>();
++        StoreUi.Store storeD = new StoreUi.Store(cat, new StoreUi.Wallet());
++        for (int i = 0; i < 15; i++) {
++            long a = System.nanoTime();
++            for (Map.Entry<String, String> e : heavy.entitlements.entrySet())
++                storeD.grantFromSync(e.getKey().substring(0, e.getKey().indexOf(":v")), e.getValue());
++            gs.add(System.nanoTime() - a);
++        }
++        P50_GRANT_US = medianUs(gs);
++        check("perf.grant", P50_GRANT_US <= 50_000);
++    }
++
++    static String tag(java.util.concurrent.Callable<StoreUi.Result> c) {
++        try {
++            StoreUi.Result r = c.call();
++            return r.ok ? "OK" : r.tag;
++        } catch (Exception e) {
++            return e instanceof SyncVault.SyncRefused ? e.getMessage() : "EXCEPTION";
++        }
++    }
++}
+diff --git a/tests/com/hark/neokey/EntitlementTest.java b/tests/com/hark/neokey/EntitlementTest.java
+new file mode 100644
+index 0000000..343f805
+--- /dev/null
++++ b/tests/com/hark/neokey/EntitlementTest.java
+@@ -0,0 +1,131 @@
++package com.hark.neokey;
++
++import java.util.ArrayList;
++import java.util.LinkedHashMap;
++import java.util.List;
++import java.util.Map;
++
++/**
++ * اختبارات الاستحقاقات عبر الأجهزة — المرحلة 3، الأسبوع 3.
++ *
++ * وحدة السجل الجديد (entitlement) في الخزنة والجسر: التجميع يبني سجلاً لكل
++ * حزمة مملوكة بدبيسها الكامل، التفكيك يُخرج ملكية قابلة للمنح، القراءة من
++ * الشبكة تتسامح مع نوع مجهول (يُتجاهل) والكتابة المحلية ترفضه (فشل مغلق)،
++ * والمنح مضبوط بالدبيس ضد الكتالوج — الاستعادة تعيد الملكية لا الثنائيات.
++ * نقي JVM — تعمل في أي بيئة.
++ */
++public class EntitlementTest {
++
++    static int pass, fail;
++
++    static void check(String name, boolean ok) {
++        if (ok) { pass++; System.out.println("PASS " + name); }
++        else { fail++; System.out.println("FAIL " + name); }
++    }
++
++    static String pin64(String seed) {
++        try {
++            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
++            byte[] d = md.digest(seed.getBytes(java.nio.charset.StandardCharsets.UTF_8));
++            StringBuilder b = new StringBuilder();
++            for (byte x : d) b.append(String.format("%02x", x));
++            return b.toString();
++        } catch (java.security.NoSuchAlgorithmException e) {
++            throw new RuntimeException(e);
++        }
++    }
++
++    public static void main(String[] args) throws Exception {
++        String pin = pin64("pack-spec-1");
++
++        // 1) التجميع: سجل entitlement لكل حزمة بدبيس 64-hex وبلا دبس فاسد
++        SyncState.Snapshot s = new SyncState.Snapshot();
++        s.entitlements.put("f01-p01", pin);
++        s.entitlements.put("f02-p03", "ZZ-not-hex");
++        s.entitlements.put("f03-p01", null);
++        List<SyncVault.Rec> recs = SyncState.collect(s, 1, 100L);
++        int ent = 0;
++        SyncVault.Rec the = null;
++        for (SyncVault.Rec r : recs) {
++            if (SyncVault.KIND_ENTITLEMENT.equals(r.kind)) { ent++; if ("f01-p01".equals(r.key)) the = r; }
++        }
++        check("collect.oneValidEnt", ent == 1);
++        check("collect.entShape", the != null && the.id.equals("ent:f01-p01")
++                && the.body.equals(pin) && the.rev == 1 && !the.tomb);
++        check("collect.badPinDropped", SyncState.collect(s, 1, 100L).size() == 1);
++
++        // سقف الاستحقاقات = سقف مكتبة المتجر
++        SyncState.Snapshot many = new SyncState.Snapshot();
++        for (int i = 0; i < StoreUi.MAX_LIBRARY + 20; i++)
++            many.entitlements.put("p" + String.format("%03d", i), pin);
++        int capped = 0;
++        for (SyncVault.Rec r : SyncState.collect(many, 1, 1L))
++            if (SyncVault.KIND_ENTITLEMENT.equals(r.kind)) capped++;
++        check("collect.cap", capped == StoreUi.MAX_LIBRARY);
++
++        // 2) التفكيك: ملكية قابلة للمنح، وشاهد الحذف لا يمنح، والدبس الفاسد لا يصل
++        List<SyncVault.Rec> state = new ArrayList<>();
++        state.add(new SyncVault.Rec("ent:f01-p01", SyncVault.KIND_ENTITLEMENT, "f01-p01", pin, 2, 10L, false));
++        state.add(new SyncVault.Rec("ent:f09-p09", SyncVault.KIND_ENTITLEMENT, "f09-p09", "short", 2, 10L, false));
++        state.add(new SyncVault.Rec("ent:f08-p08", SyncVault.KIND_ENTITLEMENT, "f08-p08", pin, 3, 20L, true));
++        SyncState.Plan p = SyncState.apply(state);
++        check("apply.grant", pin.equals(p.entitlements.get("f01-p01")));
++        check("apply.badPinFiltered", !p.entitlements.containsKey("f09-p09"));
++        check("apply.tombNoGrant", !p.entitlements.containsKey("f08-p08"));
++        check("apply.countsEnt", p.count() == p.entitlements.size());
++
++        // 3) القراءة من الشبكة: نوع مجهول يُتجاهل (توافق مستقبلي)، والكتابة ترفض
++        List<SyncVault.Rec> base = new ArrayList<>();
++        base.add(new SyncVault.Rec("theme:current", SyncVault.KIND_THEME, "current", "3", 1, 1L, false));
++        String json = new String(SyncVault.stateToBytes(base), java.nio.charset.StandardCharsets.UTF_8);
++        String planted = json.substring(0, json.length() - 2)
++                + ",[\"zz:x\",\"walletx\",\"k\",1,1,0,\"v\"]]}";
++        List<SyncVault.Rec> out = SyncVault.bytesToState(planted.getBytes(java.nio.charset.StandardCharsets.UTF_8));
++        check("parse.unknownIgnored", out.size() == 1 && "theme:current".equals(out.get(0).id));
++        List<SyncVault.Rec> empty = SyncVault.bytesToState(
++                "{\"v\":1,\"recs\":[[\"a\",\"ghost\",\"k\",1,1,0,\"x\"]]}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
++        check("parse.allUnknownEmpty", empty.isEmpty());
++        try {
++            new SyncVault.Rec("x", "walletx", "k", "v", 1, 1, false);
++            check("local.unknownRefused", false);
++        } catch (SyncVault.SyncRefused e) {
++            check("local.unknownRefused", "rec_kind".equals(e.getMessage()));
++        }
++
++        // 4) الحالة المتزامنة بلا ثنائيات: جسم السجل دبيس فقط (64 محرف hex)
++        check("record.pinOnly", the.body.length() == 64 && the.body.matches("[0-9a-f]{64}"));
++
++        // 5) المنح ضد الكتالوج الحقيقي: نجاح/تكرار/دبيس غريب/حزمة غريبة
++        StoreUi.Catalog cat = StoreUi.loadCatalog(new String(
++                java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("assets/founders_catalog.json")),
++                java.nio.charset.StandardCharsets.UTF_8));
++        StoreUi.Store st = new StoreUi.Store(cat, new StoreUi.Wallet());
++        StoreUi.Pack pk = cat.byId.values().iterator().next();
++        check("grant.ok", st.grantFromSync(pk.id, pk.sha256).ok);
++        check("grant.idempotent", st.grantFromSync(pk.id, pk.sha256).ok && st.ownedCount() == 1);
++        check("grant.wrongPin", !st.grantFromSync(pk.id, pin64("other")).ok);
++        check("grant.noPack", !st.grantFromSync("pack:غيره", pk.sha256).ok);
++        check("grant.ownedPins", pk.sha256.equals(st.ownedPins().get(pk.id)));
++
++        // 6) الاستعادة ≠ شراء: لا مال ولا بيع، والمال محلي الحقيقة
++        check("grant.noMoney", st.paidCents() == 0 && st.sales().isEmpty() && st.wallet().balance() == 0);
++
++        // 7) الملكية ≠ التثبيت: إزالة التثبيت تبقي الملكية المتزامنة
++        check("ownNotInstall", st.install(pk.id, pk.specJson.getBytes(java.nio.charset.StandardCharsets.UTF_8), 1L).ok
++                && st.uninstall(pk.id).ok && st.ownedPins().containsKey(pk.id)
++                && !st.installed(pk.id));
++
++        // 8) دمج حتمي عبر الأجهزة: ent من جهازين يتبع آخر-كاتب-يفوز بالترتيب الكلي
++        List<SyncVault.Rec> a = new ArrayList<>();
++        a.add(new SyncVault.Rec("ent:f01-p01", SyncVault.KIND_ENTITLEMENT, "f01-p01", pin, 1, 5L, false));
++        List<SyncVault.Rec> b = new ArrayList<>();
++        b.add(new SyncVault.Rec("ent:f01-p01", SyncVault.KIND_ENTITLEMENT, "f01-p01", pin, 2, 9L, false));
++        List<SyncVault.Rec> m1 = SyncVault.merge(a, b), m2 = SyncVault.merge(b, a);
++        check("merge.commutative", m1.equals(m2) && m1.get(0).rev == 2);
++
++        System.out.println("EntitlementTest: RESULT " + pass + " passed, " + fail + " failed");
++        if (fail > 0) System.exit(1);
++    }
++
++    private EntitlementTest() { }
++}
+diff --git a/tests/run.sh b/tests/run.sh
+index 72b5309..c602783 100755
+--- a/tests/run.sh
++++ b/tests/run.sh
+@@ -58,3 +58,4 @@ java -cp build/test:$JAR com.hark.neokey.NqfPortTest
+ java -cp build/test:$JAR com.hark.neokey.CommunityDictTest
+ java -cp build/test:$JAR com.hark.neokey.StoreUiTest
+ java -cp build/test:$JAR com.hark.neokey.DictSignTest
++java -cp build/test:$JAR com.hark.neokey.EntitlementTest

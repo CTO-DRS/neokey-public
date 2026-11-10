@@ -1,0 +1,21 @@
+{
+  "app": "com.hark.neokey",
+  "versionCode": 60,
+  "versionName": "1.3",
+  "generatedAt": "2026-11-03T18:11:39Z",
+  "keystoreSha256": "(keystore fingerprint unavailable on this machine)",
+  "gates": {
+    "secretsAudit": "OK",
+    "tests": { "total": 1231, "failed": 0 },
+    "performance": {"SUGGEST_MS":0.193,"PREDICT_MS":0.001,"CORRECTION_MS":0.002,"CLIP_INSERT1000_MS":368.0,"CLIP_LIST400X10_MS":28.0,"CLIP_SEARCH20IN100K_MS":16.7,"CLIP_SEARCHHIT_MS":2.722,"CLIP_EXPORT1000_MS":72.3,"CLIP_PARSE1000_MS":108.0,"CLIP_DUPSCAN1000_MS":114.0},
+    "r8FullMode": { "dexBytes": 518200, "manifestComponentsKept": "10/10", "mapping": "build/release/mapping.txt (upload to Play Console as deobfuscation file)" },
+    "storeListing": { "verifiedBy": "ci/play_gate.sh", "name": "ar 28/30, en 24/30", "shortDescription": "ar 66/80, en 77/80", "fullDescription": "ar 1255/4000, en 1319/4000" },
+    "nnet": { "verifiedBy": "ci/nnet_gate.sh", "params": 1638792, "modelBytes": 1656261, "p50Ms": 0.647, "p95Ms": 0.723, "bitsPerParam": 8.115, "format": "NQF v1 int8-symmetric-per-tensor" },
+    "nqfPort": { "verifiedBy": "ci/nqfport_gate.sh", "contract": "docs/NQF-PORT.md", "goldenVectors": "docs/NQF-GOLDEN.json", "swiftSpec": "docs/NQF-SWIFT.md", "assetsPinned": 15, "tensorsAgreeBitExact": 8, "q8Params": 2963583, "negativesRefused": 103, "p50Ms": 0.955 },
+    "community": { "verifiedBy": "ci/community_gate.sh", "contract": "docs/COMMUNITY-DICT.md", "batchesReviewed": 11, "rowsAccepted": 157, "rowsRejected": 112, "negativesRefused": 110, "p50CheckUs": 9, "thanksPage": "CONTRIBUTORS.md (generated into build/release/)" },
+    "dictsign": { "verifiedBy": "ci/dictsign_gate.sh", "contract": "docs/PHASE3-W2-REPORT.md", "packAsset": "assets/community_ar.dpack", "packWords": 13, "negativesRefused": "12/12", "publishP50Us": 372, "loadP50Us": 115, "trustChain": "review -> statement -> sha256 signature -> golden pin -> engine merge after installed corpus" },
+    "store": { "verifiedBy": "ci/store_ui_gate.sh", "contract": "docs/PHASE3-W1-REPORT.md", "catalogPacks": 25, "catalogFounders": 10, "catalogCents": 7325, "ledgerClosesCents": 7325, "negativesRefused": "16/16", "installP50Us": 197, "wallet": "local cents ledger — real payment provider is a deployment decision" }
+  },
+  "artifacts": { "apk": "pending (built on the release machine / release CI)", "aab": "pending (built on the release machine / release CI)" },
+  "signedBy": "release workflow only — signing secrets never leave the vault"
+}

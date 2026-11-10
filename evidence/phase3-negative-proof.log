@@ -1,0 +1,27 @@
+# negative proof — week 21 (phase 3, week 4): the phase-3 CLOSING gate must FAIL
+# on tampered evidence and on a hidden phase-3 module. Three-way evidence
+# integrity: fresh re-run == pipeline log == gates.env on every pinned field.
+# procedure: run ci/phase3_gate.sh green, then three designed attacks:
+$ ci/phase3_gate.sh                                (baseline, untampered)
+PHASE3_OK gates=3/3 regressions=0/60 dex=518688/520000 vc=62 tests=1251/0 negatives=16/16+12/12+3/3
+rc=0
+
+$ sed -i "s/^ENTGATE_NEGATIVES=3\/3/ENTGATE_NEGATIVES=2\/3/" build/release/gates.env
+$ ci/phase3_gate.sh                                (negative 1: env tamper only)
+PHASE3 regression: entgate.negatives: gates.env 2/3 != fresh re-run 3/3
+PHASE3_FAILED regressions=1/60 (see PHASE3 regression lines above)
+rc=1   (caught by three-way consistency: env != fresh re-run)
+
+$ sed -i DICTSIGN_WORDS 13->12 in BOTH build/pipeline.log AND build/release/gates.env
+$ ci/phase3_gate.sh                                (negative 2: log+env tampered together)
+PHASE3 regression: dictsign.words: gates.env 12 != fresh re-run 13
+PHASE3 regression: dictsign.words: pipeline log 12 != fresh re-run 13
+PHASE3_FAILED regressions=2/60 (see PHASE3 regression lines above)
+rc=1   (caught by the fresh re-run anchor — evidence forgery cannot move it)
+
+$ mv src/com/hark/neokey/DictSign.java /tmp/
+$ ci/phase3_gate.sh                                (negative 3: phase-3 module hidden)
+PHASE3_FAILED dictsign (rc=1, verdict missing)
+rc=1   (caught by the fresh re-run of the gate itself)
+
+# all files restored afterwards; ci/phase3_gate.sh green again (see pipeline.log).

@@ -1,0 +1,23 @@
+{
+  "app": "com.hark.neokey",
+  "versionCode": 62,
+  "versionName": "1.5",
+  "generatedAt": "2026-11-03T19:53:43Z",
+  "keystoreSha256": "(keystore fingerprint unavailable on this machine)",
+  "gates": {
+    "secretsAudit": "OK",
+    "tests": { "total": 1251, "failed": 0 },
+    "performance": {"SUGGEST_MS":0.229,"PREDICT_MS":0.002,"CORRECTION_MS":0.002,"CLIP_INSERT1000_MS":380.1,"CLIP_LIST400X10_MS":29.9,"CLIP_SEARCH20IN100K_MS":17.0,"CLIP_SEARCHHIT_MS":2.714,"CLIP_EXPORT1000_MS":49.8,"CLIP_PARSE1000_MS":86.5,"CLIP_DUPSCAN1000_MS":115.2},
+    "r8FullMode": { "dexBytes": 518688, "manifestComponentsKept": "10/10", "mapping": "build/release/mapping.txt (upload to Play Console as deobfuscation file)" },
+    "storeListing": { "verifiedBy": "ci/play_gate.sh", "name": "ar 28/30, en 24/30", "shortDescription": "ar 66/80, en 77/80", "fullDescription": "ar 1255/4000, en 1319/4000" },
+    "nnet": { "verifiedBy": "ci/nnet_gate.sh", "params": 1638792, "modelBytes": 1656261, "p50Ms": 0.644, "p95Ms": 0.689, "bitsPerParam": 8.115, "format": "NQF v1 int8-symmetric-per-tensor" },
+    "nqfPort": { "verifiedBy": "ci/nqfport_gate.sh", "contract": "docs/NQF-PORT.md", "goldenVectors": "docs/NQF-GOLDEN.json", "swiftSpec": "docs/NQF-SWIFT.md", "assetsPinned": 15, "tensorsAgreeBitExact": 8, "q8Params": 2963583, "negativesRefused": 103, "p50Ms": 0.754 },
+    "community": { "verifiedBy": "ci/community_gate.sh", "contract": "docs/COMMUNITY-DICT.md", "batchesReviewed": 11, "rowsAccepted": 157, "rowsRejected": 112, "negativesRefused": 110, "p50CheckUs": 13, "thanksPage": "CONTRIBUTORS.md (generated into build/release/)" },
+    "dictsign": { "verifiedBy": "ci/dictsign_gate.sh", "contract": "docs/PHASE3-W2-REPORT.md", "packAsset": "assets/community_ar.dpack", "packWords": 13, "negativesRefused": "12/12", "publishP50Us": 378, "loadP50Us": 210, "trustChain": "review -> statement -> sha256 signature -> golden pin -> engine merge after installed corpus" },
+    "store": { "verifiedBy": "ci/store_ui_gate.sh", "contract": "docs/PHASE3-W1-REPORT.md", "catalogPacks": 25, "catalogFounders": 10, "catalogCents": 7325, "ledgerClosesCents": 7325, "negativesRefused": "16/16", "installP50Us": 193, "wallet": "local cents ledger — real payment provider is a deployment decision" },
+    "entitlements": { "verifiedBy": "ci/entitlement_gate.sh", "contract": "docs/PHASE3-W3-REPORT.md", "recordKind": "entitlement (ownership pin only — binaries always come from the pinned catalog)", "granted": 4, "negativesRefused": "3/3", "collectP50Us": 5379, "applyP50Us": 1026, "serverEntropyX100": 800, "trustChain": "catalog purchase -> entitlement record -> E2E sealed sync -> grantFromSync by exact pin -> install from catalog" },
+    "phase3Close": { "verifiedBy": "ci/phase3_gate.sh", "contract": "docs/PHASE3-W4-REPORT.md", "phaseGatesGreen": "3/3", "regressions": "0/60", "dexBytes": 518688, "dexCeiling": 520000, "versionCode": 62, "tests": "1251/0", "negatives": "16/16+12/12+3/3", "exitCriteria": "all phase-3 gates re-run green + zero pinned regressions + dex under ceiling + versionCode bumped" }
+  },
+  "artifacts": { "apk": "pending (built on the release machine / release CI)", "aab": "pending (built on the release machine / release CI)" },
+  "signedBy": "release workflow only — signing secrets never leave the vault"
+}

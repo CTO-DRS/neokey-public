@@ -1,0 +1,1 @@
+{"batchId":"710c1105fa86e9b99299b1d1e210a9257b4d05242c3b95951fcf973422c83713","total":220,"accepted":110,"rejected":110,"p50Us":23,"totalMs":9,"tags":{"ACCEPT":110,"BAD_DIACRITICS":19,"BAD_LICENSE":15,"BAD_POS":12,"FORBIDDEN":9,"HAS_TASHKEEL_IN_WORD":12,"NOT_ARABIC":25,"NO_DIACRITICS":18},"contributors":{"kareem":55,"layan":55}}

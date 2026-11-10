@@ -1,0 +1,16 @@
+{
+  "app": "com.hark.neokey",
+  "versionCode": 58,
+  "versionName": "1.1",
+  "generatedAt": "2026-11-02T23:27:29Z",
+  "keystoreSha256": "(keystore fingerprint unavailable on this machine)",
+  "gates": {
+    "secretsAudit": "OK",
+    "tests": { "total": 923, "failed": 0 },
+    "performance": {"SUGGEST_MS":0.534,"PREDICT_MS":0.002,"CORRECTION_MS":0.002,"CLIP_INSERT1000_MS":292.1,"CLIP_LIST400X10_MS":36.0,"CLIP_SEARCH20IN100K_MS":15.5,"CLIP_SEARCHHIT_MS":3.224,"CLIP_EXPORT1000_MS":65.8,"CLIP_PARSE1000_MS":121.3,"CLIP_DUPSCAN1000_MS":115.6},
+    "storeListing": { "verifiedBy": "ci/play_gate.sh", "name": "ar 28/30, en 24/30", "shortDescription": "ar 66/80, en 77/80", "fullDescription": "ar 1255/4000, en 1319/4000" },
+    "nnet": { "verifiedBy": "ci/nnet_gate.sh", "params": 1638792, "modelBytes": 1656261, "p50Ms": 0.647, "p95Ms": 0.733, "bitsPerParam": 8.115, "format": "NQF v1 int8-symmetric-per-tensor" }
+  },
+  "artifacts": { "apk": "pending (built on the release machine / release CI)", "aab": "pending (built on the release machine / release CI)" },
+  "signedBy": "release workflow only — signing secrets never leave the vault"
+}

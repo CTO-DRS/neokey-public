@@ -1,0 +1,5 @@
+# negative proof — week 19 (phase 3, week 2): the signed-merge gate must FAIL
+# when the signing module is hidden (no silent pass without DictSign).
+# procedure: mv src/com/hark/neokey/DictSign.java /tmp/ && ci/dictsign_gate.sh && mv back
+$ ci/dictsign_gate.sh
+DICTSIGN_GATE_FAILED compile

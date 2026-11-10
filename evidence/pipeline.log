@@ -1,0 +1,1311 @@
+NeoKey CI pipeline — 2026-11-03T19:52:19Z
+
+───── STAGE: probe ─────
+java: openjdk version "21.0.13" 2026-10-20
+rg:   ripgrep 14.1.1
+sdk:  (none set)
+jars: tools/android.jar tools/ecj.jar tools/r8.jar tools/slf4j-api.jar tools/sqlite-jdbc.jar 
+[probe] PASS (0s)
+
+───── STAGE: audit ─────
+SECRETS_AUDIT_OK
+[audit] PASS (0s)
+
+───── STAGE: tests ─────
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+PASS short text saved
+PASS 100 chars round-trip exact (Arabic, tashkeel, emoji, tabs, CRLF)
+PASS 10000 chars round-trip exact (Arabic, tashkeel, emoji, tabs, CRLF)
+PASS 100000 chars round-trip exact (Arabic, tashkeel, emoji, tabs, CRLF)
+PASS 500000 chars round-trip exact (Arabic, tashkeel, emoji, tabs, CRLF)
+PASS over limit rejected, not truncated
+PASS empty rejected
+PASS legacy SEP char kept
+PASS list preview is capped
+PASS same text again = bump, no duplicate
+PASS bumped item moves to top
+PASS 100 pins accepted
+PASS pin 101 refused
+PASS pinning twice is a no-op
+PASS refusal loses nothing
+PASS replace pin swaps atomically
+PASS unpin
+PASS re-pin goes to end
+PASS move pin to first
+PASS list shows pins first in order
+PASS prune keeps 50 temp + pinned/fav/titled
+PASS age prune removes old temps only
+PASS clearTemporary keeps pinned
+PASS clearAll removes pinned
+PASS edit saved
+PASS version kept
+PASS restore previous
+PASS versions capped at 10
+PASS edit to empty refused, source unchanged
+PASS migration moves all, keeps pins first
+PASS migration is idempotent
+PASS delete
+PASS 1000 items stored
+PERF insert 1000 mixed: 386 ms, list(400): 3 ms (JVM, in-memory SQLite)
+PASS search ignores tashkeel
+PASS search with tashkeel in query
+PASS search case-insensitive
+PASS alef forms unified
+PASS hit deep inside 100k text gives snippet with match
+PASS archived hidden from all, found in archive tab
+PASS fav tab
+PASS search matches title
+PERF 20 searches over 100k text: 3 ms
+PASS v1 schema had no norm
+PASS upgrade keeps rows and pins, search works
+PASS find tashkeel-insensitive
+PASS find exact without ignoring marks
+PASS find case-sensitive
+PASS find case-insensitive
+PASS whole word
+PASS replace all
+PERF find in 100k (marks-insensitive): 1538 hits, 7 ms
+PASS find in 100k text
+PASS counts chars/words/lines (emoji = 1)
+PASS category name unique (trimmed)
+PASS category list and count
+PASS categorised items survive clearTemporary
+PASS search inside category
+PASS rename rejects duplicate
+PASS delete category keeps texts
+PASS template copy, no duplicate
+PASS template not in all tab, survives clear history
+PASS paged loading: limit 60 then 120
+PASS drag reorder to absolute index
+PASS export load all incl. template
+PASS export pinned scope
+PASS export ids scope
+PASS json parses, schema 1
+PASS json all new on empty db
+PASS json import report
+PASS json round trip exact (text, title, pin, fav, template, dates, categories)
+PASS 100k text survives json
+PASS re-import detects duplicates
+PASS skip mode changes nothing
+PASS copy mode adds independent copies
+PASS replace mode updates existing metadata
+PASS csv bom + header + quoting round trip
+PASS csv reader edge cases
+PASS csv unclosed quote rejected
+PASS csv without header uses first column
+PASS txt separator round trip (texts)
+PASS txt plain file = one item / lines option
+PASS broken json rejected
+PASS wrong format rejected
+PASS newer schema rejected
+PASS deep nesting rejected safely
+PASS preview counts new/dup/invalid
+PASS generic json array accepted
+PASS oversized item marked invalid
+PASS import respects 100 pin limit
+PASS failed import rolls back completely
+PERF export 1000: 57 ms, parse+dup+import 1000: 161 ms
+PASS 1000 items import
+RESULT 89 passed, 0 failed
+== ArabicNorm: Dictionary.norm ==
+PASS hamza alef forms all fold to ا
+PASS taa marbuta folds to ه
+PASS alef maqsura folds to ي
+PASS hamza on waw folds to و
+PASS hamza on yaa folds to ي
+PASS standalone hamza kept
+PASS tashkeel stripped (بِسْمِ)
+PASS full diacritics word (مُحَمَّد)
+PASS mixed marks inside phrase
+PASS english lowercased
+PASS empty stays empty
+PASS twins أحمد/احمد share key
+PASS twins علي/على share key
+== ArabicNorm: ClipNorm.isMark ==
+PASS fatha is a mark
+PASS shadda is a mark
+PASS sukun is a mark
+PASS tatweel is a mark
+PASS superscript alef is a mark
+PASS quranic annotation is a mark
+PASS ZWJ is a mark
+PASS RLM is a mark
+PASS alef is not a mark
+PASS latin letter is not a mark
+PASS space is not a mark
+== ArabicNorm: ClipNorm.fold ==
+PASS fold أ
+PASS fold إ
+PASS fold آ
+PASS fold ٱ
+PASS fold ى
+PASS fold ة
+PASS fold ؤ
+PASS fold ئ
+PASS fold arabic-indic digits
+PASS fold extended arabic digits
+PASS fold uppercase latin
+PASS fold keeps plain arabic
+== ArabicNorm: ClipNorm.of ==
+PASS of(null) empty
+PASS of(empty) empty
+PASS of strips marks + folds
+PASS of converts digits
+PASS of mixed text+digits+latin
+PASS of marks-only is empty
+== ArabicNorm: ClipNorm.find ==
+PASS find skips interior marks
+PASS find miss returns null
+PASS find folds آ inside raw
+PASS find matches arabic-indic digits as ascii
+PASS find in shadda word
+PASS find keeps trailing mark with match
+PASS find(null, q) null
+PASS find(raw, null) null
+PASS find(raw, empty) null
+PASS find mid-text position
+ArabicNormTest subtotal: 52 passed, 0 failed
+== ArabicFixes:joined phrases ==
+PASS انشالله
+PASS انشاءالله
+PASS إنشاءالله
+PASS انشاالله
+PASS انشاللة
+PASS ان شاءالله
+PASS إنشالله
+PASS ماشاءالله
+PASS ماشالله
+PASS مشاءالله
+PASS ماشاالله
+PASS مشالله
+PASS الحمدلله
+PASS الحمدللة
+PASS الحمدالله
+PASS جزاكالله
+PASS جزاكاللهخير
+PASS باركالله
+PASS باركاللهفيك
+PASS السلامعليكم
+PASS لااله
+PASS لاإلهإلاالله
+== ArabicFixes:words ==
+PASS لاكن
+PASS لاكنه
+PASS هاذا
+PASS هاذه
+PASS ذالك
+PASS هاكذا
+PASS مسئول
+PASS مسؤل
+PASS شيئ
+PASS اصدقاء
+PASS اسف
+PASS انا
+PASS الى
+PASS اذا
+PASS امس
+PASS احسن
+PASS اكيد
+PASS انسان
+== ArabicFixes:tanween-to-alef-nun ==
+PASS طبعن
+PASS طبعا
+PASS شكرن
+PASS شكرا
+PASS اهلن
+PASS اهلا
+PASS عفون
+PASS عفوا
+PASS ايضن
+PASS ايضا
+PASS جدن
+PASS جدا
+PASS دائمن
+PASS دايما
+PASS دائما
+PASS ابدن
+PASS ابدا
+== ArabicFixes:edges ==
+PASS null input
+PASS 1-char input ignored
+PASS correct form passes through (لكن)
+PASS already-correct tanween form (أهلاً)
+PASS unknown word null
+PASS tashkeel wrong form still fixed
+ArabicFixesTest subtotal: 63 passed, 0 failed
+== EmojiHints:arabic words ==
+PASS قهوة -> ☕
+PASS شاي -> ☕
+PASS احبك -> ❤️
+PASS أحبك -> ❤️
+PASS حبيبي -> ❤️
+PASS قلبي -> ❤️
+PASS هههه -> 😂
+PASS هههههه -> 😂
+PASS ضحك -> 😂
+PASS جميل -> 😍
+PASS روعة -> 😍
+PASS تمام -> 👍
+PASS طيب -> 👍
+PASS شكرا -> 🙏
+PASS شكراً -> 🙏
+PASS مشكور -> 🙏
+PASS يارب -> 🤲
+PASS آمين -> 🤲
+PASS ورد -> 🌹
+PASS وردة -> 🌹
+PASS مبروك -> 🎉
+PASS مبارك -> 🎉
+PASS مكة -> 🕋
+PASS عمرة -> 🕋
+PASS رمضان -> 🌙
+PASS مساء -> 🌙
+PASS سيارة -> 🚗
+PASS طريق -> 🚗
+PASS سفر -> ✈️
+PASS مطار -> ✈️
+PASS اكيد -> 💯
+PASS أكيد -> 💯
+PASS بالضبط -> 💯
+PASS كشخة -> 😎
+PASS تم -> ✅
+PASS خلاص -> ✅
+PASS وقت -> ⏰
+PASS ساعة -> ⏰
+PASS بيت -> 🏠
+PASS البيت -> 🏠
+PASS دوام -> 💼
+PASS شغل -> 💼
+PASS دراسة -> 📚
+PASS جامعة -> 📚
+PASS مطر -> 🌧️
+PASS بطل -> 💪
+PASS قوة -> 💪
+PASS نار -> 🔥
+PASS قوي -> 🔥
+== EmojiHints:english words ==
+PASS love -> ❤️
+PASS heart -> ❤️
+PASS lol -> 😂
+PASS haha -> 😂
+PASS funny -> 😂
+PASS beautiful -> 😍
+PASS amazing -> 😍
+PASS ok -> 👍
+PASS great -> 👍
+PASS thanks -> 🙏
+PASS please -> 🥺
+PASS coffee -> ☕
+PASS tea -> ☕
+PASS birthday -> 🎂
+PASS cake -> 🎂
+PASS morning -> ☀️
+PASS sun -> ☀️
+PASS night -> 🌙
+PASS moon -> 🌙
+PASS sleep -> 😴
+PASS tired -> 😴
+PASS food -> 🍔
+PASS hungry -> 🍔
+PASS car -> 🚗
+PASS drive -> 🚗
+PASS travel -> ✈️
+PASS flight -> ✈️
+PASS football -> ⚽
+PASS soccer -> ⚽
+PASS fire -> 🔥
+PASS hot -> 🔥
+PASS exactly -> 💯
+PASS sure -> 💯
+PASS cool -> 😎
+PASS think -> 🤔
+PASS maybe -> 🤔
+PASS hmm -> 🤔
+PASS hello -> 👋
+PASS hi -> 👋
+PASS bye -> 👋
+PASS strong -> 💪
+PASS gym -> 💪
+PASS mosque -> 🕌
+PASS call -> 📞
+PASS phone -> 📞
+PASS money -> 💰
+PASS cash -> 💰
+PASS gift -> 🎁
+PASS kiss -> 😘
+PASS done -> ✅
+PASS time -> ⏰
+PASS home -> 🏠
+PASS house -> 🏠
+PASS work -> 💼
+PASS job -> 💼
+PASS study -> 📚
+PASS school -> 📚
+PASS rain -> 🌧️
+== EmojiHints:robustness ==
+PASS tashkeel word maps
+PASS hamza folded both ways
+PASS unknown word null
+PASS empty null
+PASS null null
+EmojiHintsTest subtotal: 112 passed, 0 failed
+== EmojiSearch:ranking ==
+PASS query قلب non-empty
+PASS query قلب respects cap
+PASS query قلب unique results
+PASS heart is the top hit for قلب (exact keyword)
+PASS cap >= match-count returns them all
+PASS search returns exactly the oracle match set
+PASS every result has a قلب keyword
+PASS multi-word AND non-empty
+PASS multi-word AND semantics
+PASS AND with impossible word is empty
+PASS english query love non-empty
+PASS english results match keyword
+PASS tashkeel query normalised
+== EmojiSearch:edges ==
+PASS empty query empty result
+PASS blank query empty result
+PASS unknown query empty result
+PASS cap n=3
+PASS deterministic ordering
+EmojiSearchTest subtotal: 18 passed, 0 failed
+== Dictionary:load & knows ==
+PASS 150k asset dictionary loads on JVM
+PASS knows common word
+PASS knows typo-variant shipped in dict (هاذا)
+PASS knows 1-edit variant (السلم)
+PASS unknown word not known
+PASS knows hamza surface form only when shipped
+== Dictionary:suggest ==
+PASS prefix suggestions non-empty
+PASS prefix suggestions all share prefix
+PASS typed word excluded from its own suggestions
+PASS longer completions included
+PASS typo tolerance finds السلام for السلم
+PASS empty query empty result
+PASS cap n respected
+PASS learned word (x10) tops suggestions
+PASS learned word below learning threshold excluded
+== Dictionary:correction ==
+PASS hamza-form typo corrected via same key
+PASS already-known word not corrected
+PASS common word itself not corrected
+PASS too-short input not corrected
+PASS far-from-any-word not corrected
+== Dictionary:learning limits ==
+PASS 1-char word rejected
+PASS 31-char word rejected
+== Dictionary:prediction ==
+PASS seed bigram السلام->عليكم
+PASS prediction respects cap
+PASS unknown previous word predicts nothing
+PASS repeated learned pair beats corpus (ranks 1st)
+PASS learnPair edge inputs no crash
+== Dictionary:glide ==
+PASS glide path finds target word
+PASS glide dedupes double letters (اله -> الله)
+PASS glide extra strokes tolerated (سلالم -> سلام)
+PASS glide short path empty
+PASS glide prefers learned user word
+== Dictionary:persistence ==
+PASS save() writes user file
+PASS learned word survives restart
+PASS learned count carried over
+PASS forgetAll clears learning
+PASS clearUser deletes the user file
+== Dictionary:performance gates (JVM) ==
+PERF suggest(سلام,10) avg 0.49 ms, predict avg 0.023 ms (150k dict, JVM)
+PASS suggest P50 gate < 80ms (regression guard)
+PASS predict P50 gate < 5ms
+DictionaryTest subtotal: 39 passed, 0 failed
+== Decor:catalog integrity ==
+PASS NAMES covers every style
+PASS TOTAL = styles + frames
+PASS bismillah frame is the open-only ornament
+PASS every frame has 2 columns and non-empty open
+PASS only the bismillah frame has an empty close side
+PASS frameSample wraps نيو
+PASS sample(OFF) is the plain name
+PASS sample(BOLD) non-empty
+PASS OFF apply is identity
+PASS unknown style is identity
+== Decor:latin math styles ==
+PASS BOLD a
+PASS BOLD A
+PASS BOLD digit 5
+PASS BOLD keeps arabic untouched
+PASS MONO digit 5
+PASS SANS Z
+PASS SCRIPT_THIN special e
+PASS ITALIC special h
+PASS FRAKTUR special C
+PASS DOUBLE special R
+PASS FULLWIDTH space
+PASS FULLWIDTH A
+== Decor:enclosed styles ==
+PASS CIRCLED b
+PASS CIRCLED 0
+PASS NEG_CIRCLED 0
+PASS PAREN digit 3
+PASS PAREN 0 untouched
+PASS SQUARED a
+PASS BRACKETS wraps letter
+PASS BRACKETS skips space
+== Decor:combining marks ==
+PASS STRIKE adds U+0336
+PASS UNDERLINE adds U+0332
+PASS DOUBLE_UNDER adds U+0333
+PASS OVERLINE adds U+0305
+PASS DOTS adds U+0324
+PASS WAVE adds U+0330
+PASS SLASH adds U+0338
+== Decor:arabic styles ==
+PASS KASHIDA joins ب
+PASS KASHIDA skips non-joining ا
+PASS AR_SHADDA on joining ب
+PASS AR_SHADDA on non-joining ا
+PASS AR_LONG stretches ب
+PASS HEARTS decorates arabic
+PASS FLOWERS decorates arabic
+PASS STARS decorates arabic
+== Decor:mapped + superscript ==
+PASS SUPER digit 3
+PASS UPSIDE a
+PASS SMALL caps a
+PASS SMALL caps upper A
+PASS apply == per-char one()
+DecorTest subtotal: 50 passed, 0 failed
+== Writer:catalog integrity ==
+PASS 7 categories
+PASS 3 tones
+PASS 2 languages
+PASS SHORT category index
+PASS every category has variants in both languages
+PASS 8 short replies AR
+PASS 8 short replies EN
+== Writer:arabic formal letter ==
+PASS subject line with topic
+PASS formal greeting names the recipient
+PASS islamic formal greeting
+PASS topic replaces {t} in body
+PASS empty sender becomes [اسمك]
+PASS sender name signed
+PASS empty recipient formal greeting
+== Writer:tones, placeholders, variants ==
+PASS brief tone drops subject line
+PASS brief tone keeps first sentence only
+PASS brief tone closing
+PASS empty topic becomes [الموضوع] placeholder
+PASS negative variant wraps (v=-1 == v=2)
+PASS overflow variant wraps (v=3 == v=0)
+== Writer:customer care + job ==
+PASS customer care signs as the team
+PASS customer care skips warmup line
+PASS customer care greeting
+PASS job subject titled طلب توظيف
+PASS short category returns body only
+== Writer:english letters ==
+PASS english subject
+PASS english formal greeting
+PASS english faithful closing
+PASS english placeholder name
+PASS english friendly greeting names
+PASS english warmup line
+PASS english brief closing
+WriterTest subtotal: 32 passed, 0 failed
+== Integrity: pin fidelity ==
+PASS embedded fingerprint matches the vault value
+PASS official pin list is non-empty and normalized
+PASS normalize strips colons and case
+PASS normalize rejects short/garbage input
+PASS sha256Hex known vector (abc)
+PASS sha256Hex empty input -> empty output
+== Integrity:verdict matrix ==
+PASS official signature -> OK
+PASS official signature with mixed formatting -> OK
+PASS foreign release signature -> MISMATCH (repackaged-apk pattern)
+PASS no signatures -> UNKNOWN (tooling context is not an accusation)
+PASS debuggable build wins first -> SANDBOX even with a foreign signature
+PASS garbage entries among signatures do not crash the verdict
+PASS garbage-only signatures -> MISMATCH (a real signed build with unreadable certs)
+PASS verdict is deterministic across calls
+== Integrity:feature gate (revenue surface only) ==
+PASS OK / SANDBOX / UNKNOWN keep features
+PASS only MISMATCH restricts the paid surface
+== Integrity:emulator hint (record-only) ==
+PASS SDK emulator fingerprints hint true
+PASS genymotion hints true
+PASS a real device does not hint
+== Integrity:anonymous report (published privacy contract) ==
+PASS report parses back as the exact published fields
+PASS MISMATCH report carries the evidence booleans
+PASS report contains no device identifiers (privacy contract)
+PASS null state never breaks the report
+== CrashReport: schema fidelity ==
+PASS schema + version + app are fixed strings
+PASS identity fields are numbers only
+PASS sessions/crashes/rate present
+PASS shield state is carried lowercase
+PASS all metric keys appear with p50/p95
+== CrashReport:crash rate ==
+PASS rate = crashes/sessions*100, 2 decimals
+PASS zero sessions -> 0 (no rate, not infinity)
+PASS negative counters clamp to 0
+PASS every crash on every session = 100
+== CrashReport:last crash parsing ==
+PASS last_crash parses type
+PASS last_crash keeps our own frame
+PASS days_ago computed in day buckets
+PASS empty crash log -> last_crash:null
+PASS raw type without ' @ ' -> where unknown
+PASS future timestamp clamps days_ago to 0
+== CrashReport:where sanitizer (own frames only) ==
+PASS plain frame passes
+PASS inner-class frame passes
+PASS file path degrades to unknown
+PASS url/text degrades to unknown
+PASS over-long frame truncated to 80
+PASS null/empty -> unknown
+== CrashReport:privacy contract (numbers only) ==
+PASS report + baseline carry no identifiers, paths or urls
+PASS no typed text field exists anywhere
+== CrashReport:baseline (Phase-0 exit criterion) ==
+PASS baseline schema
+PASS baseline keeps build identity + metrics
+PASS baseline carries no stability fields
+PASS null/short arrays degrade to zeros, never throw
+PASS NaN/Infinity clamp to 0
+== Feedback: envelope ==
+PASS support email is the documented address
+PASS email is normal (lowercase, no spaces, single @)
+PASS site is https
+PASS mail subject carries version name and code
+PASS mail body embeds the anonymous report verbatim
+PASS mail body trims the user note
+PASS mail body keeps report after the label
+PASS empty report -> explicit fallback line, never a dangling label
+== Feedback: beta loop wording ==
+PASS join steps mention the email (loop works before any link exists)
+PASS join steps mention the join subject
+PASS join steps promise the privacy contract
+PASS survey has exactly the 5 documented questions
+PASS survey questions are non-empty
+PASS survey text block numbers the questions
+PASS no device identifiers anywhere in the wording
+PASS no tracking params in any URL
+PASS the only URL allowed is the developer site on https
+== Correction2: confusion table integrity ==
+PASS table rows carry alternatives and priors
+PASS every alternative is a same-norm spelling
+PASS confusionOf accepts hamza re-spellings
+PASS confusionOf rejects different lengths and moved letters
+PASS degradesStandard flags bare-form regressions only
+PASS standard direction covers hamza/ة only (ي/ى lexically split)
+== Correction2: previous word (pure text logic) ==
+PASS word before the current one
+PASS no previous word
+PASS the word before the tail word
+PASS separators between words are skipped
+== Correction2: the zero-annoyance policy ==
+PASS unknown word, hamza variant -> restored
+PASS bare taa-marbuta -> standard ة restored
+PASS hamza normalization on informal spelling
+PASS NEVER degrades a correct marked word to its bare form
+PASS conservative on the lexically-split ي/ى class without context
+PASS exception set wins over everything
+PASS short and null input stay untouched
+PASS a word with no candidates is left alone
+== Correction2: context votes ==
+PASS previous word pulls the intended spelling
+PASS context never justifies degrading the standard form
+== Correction2 (week 2): the next word ==
+PASS first word of the after-cursor text
+PASS separators and end handled
+PASS next word resolves the إن/أن family (raw-keyed corpus rows)
+PASS next word resolves الآن with NO prev (sentence start)
+PASS the علي/على family follows a real next-word bigram
+== Correction2 (week 2): the function-word rule ==
+PASS neutral context fires the function-word rule
+PASS NO context at all -> the rule never fires (clean name stays)
+PASS bigram preference for the typed spelling blocks the rule
+PASS the rule never degrades the standard orthography
+== Correction2 (week 2): الفاصلة المنقوطة والأرقام العربية ==
+PASS punct/numeral table integrity
+PASS Latin ; means ؛ on the Arabic layout only
+PASS digit attached to Arabic text becomes Arabic-Indic
+PASS digit attached to Latin text stays Latin (both directions)
+PASS unattached digit keeps what was typed; row pref wins when ON
+== Correction2 (week 2): الحقول الحرجة policy ==
+PASS sensitive field: never silently corrected
+PASS autocorrect off: engine not consulted
+PASS normal field + autocorrect on: allowed
+== Exceptions: parse / serialize round-trip ==
+PASS three entries parsed
+PASS empty/null pref -> empty list
+PASS blank tokens dropped, duplicates dropped
+PASS serialize round-trip
+PASS serialize empty -> empty pref
+== Exceptions: add (dedup + cap) ==
+PASS norm duplicate occupies ONE entry
+PASS newest last
+PASS cap 300 keeps the latest
+PASS null/empty word ignored
+== Exceptions: remove either spelling ==
+PASS remove by marked spelling
+PASS remove by exact entry
+== Exceptions: shouldSkip (the shared check) ==
+PASS raw hit
+PASS normalized hit
+PASS other words pass
+PASS empty list/word never skips
+PASS count helper
+== SendPreview: when the small window shows ==
+PASS corrections pending + normal field -> shows
+PASS sensitive field -> NEVER shows
+PASS no edits -> nothing to show
+PASS build empty/null -> null
+== SendPreview: the printed lines ==
+PASS line carries both sides
+PASS four lines shown + count line
+PASS undo hint present
+PASS order preserved (newest correction first)
+== SendPreview: the privacy contract ==
+PASS side capped at 40 chars + ellipsis
+PASS no identifiers/paths/urls leak into the preview
+PASS empty sides tolerated
+== NQF: round-trip ==
+PASS expectedBytes() exact
+PASS tensor count + meta survive
+PASS Q8 bytes bit-exact
+PASS Q8 scale survives
+PASS F32 bit-exact
+PASS dims survive
+PASS names listed in order
+PASS missing tensor name -> BadFormat
+== NQF: negative proofs (reader) ==
+PASS bad magic refused
+PASS bad version refused
+PASS truncation refused
+PASS one flipped blob byte refused (tensor CRC)
+PASS one flipped meta byte refused (trailer CRC)
+PASS flipped tensor-count byte refused
+PASS null bytes refused
+PASS tiny bytes refused
+PASS NaN scale refused
+== NQF: negative proofs (writer) ==
+PASS dims/product mismatch refused
+PASS zero scale refused
+PASS NaN scale refused at write
+PASS duplicate name refused
+PASS empty name refused
+PASS rank 0 refused
+PASS rank 7 refused
+PASS F32 product mismatch refused
+== NNet: quantization ==
+PASS dynQuantScale = max|x|/127
+PASS dynQuantScale positive finite
+PASS zero vector -> tiny scale, not NaN
+PASS quantized within [-127,127], no -128
+PASS dequantize relative error < 1.5% (0.0042)
+== NNet: quantized matvec vs fp32 ==
+PASS matVecQ8 ≈ matVecF32 (rel err < 3%): 0.0035
+PASS int32 accumulation exact at MAX_COLS
+PASS cols overflow guard refuses > MAX_COLS
+PASS short activation buffer refused
+PASS matVecF32 manual check (13, 28)
+PASS deqRow values
+== NNet: activations ==
+PASS layerNorm -> mean ≈ 0, std ≈ 1
+PASS gamma=2 -> std ≈ 2
+PASS gelu(0)=0
+PASS gelu(1)≈0.8412
+PASS gelu(-1)≈-0.1588
+PASS relu
+PASS softmax sums to 1, monotone
+== NNet: topK ==
+PASS topK order best-first (ties -> lower index)
+PASS all-tie -> indices 0,1
+PASS k > len clamps
+PASS k <= 0 empty
+PASS topK deterministic
+== NNet: Mlp runner ==
+PASS Mlp dims parsed
+PASS Mlp file expectedBytes exact
+PASS forward length = vocab
+PASS forward bit-identical (deterministic)
+PASS predict 5 distinct valid ids
+PASS predict = topK of forward
+PASS wrong ctx length refused
+PASS id out of vocab refused
+PASS missing tensor -> BadFormat
+PASS fc0.w wrong ctx*embDim refused
+PASS bias size mismatch refused
+PASS shipped model readable at assets/nnet_ar.nqf
+PASS loads the shipped trained model
+PASS ctx=2 derived from the tensor directory
+PASS vocab matches the training vocab (9300)
+PASS params in the roadmap band 1–3M (2867940)
+PASS model file under the 8MB budget (3004240B)
+PASS model file is a real trained export (≥2.5MB)
+PASS top3 returns 3 candidates on a real context
+PASS top3 candidates are real vocabulary words
+PASS top3 candidates are distinct
+PASS deterministic: same context → same top-3
+PASS OOV context degrades to <unk> path, still 3 candidates
+PASS empty context handled (sentence start convention)
+PASS id(null)==0 and id("")==0
+PASS id(word(i)) round-trips into range for ids 2..500
+PASS norm strips diacritics + hamza families (أَحْمَد → احمد)
+PASS norm ة→ه, ى→ي, ؤ→و, ئ→ي
+PASS second independent load behaves identically
+PASS one flipped byte in the shipped model is refused (NQF.BadFormat)
+PASS truncated shipped model is refused
+PASS word(-1)/word(vocab) are null
+PASS word(0) is <unk>
+CoreTests time: 2465 ms
+RESULT 579 passed, 0 failed
+PASS hijazi: ايش تسوى دحين
+PASS hijazi: يمه ايش عندك اليوم
+PASS hijazi: الاكل مليح اليوم
+PASS najdi: وش تسوى الحين
+PASS najdi: ذلحين وصلنا الشركه
+PASS najdi: مب زين كذا تسوي
+PASS gulf: وايد زين هذا الشي
+PASS gulf: شخبارك عساك بخير
+PASS gulf: حيل حلو المكان
+PASS normAr: ايش=إيش (همزة)
+PASS normAr: دحينة=دحينه (ة/ه)
+PASS normAr: التشكيل يتجاهل
+PASS normAr: التطويل يتجاهل
+PASS normAr وحدة: أ→ا، ة→ه، ى→ي، ؤ→و، ئ→ي
+PASS ترتيب الكلمات لا يغير الفئة
+PASS النافذة آخر 12 كلمة فقط
+PASS فصحى لا تدعي لهجة
+PASS فارغ = msa
+PASS لاتيني/أرقام = msa
+PASS ترقيم فقط = msa
+PASS msa ثقة 1.0 وصفر دليل
+PASS حتمية: نفس المدخل = نفس النتيجة
+PASS toString يحمل الفئة والثقة
+PASS الثقة = الأعلى/المجموع (0..1]
+PASS hits يحصي الكلمات الدالة فقط
+PASS عائلة بلا حسم = خليجي عام
+PASS tokenize: الترقيم واللاتيني فواصل
+PASS tokenize: فارغ آمن
+PASS جدول العلامات: 81 مدخلاً
+PASS كل صف: ثلاثة أوزان 0..3 ومجموع 1..6
+PASS صفوف العائلة الخليجية (1,1,1) موجودة
+PASS مفاتيح الجدول بنسخة normAr
+PASS markers() غير قابل للتعديل
+PASS كاشف بلا حالة: نتيجتان متتاليتان لمُدخلين مختلفين مستقلتان
+PASS مجموعة البوابة الكاملة عبر نفس المحرك (64 صف، دقة ≥85%)
+CURATED_SET 64/64
+RESULT 35 passed, 0 failed
+PASS off: يستخدم الفصحى حتى مع نص لهجة كثيف
+PASS msa-mode: احترام إعداد المستخدم حرفياً
+PASS مثبتة حجازي: قاموسها بلا كشف
+PASS مثبتة نجدي: قاموسها
+PASS مثبتة خليجي: قاموسها
+PASS auto: حجازي كثيف → ar_hijazi
+PASS auto: نجدي كثيف → ar_najdi
+PASS auto: خليجي عام → ar_gulf
+PASS auto: فصحى صرفة تبقى فصحى
+PASS مانع التذبذب: كلمة لهجة واحدة لا تقلب القاموس
+PASS مانع التذبذب: دليلان يبدلان
+PASS نافذة فارغة/ملغاة في auto = فصحى
+PASS حتمية: نفس المدخل نفس القرار
+PASS وضع غير معروف يرتد للتلقائي بلا استثناء
+PASS معرفات القواميس مطابقة لأسماء الأصول
+PASS p50 < 1ms (فعلياً 0.0108ms)
+RESULT 16 passed, 0 failed
+PASS الملخص أقصر من النص
+PASS الملخص بثلاث جمل كما طُلب
+PASS الملخص يحتفظ بالموضوع المتكرر (المتحدث)
+PASS الملخص يحافظ على الترتيب الأصلي
+PASS حتمية: مرتان مخرج واحد
+PASS جمل أقل من المطلوب → النص كله
+PASS حراسة: null/فارغ/عدد غير صالح → "" بلا استثناء
+PASS إثبات سلبي: معلمة العدد حية لا مهملة
+PASS إثبات سلبي: الدرجة ترددية لا تموضعية (الأعلى تردداً آخراً يُلتقط)
+PASS p50 تلخيص < 2ms (فعلياً 0.1796ms)
+PASS الرقي: العبارة الأطول (ابغي منك→أرجو منك) تسبق المفردة
+PASS الرقي: منك→أرجو
+PASS الرقي: وش رايك→ما رأيك (عبارة)
+PASS الأبسط: نرجو التكرم→رجاءً
+PASS الأبسط: بخصوص→عن
+PASS الأبسط: في حال→إذا
+PASS الأبسط: بناءً على→حسب
+PASS العبارة الأطول تسبق المفردة (نرجو منكم التكرم)
+PASS حدود الكلمة: موعدنا لا تُمس
+PASS حدود الكلمة: مو→ليس تعمل على الحد
+PASS التطبيع يلتقط الهمزات المهملة (ابغى=أبغى)
+PASS نص فصيح يمر شبه بلا لمس
+PASS حراسة: null/فارغ/وضع غير معروف بلا استثناء ولا تخمين
+PASS حتمية إعادة الصياغة
+PASS عدد القواعد موثق فوق الحد
+PASS ثلاث نبرات ثلاثة مخارج متميزة
+PASS الرسمية بطاقاتها (السلام عليكم + مع التقدير + الجوهر)
+PASS الودية بصيغة أخوية
+PASS القصيرة سطر موجز
+PASS نية الشكر تغير القالب
+PASS نية الاعتذار في القصير
+PASS نية السؤال في الرسمي
+PASS النوايا الست مغطاة بالقوالب والكشف
+PASS نية عامة لغيرها
+PASS حراسة: null/فارغ ينتج قوالب صالحة
+PASS نبرة خارج النطاق ترتد للرسمية
+PASS حتمية النبرات
+PASS المسار كله محلي: يعمل بلا مفاتيح ولا شبكة
+RESULT 38 passed, 0 failed
+PASS master غائب/فارغ/off/غريب → DENIED
+PASS قدرة غير معروفة → DENIED حتى مع فتح كل شيء
+PASS إذن القدرة مغلق/غائب/غريب → DENIED
+PASS ask بلا موافقة → ASK
+PASS ask مع موافقة → ALLOWED لهذا الإرسال
+PASS master on + إذن on → ALLOWED
+PASS القرارات الثابتة متسقة ومتمايزة
+PASS النطاق الوحيد للمساعد: openrouter/api/v1/ (https فقط)
+PASS سطر التدقيق محكم 5 حقول بلا نص مستخدم
+PASS سطر DENIED يحمل السبب
+PASS سطر ASK مميز
+PASS مفاتيح الإعدادات ثابتة
+PASS مليون قرار < 1000ms (فعلياً 16ms)
+RESULT 13 passed, 0 failed
+PASS PBKDF2-HMAC-SHA256 متجه c=1 مطابق
+PASS PBKDF2-HMAC-SHA256 متجه c=2 مطابق
+PASS PBKDF2-HMAC-SHA256 متجه c=4096 مطابق
+PASS HKDF RFC5869 حالة الاختبار 1 مطابقة (L=42)
+PASS HKDF حالة الاختبار 3 بملح فارغ مطابقة (L=42)
+PASS الاسم المستعار مستقر (نفس المدخلات = نفس المعرف) وبطول ثابت
+PASS ملح مختلف = معرف مختلف (لا ارتباط بين الحسابات)
+PASS كلمة سر فارغة/ملح سيئ → رفض
+PASS المغلف يحمل السحر والنسخة وطول ترويسة 50 بايت بالضبط
+PASS حساب الحجم دقيق: ct = pt + 16 (وسم GCM) وفوقية 100KB أقل من 0.1%
+PASS الفتح يعيد الحالة نفسها حرفياً
+PASS nonce مختلف = مغلف مختلف (ولكن كلاهما يُفتح لنفس النص)
+PASS كلمة سر خاطئة → رفض auth_failed (ولا نصف حالة)
+PASS تبديل بايت في السحر/النسخة/kdf → رفض
+PASS تبديل بايت في الملح/nonce/المتن/الوسم → رفض
+PASS مغلف مقصوص/فارغ/بلا ترويسة → رفض
+PASS خادم dump بلا أي عربية وبلا كلمات مفتاحية وبلا بنية JSON
+PASS خادم dump بلا كلمة السر إطلاقاً
+PASS إنتروبيا المخزون عالية (فعلياً 7.55 بت/بايت ≥ 7.5)
+PASS الخادم لا يفهرس المحتوى: get بالمعرف فقط وdump بلا فهارس
+PASS الدمج تبادلي: merge(a,b) = merge(b,a) = 6 سجلات
+PASS الفائز هو الأعلى rev (لا تجميع، اختيار واحد)
+PASS الهوية: الدمج محافظ — دمج الحالة القياسية مع نفسها يعيدها حرفياً
+PASS الشاهد يفوز: rev أقدم لا يُحيي المحذوف
+PASS التعادل الكامل يُحسم بالنص (ترتيب كلي — بلا عشوائية)
+PASS سجل نوع مجهول/rev صفر/نص مفقود → رفض بناء
+PASS JSON يدعم العربية وعلامات الاقتباس والمطاط داخل النص
+PASS JSON يرفض نسخة غريبة وثهلة زائدة ومحرف تحكم خام
+PASS جهاز جديد: ملح الحساب من الخادم ثم اشتقاق مطابق للمعرف
+PASS الاستعادة الكاملة على جهاز جديد = الحالة نفسها بالصيغة القياسية (5 سجلات)
+PASS كلمة سر خاطئة على الجهاز الجديد → رفض ولا شيء يُمس
+PASS الجهازان متقارغان: تعديل B ظهر والدمج حتمي
+PASS base64url ذهاب وإياب لكل الأطوال (1..40) ومطابق
+PASS الحصص: كتلة أكبر من السقف تُرفض وحصة المجاني تحد
+PASS الخادم يفرض الحصة فعلاً (رفض store لا مجرد إشعار)
+PASS ختم+فتح حالة مستخدم ثقيل (242KB): p50 7.22ms = 2.98ms/100KB < 5 (إنتاجية لا حجم اعتباطي)
+PASS KDF مقصود البطء: 116ms في الميزانية (< 400ms، مرة لكل جلسة)
+RESULT 37 passed, 0 failed
+PASS التجميع: سجل السمة واحد (themeIdx=7)
+PASS التجميع: عائلات الهمزة سجل واحد (المدرسة/المدرسه، الآن/الان)
+PASS التجميع: الاستثناءات 3 (حد Exceptions.CAP)
+PASS التجميع: العبارات 3 والاختصارات 2
+PASS التجميع: التثبيتات 2 بمفاتيح مواضع مرتبة
+PASS التجميع: القائمة البيضاء تمنع ai_key وnet_sync وtheme المزدوج
+PASS التجميع: لا سر في أي سجل
+PASS التجميع: حتمي — نفس اللقطة = نفس السجلات
+PASS التجميع: الهوية من المحتوى لا من rev (نفس ids مع rev مختلف)
+PASS التفكيك: السمة 7
+PASS التفكيك: عربي 3 كلمات (بعد إملاء الهمزات) وإنجليزي 1
+PASS التفكيك: استثناءات 3 وعبارات 3 واختصارات 2
+PASS التفكيك: التثبيتان بالترتيب الأصلي
+PASS التفكيك: الإعدادات 2 فقط (الممنوع رُفض)
+PASS التفكيك: الخطة عدد سجلاتها الكامل
+PASS الدفع: يمر بإذن on ويرفع كتلة بالحجم المتوقع
+PASS الدخول: نفس الحساب المستعار من الملح العلني
+PASS السحب: حالة A كاملة + محلي B محفوظ في الدمج
+PASS التفكيك بعد الدمج: خطة كاملة على بيانات الجهازين
+PASS البوابة: master off/غائب/غريب → لا اتصال إطلاقاً
+PASS البوابة: قدرة sync مغلقة → رفض الدفع والسحب معاً
+PASS البوابة: ask بلا موافقة = ASK، مع موافقة = ALLOWED
+PASS البوابة: ask بلا موافقة لا يرفع بايتاً واحداً
+PASS البوابة: نطاق sync الأبيض فقط — نطاق آخر مرفوض
+PASS الحصة: تجاوز المجاني يُرفض وVIP يتسع
+PASS التسجيل: عبارة فارغة → empty_passphrase
+PASS التسجيل: ملح ناقص → bad_salt
+PASS الدخول: حساب لا يطابق الملح → رفض
+PASS النسخة الملفية: ترويسة NSF1 صحيحة
+PASS النسخة الملفية: ذهاباً وعوداً = نفس السجلات
+PASS النسخة الملفية: عبارة خاطئة → auth_failed
+PASS النسخة الملفية: بايت مُعدّل في المتن → رفض
+PASS التدقيق: الصيغة SYNCAUDIT\taction\tverdict\tbytes\tts
+PASS التدقيق: لا نص مستخدم ولا معرف كتلة في السطر
+PASS الأداء: تجميع 3000 كلمة ≤ 120ms (15.2ms، 3001 سجلاً)
+PASS الحجم: حالة 3000 كلمة ضمن الحصة المجانية (280964B ≤ 1MB)
+RESULT 36 passed, 0 failed
+PASS json.simple
+PASS json.dup-refused
+PASS json.trailing-refused
+PASS json.ctrl-refused
+PASS json.root-array-parses
+PASS review.shape-array-refused
+PASS json.unicode-escape
+PASS json.nested
+PASS json.depth-refused
+PASS review.good-pass
+PASS review.name-echo
+PASS review.nanos-measured
+PASS review.version-required
+PASS review.app-mismatch
+PASS review.empty
+PASS review.allowlist
+PASS review.vendor-unknown
+PASS review.vendor-null-registry
+PASS arabic.bidi
+PASS arabic.bidi-isolate
+PASS arabic.tatweel
+PASS arabic.tashkeel
+PASS arabic.clean-name-pass
+PASS arabic.name-ws
+PASS arabic.name-length
+PASS arabic.name-empty
+PASS color.rgb3
+PASS color.argb8
+PASS color.rrggbb-opaque
+PASS color.bad
+PASS color.bad2
+PASS color.review-bad-hex
+PASS color.bg-alpha-refused
+PASS review.required
+PASS range.font
+PASS range.anim
+PASS range.anim-neg-ok
+PASS range.borderw
+PASS range.borderw-frac-ok
+PASS layout.range
+PASS layout.bool
+PASS layout.unknown-key
+PASS contrast.white-black
+PASS contrast.same-zero
+PASS contrast.opaque-bg
+PASS contrast.blend-full-alpha
+PASS contrast.blend-half
+PASS contrast.review-violation
+PASS neon.glow-required
+PASS size.cap
+PASS sha256.known-vector
+PASS sha256.deterministic
+
+ThemePackTest: 52 pass, 0 fail
+RESULT 52 passed, 0 failed
+PASS split.70-30-100
+PASS split.149-floor
+PASS split.1-cent
+PASS split.10-cents
+PASS split.499
+PASS split.999999
+PASS split.zero
+PASS split.negative-refused
+PASS sale.zero-price-refused
+PASS sale.bad-kind-refused
+PASS month.statements
+PASS month.f01-aggregate
+PASS month.f01-split
+PASS month.f02-split
+PASS month.closes
+PASS refund.netted
+PASS refund.split-of-net
+PASS refund.counted
+PASS adjustment.creator-zero
+PASS adjustment.reported
+PASS adjustment.platform-total
+PASS payout.above-bar-pays
+PASS payout.below-bar-carries
+PASS payout.idempotent
+PASS payout.conserves
+PASS determinism.statements-order
+PASS determinism.same-money
+PASS unknown-vendor.settled
+
+EconomyTest: 28 pass, 0 fail
+RESULT 28 passed, 0 failed
+PASS synthetic.tensor-count
+PASS synthetic.meta-exact
+PASS synthetic.version-flags
+PASS emb.name-dtype
+PASS emb.dims
+PASS emb.scale-bits
+PASS emb.crc
+PASS emb.raw-bytes-identical
+PASS emb.deq-digest-defined
+PASS fc.bias.name-dtype
+PASS fc.bias.dims
+PASS fc.bias.scale-bits
+PASS fc.bias.crc
+PASS fc.bias.raw-bytes-identical
+PASS fc.bias.deq-digest-defined
+PASS deq.bit-exact-vs-NNet.deqRow
+PASS deq.digest-stable
+PASS scale.bits-are-reference
+PASS text.lines-3
+PASS text.order-is-rank
+PASS text.utf8-arabic
+PASS text.sha256
+PASS neg.magic
+PASS neg.version
+PASS neg.tensor-count
+PASS neg.short
+PASS neg.null
+PASS neg.name-empty
+PASS neg.dtype
+PASS neg.rank
+PASS neg.scale-nonpositive
+PASS neg.size-mismatch
+PASS neg.tensor-crc
+PASS neg.trailer-crc
+PASS neg.fuzz-128-flips-all-refused
+NQFPORT-TESTS pass=35 fail=0
+RESULT 35 passed, 0 failed
+CommunityDictTest: RESULT 187 passed, 0 failed
+StoreUiTest: RESULT 48 passed, 0 failed
+== DictSign:publish ==
+PASS clean 2-row batch accepted 2/2
+PASS publish carries the report batchId
+PASS publish counter = accepted count
+PASS dpack sig is a 64-hex digest distinct from batchId
+PASS words sha differs from batch sha
+PASS publish is byte-deterministic (re-publish identical)
+PASS statement embedded and pinned (report sha)
+PASS publish refuses zero-accepted batch (EMPTY_PACK)
+PASS publish refuses foreign report (BATCH_MISMATCH)
+== DictSign:load ==
+PASS load with statement passes
+PASS pack order = review acceptance order
+PASS pack batchId matches
+PASS device path loads without statement
+PASS sig survives the round-trip
+== DictSign:engine consumption order ==
+PASS without pack asset: pack word unknown
+PASS with pack asset: pack words known
+PASS pack rank starts after the whole installed corpus (3,4,5)
+PASS installed corpus always precedes the pack
+PASS pack order preserved inside the pack
+PASS pack score capped at PACK_SCORE (3000)
+PASS pack words never fire the exact-match boost (3000 < 22000)
+PASS suggest surfaces the pack word (after installed rivals)
+== DictSign:installed wins ==
+PASS review refused the hamza-variant duplicate (1 accepted)
+PASS merged pack word lands right after the corpus
+PASS duplicate word still resolves to the installed spelling
+PASS mergePack drops duplicates and reports the honest count
+== DictSign:negatives ==
+PASS NEG tampered body byte → DPACK_SIG
+PASS NEG post-review word swap vs original statement → DPACK_REPORT
+PASS NEG forged counter, unsigned edit → DPACK_SIG
+PASS NEG reforged counter mismatching body → DPACK_COUNT
+PASS NEG foreign batchId → DPACK_REPORT (statement pins the batch)
+PASS NEG corrupted words pin → DPACK_WORDS
+PASS NEG wrong schema line → DPACK_SCHEMA
+PASS NEG truncated body → DPACK_WORDS (body sha no longer matches)
+PASS NEG fully-reforged truncation → DPACK_REPORT
+PASS NEG BOM-prefixed package → DPACK_SCHEMA
+PASS NEG latin poison word, fully-reforged pack + own statement → DPACK_WORD (NOT_ARABIC)
+PASS NEG pack duplicating the installed dictionary → DPACK_WORD (DUPLICATE)
+DictSignTest: RESULT 38 passed, 0 failed
+PASS collect.oneValidEnt
+PASS collect.entShape
+PASS collect.badPinDropped
+PASS collect.cap
+PASS apply.grant
+PASS apply.badPinFiltered
+PASS apply.tombNoGrant
+PASS apply.countsEnt
+PASS parse.unknownIgnored
+PASS parse.allUnknownEmpty
+PASS local.unknownRefused
+PASS record.pinOnly
+PASS grant.ok
+PASS grant.idempotent
+PASS grant.wrongPin
+PASS grant.noPack
+PASS grant.ownedPins
+PASS grant.noMoney
+PASS ownNotInstall
+PASS merge.commutative
+EntitlementTest: RESULT 20 passed, 0 failed
+[tests] PASS (13s)
+
+───── STAGE: perf ─────
+== PerfGate: dictionary (150k asset, JVM) ==
+PERFGATE name=suggest(سلام,10) p50=0.229ms p95=1.162ms budget=8.0ms verdict=OK
+PERFGATE name=predict(في,5) p50=0.002ms p95=0.005ms budget=1.0ms verdict=OK
+PERFGATE name=correction(السلآم) p50=0.002ms p95=0.009ms budget=8.0ms verdict=OK
+== PerfGate: clipboard (real SQLite, in-memory) ==
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+PERFGATE name=clip.insert1000 total=380.1ms budget=900.0ms verdict=OK
+PERFGATE name=clip.list400x10 total=29.9ms budget=200.0ms verdict=OK
+PERFGATE name=clip.search20in100k total=17.0ms budget=60.0ms verdict=OK
+PERFGATE name=clip.searchHit(deep) p50=2.714ms p95=2.714ms budget=120.0ms verdict=OK
+PERFGATE name=clip.export1000 total=49.8ms budget=400.0ms verdict=OK
+PERFGATE name=clip.parse1000 total=86.5ms budget=400.0ms verdict=OK
+PERFGATE name=clip.dupScan1000 total=115.2ms budget=400.0ms verdict=OK
+PERF_GATE_OK
+[perf] PASS (2s)
+
+───── STAGE: playstore ─────
+PLAYGATE name_ar=28/30
+PLAYGATE short_ar=66/80
+PLAYGATE full_ar=1255/4000
+PLAYGATE name_en=24/30
+PLAYGATE short_en=77/80
+PLAYGATE full_en=1319/4000
+PLAY_GATE_OK
+PLAY_GATE OK
+[playstore] PASS (1s)
+
+───── STAGE: correction ─────
+CORRGATE n=72 v2_acc=100.0% v2_same_norm=0 v2_wrong=0 v1_acc=16.7% gap=83.3 fp_wrong=0 norms=8(3.0%) p50=0.012ms p95=0.032ms punct=10/10 policy_fails=0
+CORR_GATE_OK
+[correction] PASS (1s)
+
+───── STAGE: nnet ─────
+NNETGATE model_params=1638792 (q8=1632768 f32=6024) model_bytes=1656261 overhead=1.44% bpp=8.115 p50=0.644ms p95=0.689ms matvec_err=0.0027 negatives=[magicOK, versionOK, truncationOK, blob-flipOK, meta-flipOK]
+NNETGATE budget: p50 0.644 / 8ms, model 1656261B / 8MB, quantization int8-symmetric-per-tensor, engine pure JVM (zero android.*, zero libs)
+NNETGATE2 real_params=2867940 real_bytes=3004240 top3=47/192=24.5% fused=47/192=24.5% table3=53 table6=64 oracle=68/192=35.4% p50=1.134ms p95=1.228ms ctx=2
+NNETGATE2 budget: model 24.479% (floor 20%), fused 24.479% vs traditional 27.6% — roadmap bar 45% is training-machine rerun (NEOKEY_A2_STRICT=1), p50 1.134 / 8ms, model 3004240B / 8MB
+NNET_GATE_OK
+NNET_GATE OK
+[nnet] PASS (3s)
+
+───── STAGE: dialect ─────
+DIALECTGATE acc=100.0% hijazi=100.0% najdi=100.0% gulf=100.0% msa=100.0% dict_words=hijazi:370,najdi:361,gulf:371, markers=81 p50=0.001ms
+DIALECT_GATE_OK
+DIALECT_GATE OK
+[dialect] PASS (2s)
+
+───── STAGE: assistant ─────
+ASSISTGATE switch_acc=100.0% rows=48 classes_ok=6
+ASSISTGATE switch_p50=0.0105ms
+ASSISTGATE summarize_texts=8 p50=0.1473ms
+ASSISTGATE rephrase_probes=11 rules_respectful=51 rules_simple=32
+ASSISTGATE tones_intents=6 distinct=3
+ASSISTGATE netgate_failclosed=ok audit5=ok
+ASSISTGATE modes_valid=6
+ASSIST_GATE_OK
+ASSIST_GATE OK
+[assistant] PASS (2s)
+
+───── STAGE: sync ─────
+SYNCGLINE state_bytes=59554 overhead_pct=0.111 seal_p50=1.893ms per100=3.26ms restore_ms=18.845 kdf_ms=147 entropy=8.00
+SYNC_GATE_OK
+SYNC_GATE OK
+[sync] PASS (4s)
+
+───── STAGE: syncclient ─────
+SYNCCLGATE state_recs=580 blob_bytes=50034 pull_ms=15.8 entropy=8.00 big_ms=23.2 kdf_ms=225 checks=30 failed=0
+SYNCCLIENT_GATE_OK
+SYNCCLIENT_GATE OK
+[syncclient] PASS (5s)
+
+───── STAGE: themestore ─────
+catalog: 10 founders, 25 packs, 22499 catalog bytes
+review: 25/25 PASS, every pack hash-pinned (bytes reviewed == bytes published)
+review latency: p50 0.120 ms, p95 0.150 ms (bar 5 ms)
+negatives: 23 harmful packs designed, ALL refused with the right tag
+publish: post-review byte flip caught by the hash pin (review pass, pin refused)
+economy month: gross 125080 c, refunds 5633 c, creator 83609 c (70.00%), platform 35838 c (30.00%), paid 83609 c, carried 0 c
+economy edge: refund-exceeds-gross absorbed and reported, other vendors unaffected
+
+THEMESTORE packs=25 pass=25 hash_pinned=25
+THEMESTORE latency p50 0.120ms p95 0.150ms negatives=23 checks=112
+THEMESTORE month gross=125080 refunds=5633 creator=83609 platform=35838
+checks: 112, failures: 0
+THEME_STORE_GATE_OK
+THEME_STORE_GATE OK
+[themestore] PASS (2s)
+
+───── STAGE: nqfport ─────
+pins=15
+tensors=8 agree=8
+engine-deq-rows=512
+text-assets=12 tab-structured=2
+port-read p50=0.754ms p95=18.802ms
+targeted=7/7
+fuzz=96/96
+negatives=103
+NQFPORT_GATE_OK assets=15 tensors=8 params=2963583 agree=8 negatives=103 p50=0.754ms p95=18.802ms gate=0.65s
+NQFPORT_GATE OK
+[nqfport] PASS (2s)
+
+───── STAGE: community ─────
+COMMUNITY_GATE_OK accepted=157 rejected=112 negatives=110 p50_us=13 batches=11 installed=134188
+COMMUNITY_GATE OK
+[community] PASS (2s)
+
+───── STAGE: dictsign ─────
+DICTSIGN_GATE_OK batches=2 words=13 negatives=12/12 p50_publish_us=378 p50_load_us=210 checks=16
+DICTSIGN_GATE OK
+[dictsign] PASS (3s)
+
+───── STAGE: storeui ─────
+STOREGATE install_total_ms=6
+STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16 p50_install_us=193 catalog_cents=7325 ledger_closes=7325 checks=79
+STOREUI_GATE OK
+[storeui] PASS (1s)
+
+───── STAGE: entitlement ─────
+ENTGATE_OK devices=2 granted=4 negatives=3/3 p50_collect_us=5379 p50_apply_us=1026 p50_grant_us=34 entropy_x100=800 checks=52
+ENTGATE OK
+[entitlement] PASS (4s)
+[build] SKIP (no Android SDK in this environment (compile gate runs on CI / build machine))
+
+───── STAGE: r8 ─────
+NOTE: no aapt2 R (no SDK) — compile-time stub R generated for the shrink proof
+R8_OK dex=518688 bytes, mapping=209 program classes, manifest components kept=10/10
+PACKAGING_SKIPPED (no ANDROID_SDK — R8 dex + mapping proven; APK assembly runs on the build machine / release CI)
+[r8] PASS (28s)
+
+───── STAGE: phase3 ─────
+[phase3] STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16 p50_install_us=181 catalog_cents=7325 ledger_closes=7325 checks=79
+[phase3] DICTSIGN_GATE_OK batches=2 words=13 negatives=12/12 p50_publish_us=416 p50_load_us=36 checks=16
+[phase3] ENTGATE_OK devices=2 granted=4 negatives=3/3 p50_collect_us=5579 p50_apply_us=982 p50_grant_us=53 entropy_x100=800 checks=52
+PHASE3_OK gates=3/3 regressions=0/60 dex=518688/520000 vc=62 tests=1251/0 negatives=16/16+12/12+3/3
+[phase3] PASS (9s)
+
+───── STAGE: release ─────
+RELEASE_MANIFEST_OK → build/release/release-manifest.json + rollout-plan.json + rollout-plan.txt
+[release] PASS (0s)
+
+════════════════ PIPELINE SUMMARY ════════════════
+  probe    PASS
+  audit    PASS
+  tests    PASS
+  perf     PASS
+  playstore PASS
+  correction PASS
+  nnet     PASS
+  dialect  PASS
+  assistant PASS
+  sync     PASS
+  syncclient PASS
+  themestore PASS
+  nqfport  PASS
+  community PASS
+  dictsign PASS
+  storeui  PASS
+  entitlement PASS
+  build    SKIP — no Android SDK in this environment (compile gate runs on CI / build machine)
+  r8       PASS
+  phase3   PASS
+  release  PASS
+  tests: 1251 passed, 0 failed
+═══════════════════════════════════════════════════
+PIPELINE_OK

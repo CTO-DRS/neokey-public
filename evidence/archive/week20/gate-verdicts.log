@@ -1,0 +1,11 @@
+ENTGATE OK
+DICTSIGN_GATE OK
+STOREUI_GATE OK
+CORRGATE n=72 v2_acc=100.0% v2_same_norm=0 v2_wrong=0 v1_acc=16.7% gap=83.3 fp_wrong=0 norms=8(3.0%) p50=0.008ms p95=0.023ms punct=10/10 policy_fails=0
+NQFPORT_GATE_OK assets=15 tensors=8 params=2963583 agree=8 negatives=103 p50=0.944ms p95=18.784ms gate=0.72s
+COMMUNITY_GATE_OK accepted=157 rejected=112 negatives=110 p50_us=17 batches=11 installed=134188
+DICTSIGN_GATE_OK batches=2 words=13 negatives=12/12 p50_publish_us=386 p50_load_us=43 checks=16
+STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16 p50_install_us=207 catalog_cents=7325 ledger_closes=7325 checks=79
+ENTGATE_OK devices=2 granted=4 negatives=3/3 p50_collect_us=5015 p50_apply_us=995 p50_grant_us=35 entropy_x100=800 checks=52
+R8_OK dex=518688 bytes, mapping=209 program classes, manifest components kept=10/10
+PIPELINE_OK

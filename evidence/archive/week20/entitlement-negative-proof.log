@@ -1,0 +1,8 @@
+# negative proof — week 20 (phase 3, week 3): the entitlements gate must FAIL
+# when the entitlements bridge is hidden (no silent pass without StoreUi —
+# SyncState.CAP_ENTITLEMENTS + EntitlementGate both compile against it).
+# procedure: mv src/com/hark/neokey/StoreUi.java /tmp/ && ci/entitlement_gate.sh && mv back
+$ mv src/com/hark/neokey/StoreUi.java /tmp/
+$ ci/entitlement_gate.sh
+ENTGATE_FAILED compile
+$ mv /tmp/StoreUi.java src/com/hark/neokey/StoreUi.java   (restored — gate green again)

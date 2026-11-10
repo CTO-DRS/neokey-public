@@ -1,0 +1,5 @@
+=== negative proof: hide ThemePack.java → gate must fail (exit 1) ===
+THEME_STORE_GATE_FAILED compile
+exit_code=1
+=== restored → re-verified ===
+THEME_STORE_GATE_OK

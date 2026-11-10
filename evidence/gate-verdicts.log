@@ -1,0 +1,15 @@
+CORRGATE n=72 v2_acc=100.0% v2_same_norm=0 v2_wrong=0 v1_acc=16.7% gap=83.3 fp_wrong=0 norms=8(3.0%) p50=0.012ms p95=0.032ms punct=10/10 policy_fails=0
+NQFPORT_GATE_OK assets=15 tensors=8 params=2963583 agree=8 negatives=103 p50=0.754ms p95=18.802ms gate=0.65s
+COMMUNITY_GATE_OK accepted=157 rejected=112 negatives=110 p50_us=13 batches=11 installed=134188
+DICTSIGN_GATE_OK batches=2 words=13 negatives=12/12 p50_publish_us=378 p50_load_us=210 checks=16
+DICTSIGN_GATE OK
+STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16 p50_install_us=193 catalog_cents=7325 ledger_closes=7325 checks=79
+STOREUI_GATE OK
+ENTGATE_OK devices=2 granted=4 negatives=3/3 p50_collect_us=5379 p50_apply_us=1026 p50_grant_us=34 entropy_x100=800 checks=52
+ENTGATE OK
+R8_OK dex=518688 bytes, mapping=209 program classes, manifest components kept=10/10
+[phase3] STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16 p50_install_us=181 catalog_cents=7325 ledger_closes=7325 checks=79
+[phase3] DICTSIGN_GATE_OK batches=2 words=13 negatives=12/12 p50_publish_us=416 p50_load_us=36 checks=16
+[phase3] ENTGATE_OK devices=2 granted=4 negatives=3/3 p50_collect_us=5579 p50_apply_us=982 p50_grant_us=53 entropy_x100=800 checks=52
+PHASE3_OK gates=3/3 regressions=0/60 dex=518688/520000 vc=62 tests=1251/0 negatives=16/16+12/12+3/3
+[phase3] PASS (9s)

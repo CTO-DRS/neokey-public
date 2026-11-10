@@ -1,0 +1,18 @@
+{
+  "app": "com.hark.neokey",
+  "versionCode": 58,
+  "versionName": "1.1",
+  "generatedAt": "2026-11-03T07:22:10Z",
+  "keystoreSha256": "(keystore fingerprint unavailable on this machine)",
+  "gates": {
+    "secretsAudit": "OK",
+    "tests": { "total": 958, "failed": 0 },
+    "performance": {"SUGGEST_MS":0.566,"PREDICT_MS":0.004,"CORRECTION_MS":0.002,"CLIP_INSERT1000_MS":348.8,"CLIP_LIST400X10_MS":56.2,"CLIP_SEARCH20IN100K_MS":16.4,"CLIP_SEARCHHIT_MS":2.763,"CLIP_EXPORT1000_MS":71.4,"CLIP_PARSE1000_MS":102.7,"CLIP_DUPSCAN1000_MS":110.1},
+    "r8FullMode": { "dexBytes": 499984, "manifestComponentsKept": "9/9", "mapping": "build/release/mapping.txt (upload to Play Console as deobfuscation file)" },
+    "storeListing": { "verifiedBy": "ci/play_gate.sh", "name": "ar 28/30, en 24/30", "shortDescription": "ar 66/80, en 77/80", "fullDescription": "ar 1255/4000, en 1319/4000" },
+    "nnet": { "verifiedBy": "ci/nnet_gate.sh", "params": 1638792, "modelBytes": 1656261, "p50Ms": 0.637, "p95Ms": 0.688, "bitsPerParam": 8.115, "format": "NQF v1 int8-symmetric-per-tensor" },
+    "nqfPort": { "verifiedBy": "ci/nqfport_gate.sh", "contract": "docs/NQF-PORT.md", "goldenVectors": "docs/NQF-GOLDEN.json", "swiftSpec": "docs/NQF-SWIFT.md", "assetsPinned": 13, "tensorsAgreeBitExact": 8, "q8Params": 2963583, "negativesRefused": 103, "p50Ms": 0.790 }
+  },
+  "artifacts": { "apk": "pending (built on the release machine / release CI)", "aab": "pending (built on the release machine / release CI)" },
+  "signedBy": "release workflow only — signing secrets never leave the vault"
+}

@@ -1,0 +1,14 @@
+catalog: 10 founders, 25 packs, 22499 catalog bytes
+review: 25/25 PASS, every pack hash-pinned (bytes reviewed == bytes published)
+review latency: p50 0.099 ms, p95 0.136 ms (bar 5 ms)
+negatives: 23 harmful packs designed, ALL refused with the right tag
+publish: post-review byte flip caught by the hash pin (review pass, pin refused)
+economy month: gross 125080 c, refunds 5633 c, creator 83609 c (70.00%), platform 35838 c (30.00%), paid 83609 c, carried 0 c
+economy edge: refund-exceeds-gross absorbed and reported, other vendors unaffected
+
+THEMESTORE packs=25 pass=25 hash_pinned=25
+THEMESTORE latency p50 0.099ms p95 0.136ms negatives=23 checks=112
+THEMESTORE month gross=125080 refunds=5633 creator=83609 platform=35838
+checks: 112, failures: 0
+THEME_STORE_GATE_OK
+THEME_STORE_GATE OK

@@ -1,0 +1,10 @@
+pins=13
+tensors=8 agree=8
+engine-deq-rows=512
+text-assets=12 tab-structured=2
+port-read p50=0.860ms p95=11.253ms
+targeted=7/7
+fuzz=96/96
+negatives=103
+NQFPORT_GATE_OK assets=13 tensors=8 params=2963583 agree=8 negatives=103 p50=0.860ms p95=11.253ms gate=0.71s
+NQFPORT_GATE OK

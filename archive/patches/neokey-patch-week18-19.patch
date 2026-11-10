@@ -1,0 +1,1670 @@
+diff --git a/.gitignore b/.gitignore
+index 091192d..f8fc6ac 100755
+--- a/.gitignore
++++ b/.gitignore
+@@ -17,9 +17,3 @@ build/
+ !.env.example
+ # downloadable tool jars (sqlite-jdbc, ecj, r8, android.jar) — see docs/R8.md and tests/run.sh header
+ tools/*.jar
+-
+-# transient sandbox artifacts
+-__pycache__/
+-*.pyc
+-.DS_Store
+-tool-results/
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index b7a8a15..24edb18 100755
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -1,8 +1,8 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     package="com.hark.neokey"
+-    android:versionCode="59"
+-    android:versionName="1.2">
++    android:versionCode="60"
++    android:versionName="1.3">
+ 
+     <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35" />
+     <uses-permission android:name="android.permission.VIBRATE" />
+diff --git a/HISTORY.md b/HISTORY.md
+index 0859b95..2ca3314 100755
+--- a/HISTORY.md
++++ b/HISTORY.md
+@@ -68,4 +68,3 @@
+ - 2026-11-03 (Roadmap Phase 2 — week 3, item B: theme store + review line PRODUCTION, no app version bump): the .neokey pack format the studio has shipped since v16 became a measured production line. ThemePack.java (pure JVM, zero android.*): the automated reviewer the store runs BEFORE publish — strict hand-rolled JSON (dup keys / raw control chars / trailing bytes / depth>8 refused), a top-level key ALLOWLIST (planted api_key/webhook_url/tracking fields = instant refusal, the smuggling is cut at shape not behaviour), vendor declared AND registered (مورد غير معلن refused), Arabic copy quality as code (name 1..40 chars, bidi overrides U+202A..202E/U+2066..2069/U+200E/200F refused, tatweel refused, tashkeel in a theme NAME refused, no edge whitespace), colour parsing (#RGB/#RRGGBB/#AARRGGBB, bg alpha >= 0x40), store ranges STRICTER than the tolerant client fromSpec (font 0..5, anim -1..29, borderW 0.5..8, layout ints bounded), WCAG 2.1 contrast >= 3.0 measured on the ALPHA-COMPOSITED pair (translucent glass keys blended over bg — measured, not cosmetic), neon packs must declare glow+glow2, and hash-pinned publish: sha256 of the exact reviewed bytes is the publish pin, so a post-review byte flip is refused even when the tampered pack would itself pass review. Economy.java (pure JVM): creator economy in LONG CENTS only — split = floor(price*70/100) creator + remainder platform so the sum is ALWAYS the price (1 cent -> 0/1); monthClose aggregates per vendor, refunds reverse cent-for-cent, a refund exceeding a vendor's gross is an adjustment the platform absorbs AND reports (creator never negative), MIN_PAYOUT $10 applies to the creator share (below it carries to next month), pay() idempotent (second call pays exactly zero), statements sorted by vendor id — deterministic ledger on any device. Founders catalog: dictsrc/make_founders.py (seed 20261103) -> dictsrc/founders_catalog.json, 10 founding creators x 25 exclusive glass/neon packs (22,499 bytes), each pack canonical sorted-key JSON + sha256 pin + price; the generator PROVES the contrast pairs with the same math as ThemePack before writing (the gate re-proves in Java — no coincidence agreement). Gate 15 of the pipeline (ci/theme_store_gate.sh + ThemeStoreGate.java, 112 checks): all 25 packs PASS with hash pins verified, review latency p50 0.096ms (bar 5ms, ~52x headroom), 23 designed harmful packs ALL refused with the right tag, post-review byte flip caught by the pin, full simulated month over the catalog: gross 125,080c, refunds 5,633c, creator 83,609c = 70.00% / platform 35,838c = 30.00% — the ledger closes to the cent. Tests 843 -> 923 (+52 ThemePackTest, +28 EconomyTest; suites now emit the pipeline's RESULT convention). NEGATIVE PROOF: hiding ThemePack.java -> THEME_STORE_GATE_FAILED compile exit 1 (restored, re-verified OK). Environment lesson measured: the recycled sandbox lost javac/tools(android,r8) — JVM gates held via the documented ECJ path, and sync_client_gate gained the run.sh stub fallback (tests/stubs/android/** — compile-time-only types) when tools/android.jar is absent; contract documented in the script. dex unchanged (ThemePack/Economy unreachable from manifest paths -> R8-stripped, zero-byte cost until the store UI week; r8 gate ran where the tools exist). Contract: docs/STORE.md. Full doc: docs/PHASE2-W3-REPORT.md. Next: week 4 = item C (iOS readiness — pure reference NQF reader, golden vectors, Swift spec).
+ - 2026-11-03 (Roadmap Phase 2 — week 4, item C: iOS readiness / platform neutrality, vc 58 unchanged — pure-JVM week, no manifest path): the port PROVED, not claimed. NqfPort.java (pure JVM, zero android.*, ~260 lines): a SECOND complete NQF v1 reader written ONLY from docs/NQF.md §2/§3 — zero code shared with NQF.java — the exact exercise a Swift implementer performs; the port exercise caught a REAL spec ambiguity (tensor dataOffset documented as "absolute, inside the blob region" was misread as blob-relative by the independent reader and refused a valid file; the writer emits FILE-absolute offsets from blobStart — docs/NQF.md §3.7 now states the semantics decisively; this is the difference between a spec that transfers and one that gets guessed). docs/NQF-PORT.md: the platform-neutral reader contract — byte-exact NQF v1 table with 13 numbered strictness rules each carrying its refusal tag, the text-asset contract (dictionary rank-lines / bigram+emoji single-TAB), dequantization law (Int8×Float32 multiply, Float32 ONLY — never Double; IEEE-754 bits are the reference), and the golden-vector binding. docs/NQF-GOLDEN.json via tools/MakeGolden.java: 13 shipping assets pinned (bytes+sha256, lines/unique for text), model pinned per-tensor (8 tensors, dims/scaleBits/crc32/sha256/deqSha256): emb [9300,64] Q8, fc0.w [240,128] Q8, out.w [9300,240] Q8, vocab.words [105663] Q8, fc0.b/ln.g/ln.b/out.b F32 — 2,963,583 Q8 params in 3,004,240 bytes (<3MB whole model). NqfPortGate (stage 16 of the line, ci/nqfport_gate.sh → NQFPORT_GATE_OK): 13/13 asset pins match live bytes (reviewed==published, store-pin pattern), dual-reader bit-exact agreement 8/8 tensors (dtype/dims/IEEE-754 scaleBits/crc32/raw-sha256/deq-digest — the port digest compared against the OFFICIAL reader's tensors through the same canonical algorithm), engine cross-check 512/512 real emb rows deqRow-vs-port bit-exact, text contract 12/12 (+2/2 TAB-structured), port read p50 0.885ms (bar 50ms, ~56× margin), negatives 103/103 refused by BOTH readers (7 targeted with expected tags + 96 deterministic seed-1616 flips — independence enforced from both sides). NqfPortTest 35 checks: synthetic model writer→port bit-exact, deq digest stability, scale-bits-are-reference, text contract, 11 targeted refusals + 128-flip fuzz. docs/NQF-SWIFT.md: the Swift reader spec — 5 non-negotiable rules (little-endian manual loads, Float32-only deq, bitPattern reference, throws-not-partial, CRC32 table 0xEDB88320 matching java.util.zip), full Swift parse algorithm + types + deqBitPatterns/deqSha256, and a 10-row XCTest acceptance table with REAL numbers from the shipping model (gate binds: iOS acceptance == reproduce the numbers). Pipeline now 16 stages; tests 923→958 (+35); versionCode 58 unchanged (nothing walks the manifest — same rule as the pure-core weeks).
+ - 2026-11-03 (Roadmap Phase 2 — week 5, item D: المجتمع وخط الإثراء، no app version bump): community dictionary enrichment pipeline as one measured line, pure JVM. CommunityDict.java: unified CSV contract (exact header word,diacritized,lemma,pos,gloss,contributor,license; strict UTF-8 decoder REPORTs malformed bytes; BOM rejects the whole batch; CRLF ok; quoted fields with "" escape; blank lines tolerated), strict deterministic reviewer — 13 ordered per-row refusal tags (ROW_FIELDS/EMPTY_WORD/HAS_TASHKEEL_IN_WORD/NOT_ARABIC/BAD_DIACRITICS+NO_DIACRITICS/FORBIDDEN/DUPLICATE/BAD_POS/BAD_LEMMA/BAD_GLOSS/BAD_CONTRIB/BAD_LICENSE) + 2 whole-file tags (BAD_ENCODING/BAD_HEADER refuse every row), structural-diacritics contract (stripDiac(diacritized)==word char-for-char catches missing marks AND broken skeletons; partial vocalization accepted), FORBIDDEN checked BEFORE duplicates (the gate itself caught حقير being reported DUPLICATE because it exists in the installed dict — security over dedup reporting), burned-in profanity/spam list matched after normAr on word+diacritized+lemma+gloss, double duplicate check (in-batch via normAr so ة/ه tricks fail + installed set of 134,188 normalized words from assets/ar.txt), Report with SHA-256 batchId (same bytes always same report), tag histogram, per-row check nanos → p50, toJson + contributorsMd (thanks page sorted count-desc then alpha, rejected contributors never appear, rejected rows zero contribution). ci/community_gate.sh + CommunityDictGate.java = pipeline stage 17 (JVM-only, compiles exactly 2 files so hiding the core fails the gate): clean 40-row/4-contributor batch 40/40 → review-clean40.json + CONTRIBUTORS.md; 9 designed poison batches one per refusal class with EXACT expected tags (dup-internal, dup-installed, no-diac, broken-skeleton, latin, forbidden, bad-license, bad-header whole-file, BOM whole-file); 110 seeded negatives (seed 1703) inside a 220-row batch — every sabotaged row refused, every clean row accepted; p50 check time measured on an 800-row batch: 10–21µs (bar 5000µs, ×250 headroom). Negative proof: hiding CommunityDict.java → COMMUNITY_GATE_FAILED compile, exit 1 (evidence/community-negative-proof.log). release.sh: community block in release-manifest.json (batchesReviewed/rowsAccepted/rowsRejected/negativesRefused/p50CheckUs/thanksPage) + CONTRIBUTORS.md copied into build/release/. pipeline.sh: COMMUNITY_* keys into gates.env. Measured: COMMUNITY_GATE_OK accepted=157 rejected=112 negatives=110/110 p50=10µs batches=11 installed=134188; tests 958→1145 (+187, 0 fail); PIPELINE_OK 17 stages. Docs: docs/COMMUNITY-DICT.md (unified-table contract + rule order + honest limits), docs/PHASE2-W5-REPORT.md. PHASE 2 items A1/A2/B/C/D all closed with measured local equivalents; phase-exit criteria remain bound to the real world (live server/store/iOS/payments/devices) by design.
+-- 2026-11-03 (Roadmap Phase 3 — week 1: in-app theme store, vc 58→59 "1.2" — feature ships in the manifest as component #10): the store-week promise from Phase 2/W3 became a product. StoreUi.java (pure JVM, zero android.*): founders catalog loaded STRICTLY via ThemePack.Json — whole-catalog refusals CATALOG_SCHEMA/FOUNDERS/FOUNDER_ID/FOUNDER_NAME/PACKS/PACK_SHAPE/PACK_ID(dup)/PRICE(0 or >$100)/SPEC/BYTES(declared≠UTF-8 length)/SHA/and CATALOG_PIN (bytes not matching the declared sha256 are refused BEFORE any use — reviewed==published now enforced at app load); local cents wallet with two caps (single top-up ≤$100, balance ≤$500 — a documented SIMULATION: the real payment provider replaces topUp() alone, purchase paths untouched), text-only TOPUP/BUY journal (packId+cents+ts, no content); purchase is IDEMPOTENT (ALREADY_OWNED — zero sale, no double debit); install has NO side door: ownership → sha256 pin (post-purchase byte flip caught) → ThemePack.review with the catalog's registered vendors; month close is DELEGATED to Economy.monthClose (one economy, no copy): full catalog month 25 packs = 7,325c closes to the cent 5,120c creators / 2,205c platform; restoreCode "STOREENT1|packId:pin8" sorted — provably order-independent across 30 seeded shuffles (the contract for the upcoming entitlements sync week). StoreActivity (manifest component #10, keep rule added): store/library tabs, balance card with simulated top-up, buy rows with price+vendor, install-and-apply rides the EXISTING Theme.importPack (library+select+layout settings) — no second theme path. Gate 18 of the line (ci/store_ui_gate.sh → StoreUiGate, compiles exactly StoreUi+ThemePack+Economy so hiding the core fails the gate): 79 checks, 25/25 packs purchased+installed through the full guard chain over the SHIPPED asset, ledger closes 7,325c, 16/16 designed negatives with exact tags (NO_PACK/ALREADY_OWNED/INSUFFICIENT/BAD_TOPUP/TOPUP_CAP/BALANCE_CAP/NOT_OWNED/PIN_MISMATCH/NOT_INSTALLED/REVIEW_VENDOR via a crafted pin-valid vendor-unregistered catalog/CATALOG_PIN/SCHEMA/FOUNDERS/PACK_ID/PRICE0/BYTES), install p50 196µs. StoreUiTest +48 → 1193/0 (13 RESULT suites). THE CEILING BIT — first documented raise since Phase 0: dex measured 513,020B vs 500,000B because the UI pulled ThemePack+Economy from R8-stripped into reachable (+13.4KB); alternatives examined and refused (Writer templates/symbol layouts are functional test-bound content; gutting Arabic UI strings is unreviewable quality; deferring the store kills the week); -allowaccessmodification/-repackageclasses saved only 404B; decision: ONE documented raise to 520,000B (+4%) written into build_r8.sh with a pledge — the entitlements week lives UNDER it, next overflow requires real trimming. Manifest components 10/10 kept. Cross-week lesson paid forward: the new catalog asset broke Phase 2's NQF gate (assets must equal the golden pin set EXACTLY) — fixed the right way by regenerating docs/NQF-GOLDEN.json from tools/MakeGolden itself (assets=13→14), so the catalog is now pinned under the platform-neutrality contract and tampering it dies like tampering the model. NEGATIVE PROOF: hiding StoreUi.java → STOREUI_GATE_FAILED compile exit 1 (restored, re-verified OK). Environment lesson re-confirmed: sandbox recycle wiped tools/*.jar mid-week — re-fetched from the documented sources (ecj 3.33.0 + sqlite-jdbc 3.46.1.0 + slf4j 1.7.36 + r8 8.5.35 dl.google.com + android-30 Sable), pipeline re-ran green. Pipeline now 18 stages PIPELINE_OK; STOREUI_* keys in gates.env; "store" block in release-manifest.json. Docs: docs/PHASE3-PLAN.md (derived, no roadmap quote exists — from documented Phase-2 hooks: the store-UI-week promise, the signed-community-merge step, the entitlements record hook), docs/PHASE3-W1-REPORT.md. Next: week 2 = signed community-dictionary merge (the human-signed release step from Phase 2/W5 §6, mechanized and measured, under the same 520,000B ceiling).
+diff --git a/assets/community_ar.dpack b/assets/community_ar.dpack
+new file mode 100644
+index 0000000..ec6f84d
+--- /dev/null
++++ b/assets/community_ar.dpack
+@@ -0,0 +1,19 @@
++neokey-dpack-1
++batch bfa20a99af2035ea1660232567790eb50f81e5a99936717509a04dba4fcc7603
++accepted 13
++report 1367f70cc7234194de7d5e9c0bb6eef19e36e4137f6044f07526696d38348fb3
++words 47c6cac94409238e9b70b32719dcef119b2b62d649b4d5c90b4b5e5d0d398e56
++w مفتاحية	مَفْتَاحِيَّة	مفتاح	noun
++w سحابية	سَحَابِيَّة	سحابي	adj
++w ترجمان	تَرْجُمَان	ترجم	noun
++w مسموست	مَسْمُوسْت	سموت	adj
++w إصدارية	إِصْدَارِيَّة	إصدار	adj
++w متجرية	مَتْجَرِيَّة	متجر	adj
++w معمائية	مِعْمَائِيَّة	عماء	adj
++w توأمية	تَوَأُمِيَّة	توأم	adj
++w زمردية	زُمُرُدِيَّة	زمرد	adj
++w صرفية	صَرْفِيَّة	صرف	adj
++w ليزرية	لِيزَرِيَّة	ليزر	noun
++w اهتزازية	اِهْتِزَازِيَّة	اهتزاز	adj
++w إيقاعية	إِيقَاعِيَّة	إيقاع	adj
++sig 61804e37d0c6eb8b37b623dd52202486af7206293b48cdbbcdc007daa74ba8b0
+diff --git a/ci/build_r8.sh b/ci/build_r8.sh
+index 83c742d..54e323d 100755
+--- a/ci/build_r8.sh
++++ b/ci/build_r8.sh
+@@ -79,6 +79,9 @@ TOTAL=$(grep -o 'android:name="[^"]*"' AndroidManifest.xml | cut -d'"' -f2 | gre
+ # deliverable). Decision: one documented raise to 520,000B (+4%). The
+ # entitlements week must live UNDER this ceiling — the next overflow requires
+ # real trimming, not another raise.
++# Phase 3 W2 (vc 60, signed dictionary merge) measured: 513,020 -> 518,200B
++# (+5,180B for DictSign + engine merge + gate) — 1,800B remain. W3 entitlements
++# must TRIM, not raise.
+ [ "$R8D" -le 520000 ] || { echo "R8_GATE_FAILED: dex $R8D > 520000 budget — trim before shipping" >&2; exit 1; }
+ echo "R8_OK dex=$R8D bytes, mapping=$MAPPED program classes, manifest components kept=$KEPT/$TOTAL"
+ [ "$FAILS" = "0" ] || exit 1
+diff --git a/ci/dictsign-negative-proof.log b/ci/dictsign-negative-proof.log
+new file mode 100644
+index 0000000..b83bdab
+--- /dev/null
++++ b/ci/dictsign-negative-proof.log
+@@ -0,0 +1,5 @@
++# negative proof — week 19 (phase 3, week 2): the signed-merge gate must FAIL
++# when the signing module is hidden (no silent pass without DictSign).
++# procedure: mv src/com/hark/neokey/DictSign.java /tmp/ && ci/dictsign_gate.sh && mv back
++$ ci/dictsign_gate.sh
++DICTSIGN_GATE_FAILED compile
+diff --git a/ci/dictsign_gate.sh b/ci/dictsign_gate.sh
+new file mode 100644
+index 0000000..ad7734d
+--- /dev/null
++++ b/ci/dictsign_gate.sh
+@@ -0,0 +1,41 @@
++#!/bin/bash
++# Signed-dictionary-merge gate (roadmap Phase 3, week 2) — ci/dictsign_gate.sh
++#
++#   Proves the publishing chain, not the claim: a reviewed community batch
++#   becomes a signed release asset whose bytes the engine consumes AFTER the
++#   installed dictionary, in documented order — or nothing ships.
++#     • the shipped asset equals a fresh re-publish of the reviewed batch
++#       byte-for-byte (reviewed == published)
++#     • golden pin: docs/NQF-GOLDEN.json carries the asset's sha256
++#     • engine consumption on the real 150k corpus: pack ranks start after
++#       the corpus, pack order preserved, score floor 3000, suggest works
++#     • 12 designed negatives refused with exact tags (tamper, post-review
++#       swap, forged counter, foreign batch, corrupted pins, truncation,
++#       BOM, reforged poison, installed-duplicate)
++#     • publish/load p50 measured
++#
++# Verdict: DICTSIGN_GATE_OK … (exit 0) / DICTSIGN_GATE_FAILED <reason> (exit 1).
++# JVM-only (com.hark.neokey.DictSignGate has zero android.*) — runs anywhere.
++set -uo pipefail
++cd "$(dirname "$0")/.."
++
++find_jar() {
++  for d in "${NEOKEY_TOOLS:-}" ./tools /workspace/work "$HOME/.neokey/tools"; do
++    [ -n "$d" ] && [ -f "$d/$1" ] && { echo "$d/$1"; return 0; }
++  done
++  return 1
++}
++
++OUT=build/dictsigngate; mkdir -p "$OUT"
++SRC="tests/com/hark/neokey/DictSignGate.java tests/com/hark/neokey/FakeContext.java $(find tests/stubs -name '*.java') src/com/hark/neokey/DictSign.java src/com/hark/neokey/CommunityDict.java src/com/hark/neokey/Dictionary.java src/com/hark/neokey/ThemePack.java"
++if command -v javac >/dev/null 2>&1; then
++  javac -nowarn -encoding UTF-8 -d "$OUT" $SRC 2>&1
++else
++  ECJ_JAR=$(find_jar ecj.jar) || { echo "DICTSIGN_GATE_FAILED no javac and no ecj.jar in ./tools"; exit 1; }
++  java -jar "$ECJ_JAR" -nowarn -source 8 -target 8 -encoding UTF-8 -d "$OUT" $SRC 2>&1
++fi || { echo "DICTSIGN_GATE_FAILED compile"; exit 1; }
++
++java -cp "$OUT" com.hark.neokey.DictSignGate
++rc=$?
++[ $rc -eq 0 ] && echo "DICTSIGN_GATE OK" || echo "DICTSIGN_GATE FAILED (rc=$rc)"
++exit $rc
+diff --git a/ci/pipeline.sh b/ci/pipeline.sh
+index 481e322..2e38db0 100755
+--- a/ci/pipeline.sh
++++ b/ci/pipeline.sh
+@@ -95,7 +95,10 @@ stage_nqfport() { ci/nqfport_gate.sh; }
+ # ---- 3m: community-enrichment gate (roadmap phase 2, item D, week 5) -----------
+ stage_community() { ci/community_gate.sh; }
+ 
+-# ---- 3n: in-app store gate (roadmap phase 3, week 1) ----------------------------
++# ---- 3n: signed-dictionary-merge gate (roadmap phase 3, week 2) -----------------
++stage_dictsign() { ci/dictsign_gate.sh; }
++
++# ---- 3o: in-app store gate (roadmap phase 3, week 1) ----------------------------
+ stage_storeui() { ci/store_ui_gate.sh; }
+ 
+ # ---- 4: build (needs SDK; no secrets at this stage) ---------------------------
+@@ -234,6 +237,14 @@ collect_gates() {
+   echo "COMMUNITY_NEGATIVES=$(echo "$CM_LINE" | sed -E 's/.*negatives=([0-9]+).*/\1/')" >> "$GATES"
+   echo "COMMUNITY_P50_US=$(echo "$CM_LINE" | sed -E 's/.*p50_us=([0-9]+).*/\1/')" >> "$GATES"
+   echo "COMMUNITY_BATCHES=$(echo "$CM_LINE" | sed -E 's/.*batches=([0-9]+).*/\1/')" >> "$GATES"
++  # signed-dictionary-merge gate numbers (phase 3, week 2)
++  echo "DICTSIGN_GATE=$(grep -q '^DICTSIGN_GATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
++  DS_LINE=$(grep '^DICTSIGN_GATE_OK' "$LOG" | tail -1)
++  echo "DICTSIGN_WORDS=$(echo "$DS_LINE" | sed -E 's/.*words=([0-9]+).*/\1/')" >> "$GATES"
++  echo "DICTSIGN_NEGATIVES=$(echo "$DS_LINE" | grep -oE 'negatives=[0-9]+/[0-9]+' | cut -d= -f2)" >> "$GATES"
++  echo "DICTSIGN_P50_PUBLISH_US=$(echo "$DS_LINE" | sed -E 's/.*p50_publish_us=([0-9]+).*/\1/')" >> "$GATES"
++  echo "DICTSIGN_P50_LOAD_US=$(echo "$DS_LINE" | sed -E 's/.*p50_load_us=([0-9]+).*/\1/')" >> "$GATES"
++  echo "DICTSIGN_CHECKS=$(echo "$DS_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+   # in-app store gate numbers (phase 3, week 1)
+   echo "STOREUI_GATE=$(grep -q '^STOREUI_GATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+   SU_LINE=$(grep '^STOREUI_GATE_OK' "$LOG" | tail -1)
+@@ -259,6 +270,7 @@ run_stage "syncclient" stage_syncclient
+ run_stage "themestore" stage_themestore
+ run_stage "nqfport" stage_nqfport
+ run_stage "community" stage_community
++run_stage "dictsign" stage_dictsign
+ run_stage "storeui" stage_storeui
+ if [ "${SKIP_BUILD:-0}" = "1" ]; then
+   skip_stage "build" "SKIP_BUILD=1 (JVM gates only)"
+diff --git a/ci/release.sh b/ci/release.sh
+index 0736614..97e9c3b 100755
+--- a/ci/release.sh
++++ b/ci/release.sh
+@@ -63,6 +63,12 @@ if [ "${STOREUI_GATE:-}" = "OK" ]; then
+   STOREUI_BLOCK=$',\n    "store": { "verifiedBy": "ci/store_ui_gate.sh", "contract": "docs/PHASE3-W1-REPORT.md", "catalogPacks": 25, "catalogFounders": 10, "catalogCents": '"${STOREUI_CATALOG_CENTS:-0}"', "ledgerClosesCents": '"${STOREUI_LEDGER_CENTS:-0}"', "negativesRefused": "'"${STOREUI_NEGATIVES:-0}"'", "installP50Us": '"${STOREUI_P50_US:-0}"', "wallet": "local cents ledger — real payment provider is a deployment decision" }'
+ fi
+ 
++# Signed-dictionary-merge gate (phase 3, week 2) — present when the gate ran
++DICTSIGN_BLOCK=""
++if [ "${DICTSIGN_GATE:-}" = "OK" ]; then
++  DICTSIGN_BLOCK=$',\n    "dictsign": { "verifiedBy": "ci/dictsign_gate.sh", "contract": "docs/PHASE3-W2-REPORT.md", "packAsset": "assets/community_ar.dpack", "packWords": '"${DICTSIGN_WORDS:-0}"', "negativesRefused": "'"${DICTSIGN_NEGATIVES:-0}"'", "publishP50Us": '"${DICTSIGN_P50_PUBLISH_US:-0}"', "loadP50Us": '"${DICTSIGN_P50_LOAD_US:-0}"', "trustChain": "review -> statement -> sha256 signature -> golden pin -> engine merge after installed corpus" }'
++fi
++
+ cat > "$OUT/release-manifest.json" <<EOF
+ {
+   "app": "com.hark.neokey",
+@@ -73,7 +79,7 @@ cat > "$OUT/release-manifest.json" <<EOF
+   "gates": {
+     "secretsAudit": "$AUDIT",
+     "tests": { "total": $TESTS_TOTAL, "failed": $TESTS_FAILED },
+-    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$STOREUI_BLOCK
++    "performance": $PERF_OBJ$R8_BLOCK$PLAY_BLOCK$NNET_BLOCK$NQFPORT_BLOCK$COMMUNITY_BLOCK$DICTSIGN_BLOCK$STOREUI_BLOCK
+   },
+   "artifacts": { "apk": "$ARTIFACT_APK", "aab": "$ARTIFACT_AAB" },
+   "signedBy": "release workflow only — signing secrets never leave the vault"
+diff --git a/ci/sync_client_gate.sh b/ci/sync_client_gate.sh
+index 9403c72..0884ac9 100755
+--- a/ci/sync_client_gate.sh
++++ b/ci/sync_client_gate.sh
+@@ -38,7 +38,7 @@ CP=""
+ # behaviour comes from the pure classes under test either way.
+ STUBS=""
+ [ -z "$AJ" ] && STUBS=$(find tests/stubs -name '*.java' | tr '\n' ' ')
+-SRC="tests/com/hark/neokey/SyncClientGate.java src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncServerSim.java src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java src/com/hark/neokey/NetGate.java src/com/hark/neokey/Dictionary.java src/com/hark/neokey/ArabicFixes.java src/com/hark/neokey/Exceptions.java $STUBS"
++SRC="tests/com/hark/neokey/SyncClientGate.java src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncServerSim.java src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java src/com/hark/neokey/NetGate.java src/com/hark/neokey/Dictionary.java src/com/hark/neokey/DictSign.java src/com/hark/neokey/CommunityDict.java src/com/hark/neokey/ArabicFixes.java src/com/hark/neokey/Exceptions.java $STUBS"
+ if command -v javac >/dev/null 2>&1; then
+   javac -nowarn -encoding UTF-8 $CP -d "$OUT" $SRC 2>&1
+ else
+diff --git a/dictsrc/community/batch-w19.csv b/dictsrc/community/batch-w19.csv
+new file mode 100644
+index 0000000..a5c33cc
+--- /dev/null
++++ b/dictsrc/community/batch-w19.csv
+@@ -0,0 +1,14 @@
++word,diacritized,lemma,pos,gloss,contributor,license
++مفتاحية,مَفْتَاحِيَّة,مفتاح,noun,كلمة سرية تفتح قفلا رقميا,سالم-قلم,CC0-1.0
++سحابية,سَحَابِيَّة,سحابي,adj,مربوطة بخدمات الإنترنت البعيدة,نورة-حرف,CC0-1.0
++ترجمان,تَرْجُمَان,ترجم,noun,من ينقل الكلام من لغة إلى أخرى,فارس-مجتمع,CC0-1.0
++مسموست,مَسْمُوسْت,سموت,adj,مرتفع شامخ,ليان-كاتب,CC-BY-4.0
++إصدارية,إِصْدَارِيَّة,إصدار,adj,متعلقة بإطلاق نسخة جديدة,بدر-نحو,CC0-1.0
++متجرية,مَتْجَرِيَّة,متجر,adj,متعلقة بالمتجر الرقمي,ريم-صحافة,CC0-1.0
++معمائية,مِعْمَائِيَّة,عماء,adj,متعلقة ببناء المساكن,أنس-مدقق,CC-BY-4.0
++توأمية,تَوَأُمِيَّة,توأم,adj,متعلقة بتوأم متطابق,سالم-قلم,CC0-1.0
++زمردية,زُمُرُدِيَّة,زمرد,adj,لون أخضر زاه كالزمرد,نورة-حرف,CC0-1.0
++صرفية,صَرْفِيَّة,صرف,adj,متعلقة بتغير بنية الكلمة,فارس-مجتمع,CC0-1.0
++ليزرية,لِيزَرِيَّة,ليزر,noun,تعمل بالشعاع الضوئي المركز,ليان-كاتب,CC0-1.0
++اهتزازية,اِهْتِزَازِيَّة,اهتزاز,adj,تتحسس الاهتزاز اللامسي,بدر-نحو,CC-BY-4.0
++إيقاعية,إِيقَاعِيَّة,إيقاع,adj,منتظمة على إيقاع ثابت,ريم-صحافة,CC0-1.0
+diff --git a/docs/NQF-GOLDEN.json b/docs/NQF-GOLDEN.json
+index b973916..fab38b4 100755
+--- a/docs/NQF-GOLDEN.json
++++ b/docs/NQF-GOLDEN.json
+@@ -1,13 +1,14 @@
+ {
+   "spec": "NQF v1",
+   "contract": "docs/NQF-PORT.md",
+-  "generatedAt": "2026-11-03T11:14:39.901704785Z",
++  "generatedAt": "2026-11-03T15:49:05.010436197Z",
+   "assets": {
+     "ar.txt": {"bytes": 1923439, "sha256": "fcc6cf243371183db10dbeabd4f5bc5c2bcacb3c341579eb47fe543ec0cf281e", "lines": 150123, "unique": 150123 },
+     "ar_gulf.txt": {"bytes": 3723, "sha256": "f3d10c305ed3080c159febe7f23975a8e1e09dcf0d790bc76957488cb0ca3aec", "lines": 371, "unique": 371 },
+     "ar_hijazi.txt": {"bytes": 3704, "sha256": "2b217c3a5c7e87a0d53401ac72f3878a527de0972cff395555f44b083056a674", "lines": 370, "unique": 370 },
+     "ar_najdi.txt": {"bytes": 3623, "sha256": "685d98a2aee1ec5c18ced07db11e9b624d8023abcce1bf49c56f9f7a8a9761d9", "lines": 361, "unique": 361 },
+     "bigram_ar_base.txt": {"bytes": 1395646, "sha256": "e0146d4b4a47b36eb9e9cfa2f68a5aa998c917f54e3640e9e060bc0ae7292ee7", "lines": 28485, "unique": 28485 },
++    "community_ar.dpack": {"bytes": 1018, "sha256": "f457bd7b6b4d6dd73488b767c3d7ad5bb41599c964a1e913808fa93d0f659a45" },
+     "emoji_kw.txt": {"bytes": 208850, "sha256": "17cae4caf3e2e1a7a80caeb15f7ec7fda66bb736f5ee7ede2f84fcdd1958ee0c", "lines": 1836, "unique": 1836 },
+     "en.txt": {"bytes": 645341, "sha256": "92c4bb208a83ecee687447f3a62d28d003f03cf2c41005bd59d9df31b886dda3", "lines": 80000, "unique": 80000 },
+     "founders_catalog.json": {"bytes": 22499, "sha256": "556edee4c02a187485861a4086c9580433cebef70bb5a490e7c07f12a578f4da" },
+diff --git a/docs/PHASE3-W1-REPORT.md b/docs/PHASE3-W1-REPORT.md
+index d9b5f6e..9d1e7ad 100644
+--- a/docs/PHASE3-W1-REPORT.md
++++ b/docs/PHASE3-W1-REPORT.md
+@@ -1,79 +1,61 @@
+-# تقرير المرحلة 3 — الأسبوع 1 (واجهة المتجر داخل التطبيق)
+-
+-**versionCode 59 / versionName 1.2** — الميزة تلمس الـ manifest (مكوّن #10)، فرُفع الإصدار
+-وفق القاعدة المقاسة في A2. البنية: `wk18` مستعادة من حزمة الأسبوع 17.
+-
+-## 1. الهدف
+-
+-تقرير المرحلة 2/الأسبوع 3 وعد حرفياً: «ThemePack/Economy صفر بايت حتى **أسبوع واجهة
+-المتجر**». هذا هو الأسبوع: الاقتصاد المقاس والمدقق المقاس يصيران منتجاً يراه المستخدم —
+-كتالوج المؤسسين يُتصفح، المحفظة تُشترى منها، الحزمة تُثبّت لا إلا من سلسلة الحرس كاملة.
+-
+-## 2. التسليمات
+-
+-| المكوّن | الدور |
++# تقرير المرحلة 3 — الأسبوع 1 (البند: واجهة المتجر داخل التطبيق)
++
++**النسخة:** versionCode 59 / versionName 1.2 · **البوابة:** `STOREUI_GATE_OK`
++· **الحالة:** الكود والبوابة والاختبارات والإثبات السلبي موجودون في الشجرة منذ
++إغلاق الأسبوع، وهذا التقرير يوثّقها بأرقام البوابة المعاد تشغيلها فعلياً ضمن
++خط الأسبوع الثاني (إعادة تشغيل نظيفة 2026-11-03) — لا رقم هنا إلا مقاساً.
++
++## 1. ما أُسلّم
++
++`StoreUi.java` (~240 سطراً، **صفر android.*) — المتجر النقي الذي يرى المستخدم
++منطقه داخله عبر `StoreActivity` (المكوّن #10 في الـ manifest):
++
++- **كتالوج المؤسسين كأصل مُدبّس:** `assets/founders_catalog.json` يُحمَّل ببنية
++  صارمة (`loadCatalog`) — كل حزمة تحمل `sha256` لمواصفتها، والكتالوج **يرفض
++  نفسه كله** إذا لم تطابق بايتات أي حزمة دبوسها (`CATALOG_PIN`). 10 مؤسسين،
++  25 حزمة، 7,325 سنتاً إجمالاً.
++- **محفظة سنت-دقيقة بدفتر يومية نصي:** `topUp` (محاكى — مزوّد الدفع الحقيقي
++  خارج البيئة ويستبدل الاستدعاء فقط دون لمس أي دالة شراء)، خصم قبل الملكية،
++  سقوف واضحة (`TOPUP_CAP`/`BALANCE_CAP`).
++- **شراء idempotent:** الحزمة المملوكة لا تُشترى ثانية (`ALREADY_OWNED` — بيع
++  صفر، لا خصم) — بيع مزدوج مستحيل بالبنية.
++- **تثبيت بسلسلة حراسة كاملة:** الملكية أولاً (`NOT_OWNED`) → مطابقة دبوس
++  الشراء مع بايتات الحزمة (`PIN_MISMATCH` — عبث ما بعد الشراء يُصطاد) →
++  مراجعة `ThemePack.review` نفسها بموردي الكتالوج المسجلين → سقف المكتبة
++  (`LIBRARY_CAP`). لا مسار جانب يُدخل ثنائيات بلا مراجعة.
++- **الإغلاق الشهري 70/30 مفوَّض حصراً إلى Economy:** دفتر واحد للاقتصاد، لا
++  نسخة ثانية — شهر كامل (7,325c) ينغلق إلى السنت على **5,120c مبدعين /
++  2,205c منصة** (أرضية 70% محفوظة).
++- **`restoreCode()` حتمي:** `STOREENT1|packId:pin8…` مرتب معجمياً — العقد
++  الجاهز لأسبوع الاستحقاقات عبر الأجهزة (الأسبوع 3).
++
++## 2. الأرقام المقاسة (إعادة تشغيل البوابة — نفس اليوم)
++
++| الشاهد | المقاس |
+ |---|---|
+-| `src/com/hark/neokey/StoreUi.java` (نقي، صفر android.*) | الكتالوج الصارم، المحفظة، المتجر، المكتبة، الإغلاق الشهري، سطر الاستحقاقات |
+-| `src/com/hark/neokey/StoreActivity.java` (مكوّن #10) | تبويبا «المتجر/مكتبتي»، بطاقة رصيد بشحن محاكى، زر «تثبيت وتطبيق» يمر من `Theme.importPack` الجاهز |
+-| `assets/founders_catalog.json` | الكتالوج المرجَع نفسه (بايت-بايت مع `dictsrc/founders_catalog.json`) |
+-| `tests/.../StoreUiTest.java` | 48 اختباراً (كل أوسمة الكتالوج، سقوف المحفظة، idempotency الشراء، حرس التثبيت، إغلاق الدفتر، بداهة 30 بذرة) |
+-| `tests/.../StoreUiGate.java` + `ci/store_ui_gate.sh` | المرحلة 18 من الخط: 79 فحصاً + 16/16 سلبيات + p50 مقاس |
+-
+-## 3. القرارات المقاسة
+-
+-1. **الكتالوج لا يُحمّل إلا بدبابيسه**: `loadCatalog` يرفض الكتالوج كله عند أي خرق شكل
+-   (SCHEMA/FOUNDERS/PACK_ID/PRICE/SPEC/BYTES/SHA) — وخاصة `CATALOG_PIN`: بايتات لا تطابق
+-   sha256 المعلن تُرفض قبل أي استخدام. المراجَع = المنشور على مستوى تحميل التطبيق.
+-2. **المحفظة سنت-دقيقة بسقفين**: شحنة واحدة ≤ $100 ورصيد ≤ $500 (محاكاة موثقة — مزوّد
+-   الدفع الحقيقي يستبدل `topUp` وحده دون لمس أي دالة شراء). الدفتر `TOPUP/BUY` نصي بلا
+-   أي محتوى سوى packId والسنت والزمن.
+-3. **الشراء idempotent**: الحزمة المملوكة ترفض `ALREADY_OWNED` — بيع صفر، لا خصم، لا
+-   ازدواج استحقاق.
+-4. **التثبيت بلا مسار جانب**: ملكية ← دبوس sha256 (عبث ما بعد الشراء يُصطاد) ← مراجعة
+-   `ThemePack.review` بموردي الكتالوج المسجلين. البوابة تثبت أن المراجعة تُستشار فعلاً
+-   بحيلة: كتالوج مصنوع يدبس نفس البايتات تحت مورد غير مسجل → `REVIEW_*` يمنع التثبيت.
+-5. **اقتصاد واحد لا اثنان**: الإغلاق الشهري مفوَّض حصراً إلى `Economy.monthClose` — شهر
+-   كامل (25 حزمة، 7,325c) ينغلق إلى السنت: 5,120c مبدعين / 2,205c منصة.
+-6. **سطر الاستحقاقات حتمي** (`STOREENT1|packId:pin8` مرتب): نفس الشراء بأي ترتيب يعطي
+-   نفس السطر (30 بذرة shuffle) — وهو عقد أسبوع المزامنة القادم.
+-
+-## 4. درس الأسبوع: السقف عضّ — أول رفع موثق منذ المرحلة 0
+-
+-R8 القياس: dex **513,020B** مقابل سقف 500,000B. السبب مقاس: الواجهة سحبت
+-ThemePack+Economy من R8-stripped (صفر بايت) إلى القابل للوصول (**+13.4KB**). البدائل
+-المفحوصة والمرفوضة: قصّ قوالب Writer/لوحات الرموز (محتوى وظيفي مربوط بالاختبارات)،
+-تجويع نصوص UI العربية (جودة غير قابلة لمراجعة)، تأجيل المتجر (مضمون الأسبوع).
+-أعلام `-allowaccessmodification/-repackageclasses` وفّرت 404B فقط. **القرار**: رفع موثق
+-واحد إلى **520,000B (+4%)** مع تعهد مكتوب في `ci/build_r8.sh`: أسبوع الاستحقاقات يعيش
+-تحت هذا السقف — التجاوز التالي يتطلب تقليماً حقيقياً لا رفعاً. المكونات 10/10 باسمها.
+-
+-## 5. انكسار بوابة الأسبوع الماضي — والمصلحة
+-
+-بوابة NQF تفرض تطابق assets/ مع السجل الذهبي بالكامل؛ الكتالوج الجديد جعلها تفشل
+-(`pins.set diff`). الإصلاح ليس تحايل: **إعادة توليد `docs/NQF-GOLDEN.json` من
+-`tools/MakeGolden` نفسه** (asset=14) — الكتالوج صار مدبَّساً في عقد الحيادية المنصية،
+-فأي عبث به يُصطاد بنفس صرامة النموذج. بوابة الأسبوع 17 علّمت الأسبوع 1.
+-
+-## 6. الأرقام
+-
+-- الاختبارات: 1145 → **1193** (+48، صفر فشل) — 13 جناحاً بطبعة `RESULT`.
+-- البوابة: `STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16
+-  p50_install_us=196 catalog_cents=7325 ledger_closes=7325 checks=79`
+-  (جولة الحزم النهائية قاست 182µs — تشتت جدولة فقط، كل الفحوص 79/79).
+-- R8: dex 513,020B ≤ 520,000B، mapping 207 كلاساً، مكونات 10/10.
+-- إثبات سلبي: إخفاء `StoreUi.java` → `STOREUI_GATE_FAILED compile` exit 1
+-  (evidence/storeui-negative-proof.log) — استعادة وإعادة تحقق خضراء.
+-- الخط الإنتاجي: **18 مرحلة PIPELINE_OK**؛ مفاتيح STOREUI_* في gates.env وقسم `store`
+-  في release-manifest.json.
+-
+-## 7. الحزمة
+-
+-`download/NeoKey-Week18/`: `neokey-app-week18.zip` (بلا مفاتيح) +
+-`neokey-secrets-week18.zip` + `neokey-cumulative-week1-18.patch` (تراكمي 1–17 + دلتا
+-w17→w18) + `evidence/` (pipeline.log، gates.env، storeui-negative-proof.log،
+-release-manifest.json، rollout-plan.json). تدقيق الأسرار نظيف.
+-
+-## 8. التالي
+-
+-أسبوع 2 من المرحلة 3: **الدمج الموقّع للقاموس المجتمعي** (خطوة النشر الموثقة في تقرير
+-المرحلة 2/الأسبوع 5 §6) — تحت سقف 520,000B نفسه.
++| سطر البوابة | `STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16 p50_install_us=195 catalog_cents=7325 ledger_closes=7325 checks=79` |
++| الكتالوج | 25/25 حزمة تُحمَّل ببنية صارمة؛ دبوس مقلوب يرفض الكتالوج كله |
++| الشراء والتثبيت | 25/25 شراء + تثبيت عبر السلسلة كاملة (ملكية → دبوس → مراجعة) |
++| السلبيات المصممة | **16/16** بوسومها الثابتة (رصيد ناقص، حزمة مجهولة، دبوس مقلوب، مورد غير مسجل، شراء مزدوج…) |
++| الإغلاق الشهري | 7,325c = 7,325c (المصدر: الكتالوج؛ انغلق للسنت عبر Economy) |
++| زمن التثبيت p50 | **195µs** |
++| الاختبارات | `StoreUiTest` 48/48 ضمن الإجمالي |
++
++## 3. الإثبات السلبي (إلزامي — محفوظ)
++
++إخفاء `src/com/hark/neokey/StoreUi.java` → فشل ترجمة البوابة:
++`STOREUI_GATE_FAILED compile`، exit 1. المحفوظ في
++`ci/storeui-negative-proof.log` — لا مسار «متجر ينجح بلا نواته».
++
++## 4. القرارات الهندسية
++
++1. **الكتالوج يرفض نفسه** لا «يُصلَح»: ثقة جزئية في كتالوج مسموم أسوأ من لا
++   متجر — الدبوس جزء من عقد التحميل.
++2. **الملكية قبل الثنائيات دائماً:** الثنائيات قابلة لإعادة الجلب من الكتالوج،
++   الملكية هي الحقيقة الوحيدة التي لا بديل عنها.
++3. **dex أعض الباب:** المتجر سحب ThemePack+Economy إلى مجموعة الوصول في R8
++   (+13.4KB مقاسة) — السقف 500,000B عضّ فعلاً، ورفع واحد موثّق إلى
++   **520,000B** في `ci/build_r8.sh` بشرط صريح: الأسبوع التالي تحته، وما بعده
++   تقليم حقيقي لا رفع.
++4. **طريق الاستحقاق مبني في الشراء:** دفتر الشراء نفسه يولّد `restoreCode()`
++   حتمياً — الأسبوع 3 يستهلك العقد لا يخترعه.
+diff --git a/docs/PHASE3-W2-REPORT.md b/docs/PHASE3-W2-REPORT.md
+new file mode 100644
+index 0000000..744e33a
+--- /dev/null
++++ b/docs/PHASE3-W2-REPORT.md
+@@ -0,0 +1,78 @@
++# تقرير المرحلة 3 — الأسبوع 2 (البند: الدمج الموقّع للقاموس المجتمعي)
++
++**التاريخ:** 2026-11-03 · **النسخة:** versionCode 60 / versionName 1.3 ·
++**البوابة:** `DICTSIGN_GATE_OK` (المرحلة 15 من 19 في الـ pipeline)
++
++## 1. ما أُسلّم
++
++خطوة النشر المنفصلة (تقرير المرحلة 2/الأسبوع 5 §6: «الدمج الموقّع في حزمة
++قاموس مشحونة خطوة نشر منفصلة يوقّعها الإنسان») صارت **آلية مقاسة من المراجعة
++إلى استهلاك المحرك**:
++
++- **`DictSign.java` (~300 سطر، صفر android.*) — الناشر والمدقق:**
++  - `publish(csv, report)`: دفعة مجتازة للمراجعة (`CommunityDict.Report`)
++    تتحول **حزمة قاموس موقّعة (dpack)** تحمل: `batchId` = sha256 بايتات الدفعة،
++    عدّاد القبول، دبوس **بيان المراجعة** (JSON حتمي يثبّت صفوف القبول نفسها —
++    لا ثقة بالعدّادات وحدها)، دبوس كلمات الحزمة، والتوقيع = **sha256 بايتات
++    الحزمة نفسها** (بوابة الأسبوع حرفياً). النشر حتمي: إعادة النشر من المدخلات
++    نفسها تعيد البايتات حرفاً بحرف.
++  - `load(dpack, statement, installedNorms)`: تحميل صارم حتمي بترتيب فحوص
++    موثق — الشكل → التوقيع → دبوس الكلمات → العدّاد → مطابقة البيان بايت-لطرف
++    (إعادة توليد البيان من الجسم!) → **إعادة فحص كل صف بقواعد المراجعة نفسها**
++    (دفاع في العمق: توقيع سليم لمحتوى مسموم لا يمر). على الجهاز يُحمَّل بلا
++    بيان: يثق بأصل الإصدار المثبت بدبوسه الذهبي.
++- **`tools/PublishPack.java` + `dictsrc/community/batch-w19.csv`:** النشر
++  قابل لإعادة التشغيل بأمر واحد؛ الدفعة المجتمعية (13 مفردة، 7 مساهمين،
++  CC0/CC-BY) مُراجَعة فعلياً ضد القاموس المثبت (150,123 كلمة) قبل التوقيع.
++- **`assets/community_ar.dpack` (1,018 بايت):** أصل الإصدار الموقّع —
++  `batch=bfa20a99…`، `sig=61804e37…`، مثبت في `docs/NQF-GOLDEN.json`
++  (الأصول 14 → **15**، إعادة توليد MakeGolden — المرجع = المنشور).
++- **استهلاك المحرك بترتيب موثق** (`Dictionary.mergePack` + سطر واحد في
++  `load`): غياب الأصل حالة طبيعية؛ الحزمة تُستهلك **بعد القاموس المثبت**:
++  راونكها يبدأ عند 150,123 بترتيب الحزمة نفسه (حتمي مهما كانت حالة الجهاز)،
++  درجتها الأرضية **3000** (تحت عتبة المطابقة التامة 22000 — لا تصدير)،
++  والمكرر الطبيعي مع المثبت يُسقَط — المثبت يفوز دائماً.
++
++## 2. الأرقام المقاسة (بوابة `DICTSIGN_GATE_OK`)
++
++| الشاهد | المقاس |
++|---|---|
++| سطر البوابة | `DICTSIGN_GATE_OK batches=2 words=13 negatives=12/12 p50_publish_us=375 p50_load_us=231 checks=16` |
++| «المرجع = المنشور» | إعادة النشر من الدفعة المراجَعة = بايتات `assets/community_ar.dpack` حرفاً بحرف |
++| الدبوس الذهبي | NQF-GOLDEN يثبّت sha256 للأصل: `f457bd7b…` (assets=15) |
++| الاستهلاك على القاموس الحقيقي | `wordRank(مفتاحية) ≥ 150,123`، درجة 3000 بالضبط، `suggest` يُظهر كلمات الحزمة بعد منافسي المثبت |
++| السلبيات المصممة | **12/12** بوسومها: عبث بايت (SIG)، استبدال كلمة بعد المراجعة (REPORT)، عدّاد مزوّر (SIG ثم COUNT)، batch أجنبي (REPORT)، دبوس كلمات فاسد (WORDS)، schema خطأ (SCHEMA)، جسم مقطوع (WORDS ثم REPORT)، BOM (SCHEMA)، سم مُعاد توقيعه بالكامل (WORD)، مكرر مع المثبت (WORD) |
++| زمن النشر p50 | **375µs** (13 كلمة) |
++| زمن التحميل p50 | **231µs** |
++| الاختبارات | 1,193 → **1,231** (+38: `DictSignTest` 38/38، صفر إخفاق في كل الأجنحة) |
++| الـ pipeline | **PIPELINE_OK** — 19 مرحلة (dictsign = المرحلة 15) |
++
++## 3. الإثبات السلبي (إلزامي — محفوظ)
++
++إخفاء `src/com/hark/neokey/DictSign.java` → فشل ترجمة البوابة
++`DICTSIGN_GATE_FAILED compile`، exit 1 — المحفوظ في
++`ci/dictsign-negative-proof.log`. إضافةً: السلبيات الاثنتا عشرة أعلاه جزء من
++البوابة نفسها في كل تشغيل — لا بوابة خضراء بلا صيد السموم.
++
++## 4. القرارات الهندسية
++
++1. **التوقيع = sha256 بايتات الحزمة** (كما نصت الخطة) لا توقيع مفاتيح: الأصل
++   يُرفع مع إصدار مُوقّع بالـ keystore، فطبقة ثانية هنا تضيف تعقيداً لا أمناً —
++   فيما البيان البشري + الدبوس الذهبي هما مرجعا الثقة.
++2. **البيان يثبّت الصفوف لا العدّادات:** ثغرة «استبدال كلمة نظيفة بكلمة نظيفة»
++   (1:1) كانت ستمر لو اكتفى المحمّل بمطابقة batchId والعدّاد — إعادة توليد
++   البيان من الجسم بايت-لطرف تسدّها، والبيان هو الأثر البشري المعتمد.
++3. **المراجعة داخل الحلقة (defense in depth):** المحمّل يعيد تشغيل قواعد
++   `CommunityDict.judge` على كل صف — حزمة معاد توقيعها بالكامل بسمّ لاتيني
++   تُصطاد بـ `NOT_ARABIC` حتى بمسار الجهاز بلا بيان.
++4. **درس سباق قاس بالبوابة:** دمج الحزمة وسّع النافذة بين إسناد المصفوفات
++   و`loaded=true`؛ بوابة التصحيح كانت تنتظر `knows("من")` وكيلَ انتظار —
++   انكشف السباق (v2_acc=0.0% متقطع). الإصلاح: الانتظار على `isLoaded()` —
++   الأداة الصادقة، لا الوكيل الهش. ستة تشغيلات متتالية: 100% ثابتة.
++5. **dex السقف عضّ ثانية:** DictSign + الدمج + بوابة الأسبوع كلّف **+5,180B**
++   (513,020 → **518,200B** من سقف 520,000B — **المتبقي 1,800B فقط**). أسبوع
++   الاستحقاقات القادم لن يتسع له الهامش — التقليم الحقيقي (لا رفع جديد) شرط
++   بوابة الأسبوع 3، كما وُثق في `ci/build_r8.sh`.
++6. **بذور مجتمع صادقة:** الدفعة الشاحنة مفردات فصحى/مشتقات تقنية حقيقية
++   فُحصت ضد الـ 150,123 قبل التوقيع (7 مكررات رُفضت أولاً في الاختيار) —
++   الحزمة ليست دفعة اختبار تُشحن، بل أول دفعة مجتمعية تمر السلسلة كاملة.
+diff --git a/src/com/hark/neokey/DictSign.java b/src/com/hark/neokey/DictSign.java
+new file mode 100644
+index 0000000..47873ac
+--- /dev/null
++++ b/src/com/hark/neokey/DictSign.java
+@@ -0,0 +1,296 @@
++package com.hark.neokey;
++
++import java.nio.charset.CharsetDecoder;
++import java.nio.charset.StandardCharsets;
++import java.nio.charset.CodingErrorAction;
++import java.nio.charset.CharacterCodingException;
++import java.nio.ByteBuffer;
++import java.util.ArrayList;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Set;
++
++/**
++ * الدمج الموقّع للقاموس المجتمعي — المرحلة 3، الأسبوع 2. نقي: صفر android.*.
++ *
++ * خطوة النشر المنفصلة (تقرير المرحلة 2/الأسبوع 5 §6: «الدمج الموقّع في حزمة
++ * قاموس مشحونة خطوة نشر منفصلة يوقّعها الإنسان») صارت آلية مقاسة: دفعة مجتازة
++ * للمراجعة (CommunityDict.Report على بايتات CSV محددة) تتحول حزمة قاموس موقّعة
++ * (dpack) تحمل: batchId = sha256 بايتات الدفعة، عدّاد القبول، دبوس بيان
++ * المراجعة، دبوس كلمات الحزمة، والتوقيع = sha256 بايتات الحزمة نفسها — توقيع
++ * الدفعة هو sha256 بايتاتها (بوابة الأسبوع)، فأي تعديل بعد المراجعة يكسر
++ * التوقيع ويُصطاد عند التحميل.
++ *
++ * صيغة الحزمة (نص UTF-8 صارم بلا BOM، أسطر LF، سطر التوقيع أخيراً):
++ *   neokey-dpack-1
++ *   batch <64hex>                             = sha256(csv) — batchId التقرير
++ *   accepted <n>                              = عدّاد القبول في التقرير
++ *   report <64hex>                            = sha256 بايتات بيان المراجعة
++ *   words <64hex>                             = sha256 بايتات جسم الكلمات
++ *   w <word>\t<diacritized>\t<lemma>\t<pos>   = سطر لكل كلمة مقبولة بترتيب القبول
++ *   sig <64hex>                               = sha256(كل بايتات الملف قبله)
++ *
++ * بيان المراجعة (statement): JSON حتمي تصدره publish ويتضمن صفوف القبول نفسها —
++ * هو المرجع البشري المعتمد للنشر. التحميل مع البيان يرفض أي حزمة لا تطابقه
++ * بايت-لطرف (استبدال كلمة نظيفة بكلمة نظيفة أخرى يُصطاد — لا ثقة بالعدّادات
++ * وحدها). على الجهاز يُحمَّل بلا بيان: يثق الحمل بأصل الإصدار المثبت بدبوسه
++ * الذهبي (NQF-GOLDEN)، وتبقى إعادة فحص كل صف بقواعد المراجعة نفسها دفاعاً
++ * في العمق (توقيع سليم لمحتوى مسموم لا يمر).
++ *
++ * سلسلة الثقة كاملة: مراجعة CommunityDict → بيان → توقيع → أصل إصدار → دبوس
++ * ذهبي (MakeGolden) → استهلاك المحرك بعد القاموس المثبت بترتيب موثق.
++ */
++public final class DictSign {
++
++    private DictSign() {}
++
++    public static final String SCHEMA = "neokey-dpack-1";
++
++    // وسوم رفض ثابتة قصيرة (بصمة بوابة الأسبوع)
++    public static final String TAG_SCHEMA = "DPACK_SCHEMA";
++    public static final String TAG_BATCH  = "DPACK_BATCH";
++    public static final String TAG_COUNT  = "DPACK_COUNT";
++    public static final String TAG_REPORT = "DPACK_REPORT";
++    public static final String TAG_WORDS  = "DPACK_WORDS";
++    public static final String TAG_SIG    = "DPACK_SIG";
++    public static final String TAG_WORD   = "DPACK_WORD";
++    public static final String TAG_EMPTY  = "EMPTY_PACK";
++    public static final String TAG_CSV    = "BATCH_MISMATCH";
++
++    /** صف كلمة في الحزمة — المجالات التي يستهلكها المحرك ويعيد التحقق منها. */
++    public static final class Word {
++        public final String word, diacritized, lemma, pos;
++        public Word(String word, String diacritized, String lemma, String pos) {
++            this.word = word; this.diacritized = diacritized;
++            this.lemma = lemma; this.pos = pos;
++        }
++    }
++
++    /** ناتج النشر: البايتات المنشورة + أختامها + بيان المراجعة. */
++    public static final class Dpack {
++        public final byte[] bytes;
++        public final String batchId, reportSha, wordsSha, sig, statement;
++        public final int accepted;
++        public final List<Word> words;
++        Dpack(byte[] bytes, String batchId, String reportSha, String wordsSha,
++              String sig, String statement, int accepted, List<Word> words) {
++            this.bytes = bytes; this.batchId = batchId; this.reportSha = reportSha;
++            this.wordsSha = wordsSha; this.sig = sig; this.statement = statement;
++            this.accepted = accepted; this.words = words;
++        }
++    }
++
++    /** حزمة محمّلة متحقق منها — مُدخل الاستهلاك للمحرك. */
++    public static final class Pack {
++        public final String batchId, sig;
++        public final List<Word> words;
++        Pack(String batchId, String sig, List<Word> words) {
++            this.batchId = batchId; this.sig = sig; this.words = words;
++        }
++    }
++
++    // ---------------------------------------------------------------- النشر
++
++    /**
++     * دفعة مجتازة للمراجعة → حزمة موقّعة حتمية. يشتمّ قبل التوليد: التقرير
++     * لهذه الدفعة فعلاً (batchId التقرير = sha256 بايتات csv)، والقبول > 0.
++     * صفوف القبول تدخل بترتيب الدفعة نفسه — التكرار الكامل للمدخلات يعيد
++     * البايتات نفسها حرفاً بحرف (حتمية النشر تُقاس في الاختبارات).
++     */
++    public static Dpack publish(byte[] csv, CommunityDict.Report report) {
++        String batchId = CommunityDict.sha256Hex(csv);
++        if (report == null || !batchId.equals(report.batchId))
++            throw new IllegalArgumentException(TAG_CSV);
++        if (report.accepted <= 0) throw new IllegalArgumentException(TAG_EMPTY);
++        List<Word> ws = new ArrayList<>(report.accepted);
++        for (CommunityDict.Row r : report.rows)
++            if (r.accepted()) ws.add(new Word(r.word, r.diacritized, r.lemma, r.pos));
++        return assemble(batchId, ws);
++    }
++
++    /** توليد الحزمة من صفوف جاهزة (يستعمله load في بيان التحقق العكسي أيضاً). */
++    private static Dpack assemble(String batchId, List<Word> ws) {
++        byte[] body = bodyBytes(ws);
++        String wordsSha = CommunityDict.sha256Hex(body);
++        String statement = statement(batchId, ws.size(), wordsSha, ws);
++        byte[] stmt = statement.getBytes(StandardCharsets.UTF_8);
++        String reportSha = CommunityDict.sha256Hex(stmt);
++        StringBuilder h = new StringBuilder(160);
++        h.append(SCHEMA).append('\n');
++        h.append("batch ").append(batchId).append('\n');
++        h.append("accepted ").append(ws.size()).append('\n');
++        h.append("report ").append(reportSha).append('\n');
++        h.append("words ").append(wordsSha).append('\n');
++        byte[] head = h.toString().getBytes(StandardCharsets.UTF_8);
++        byte[] prefix = new byte[head.length + body.length];
++        System.arraycopy(head, 0, prefix, 0, head.length);
++        System.arraycopy(body, 0, prefix, head.length, body.length);
++        String sig = CommunityDict.sha256Hex(prefix);
++        byte[] tail = ("sig " + sig + "\n").getBytes(StandardCharsets.UTF_8);
++        byte[] out = new byte[prefix.length + tail.length];
++        System.arraycopy(prefix, 0, out, 0, prefix.length);
++        System.arraycopy(tail, 0, out, prefix.length, tail.length);
++        return new Dpack(out, batchId, reportSha, wordsSha, sig, statement, ws.size(), ws);
++    }
++
++    /** جسم الكلمات: سطر لكل كلمة، حقول بفواصل جدولة، LF حتمي. */
++    static byte[] bodyBytes(List<Word> ws) {
++        StringBuilder b = new StringBuilder(64 * ws.size());
++        for (Word w : ws)
++            b.append("w ").append(w.word).append('\t').append(w.diacritized)
++             .append('\t').append(w.lemma).append('\t').append(w.pos).append('\n');
++        return b.toString().getBytes(StandardCharsets.UTF_8);
++    }
++
++    /** بيان المراجعة: JSON حتمي يثبّت صفوف القبول نفسها (لا ثقة بالعدّادات). */
++    static String statement(String batchId, int accepted, String wordsSha, List<Word> ws) {
++        StringBuilder b = new StringBuilder(96 * ws.size() + 128);
++        b.append("{\"dpack\":\"").append(SCHEMA).append('"');
++        b.append(",\"batch\":\"").append(batchId).append('"');
++        b.append(",\"accepted\":").append(accepted);
++        b.append(",\"words\":\"").append(wordsSha).append('"');
++        b.append(",\"rows\":[");
++        for (int i = 0; i < ws.size(); i++) {
++            Word w = ws.get(i);
++            if (i > 0) b.append(',');
++            b.append("[\"").append(esc(w.word)).append("\",\"").append(esc(w.diacritized))
++             .append("\",\"").append(esc(w.lemma)).append("\",\"").append(esc(w.pos)).append("\"]");
++        }
++        b.append("]}");
++        return b.toString();
++    }
++
++    private static String esc(String s) {
++        StringBuilder b = new StringBuilder(s.length() + 2);
++        for (int i = 0; i < s.length(); i++) {
++            char c = s.charAt(i);
++            if (c == '"' || c == '\\') b.append('\\');
++            b.append(c);
++        }
++        return b.toString();
++    }
++
++    // ---------------------------------------------------------------- التحميل
++
++    /**
++     * تحميل صارم حتمي — ترتيب الفحوص موثق:
++     *   1) الترميز والشكل (schema/سطور الترويسة)               → DPACK_SCHEMA
++     *   2) شكل الحقول السداسية (batch/report/words/sig)         → وسم الحقل
++     *   3) التوقيع = sha256 بايتات الملف قبل سطر sig           → DPACK_SIG
++     *   4) دبوس جسم الكلمات                                     → DPACK_WORDS
++     *   5) عدّاد القبول = عدد صفوف الجسم فعلاً                  → DPACK_COUNT
++     *   6) بيان المراجعة (إن وُجد): دبوسه في الترويسة + تطابق   → DPACK_REPORT
++     *      إعادة توليده من الجسم بايت-لطرف (استبدال كلمة يُصطاد)
++     *   7) إعادة فحص كل صف بقواعد المراجعة نفسها (دفاع في       → DPACK_WORD
++     *      العمق: عربي، تشكيل بنيوي، ممنوع، مكرر، pos سليم)
++     * installedNorms اختياري (قانون المثبت — يمرره الناشر/الاختبار، والجهاز
++     * يكتفي بتطهير الحزمة ذاتياً لأن أصل الإصدار مثبت بدبوسه الذهبي).
++     */
++    public static Pack load(byte[] dpack, String reportJson, Set<String> installedNorms) {
++        String text = strictUtf8(dpack);
++        String[] lines = text.split("\n", -1);
++        if (lines.length > 0 && lines[lines.length - 1].isEmpty()) {
++            String[] t = new String[lines.length - 1];
++            System.arraycopy(lines, 0, t, 0, t.length);
++            lines = t;
++        }
++        if (lines.length < 7 || !SCHEMA.equals(lines[0])) throw new IllegalArgumentException(TAG_SCHEMA);
++
++        String batch   = field(lines[1], "batch ",   64, TAG_BATCH);
++        String accS    = field(lines[2], "accepted ", 0, TAG_COUNT);
++        String repSha  = field(lines[3], "report ", 64, TAG_REPORT);
++        String wordsSha= field(lines[4], "words ",  64, TAG_WORDS);
++        int accepted;
++        try { accepted = Integer.parseInt(accS); }
++        catch (NumberFormatException e) { throw new IllegalArgumentException(TAG_COUNT); }
++        if (accepted <= 0) throw new IllegalArgumentException(TAG_COUNT);
++
++        // التوقيع: sha256 لكل بايتات الملف قبل سطر sig (يجب أن يكون أخيراً)
++        if (!lines[lines.length - 1].startsWith("sig ")) throw new IllegalArgumentException(TAG_SIG);
++        String sig = field(lines[lines.length - 1], "sig ", 64, TAG_SIG);
++        int headerLen = lenOf(lines, 0, 5);
++        int bodyRows = lines.length - 6;
++        int prefixLen = headerLen + lenOf(lines, 5, bodyRows);
++        byte[] prefix = new byte[prefixLen];
++        System.arraycopy(dpack, 0, prefix, 0, prefixLen);
++        if (!CommunityDict.sha256Hex(prefix).equals(sig)) throw new IllegalArgumentException(TAG_SIG);
++
++        // جسم الكلمات: صفوف w محفوظة الترتيب
++        List<Word> ws = new ArrayList<>(bodyRows);
++        for (int i = 0; i < bodyRows; i++) {
++            String ln = lines[5 + i];
++            if (!ln.startsWith("w ")) throw new IllegalArgumentException(TAG_WORD);
++            String[] f = ln.substring(2).split("\t", -1);
++            if (f.length != 4) throw new IllegalArgumentException(TAG_WORD);
++            ws.add(new Word(f[0], f[1], f[2], f[3]));
++        }
++        byte[] body = new byte[prefixLen - headerLen];
++        System.arraycopy(dpack, headerLen, body, 0, body.length);
++        if (!CommunityDict.sha256Hex(body).equals(wordsSha)) throw new IllegalArgumentException(TAG_WORDS);
++
++        // عدّاد القبول = عدد صفوف الجسم فعلاً (قبل مطابقة البيان — رخيص وحاسم)
++        if (accepted != ws.size()) throw new IllegalArgumentException(TAG_COUNT);
++
++        // بيان المراجعة: دبوس الترويسة + إعادة توليد بايت-لطرف من الجسم
++        if (reportJson != null) {
++            byte[] provided = reportJson.getBytes(StandardCharsets.UTF_8);
++            String expected = statement(batch, accepted, wordsSha, ws);
++            if (!CommunityDict.sha256Hex(provided).equals(repSha)
++                    || !CommunityDict.sha256Hex(expected.getBytes(StandardCharsets.UTF_8)).equals(repSha))
++                throw new IllegalArgumentException(TAG_REPORT);
++        }
++
++        // دفاع في العمق: قواعد المراجعة نفسها على كل صف (الممنوع/غير العربي/
++        // التشكيل البنيوي/المكرر الداخلي/المكرر مع المثبت — أول مخالفة تفوز)
++        Set<String> seen = new HashSet<>();
++        for (int i = 0; i < ws.size(); i++) {
++            Word w = ws.get(i);
++            CommunityDict.Row r = new CommunityDict.Row(i + 6,
++                    new String[]{w.word, w.diacritized, w.lemma, w.pos, "dpack", "dpack", "CC0-1.0"});
++            String tag = CommunityDict.judge(r, installedNorms, seen);
++            if (tag != null) throw new IllegalArgumentException(TAG_WORD + ": " + tag);
++        }
++        return new Pack(batch, sig, ws);
++    }
++
++    // ---------------------------------------------------------------- أدوات
++
++    private static String field(String line, String prefix, int hexLen, String tag) {
++        if (line == null || !line.startsWith(prefix)) throw new IllegalArgumentException(tag);
++        String v = line.substring(prefix.length());
++        if (hexLen > 0 && !isHex64(v)) throw new IllegalArgumentException(tag);
++        return v;
++    }
++
++    private static boolean isHex64(String s) {
++        if (s == null || s.length() != 64) return false;
++        for (int i = 0; i < 64; i++) {
++            char c = s.charAt(i);
++            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) return false;
++        }
++        return true;
++    }
++
++    /** طول أسطر [from, from+n) بالبايتات (UTF-8 + LF) — لتقطيع التوقيع بدقة. */
++    private static int lenOf(String[] lines, int from, int n) {
++        int t = 0;
++        for (int i = from; i < from + n; i++)
++            t += lines[i].getBytes(StandardCharsets.UTF_8).length + 1;
++        return t;
++    }
++
++    /** UTF-8 صارم بلا BOM — الحزمة آلة-مولدة، أي انحراف ترميز رفض كله. */
++    private static String strictUtf8(byte[] bytes) {
++        if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xEF
++                && (bytes[1] & 0xFF) == 0xBB && (bytes[2] & 0xFF) == 0xBF)
++            throw new IllegalArgumentException(TAG_SCHEMA);
++        try {
++            CharsetDecoder dec = StandardCharsets.UTF_8.newDecoder()
++                    .onMalformedInput(CodingErrorAction.REPORT)
++                    .onUnmappableCharacter(CodingErrorAction.REPORT);
++            return dec.decode(ByteBuffer.wrap(bytes)).toString();
++        } catch (CharacterCodingException e) {
++            throw new IllegalArgumentException(TAG_SCHEMA);
++        }
++    }
++}
+diff --git a/src/com/hark/neokey/Dictionary.java b/src/com/hark/neokey/Dictionary.java
+index 23d9987..b12c6aa 100755
+--- a/src/com/hark/neokey/Dictionary.java
++++ b/src/com/hark/neokey/Dictionary.java
+@@ -45,6 +45,11 @@ final class Dictionary {
+     };
+     private volatile boolean loaded;
+     private boolean dirty;
++    /** حجم الأساس المثبت (corpus) — راونك الحزمة المجتمعية يبدأ عنده (الأسبوع 19). */
++    private int baseRankN;
++    /** الدرجة الأرضية الموثقة لكلمات حزمة القاموس المجتمعي — تحت عتبة
++     *  المطابقة التامة (22000) فلا تحزمة تتصدر المثبت أبداً. */
++    static final int PACK_SCORE = 3000;
+ 
+     Dictionary(final Context c, final String lang) { this(c, lang, false); }
+ 
+@@ -123,12 +128,87 @@ final class Dictionary {
+                 u.close();
+             }
+             synchronized (this) { words = w; keys = kk; base = s; rank = rk; }
++            baseRankN = n;
++            consumeCommunityPack(c);
+             loaded = true;
+         } catch (Exception ignored) {
+             loaded = true;
+         }
+     }
+ 
++    /** المرحلة 3/الأسبوع 2 — استهلاك حزمة القاموس المجتمعي الموقّعة من أصول
++     *  الإصدار (community_<lang>.dpack) إن وُجدت: توقيع يُتحقق ثم دمج بترتيب
++     *  موثق. غياب الأصل حالة طبيعية (الحزم اختيارية)؛ أي خرق شكل/توقيع يُرفض
++     *  كله ولا يُستهلك شيء من حزمة مسمومة. */
++    private void consumeCommunityPack(Context c) {
++        try {
++            java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
++            java.io.InputStream in = c.getAssets().open("community_" + lang + ".dpack");
++            byte[] buf = new byte[8192];
++            int rd;
++            while ((rd = in.read(buf)) > 0) bo.write(buf, 0, rd);
++            in.close();
++            DictSign.Pack p = DictSign.load(bo.toByteArray(), null, null);
++            List<String> ws = new ArrayList<>(p.words.size());
++            for (DictSign.Word w : p.words) ws.add(w.word);
++            mergePack(ws);
++        } catch (Exception ignored) { }
++    }
++
++    /** الدمج الموقّع — ترتيب الاستهلاك الموثق (بوابة الأسبوع 19):
++     *  1) كلمات الحزمة تُلحق بعد القاموس المثبت: راونكها يبدأ عند baseRankN
++     *     بترتيب الحزمة نفسه (حتمي مهما كان حالة الجهاز)؛
++     *  2) درجتها الأرضية PACK_SCORE=3000 — لا دفعة مطابقة تامة ولا تصدير؛
++     *  3) المكرر الطبيعي مع المثبت يُسقَط — القاموس المثبت يفوز دائماً؛
++     *  4) إعادة الفرز (المفتاح ثم الراونك) تحافظ على ترتيب الأساس الأصلي
++     *     حرفياً (راونك الأساس = موضع corpus الأصلي).
++     *  العائد: عدد الكلمات المضافة فعلاً. */
++    int mergePack(List<String> packWords) {
++        if (packWords == null || packWords.isEmpty()) return 0;
++        synchronized (this) {
++            String[] w = this.words, k = this.keys;
++            int[] s = this.base, r = this.rank;
++            java.util.HashSet<String> have = new java.util.HashSet<>(k.length * 2);
++            for (String key : k) have.add(key);
++            List<String> nw = new ArrayList<>();
++            List<Integer> nr = new ArrayList<>();
++            for (int i = 0; i < packWords.size(); i++) {
++                String pw = packWords.get(i);
++                String nk = norm(pw);
++                if (nk.isEmpty() || have.contains(nk)) continue;
++                have.add(nk);
++                nw.add(pw);
++                nr.add(baseRankN + i);
++            }
++            if (nw.isEmpty()) return 0;
++            int m = nw.size(), old = w.length, tot = old + m;
++            String[] W = new String[tot]; String[] K = new String[tot];
++            int[] S = new int[tot]; int[] R = new int[tot];
++            System.arraycopy(w, 0, W, 0, old); System.arraycopy(k, 0, K, 0, old);
++            System.arraycopy(s, 0, S, 0, old); System.arraycopy(r, 0, R, 0, old);
++            for (int i = 0; i < m; i++) {
++                W[old + i] = nw.get(i); K[old + i] = norm(nw.get(i));
++                S[old + i] = PACK_SCORE; R[old + i] = nr.get(i);
++            }
++            Integer[] idx = new Integer[tot];
++            for (int i = 0; i < tot; i++) idx[i] = i;
++            final String[] fk = K; final int[] fr = R;
++            Arrays.sort(idx, new Comparator<Integer>() {
++                @Override public int compare(Integer a, Integer b) {
++                    int c = fk[a].compareTo(fk[b]);
++                    return c != 0 ? c : fr[a] - fr[b];
++                }
++            });
++            String[] w2 = new String[tot], k2 = new String[tot];
++            int[] s2 = new int[tot], r2 = new int[tot];
++            for (int i = 0; i < tot; i++) {
++                w2[i] = W[idx[i]]; k2[i] = K[idx[i]]; s2[i] = S[idx[i]]; r2[i] = R[idx[i]];
++            }
++            this.words = w2; this.keys = k2; this.base = s2; this.rank = r2;
++            return m;
++        }
++    }
++
+     /** Arabic-insensitive key: hamza forms, taa marbuta, alef maqsura folded; lowercase for English. */
+     static String norm(String s) {
+         StringBuilder b = new StringBuilder(s.length());
+diff --git a/tests/com/hark/neokey/CorrectionGate.java b/tests/com/hark/neokey/CorrectionGate.java
+index be3df96..97231f9 100755
+--- a/tests/com/hark/neokey/CorrectionGate.java
++++ b/tests/com/hark/neokey/CorrectionGate.java
+@@ -67,8 +67,8 @@ public final class CorrectionGate {
+         files.mkdirs();
+         Dictionary dict = new Dictionary(new FakeContext(files), "ar");
+         long t0 = System.currentTimeMillis();
+-        while (!dict.knows("من") && System.currentTimeMillis() - t0 < 30000) Thread.sleep(100);
+-        need(dict.knows("من"), "dictionary did not load");
++        while (!dict.isLoaded() && System.currentTimeMillis() - t0 < 30000) Thread.sleep(100);
++        need(dict.isLoaded(), "dictionary did not load");
+ 
+         List<String[]> sentences = new ArrayList<>();
+         for (String line : Files.readAllLines(new File("assets/testset_ar.txt").toPath(), StandardCharsets.UTF_8)) {
+diff --git a/tests/com/hark/neokey/DictSignGate.java b/tests/com/hark/neokey/DictSignGate.java
+new file mode 100644
+index 0000000..a2c3b55
+--- /dev/null
++++ b/tests/com/hark/neokey/DictSignGate.java
+@@ -0,0 +1,308 @@
++package com.hark.neokey;
++
++import java.io.ByteArrayOutputStream;
++import java.io.File;
++import java.io.FileInputStream;
++import java.io.InputStream;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.List;
++import java.util.Map;
++import java.util.Set;
++
++/**
++ * بوابة الدمج الموقّع للقاموس المجتمعي (المرحلة 3، الأسبوع 2) — صفر android.*.
++ *
++ * تُثبت السلسلة كاملة لا الادعاء:
++ *   1) النشر حتمي: إعادة النشر من الدفعة المراجَعة نفسها تعيد بايتات الحزمة
++ *      المنشورة في assets/community_ar.dpack حرفاً بحرف (المرجع = المنشور).
++ *   2) الحزمة المنشورة تُحمَّل: مسار البيان (نشر) + مسار الجهاز (استهلاك).
++ *   3) الدبوس الذهبي: NQF-GOLDEN يثبّت sha256 لأصل الإصدار (MakeGolden).
++ *   4) المحرك يستهلك بعد المثبت بترتيب موثق على القاموس الحقيقي 150k.
++ *   5) سلبيات مصممة 12: كل وسم رفق يُصطاد بوسمه الثابت.
++ *   6) زمن النشر والتحميل p50 مقاس.
++ */
++public final class DictSignGate {
++
++    static int checks = 0;
++
++    public static void main(String[] args) throws Exception {
++        try {
++            shippedAsset();
++            engineReal();
++            negativesAndTiming();
++            System.out.println("DICTSIGN_GATE_OK batches=2 words=" + SHIPPED_WORDS
++                    + " negatives=" + NEG_OK + "/" + NEG_ALL
++                    + " p50_publish_us=" + P50_PUBLISH_US + " p50_load_us=" + P50_LOAD_US
++                    + " checks=" + checks);
++        } catch (Throwable t) {
++            System.out.println("DICTSIGN_GATE_FAILED " + t.getClass().getSimpleName()
++                    + (t.getMessage() == null ? "" : ": " + t.getMessage()));
++            System.exit(1);
++        }
++    }
++
++    static final String PACK_ASSET = "assets/community_ar.dpack";
++    static final String BATCH_FILE = "dictsrc/community/batch-w19.csv";
++    static int SHIPPED_WORDS = -1, NEG_OK = 0, NEG_ALL = 0;
++    static long P50_PUBLISH_US = -1, P50_LOAD_US = -1;
++
++    static void ok(boolean cond, String what) {
++        checks++;
++        if (!cond) throw new IllegalStateException(what);
++    }
++
++    static byte[] readAll(File f) throws Exception {
++        ByteArrayOutputStream bo = new ByteArrayOutputStream();
++        try (InputStream in = new FileInputStream(f)) {
++            byte[] buf = new byte[8192]; int n;
++            while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
++        }
++        return bo.toByteArray();
++    }
++
++    // ---------------------------------------------- 1) المرجع = المنشور
++
++    static void shippedAsset() throws Exception {
++        File shippedF = new File(PACK_ASSET);
++        File batchF = new File(BATCH_FILE);
++        ok(shippedF.isFile(), "shipped pack missing: " + PACK_ASSET);
++        ok(batchF.isFile(), "community batch missing: " + BATCH_FILE);
++        byte[] shipped = readAll(shippedF);
++        byte[] batch = readAll(batchF);
++
++        Set<String> installed = CommunityDict.normSetOf(linesOf(new File("assets/ar.txt")));
++        CommunityDict.Report rep = CommunityDict.review(batch, installed);
++        ok(rep.accepted == rep.total && rep.accepted > 0,
++                "shipped batch must be fully accepted, got " + rep.accepted + "/" + rep.total);
++        DictSign.Dpack d = DictSign.publish(batch, rep);
++        ok(Arrays.equals(d.bytes, shipped),
++                "re-published pack differs from the shipped asset (reviewed != published)");
++        SHIPPED_WORDS = d.accepted;
++
++        // مسار البيان: الحزمة المنشورة تطابق بيانها المحفوظ في تقرير البناء
++        DictSign.Pack p = DictSign.load(shipped, d.statement, installed);
++        ok(p.words.size() == d.accepted, "statement-path load lost rows");
++        // مسار الجهاز: بلا بيان — نفس الصفوف
++        DictSign.Pack dev = DictSign.load(shipped, null, null);
++        ok(dev.words.size() == d.accepted && dev.sig.equals(d.sig), "device-path load mismatch");
++
++        // الدبوس الذهبي: أصل الإصدار مثبت في NQF-GOLDEN (المرجع = المنشور)
++        ThemePack.Json.Node golden = ThemePack.Json.parse(
++                new String(readAll(new File("docs/NQF-GOLDEN.json")), StandardCharsets.UTF_8));
++        ok(golden.isObj(), "golden shape");
++        Map<String, ThemePack.Json.Node> assets = golden.obj().get("assets").obj();
++        ThemePack.Json.Node pin = assets.get("community_ar.dpack");
++        ok(pin != null, "golden pin missing for community_ar.dpack (run MakeGolden)");
++        String sha = pin.obj().get("sha256").str();
++        ok(CommunityDict.sha256Hex(shipped).equals(sha), "golden pin mismatch for community_ar.dpack");
++    }
++
++    static List<String> linesOf(File f) throws Exception {
++        List<String> out = new ArrayList<>();
++        for (String l : new String(readAll(f), StandardCharsets.UTF_8).split("\n"))
++            if (!l.isEmpty()) out.add(l);
++        return out;
++    }
++
++    // ---------------------------------------------- 4) الاستهلاك على القاموس الحقيقي
++
++    static void engineReal() throws Exception {
++        Dictionary d = new Dictionary(new FakeContext(Files.createTempDirectory("w19gate").toFile()), "ar");
++        long t0 = System.currentTimeMillis();
++        while (!d.isLoaded() && System.currentTimeMillis() - t0 < 20000) Thread.sleep(25);
++        ok(d.isLoaded(), "150k dictionary failed to load");
++        ok(d.knows("مفتاحية"), "shipped pack word unknown to the engine");
++        ok(d.knows("إيقاعية"), "second shipped pack word unknown to the engine");
++        ok(d.wordRank("مفتاحية") >= 150123, "pack word rank must sit after the whole corpus");
++        ok(d.wordScore("مفتاحية") == Dictionary.PACK_SCORE, "pack score must equal the documented floor");
++        ok(!d.knows("شذوبيب"), "unknown word must stay unknown");
++        List<String> sug = d.suggest("زمرد", 5);
++        ok(sug.contains("زمردية"), "suggest must surface the pack word (after installed rivals)");
++    }
++
++    // ---------------------------------------------- 5+6) السلبيات والزمن
++
++    interface F { void run(); }
++
++    static String expect(F f) {
++        try { f.run(); return null; }
++        catch (IllegalArgumentException e) { return String.valueOf(e.getMessage()); }
++    }
++
++    static void neg(String name, String expected, String got) {
++        NEG_ALL++;
++        boolean okTag = expected.equals(got) || (expected.equals("DPACK_WORD") && got != null && got.startsWith("DPACK_WORD"));
++        if (okTag) NEG_OK++;
++        else throw new IllegalStateException("negative [" + name + "] expected " + expected + " got " + got);
++    }
++
++    static byte[] csv(String... rows) {
++        StringBuilder b = new StringBuilder("word,diacritized,lemma,pos,gloss,contributor,license\n");
++        for (String r : rows) b.append(r).append('\n');
++        return b.toString().getBytes(StandardCharsets.UTF_8);
++    }
++
++    static DictSign.Dpack pub(byte[] c) {
++        return DictSign.publish(c, CommunityDict.review(c, new java.util.HashSet<>()));
++    }
++
++    static void negativesAndTiming() throws Exception {
++        byte[] b = csv(
++                "كتابية,كِتَابِيَّة,كتاب,adj,متعلقة بالكتاب والتحرير,سالم-قلم,CC0-1.0",
++                "عدادية,عَدَّادِيَّة,عداد,adj,متعلقة بالعد والقياس,نورة-حرف,CC0-1.0");
++        DictSign.Dpack d = pub(b);
++        byte[] raw = d.bytes;
++        String stmt = d.statement;
++        Set<String> inst = new java.util.HashSet<>(java.util.Collections.singletonList(
++                CommunityDict.normAr("كتابية")));
++
++        long t0 = System.nanoTime();
++        int ITERS = 400;
++        for (int i = 0; i < ITERS; i++) DictSign.publish(b, CommunityDict.review(b, new java.util.HashSet<>()));
++        P50_PUBLISH_US = (System.nanoTime() - t0) / 1000 / ITERS;
++
++        t0 = System.nanoTime();
++        for (int i = 0; i < ITERS; i++) DictSign.load(raw, null, null);
++        P50_LOAD_US = (System.nanoTime() - t0) / 1000 / ITERS;
++
++        byte[] t1 = raw.clone();
++        t1[indexOf(raw, "w ".getBytes(StandardCharsets.UTF_8)) + 3] ^= 0x01;
++        neg("tamper", "DPACK_SIG", expect(() -> DictSign.load(t1, stmt, null)));
++
++        byte[] swapped = csv(
++                "مدادية,مِدَادِيَّة,مداد,adj,متعلقة بالمداد والكتابة,سالم-قلم,CC0-1.0",
++                "عدادية,عَدَّادِيَّة,عداد,adj,متعلقة بالعد والقياس,نورة-حرف,CC0-1.0");
++        DictSign.Dpack fg = pub(swapped);
++        String head = new String(raw, 0, headerLen(raw), StandardCharsets.UTF_8)
++                .replace("words " + d.wordsSha, "words " + fg.wordsSha);
++        byte[] attack = (head + new String(bodyOf(fg.bytes), StandardCharsets.UTF_8)
++                + "sig " + CommunityDict.sha256Hex(
++                        concat(head.getBytes(StandardCharsets.UTF_8), bodyOf(fg.bytes))) + "\n")
++                .getBytes(StandardCharsets.UTF_8);
++        neg("swap", "DPACK_REPORT", expect(() -> DictSign.load(attack, stmt, null)));
++
++        neg("counter-unsigned", "DPACK_SIG", expect(() -> DictSign.load(
++                patch(raw, "accepted 2", "accepted 3"), stmt, null)));
++        neg("counter-reforged", "DPACK_COUNT", expect(() -> DictSign.load(
++                reforge(raw, "accepted 2", "accepted 3"), stmt, null)));
++        neg("foreign-batch", "DPACK_REPORT", expect(() -> DictSign.load(
++                reforge(raw, "batch " + d.batchId, "batch " + CommunityDict.sha256Hex("x".getBytes(StandardCharsets.UTF_8))),
++                stmt, null)));
++        neg("words-pin", "DPACK_WORDS", expect(() -> DictSign.load(
++                reforge(raw, "words " + d.wordsSha, "words " + CommunityDict.sha256Hex("y".getBytes(StandardCharsets.UTF_8))),
++                stmt, null)));
++        neg("schema", "DPACK_SCHEMA", expect(() -> DictSign.load(
++                reforge(raw, "neokey-dpack-1", "neokey-dpack-2"), stmt, null)));
++
++        String txt = new String(raw, StandardCharsets.UTF_8);
++        int r1end = txt.indexOf('\n', txt.indexOf("w "));
++        byte[] cut = txt.substring(0, r1end + 1).getBytes(StandardCharsets.UTF_8);
++        byte[] cutR = appendSig(cut);
++        neg("truncate", "DPACK_WORDS", expect(() -> DictSign.load(cutR, stmt, null)));
++        byte[] cut2 = reforge(reforge(cutR, "accepted 2", "accepted 1"),
++                "words " + d.wordsSha, "words " + CommunityDict.sha256Hex(bodyOf(cutR)));
++        byte[] cutF = cut2;
++        neg("truncate-reforged", "DPACK_REPORT", expect(() -> DictSign.load(cutF, stmt, null)));
++
++        byte[] bom = new byte[raw.length + 3];
++        bom[0] = (byte) 0xEF; bom[1] = (byte) 0xBB; bom[2] = (byte) 0xBF;
++        System.arraycopy(raw, 0, bom, 3, raw.length);
++        neg("bom", "DPACK_SCHEMA", expect(() -> DictSign.load(bom, stmt, null)));
++
++        List<DictSign.Word> poison = new ArrayList<>();
++        poison.add(new DictSign.Word("qqq", "qqq", "qqq", "noun"));
++        poison.add(new DictSign.Word("عدادية", "عَدَّادِيَّة", "عداد", "adj"));
++        String mStmt = DictSign.statement(d.batchId, poison.size(),
++                CommunityDict.sha256Hex(DictSign.bodyBytes(poison)), poison);
++        neg("poison-reforged", "DPACK_WORD", expect(() -> DictSign.load(manualPack(d.batchId, poison), mStmt, null)));
++
++        DictSign.Dpack dupD = pub(b);
++        neg("duplicate-installed", "DPACK_WORD", expect(() -> DictSign.load(dupD.bytes, dupD.statement, inst)));
++    }
++
++    // ---- byte surgery (نفس أدوات الاختبار) ----
++
++    static int indexOf(byte[] hay, byte[] needle) {
++        outer: for (int i = 0; i <= hay.length - needle.length; i++) {
++            for (int j = 0; j < needle.length; j++) if (hay[i + j] != needle[j]) continue outer;
++            return i;
++        }
++        return -1;
++    }
++
++    static int headerLen(byte[] raw) {
++        int n = 0;
++        for (int i = 0, seen = 0; seen < 5 && i < raw.length; i++)
++            if (raw[i] == '\n') { seen++; n = i + 1; }
++        return n;
++    }
++
++    static byte[] bodyOf(byte[] raw) {
++        int h = headerLen(raw);
++        int sigStart = raw.length - (4 + 64 + 1);
++        byte[] b = new byte[sigStart - h];
++        System.arraycopy(raw, h, b, 0, b.length);
++        return b;
++    }
++
++    static byte[] concat(byte[] a, byte[] b) {
++        byte[] o = new byte[a.length + b.length];
++        System.arraycopy(a, 0, o, 0, a.length);
++        System.arraycopy(b, 0, o, a.length, b.length);
++        return o;
++    }
++
++    static byte[] patch(byte[] raw, String from, String to) {
++        return new String(raw, StandardCharsets.UTF_8).replace(from + "\n", to + "\n")
++                .getBytes(StandardCharsets.UTF_8);
++    }
++
++    static byte[] reforge(byte[] raw, String from, String to) {
++        return resig(patch(raw, from, to));
++    }
++
++    /** append a fresh sig line over exactly these prefix bytes (truncated-file attacker) */
++    static byte[] appendSig(byte[] prefix) {
++        byte[] tail = ("sig " + CommunityDict.sha256Hex(prefix) + "\n").getBytes(StandardCharsets.UTF_8);
++        byte[] out = new byte[prefix.length + tail.length];
++        System.arraycopy(prefix, 0, out, 0, prefix.length);
++        System.arraycopy(tail, 0, out, prefix.length, tail.length);
++        return out;
++    }
++
++    static final byte[] SIGB = {'\n', 's', 'i', 'g', ' '};
++
++    /** recompute the sig line over everything before it — BYTE indices only
++     *  (a char-index search on UTF-8 Arabic would truncate mid-sequence) */
++    static byte[] resig(byte[] raw) {
++        int hit = -1;
++        outer: for (int i = raw.length - 5; i >= 0; i--) {
++            for (int j = 0; j < 5; j++) if (raw[i + j] != SIGB[j]) continue outer;
++            hit = i; break;
++        }
++        if (hit < 0) return raw;
++        int sigStart = hit + 1;
++        byte[] prefix = new byte[sigStart];
++        System.arraycopy(raw, 0, prefix, 0, sigStart);
++        byte[] tail = ("sig " + CommunityDict.sha256Hex(prefix) + "\n").getBytes(StandardCharsets.UTF_8);
++        byte[] out = new byte[sigStart + tail.length];
++        System.arraycopy(prefix, 0, out, 0, sigStart);
++        System.arraycopy(tail, 0, out, sigStart, tail.length);
++        return out;
++    }
++
++    static byte[] manualPack(String batch, List<DictSign.Word> ws) {
++        byte[] body = DictSign.bodyBytes(ws);
++        String wordsSha = CommunityDict.sha256Hex(body);
++        String st = DictSign.statement(batch, ws.size(), wordsSha, ws);
++        String reportSha = CommunityDict.sha256Hex(st.getBytes(StandardCharsets.UTF_8));
++        String head = "neokey-dpack-1\nbatch " + batch + "\naccepted " + ws.size()
++                + "\nreport " + reportSha + "\nwords " + wordsSha + "\n";
++        byte[] prefix = concat(head.getBytes(StandardCharsets.UTF_8), body);
++        return (new String(prefix, StandardCharsets.UTF_8) + "sig " + CommunityDict.sha256Hex(prefix) + "\n")
++                .getBytes(StandardCharsets.UTF_8);
++    }
++}
+diff --git a/tests/com/hark/neokey/DictSignTest.java b/tests/com/hark/neokey/DictSignTest.java
+new file mode 100644
+index 0000000..446f87f
+--- /dev/null
++++ b/tests/com/hark/neokey/DictSignTest.java
+@@ -0,0 +1,354 @@
++package com.hark.neokey;
++
++import java.io.File;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Set;
++
++/**
++ * Week 19 tests — signed community-dictionary merge (Phase 3, week 2).
++ * Positives: deterministic publishing, byte-exact signature, statement match,
++ * engine consumption order (installed first, pack order after, duplicate drop,
++ * score cap). Negatives: every designed refusal tag of DictSign.load/publish,
++ * including a fully-reforged poison pack caught by row re-validation.
++ */
++public final class DictSignTest {
++
++    static int passed = 0, failed = 0;
++
++    public static void main(String[] args) throws Exception {
++        publishPositives();
++        loadPositives();
++        engineOrder();
++        engineDuplicateDrop();
++        negatives();
++        System.out.println("DictSignTest: RESULT " + passed + " passed, " + failed + " failed");
++        if (failed > 0) System.exit(1);
++    }
++
++    // ------------------------------------------------------------ helpers
++
++    static void check(String name, boolean ok) {
++        if (ok) passed++; else failed++;
++        System.out.println((ok ? "PASS " : "FAIL ") + name);
++    }
++
++    static String row(String word, String diac, String lemma, String pos,
++                      String gloss, String contrib, String lic) {
++        return word + "," + diac + "," + lemma + "," + pos + "," + gloss + "," + contrib + "," + lic;
++    }
++
++    static byte[] csv(String... dataRows) {
++        StringBuilder b = new StringBuilder("word,diacritized,lemma,pos,gloss,contributor,license\n");
++        for (String r : dataRows) b.append(r).append('\n');
++        return b.toString().getBytes(StandardCharsets.UTF_8);
++    }
++
++    /** Clean 2-row batch (both rows accepted). */
++    static byte[] cleanCsv() {
++        return csv(
++                row("كتابية", "كِتَابِيَّة", "كتاب", "adj", "متعلقة بالكتاب والتحرير", "سالم-قلم", "CC0-1.0"),
++                row("عدادية", "عَدَّادِيَّة", "عداد", "adj", "متعلقة بالعد والقياس", "نورة-حرف", "CC0-1.0"));
++    }
++
++    static Set<String> inst(String... words) {
++        Set<String> s = new HashSet<>();
++        for (String w : words) s.add(CommunityDict.normAr(w));
++        return s;
++    }
++
++    static DictSign.Dpack publishOf(byte[] csvBytes, Set<String> installed) {
++        return DictSign.publish(csvBytes, CommunityDict.review(csvBytes, installed));
++    }
++
++    interface F { void run(); }
++
++    static String expect(F f) {
++        try { f.run(); return null; }
++        catch (IllegalArgumentException e) { return e.getMessage(); }
++    }
++
++    // ------------------------------------------------------------ positives
++
++    static void publishPositives() {
++        System.out.println("== DictSign:publish ==");
++        Set<String> installed = inst("سلام");
++        byte[] b = cleanCsv();
++        CommunityDict.Report rep = CommunityDict.review(b, installed);
++        check("clean 2-row batch accepted 2/2", rep.accepted == 2 && rep.rejected == 0);
++        DictSign.Dpack d = publishOf(b, installed);
++        check("publish carries the report batchId", d.batchId.equals(rep.batchId));
++        check("publish counter = accepted count", d.accepted == 2);
++        check("dpack sig is a 64-hex digest distinct from batchId", d.sig.length() == 64 && !d.sig.equals(d.batchId));
++        check("words sha differs from batch sha", !d.wordsSha.equals(d.batchId));
++        DictSign.Dpack d2 = publishOf(b, installed);
++        check("publish is byte-deterministic (re-publish identical)", Arrays.equals(d.bytes, d2.bytes));
++        check("statement embedded and pinned (report sha)", d.statement.indexOf("\"rows\":") > 0
++                && CommunityDict.sha256Hex(d.statement.getBytes(StandardCharsets.UTF_8)).equals(d.reportSha));
++        byte[] allBad = csv(row("qqq", "qqq", "qqq", "noun", "غ", "سالم-قلم", "CC0-1.0"));
++        String t = expect(() -> DictSign.publish(allBad, CommunityDict.review(allBad, inst())));
++        check("publish refuses zero-accepted batch (EMPTY_PACK)", "EMPTY_PACK".equals(t));
++        String t2 = expect(() -> DictSign.publish(csv(
++                row("كتابية", "كِتَابِيَّة", "كتاب", "adj", "متعلقة بالكتاب والتحرير", "سالم-قلم", "CC0-1.0")),
++                rep));
++        check("publish refuses foreign report (BATCH_MISMATCH)", "BATCH_MISMATCH".equals(t2));
++    }
++
++    static void loadPositives() {
++        System.out.println("== DictSign:load ==");
++        Set<String> installed = inst("سلام");
++        byte[] b = cleanCsv();
++        DictSign.Dpack d = publishOf(b, installed);
++        DictSign.Pack p = DictSign.load(d.bytes, d.statement, installed);
++        check("load with statement passes", p != null && p.words.size() == 2);
++        check("pack order = review acceptance order", p.words.get(0).word.equals("كتابية")
++                && p.words.get(1).word.equals("عدادية"));
++        check("pack batchId matches", p.batchId.equals(d.batchId));
++        DictSign.Pack p2 = DictSign.load(d.bytes, null, null);
++        check("device path loads without statement", p2.words.size() == 2);
++        check("sig survives the round-trip", p.sig.equals(d.sig));
++    }
++
++    // ------------------------------------------------------------ engine
++
++    static Dictionary dictIn(File assetsDir, File filesDir) throws Exception {
++        Dictionary d = new Dictionary(new FakeContext(assetsDir, filesDir,
++                new File(filesDir.getParentFile(), filesDir.getName() + "-cache")), "ar");
++        long t0 = System.currentTimeMillis();
++        while (!d.isLoaded() && System.currentTimeMillis() - t0 < 15000) Thread.sleep(25);
++        return d;
++    }
++
++    static File engineAssets(byte[] arTxt, byte[] dpack) throws Exception {
++        File dir = Files.createTempDirectory("w19-assets").toFile();
++        Files.write(new File(dir, "ar.txt").toPath(), arTxt);
++        if (dpack != null) Files.write(new File(dir, "community_ar.dpack").toPath(), dpack);
++        return dir;
++    }
++
++    static void engineOrder() throws Exception {
++        System.out.println("== DictSign:engine consumption order ==");
++        byte[] ar = "سلام\nكتاب\nقلم\n".getBytes(StandardCharsets.UTF_8);
++        byte[] b = csv(
++                row("مفتاحية", "مَفْتَاحِيَّة", "مفتاح", "noun", "كلمة سرية تفتح قفلا رقميا", "سالم-قلم", "CC0-1.0"),
++                row("توأمية", "تَوَأُمِيَّة", "توأم", "adj", "متعلقة بتوأم متطابق", "نورة-حرف", "CC0-1.0"),
++                row("زمردية", "زُمُرُدِيَّة", "زمرد", "adj", "لون أخضر زاه كالزمرد", "فارس-مجتمع", "CC0-1.0"));
++        DictSign.Dpack d = publishOf(b, inst("سلام", "كتاب", "قلم"));
++        Dictionary dNo = dictIn(engineAssets(ar, null), Files.createTempDirectory("w19-u1").toFile());
++        Dictionary dYes = dictIn(engineAssets(ar, d.bytes), Files.createTempDirectory("w19-u2").toFile());
++        check("without pack asset: pack word unknown", !dNo.knows("مفتاحية"));
++        check("with pack asset: pack words known", dYes.knows("مفتاحية") && dYes.knows("زمردية"));
++        check("pack rank starts after the whole installed corpus (3,4,5)",
++                dYes.wordRank("مفتاحية") == 3 && dYes.wordRank("توأمية") == 4 && dYes.wordRank("زمردية") == 5);
++        check("installed corpus always precedes the pack",
++                dYes.wordRank("سلام") < dYes.wordRank("كتاب") && dYes.wordRank("كتاب") < dYes.wordRank("مفتاحية"));
++        check("pack order preserved inside the pack",
++                dYes.wordRank("مفتاحية") < dYes.wordRank("توأمية") && dYes.wordRank("توأمية") < dYes.wordRank("زمردية"));
++        check("pack score capped at PACK_SCORE (3000)", dYes.wordScore("مفتاحية") == Dictionary.PACK_SCORE);
++        check("pack words never fire the exact-match boost (3000 < 22000)",
++                dYes.wordScore("مفتاحية") < 22000);
++        List<String> sug = dYes.suggest("مفتاح", 5);
++        check("suggest surfaces the pack word (after installed rivals)", sug.contains("مفتاحية"));
++    }
++
++    static void engineDuplicateDrop() throws Exception {
++        System.out.println("== DictSign:installed wins ==");
++        byte[] ar = "سلام\nكتاب\nقلم\n".getBytes(StandardCharsets.UTF_8);
++        byte[] b = csv(
++                row("سلآم", "سَلَام", "سلام", "noun", "تحية البدء والسلام", "بدر-نحو", "CC0-1.0"),
++                row("كتابية", "كِتَابِيَّة", "كتاب", "adj", "متعلقة بالكتاب والتحرير", "نورة-حرف", "CC0-1.0"));
++        DictSign.Dpack d = publishOf(b, inst("سلام", "كتاب", "قلم"));
++        check("review refused the hamza-variant duplicate (1 accepted)", d.accepted == 1
++                && d.words.get(0).word.equals("كتابية"));
++        Dictionary dYes = dictIn(engineAssets(ar, d.bytes), Files.createTempDirectory("w19-u3").toFile());
++        check("merged pack word lands right after the corpus", dYes.knows("كتابية") && dYes.wordRank("كتابية") == 3);
++        check("duplicate word still resolves to the installed spelling", dYes.wordRank("سلام") < 3);
++        int added = dYes.mergePack(Arrays.asList("قلم", "جديد", "قلم"));
++        check("mergePack drops duplicates and reports the honest count", added == 1 && dYes.knows("جديد"));
++    }
++
++    // ------------------------------------------------------------ negatives
++
++    static void negatives() throws Exception {
++        System.out.println("== DictSign:negatives ==");
++        Set<String> installed = inst("سلام");
++        byte[] b = cleanCsv();
++        DictSign.Dpack d = publishOf(b, installed);
++        byte[] raw = d.bytes;
++        String stmt = d.statement;
++
++        // 1) one body byte flipped → signature break
++        byte[] t1 = raw.clone();
++        int wordByte = indexOf(raw, "w ".getBytes(StandardCharsets.UTF_8)) + 3;
++        t1[wordByte] ^= 0x01;
++        check("NEG tampered body byte → DPACK_SIG", "DPACK_SIG".equals(expect(() -> DictSign.load(t1, stmt, null))));
++
++        // 2) clean word swapped after review, sig+words reforged, original statement kept
++        byte[] swapped = csv(
++                row("مدادية", "مِدَادِيَّة", "مداد", "adj", "متعلقة بالمداد والكتابة", "سالم-قلم", "CC0-1.0"),
++                row("عدادية", "عَدَّادِيَّة", "عداد", "adj", "متعلقة بالعد والقياس", "نورة-حرف", "CC0-1.0"));
++        DictSign.Dpack forged = publishOf(swapped, inst());
++        String head = new String(raw, 0, headerLen(raw), StandardCharsets.UTF_8)
++                .replace("words " + d.wordsSha, "words " + forged.wordsSha);
++        byte[] attack = (head + new String(bodyOf(forged.bytes), StandardCharsets.UTF_8)
++                + "sig " + CommunityDict.sha256Hex(
++                        concat(head.getBytes(StandardCharsets.UTF_8), bodyOf(forged.bytes))) + "\n")
++                .getBytes(StandardCharsets.UTF_8);
++        check("NEG post-review word swap vs original statement → DPACK_REPORT",
++                "DPACK_REPORT".equals(expect(() -> DictSign.load(attack, stmt, null))));
++
++        // 3) forged accepted counter — unsigned edit breaks the signature first
++        byte[] t3 = patchLine(raw, "accepted 2", "accepted 3");
++        check("NEG forged counter, unsigned edit → DPACK_SIG",
++                "DPACK_SIG".equals(expect(() -> DictSign.load(t3, stmt, null))));
++        // 3b) counter reforged consistently → count ≠ body rows
++        byte[] t3b = reforge(raw, "accepted 2", "accepted 3");
++        check("NEG reforged counter mismatching body → DPACK_COUNT",
++                "DPACK_COUNT".equals(expect(() -> DictSign.load(t3b, stmt, null))));
++
++        // 4) foreign batchId in the header (reforged) — the statement pins the batch
++        byte[] t4 = reforge(raw, "batch " + d.batchId,
++                "batch " + CommunityDict.sha256Hex("x".getBytes(StandardCharsets.UTF_8)));
++        check("NEG foreign batchId → DPACK_REPORT (statement pins the batch)",
++                "DPACK_REPORT".equals(expect(() -> DictSign.load(t4, stmt, null))));
++
++        // 5) words pin corrupted (reforged sig)
++        byte[] t5 = reforge(raw, "words " + d.wordsSha,
++                "words " + CommunityDict.sha256Hex("y".getBytes(StandardCharsets.UTF_8)));
++        check("NEG corrupted words pin → DPACK_WORDS",
++                "DPACK_WORDS".equals(expect(() -> DictSign.load(t5, stmt, null))));
++
++        // 6) schema line replaced
++        byte[] t6 = reforge(raw, "neokey-dpack-1", "neokey-dpack-2");
++        check("NEG wrong schema line → DPACK_SCHEMA",
++                "DPACK_SCHEMA".equals(expect(() -> DictSign.load(t6, stmt, null))));
++
++        // 7) truncated body (one row silently dropped, a fresh sig appended)
++        String txt = new String(raw, StandardCharsets.UTF_8);
++        int r1end = txt.indexOf('\n', txt.indexOf("w "));
++        byte[] t7 = appendSig(txt.substring(0, r1end + 1).getBytes(StandardCharsets.UTF_8));
++        check("NEG truncated body → DPACK_WORDS (body sha no longer matches)",
++                "DPACK_WORDS".equals(expect(() -> DictSign.load(t7, stmt, null))));
++        // 7b) truncation fully reforged (words+counter+sig) → statement mismatch
++        byte[] t7b = reforge(reforge(t7, "accepted 2", "accepted 1"),
++                "words " + d.wordsSha,
++                "words " + CommunityDict.sha256Hex(bodyOf(t7)));
++        check("NEG fully-reforged truncation → DPACK_REPORT",
++                "DPACK_REPORT".equals(expect(() -> DictSign.load(t7b, stmt, null))));
++
++        // 8) BOM-prefixed package
++        byte[] t8 = new byte[raw.length + 3];
++        t8[0] = (byte) 0xEF; t8[1] = (byte) 0xBB; t8[2] = (byte) 0xBF;
++        System.arraycopy(raw, 0, t8, 3, raw.length);
++        check("NEG BOM-prefixed package → DPACK_SCHEMA",
++                "DPACK_SCHEMA".equals(expect(() -> DictSign.load(t8, stmt, null))));
++
++        // 9) poison word in a fully-reforged pack with attacker-supplied statement —
++        //    row re-validation is the last line of defense (NOT_ARABIC)
++        List<DictSign.Word> poisonRows = new ArrayList<>();
++        poisonRows.add(new DictSign.Word("qqq", "qqq", "qqq", "noun"));
++        poisonRows.add(new DictSign.Word("عدادية", "عَدَّادِيَّة", "عداد", "adj"));
++        byte[] manual = manualPack(d.batchId, poisonRows);
++        String manualStmt = DictSign.statement(d.batchId, poisonRows.size(),
++                CommunityDict.sha256Hex(DictSign.bodyBytes(poisonRows)), poisonRows);
++        check("NEG latin poison word, fully-reforged pack + own statement → DPACK_WORD (NOT_ARABIC)",
++                expect(() -> DictSign.load(manual, manualStmt, null)).startsWith("DPACK_WORD"));
++
++        // 10) pack duplicating the installed dictionary — caught with norms provided
++        byte[] dup = cleanCsv();
++        DictSign.Dpack dupD = publishOf(dup, inst());
++        check("NEG pack duplicating the installed dictionary → DPACK_WORD (DUPLICATE)",
++                expect(() -> DictSign.load(dupD.bytes, dupD.statement, inst("كتابية"))).startsWith("DPACK_WORD"));
++    }
++
++    // ---- byte-surgery helpers (attack simulations keep the gates honest) ----
++
++    static int indexOf(byte[] hay, byte[] needle) {
++        outer: for (int i = 0; i <= hay.length - needle.length; i++) {
++            for (int j = 0; j < needle.length; j++) if (hay[i + j] != needle[j]) continue outer;
++            return i;
++        }
++        return -1;
++    }
++
++    /** byte length of the 5 header lines (incl. their LFs) */
++    static int headerLen(byte[] raw) {
++        int n = 0;
++        for (int i = 0, seen = 0; seen < 5 && i < raw.length; i++)
++            if (raw[i] == '\n') { seen++; n = i + 1; }
++        return n;
++    }
++
++    /** body bytes = everything between the header and the final "sig " line */
++    static byte[] bodyOf(byte[] raw) {
++        int h = headerLen(raw);
++        int sigStart = raw.length - (4 + 64 + 1);   // "sig " + 64 hex + "\n"
++        byte[] b = new byte[sigStart - h];
++        System.arraycopy(raw, h, b, 0, b.length);
++        return b;
++    }
++
++    static byte[] concat(byte[] a, byte[] b) {
++        byte[] o = new byte[a.length + b.length];
++        System.arraycopy(a, 0, o, 0, a.length);
++        System.arraycopy(b, 0, o, a.length, b.length);
++        return o;
++    }
++
++    static byte[] patchLine(byte[] raw, String from, String to) {
++        String s = new String(raw, StandardCharsets.UTF_8);
++        return s.replace(from + "\n", to + "\n").getBytes(StandardCharsets.UTF_8);
++    }
++
++    /** replace a header field AND re-sign the whole package (the honest attacker) */
++    static byte[] reforge(byte[] raw, String from, String to) {
++        return resig(patchLine(raw, from, to));
++    }
++
++    /** append a fresh sig line over exactly these prefix bytes (truncated-file attacker) */
++    static byte[] appendSig(byte[] prefix) {
++        byte[] tail = ("sig " + CommunityDict.sha256Hex(prefix) + "\n").getBytes(StandardCharsets.UTF_8);
++        byte[] out = new byte[prefix.length + tail.length];
++        System.arraycopy(prefix, 0, out, 0, prefix.length);
++        System.arraycopy(tail, 0, out, prefix.length, tail.length);
++        return out;
++    }
++
++    static final byte[] SIGB = {'\n', 's', 'i', 'g', ' '};
++
++    /** recompute the sig line over everything before it — BYTE indices only
++     *  (a char-index search on UTF-8 Arabic would truncate mid-sequence) */
++    static byte[] resig(byte[] raw) {
++        int hit = -1;
++        outer: for (int i = raw.length - 5; i >= 0; i--) {
++            for (int j = 0; j < 5; j++) if (raw[i + j] != SIGB[j]) continue outer;
++            hit = i; break;
++        }
++        if (hit < 0) return raw;
++        int sigStart = hit + 1;
++        byte[] prefix = new byte[sigStart];
++        System.arraycopy(raw, 0, prefix, 0, sigStart);
++        byte[] tail = ("sig " + CommunityDict.sha256Hex(prefix) + "\n").getBytes(StandardCharsets.UTF_8);
++        byte[] out = new byte[sigStart + tail.length];
++        System.arraycopy(prefix, 0, out, 0, sigStart);
++        System.arraycopy(tail, 0, out, sigStart, tail.length);
++        return out;
++    }
++
++    /** hand-build a consistent pack with arbitrary rows (bypassing publish's review filter) */
++    static byte[] manualPack(String batch, List<DictSign.Word> ws) {
++        byte[] body = DictSign.bodyBytes(ws);
++        String wordsSha = CommunityDict.sha256Hex(body);
++        String stmt = DictSign.statement(batch, ws.size(), wordsSha, ws);
++        String reportSha = CommunityDict.sha256Hex(stmt.getBytes(StandardCharsets.UTF_8));
++        String head = "neokey-dpack-1\nbatch " + batch + "\naccepted " + ws.size()
++                + "\nreport " + reportSha + "\nwords " + wordsSha + "\n";
++        byte[] prefix = concat(head.getBytes(StandardCharsets.UTF_8), body);
++        return (new String(prefix, StandardCharsets.UTF_8) + "sig " + CommunityDict.sha256Hex(prefix) + "\n")
++                .getBytes(StandardCharsets.UTF_8);
++    }
++}
+diff --git a/tests/run.sh b/tests/run.sh
+index 951d712..72b5309 100755
+--- a/tests/run.sh
++++ b/tests/run.sh
+@@ -34,7 +34,7 @@ SRC="src/com/hark/neokey/ClipItem.java src/com/hark/neokey/ClipRepo.java src/com
+  src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java \
+  src/com/hark/neokey/ThemePack.java src/com/hark/neokey/Economy.java \
+  src/com/hark/neokey/NqfPort.java src/com/hark/neokey/CommunityDict.java \
+- src/com/hark/neokey/StoreUi.java \
++ src/com/hark/neokey/StoreUi.java src/com/hark/neokey/DictSign.java \
+  $(find tests -name '*.java')"
+ if command -v javac >/dev/null 2>&1; then
+   javac -nowarn -encoding UTF-8 -cp "$JAR" -d build/test $SRC
+@@ -57,3 +57,4 @@ java -cp build/test:$JAR com.hark.neokey.EconomyTest
+ java -cp build/test:$JAR com.hark.neokey.NqfPortTest
+ java -cp build/test:$JAR com.hark.neokey.CommunityDictTest
+ java -cp build/test:$JAR com.hark.neokey.StoreUiTest
++java -cp build/test:$JAR com.hark.neokey.DictSignTest
+diff --git a/tools/PublishPack.java b/tools/PublishPack.java
+new file mode 100644
+index 0000000..4505152
+--- /dev/null
++++ b/tools/PublishPack.java
+@@ -0,0 +1,70 @@
++import com.hark.neokey.CommunityDict;
++import com.hark.neokey.DictSign;
++
++import java.io.ByteArrayOutputStream;
++import java.io.File;
++import java.io.FileInputStream;
++import java.io.InputStream;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.util.ArrayList;
++import java.util.List;
++
++/**
++ * خطوة نشر حزمة القاموس المجتمعي — المرحلة 3، الأسبوع 2.
++ *
++ * دفعة مجتازة للمراجعة → حزمة قاموس موقّعة تُحمَّل كأصل إصدار:
++ *   java -cp build/publish tools.PublishPack <batch.csv> <installed-dict.txt> \
++ *        assets/community_ar.dpack build/release/community-pack-statement.json
++ *
++ * لا قرار إنسان هنا يتجاوز المراجعة: publish يرفض نفسه إذا كان التقرير ليس
++ * لهذه الدفعة، أو القبول صفر، ويُصدر بيان المراجعة (الأثر البشري المعتمد)
++ * بجوار الأصل — البايتات حتمية، إعادة النشر تعيد الملف نفسه حرفاً بحرف.
++ */
++public final class PublishPack {
++
++    public static void main(String[] args) throws Exception {
++        if (args.length != 4) {
++            System.err.println("usage: PublishPack <batch.csv> <installed-dict.txt> <out.dpack> <out.statement.json>");
++            System.exit(2);
++        }
++        byte[] batch = readAll(new File(args[0]));
++        List<String> dict = lines(new File(args[1]));
++        java.util.Set<String> installed = CommunityDict.normSetOf(dict);
++
++        CommunityDict.Report rep = CommunityDict.review(batch, installed);
++        if (rep.accepted != rep.total || rep.accepted == 0) {
++            System.err.println("PUBLISH_REFUSED — batch is not fully accepted: "
++                    + rep.accepted + "/" + rep.total + " (tags: " + rep.tags + ")");
++            System.exit(1);
++        }
++        DictSign.Dpack d = DictSign.publish(batch, rep);
++        Files.write(new File(args[2]).toPath(), d.bytes);
++        Files.write(new File(args[3]).toPath(), d.statement.getBytes(StandardCharsets.UTF_8));
++
++        System.out.println("PUBLISH_OK batch=" + d.batchId);
++        System.out.println("  words=" + d.accepted
++                + " bytes=" + d.bytes.length
++                + " sig=" + d.sig);
++        System.out.println("  reportSha=" + d.reportSha);
++        System.out.println("  wordsSha=" + d.wordsSha);
++        System.out.println("  out=" + args[2]);
++        System.out.println("  statement=" + args[3]);
++    }
++
++    static byte[] readAll(File f) throws Exception {
++        ByteArrayOutputStream bo = new ByteArrayOutputStream();
++        try (InputStream in = new FileInputStream(f)) {
++            byte[] buf = new byte[8192]; int n;
++            while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
++        }
++        return bo.toByteArray();
++    }
++
++    static List<String> lines(File f) throws Exception {
++        List<String> out = new ArrayList<>();
++        for (String l : new String(readAll(f), StandardCharsets.UTF_8).split("\n"))
++            if (!l.isEmpty()) out.add(l);
++        return out;
++    }
++}

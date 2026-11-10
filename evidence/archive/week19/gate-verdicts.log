@@ -1,0 +1,9 @@
+DICTSIGN_GATE OK
+STOREUI_GATE OK
+CORRGATE n=72 v2_acc=100.0% v2_same_norm=0 v2_wrong=0 v1_acc=16.7% gap=83.3 fp_wrong=0 norms=8(3.0%) p50=0.018ms p95=0.044ms punct=10/10 policy_fails=0
+NQFPORT_GATE_OK assets=15 tensors=8 params=2963583 agree=8 negatives=103 p50=0.955ms p95=5.711ms gate=0.79s
+COMMUNITY_GATE_OK accepted=157 rejected=112 negatives=110 p50_us=9 batches=11 installed=134188
+DICTSIGN_GATE_OK batches=2 words=13 negatives=12/12 p50_publish_us=372 p50_load_us=115 checks=16
+STOREUI_GATE_OK founders=10 packs=25 installed=25 negatives=16/16 p50_install_us=197 catalog_cents=7325 ledger_closes=7325 checks=79
+R8_OK dex=518200 bytes, mapping=209 program classes, manifest components kept=10/10
+PIPELINE_OK
