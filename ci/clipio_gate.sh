@@ -63,9 +63,11 @@ fi
 echo "$RAW" | grep -q "txt separator-line escape keeps item count" \
   || { echo "CLIPIO_GATE_FAILED law.absent (the TXT separator escape check is missing from the suite)"; exit 1; }
 
-# live perf numbers from this run (export 1000 / parse+dup+import 1000)
-EX_MS=$(echo "$RAW" | grep -oE 'PERF export 1000: [0-9]+ ms' | tail -1 | grep -oE '[0-9]+')
-IM_MS=$(echo "$RAW" | grep -oE 'parse\+dup\+import 1000: [0-9]+ ms' | tail -1 | grep -oE '[0-9]+')
+# live perf numbers from this run (export 1000 / parse+dup+import 1000).
+# The number is taken AFTER the colon (the suite name's "1000" must not be
+# captured — the W47 gates.env lesson: a multi-line EX_MS poisoned the key).
+EX_MS=$(echo "$RAW" | grep -oE 'PERF export 1000: [0-9]+ ms' | tail -1 | sed -E 's/.*: ([0-9]+) ms.*/\1/')
+IM_MS=$(echo "$RAW" | grep -oE 'parse\+dup\+import 1000: [0-9]+ ms' | tail -1 | sed -E 's/.*: ([0-9]+) ms.*/\1/')
 echo "CLIPIOGATE checks=$PASSED export1000=${EX_MS:-?}ms import1000=${IM_MS:-?}ms"
 echo "CLIPIO_GATE_OK"
 exit 0
