@@ -82,7 +82,10 @@ TR_UIEN=$(field "$TR" ui_en_coupled)
 # wrong resource IDs); R.* constants inline as 32-bit, shifting the measured
 # trim delta 13424 -> 13052 (-372 = exactly the real-R size delta). The lever
 # itself is unchanged (entries=119, regrown=0, purity intact).
-[ "${TR_SAVED:-0}" -ge 13052 ]  || fail "trim saved ${TR_SAVED:-0} < 13052 (the lever shrank)"
+# W47 re-pin (roadmap W47, documented weekly baseline): 13052 -> 12984 — the
+# clip escapeTxt law (ci/clipio_gate.sh, HISTORY W47) grew the source by 68
+# dex bytes, the measured lever shrinks by the same delta; dex 505704/512000.
+[ "${TR_SAVED:-0}" -ge 12984 ]  || fail "trim saved ${TR_SAVED:-0} < 12984 (the lever shrank)"
 [ "${TR_CEIL:-0}"  = "$DEX_CEILING" ] || fail "trim ceiling ${TR_CEIL:-0} != $DEX_CEILING"
 [ "${TR_DEX:-999999}" -le "$DEX_CEILING" ] || fail "trim dex $TR_DEX > ceiling $DEX_CEILING"
 
