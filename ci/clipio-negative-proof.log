@@ -1,0 +1,22 @@
+# clipio-negative-proof — W47 (2026-11-16), 2026-11-10T22:02:15Z
+# Three attacks against ci/clipio_gate.sh; each must bite its exact tag,
+# then the clean tree must heal to a full green gate (containment).
+
+ATTACK baseline
+  baseline ✓ (CLIPIO_GATE_OK on the clean tree)
+
+ATTACK tamper.test.expectation
+  bit ✓ (tamper.test.expectation — rc=1, gate refused)
+  verdict: CLIPIO_GATE_FAILED tests.failed=1
+  heal ✓ (backup bytes restored = full green gate again)
+
+ATTACK tamper.source.format
+  bit ✓ (tamper.source.format — rc=1, gate refused)
+  heal ✓ (backup bytes restored = full green gate again)
+
+ATTACK tests.missing.fail-closed
+  bit ✓ (tests.missing.fail-closed — rc=1, gate refused)
+  heal ✓ (backup bytes restored = full green gate again)
+
+PROOF_PASSED — all three attacks bit their exact tags and the clean tree healed green after each
+# exit=0
