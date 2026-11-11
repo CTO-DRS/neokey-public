@@ -57,8 +57,8 @@ import java.util.regex.Pattern;
  *   n5 31-char app name       → listing.over_limit
  *   n6 evidence not in ui_en  → ui.decoupled
  *
- * Verdict: UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=7 evidence=8
- *          permissions=3 vc=73 vn=2.6 apk_sha256=…  /  FAILED <reason>
+ * Verdict: UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=8 evidence=8
+ *          permissions=3 vc=1 vn=0.1.0 apk_sha256=…  /  FAILED <reason>
  */
 public final class UploadBundleGate {
     private UploadBundleGate() {}

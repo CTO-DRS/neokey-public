@@ -1,24 +1,24 @@
-== uploadbundle negative proof — 2026-11-05T02:57:16Z ==
+== uploadbundle negative proof — 2026-11-11T07:58:30Z ==
 
 --- attack: swapped artifact (rebuilt APK planted as build/NeoKey-2036.apk) (expect: UPLOADBUNDLEGATE_FAILED anchor.apk.sha)
 rc=1
-verdict: UPLOADBUNDLEGATE_FAILED anchor.apk.sha (artifact sha256=fcdf348960080456a1d0fba3a8c3166d3e42171088cb5102475bc647e5647b03 != pinned 42fd08bcee9e0fbf3250d4cb479795aa9aa52486f5a503cd5e885820e01bf1aa — the bundle refuses a rebuilt or swapped APK)
-tag: UPLOADBUNDLEGATE_FAILED anchor.apk.sha (artifact sha256=fcdf348960080456a1d0fba3a8c3166d3e42171088cb5102475bc647e5647b03 != pinned 42fd08bcee9e0fbf3250d4cb479795aa9aa52486f5a503cd5e885820e01bf1aa — the bundle refuses a rebuilt or swapped APK)
+verdict: UPLOADBUNDLEGATE_FAILED anchor.apk.sha (artifact sha256=a6a28d4f7a14e8a2e3f7f806333bea89ec0e824abc62c62f547af68451db12a6 != pinned f4a22721cdb4a8edb57d2f63d7c2f17d1b4660379e7d8a4c8cb87c2ac78febbc — the bundle refuses a rebuilt or swapped APK)
+tag: UPLOADBUNDLEGATE_FAILED anchor.apk.sha (artifact sha256=a6a28d4f7a14e8a2e3f7f806333bea89ec0e824abc62c62f547af68451db12a6 != pinned f4a22721cdb4a8edb57d2f63d7c2f17d1b4660379e7d8a4c8cb87c2ac78febbc — the bundle refuses a rebuilt or swapped APK)
 tag: OK
-restored: rc=0 UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=8 evidence=8 vc=73 vn=2.6 ap
+restored: rc=0 UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=8 evidence=8 vc=1 vn=0.1.0 a
 
 --- attack: neutered safety derivation (answers beyond the declared permissions) (expect: UPLOADBUNDLEGATE_FAILED negatives.safety_unproven)
 rc=1
 verdict: UPLOADBUNDLEGATE_FAILED negatives.safety_unproven
 tag: UPLOADBUNDLEGATE_FAILED negatives.safety_unproven
 tag: OK
-restored: rc=0 UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=8 evidence=8 vc=73 vn=2.6 ap
+restored: rc=0 UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=8 evidence=8 vc=1 vn=0.1.0 a
 
 --- attack: hide UploadBundleGate.java (compile guard must refuse) (expect: UPLOADBUNDLEGATE_FAILED compile)
 rc=1
 verdict: UPLOADBUNDLEGATE_FAILED compile
 tag: UPLOADBUNDLEGATE_FAILED compile
 tag: OK
-restored: rc=0 UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=8 evidence=8 vc=73 vn=2.6 ap
+restored: rc=0 UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=8 evidence=8 vc=1 vn=0.1.0 a
 
 UPLOADBUNDLE_NEGATIVE_PROOF_OK 3 attacks bitten, all restores healed
