@@ -1,4 +1,4 @@
-== communityopen negative proof — 2026-11-11T21:38:17Z ==
+== communityopen negative proof — 2026-11-11T22:01:48Z ==
 baseline: COMMUNITYOPEN_OK checks=51 negatives=16/16 words=9 contribs=3 batches=6 pack=9 vc=1 vn=0.1.0
 
 --- attack: dead thanks expectation (the harness's demand on the thanks title renamed away — a rehearsal that accepts any thanks page credits nobody)

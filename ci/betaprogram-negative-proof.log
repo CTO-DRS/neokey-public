@@ -1,4 +1,4 @@
-== betaprogram negative proof — 2026-11-11T19:31:24Z ==
+== betaprogram negative proof — 2026-11-11T22:01:38Z ==
 baseline: BETAPROGRAM_OK checks=33 negatives=6/6 seats=100 batch=22 rate=0.03 vc=1 vn=0.1.0
 
 --- attack: dead week expectation (the harness's demand on the ledger verdict renamed away — a rehearsal that accepts any verdict rehearses nothing)
