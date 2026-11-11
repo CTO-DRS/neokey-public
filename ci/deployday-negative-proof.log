@@ -1,0 +1,16 @@
+== deployday negative proof — 2026-11-11T15:01:38Z ==
+baseline: DEPLOYDAY_OK checks=29 negatives=7/7 pin16=c72ce04908603886 days_left=364 pack_members=6 vc=1 vn=0.1.0
+
+--- attack: dead decision expectation (the PROVISION_OK prefix renamed away — a rehearsal that accepts any verdict rehearses nothing)
+bit: DEPLOYDAY_FAILED decision.ok
+restored: green re-verify OK (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=b66f2e1f59a0dc92 days_left=364 pack_members=6 vc=1 vn=0.1.0)
+
+--- attack: the pin law severed from the decision (the derived pin replaced by a hardcoded rogue literal — the wire must refuse what nobody derived)
+bit: DEPLOYDAY regression: health.ok (the real probe on the pinned anchored channel (strict name check — the IP SAN matches))
+restored: green re-verify OK (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=4ad29d86746237e6 days_left=364 pack_members=6 vc=1 vn=0.1.0)
+
+--- attack: hidden tool (DeployDay.java removed — the gate fails closed at compile)
+bit: DEPLOYDAY_FAILED compile
+restored: green re-verify OK (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=5d6accb716c743a7 days_left=364 pack_members=6 vc=1 vn=0.1.0)
+
+PROOF PASSED deployday 3/3 attacks bit their exact tags and the restores healed (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=5d6accb716c743a7 days_left=364 pack_members=6 vc=1 vn=0.1.0)
