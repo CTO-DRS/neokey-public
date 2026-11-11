@@ -105,8 +105,11 @@ public final class Preflight {
                 new String[]{CMD_SIGN1, SRC_SIGN_DOC},
                 new boolean[]{true, false}));
         L.add(new Step("billing.console", "سلك BillingClient + مفتاح اللوحة الحقيقي", false,
-                "يحتاج جهازاً ومفتاح اللوحة — الاستبدال نفسه مثبت قبل الحساب (W34)",
-                null, new String[0], new String[0], new boolean[0]));
+                "يحتاج جهازاً ومفتاح اللوحة الحقيقي — نقطة الاستبدال الوحيدة هي السطر المُحكَم (الأمر الأول أدناه)؛ اللصق يلمس السطر المُحكَم وحده: PlayProvider بالمفتاح الحقيقي مكان SimProvider، ثم يُعاد تثبيت OpVerify.SWAP_LINE بوعي (قانون السطر المُحكَم W34) — الحكم OPVERIFYGATE_OK",
+                null,
+                new String[]{"sim = new PaymentProvider.SimProvider();", "ci/opverify_gate.sh"},
+                new String[]{"src/com/hark/neokey/StoreActivity.java", "ci/opverify_gate.sh"},
+                new boolean[]{false, true}));
         L.add(new Step("sync.server", "النطاق + شهادة CA + نقل الحزمة + الأمران الآليان", false,
                 "الشراء والنقل خارج البيئة — أمر القرار وسطر الدبوس حرفان محروسان، والقوس يُكمل بسطر PROVISION_OK المُصدَر",
                 null,
@@ -116,8 +119,11 @@ public final class Preflight {
                 new String[]{SRC_PACK, SRC_PACK, SRC_PACK},
                 new boolean[]{false, false, false}));
         L.add(new Step("store.accounts", "حسابات المتاجر + نقطة الرفع نفسها", false,
-                "حساب + كونسول — الحزمة موصلة للرفع منذ W32",
-                null, new String[0], new String[0], new boolean[0]));
+                "حساب + كونسول — الحزمة موصلة للرفع منذ W49 (8 أعضاء + البيان؛ sha الـ APK المرساة يُشتق طازجًا في صف 1) — المسار الداخلي (internal testing) أول مسار، وبيان الحزمة هو مرجع الأعضاء قبل الرفع، وإعادة التحقق الأخيرة ببوابة الحزمة",
+                null,
+                new String[]{"build/upload/bundle/statement.json", "ci/uploadbundle_gate.sh"},
+                new String[]{"ci/uploadbundle_gate.sh", "ci/uploadbundle_gate.sh"},
+                new boolean[]{true, true}));
         L.add(new Step("device.matrix", "مصفوفة الأجهزة الحقيقية + أرقام MAU", false,
                 "خارجية كاملة (جهاز + حساب) — توثَّق كما هي بلا تظاهر",
                 null, new String[0], new String[0], new boolean[0]));

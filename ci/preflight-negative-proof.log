@@ -1,17 +1,17 @@
-== preflight negative proof — 2026-11-05T10:48:08Z ==
-baseline: PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=77 vn=3.0
+== preflight negative proof — 2026-11-11T11:39:04Z ==
+baseline: PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=1 vn=0.1.0
 
 --- attack: stale identity fed to the gate (last week's verdicts 76/3.0 in the evidence file — the sheet would agree with the lie, the evidence identity check does not)
 bit: PREFLIGHTGATE_FAILED evidence
-restored: green re-verify OK (PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=77 vn=3.0)
+restored: green re-verify OK (PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=1 vn=0.1.0)
 
 --- attack: dead guard (the sheet checker's evidence comparison neutered — its tag renamed away)
 bit: PREFLIGHT regression: neg.evidence_tampered (got: attack.neutered.tag bundle.reverify)
-restored: green re-verify OK (PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=77 vn=3.0)
+restored: green re-verify OK (PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=1 vn=0.1.0)
 
 --- attack: hidden tool (Preflight.java removed)
 bit: PREFLIGHTGATE_FAILED compile
-restored: green re-verify OK (PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=77 vn=3.0)
+restored: green re-verify OK (PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=1 vn=0.1.0)
 
 == PROOF PASSED: all three attacks bit with their own tags, all files restored, final gate green ==
-PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=77 vn=3.0
+PREFLIGHTGATE_OK checks=18 negatives=4/4 rows=10 checked=5 outside=5 sheet=build/release/preflight-sheet.md vc=1 vn=0.1.0

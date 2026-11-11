@@ -14,6 +14,13 @@
 #      check bites FIRST, before anything emits: every fresh verdict must
 #      carry the published identity («المرجع = المنشور» — evidence is
 #      measured against the week, not against itself).
+#      THE W34 LESSON BIT THE ATTACK ITSELF (found at the W50 prep, 2026-11-11):
+#      the sed's MATCH side was pinned to the then-current 77/3.0 and became a
+#      silent no-op at the identity unification (vc 1 / 0.1.0) — the attack
+#      stopped biting and the proof failed loudly (that is what proofs are
+#      for). The match side is now bump-independent (vc=[0-9]+ vn=[0-9.]+);
+#      the STALE TARGET stays a literal — any stale literal is wrong the same
+#      way.
 #   2) dead guard: the sheet checker's evidence comparison neutered (its tag
 #      renamed away) — the tampered-evidence negative STOPS BITING with its
 #      expected tag and the gate fails on it: a checker that compares
@@ -63,7 +70,7 @@ fi
 echo "baseline: $(grep -m1 '^PREFLIGHTGATE_OK' /tmp/pf_base.txt)"
 
 run_attack "stale identity fed to the gate (last week's verdicts 76/3.0 in the evidence file — the sheet would agree with the lie, the evidence identity check does not)" \
-  "sed -i 's/vc=77 vn=3.0/vc=76 vn=3.0/g' build/preflight-evidence.env" \
+  "sed -i -E 's/vc=[0-9]+ vn=[0-9.]+/vc=76 vn=3.0/g' build/preflight-evidence.env" \
   "PREFLIGHTGATE_FAILED evidence" \
   ":" \
   "java -cp build/preflight-gate com.hark.neokey.PreflightGate"
