@@ -119,11 +119,11 @@ public final class Preflight {
                 new String[]{SRC_PACK, SRC_PACK, SRC_PACK},
                 new boolean[]{false, false, false}));
         L.add(new Step("store.accounts", "حسابات المتاجر + نقطة الرفع نفسها", false,
-                "حساب + كونسول — الحزمة موصلة للرفع منذ W49 (8 أعضاء + البيان؛ sha الـ APK المرساة يُشتق طازجًا في صف 1) — المسار الداخلي (internal testing) أول مسار، وبيان الحزمة هو مرجع الأعضاء قبل الرفع، وإعادة التحقق الأخيرة ببوابة الحزمة",
+                "حساب + كونسول — الحزمة موصلة للرفع منذ W49 (8 أعضاء + البيان؛ sha الـ APK المرساة يُشتق طازجًا في صف 1) — المسار الداخلي (internal testing) أول مسار، وبيان الحزمة build/upload/bundle/statement.json هو مرجع الأعضاء قبل الرفع، وإعادة التحقق الأخيرة ببوابة الحزمة",
                 null,
-                new String[]{"build/upload/bundle/statement.json", "ci/uploadbundle_gate.sh"},
+                new String[]{"build/upload/bundle", "ci/uploadbundle_gate.sh"},
                 new String[]{"ci/uploadbundle_gate.sh", "ci/uploadbundle_gate.sh"},
-                new boolean[]{true, true}));
+                new boolean[]{false, true}));
         L.add(new Step("device.matrix", "مصفوفة الأجهزة الحقيقية + أرقام MAU", false,
                 "خارجية كاملة (جهاز + حساب) — توثَّق كما هي بلا تظاهر",
                 null, new String[0], new String[0], new boolean[0]));
