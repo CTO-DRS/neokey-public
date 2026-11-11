@@ -85,7 +85,13 @@ TR_UIEN=$(field "$TR" ui_en_coupled)
 # W47 re-pin (roadmap W47, documented weekly baseline): 13052 -> 12984 — the
 # clip escapeTxt law (ci/clipio_gate.sh, HISTORY W47) grew the source by 68
 # dex bytes, the measured lever shrinks by the same delta; dex 505704/512000.
-[ "${TR_SAVED:-0}" -ge 12984 ]  || fail "trim saved ${TR_SAVED:-0} < 12984 (the lever shrank)"
+# W48 re-pin (roadmap W48, documented weekly baseline): 12984 -> 6884 — the
+# phase-6 library (tags + shortcuts + text tools + the editor/library UI, the
+# W48 report) spent 6100 dex bytes: dex 505704 -> 511804 (margin 196B — the
+# ceiling stays 512,000, never raised; the W49+ feature weeks trim before they
+# add: the remaining lever inventory is Writer/Theme/Feedback long copy,
+# ~10KB measured, documented in the W48 notes).
+[ "${TR_SAVED:-0}" -ge 6884 ]  || fail "trim saved ${TR_SAVED:-0} < 6884 (the lever shrank)"
 [ "${TR_CEIL:-0}"  = "$DEX_CEILING" ] || fail "trim ceiling ${TR_CEIL:-0} != $DEX_CEILING"
 [ "${TR_DEX:-999999}" -le "$DEX_CEILING" ] || fail "trim dex $TR_DEX > ceiling $DEX_CEILING"
 

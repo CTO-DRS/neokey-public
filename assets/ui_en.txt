@@ -900,3 +900,14 @@ RGB حي	Live RGB
 اضغط على كلمة لإزالتها من الاستثناءات؛ تُعاد للتصحيح التلقائي.	Tap a word to remove it from the exceptions; it gets corrected again.
 أُزيلت من الاستثناءات	Removed from the exceptions
 القائمة فاضية — تراجع عن أي تصحيح بزر الحذف وتُضاف هنا	The list is empty — undo any correction with backspace and it lands here.
+إزالة التشكيل	Strip diacritics
+تنظيم المسافات	Tidy spaces
+الوسوم:	Tags:
++ وسم	+ Tag
+وسم جديد	New tag
+＋ وسم جديد	＋ New tag
+الحد ١٢ وسماً للنص	Up to 12 tags per text
+اختصار للتوسع السريع (كلمة واحدة)	Expansion shortcut (one word)
+الاختصار لازم كلمة واحدة بلا مسافات وغير مستخدم	The shortcut must be one unused word with no spaces
+أُزيل الاختصار	Shortcut removed
+انحفظ الاختصار	Shortcut saved

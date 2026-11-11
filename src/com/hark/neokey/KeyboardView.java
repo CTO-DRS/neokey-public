@@ -142,6 +142,7 @@ public class KeyboardView extends View {
     private final List<Key> toolbar = new ArrayList<>();
     private final List<Key> suggKeys = new ArrayList<>();
     static final String CLIP_MARK = "\uE000";
+    static final String CLIP_SC_MARK = "\uE001";   // W48: a clip-shortcut expansion suggestion (mark + token)
     private final List<Key> clipKeys = new ArrayList<>();
     private final List<Key> clipBottom = new ArrayList<>();
     private final List<Key> sideKeys = new ArrayList<>();
@@ -151,7 +152,9 @@ public class KeyboardView extends View {
     private ClipItem clipMenu;          // item whose action menu is open
     private boolean clipDelArm;         // delete needs a second tap
     static final int CA_INSERT = 1, CA_COPY = 2, CA_PIN = 4, CA_FAV = 5, CA_ARCHIVE = 6, CA_SHARE = 8,
-            CA_DELETE = 9, CA_UP = 10, CA_DOWN = 11, CA_BACK = 12, CA_EDIT = 3, CA_TEMPLATE = 13, CA_EXPORT = 14;
+            CA_DELETE = 9, CA_BACK = 12, CA_EDIT = 3, CA_TEMPLATE = 13, CA_EXPORT = 14;
+    // W48: the pin-reorder action keys are gone from the action sheet — pins reorder by
+    // drag on the pinned tab (the W48 «بالسحب بدل ▲▼» law; ci/cliplib_gate.sh guards it).
     private List<ClipRepo.Cat> clipCats = new ArrayList<>();
     private long clipCat;
     private boolean clipHasMore, clipPendingNext;
@@ -999,18 +1002,8 @@ public class KeyboardView extends View {
         }
         float y = top + 4 * rh;
         Key back = Key.fn(Key.CLIP_ACT, "رجوع", 1f); back.id = CA_BACK;
-        if (m.pinned && clipTab != ClipRepo.TAB_ARCHIVE) {
-            Key up = Key.fn(Key.CLIP_ACT, "▲ تقديم", 1f); up.id = CA_UP;
-            Key dn = Key.fn(Key.CLIP_ACT, "▼ تأخير", 1f); dn.id = CA_DOWN;
-            float bw = w / 3f;
-            back.rect.set(contentL + gap / 2, y + gap / 2, contentL + bw - gap / 2, y + rh - gap / 2);
-            dn.rect.set(contentL + bw + gap / 2, y + gap / 2, contentL + 2 * bw - gap / 2, y + rh - gap / 2);
-            up.rect.set(contentL + 2 * bw + gap / 2, y + gap / 2, contentR - gap / 2, y + rh - gap / 2);
-            clipBottom.add(back); clipBottom.add(dn); clipBottom.add(up);
-        } else {
-            back.rect.set(contentL + gap / 2, y + gap / 2, contentR - gap / 2, y + rh - gap / 2);
-            clipBottom.add(back);
-        }
+        back.rect.set(contentL + gap / 2, y + gap / 2, contentR - gap / 2, y + rh - gap / 2);
+        clipBottom.add(back);
     }
 
     private List<List<Key>> panelRows() {
@@ -2521,8 +2514,7 @@ public class KeyboardView extends View {
         if (m == null) return;
         if (id == CA_BACK) { clipMenu = null; layoutAll(); a11yChanged(); return; }
         if (id == CA_DELETE && !clipDelArm) { clipDelArm = true; layoutAll(); return; }
-        boolean stay = id == CA_UP || id == CA_DOWN;
-        if (!stay) clipMenu = null;
+        clipMenu = null;
         clipDelArm = false;
         listener.onClipAction(m.id, id);
         if (id == CA_INSERT) { showPanel(PANEL_KEYS); return; }
@@ -2553,7 +2545,8 @@ public class KeyboardView extends View {
             }
             case Key.CLIP_CLEAR: return "مسح الحافظة";
             case Key.SUGG: {
-                String t = k.label == null ? "" : k.label.replace(CLIP_MARK, "");
+                String t = k.label == null ? "" : k.label.replace(CLIP_MARK, "").replace(CLIP_SC_MARK, "");
+                if (k.label != null && k.label.startsWith(CLIP_SC_MARK)) return "توسيع اختصار: " + t;
                 return (k.label != null && k.label.startsWith(CLIP_MARK) ? "لصق: " : "اقتراح: ") + t;
             }
             case Key.CLIP: return "نص منسوخ: " + k.label + (k.clip != null && k.clip.pinned ? "، مثبّت" : "") + (k.clip != null && k.clip.fav ? "، مفضّل" : "");

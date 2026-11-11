@@ -1,0 +1,24 @@
+# cliplib-negative-proof — W48 (2026-11-23), 2026-11-11T03:44:41Z
+# Three attacks against ci/cliplib_gate.sh; each must bite its exact tag,
+# then the clean tree must heal to a full green gate (containment).
+
+ATTACK baseline
+  baseline ✓ (CLIPLIB_GATE_OK on the clean tree)
+
+ATTACK tamper.tags-cap
+  bit ✓ (tamper.tags-cap — rc=1, gate refused)
+  verdict: CLIPLIB_GATE_FAILED tests.failed=2
+  heal ✓ (backup bytes restored = full green gate again)
+
+ATTACK tamper.sc-uniqueness
+  bit ✓ (tamper.sc-uniqueness — rc=1, gate refused)
+  verdict: CLIPLIB_GATE_FAILED tests.failed=3
+  heal ✓ (backup bytes restored = full green gate again)
+
+ATTACK tamper.arrows.returned
+  bit ✓ (tamper.arrows.returned — rc=1, gate refused)
+  verdict: CLIPLIB_GATE_FAILED arrows.returned (the pin action sheet must not carry reorder action keys — drag is the reorder law)
+  heal ✓ (backup bytes restored = full green gate again)
+
+PROOF_PASSED — all three attacks bit their exact tags and the clean tree healed green after each
+# exit=0

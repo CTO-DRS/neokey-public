@@ -54,6 +54,36 @@ final class ClipText {
         return b.toString();
     }
 
+    /**
+     * W48 text tool: whitespace tidy. Inside a line, every whitespace run becomes one space and
+     * line edges are trimmed; N consecutive blank lines collapse to ONE blank line; leading and
+     * trailing blank lines disappear. Words and paragraph structure are never touched.
+     */
+    static String tidy(String s) {
+        if (s == null || s.isEmpty()) return s == null ? "" : s;
+        StringBuilder b = new StringBuilder(s.length());
+        int n = s.length(), i = 0;
+        boolean pendingBlank = false;
+        while (i < n) {
+            StringBuilder line = new StringBuilder();
+            boolean ws = false;
+            while (i < n && s.charAt(i) != '\n') {
+                char c = s.charAt(i++);
+                if (Character.isWhitespace(c)) ws = true;
+                else { if (ws && line.length() > 0) line.append(' '); ws = false; line.append(c); }
+            }
+            i++;   // the newline itself
+            if (line.length() == 0) pendingBlank = true;
+            else {
+                if (pendingBlank && b.length() > 0) b.append('\n');
+                pendingBlank = false;
+                if (b.length() > 0) b.append('\n');
+                b.append(line);
+            }
+        }
+        return b.toString();
+    }
+
     private static boolean isWordChar(char c) { return Character.isLetterOrDigit(c) || ClipNorm.isMark(c) || c == '_'; }
 
     static boolean isWord(String t, int s, int e) {

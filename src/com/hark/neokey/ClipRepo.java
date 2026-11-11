@@ -60,9 +60,11 @@ final class ClipRepo {
         "CREATE INDEX IF NOT EXISTS versions_clip ON clip_versions(clip_id)",
     };
 
-    /** Items that are "temporary": the retention policy may delete them. */
+    /** Items that are "temporary": the retention policy may delete them.
+     *  W48: a tagged or shortcut-carrying item is user-curated metadata too — it survives
+     *  the retention policy exactly like a titled/categorised one does. */
     private static final String TEMP = "pinned=0 AND fav=0 AND archived=0 AND kind=0 AND title IS NULL " +
-            "AND id NOT IN (SELECT clip_id FROM clip_cat)";
+            "AND tags IS NULL AND shortcut IS NULL AND id NOT IN (SELECT clip_id FROM clip_cat)";
 
     private static final String COLS = "id, substr(text,1," + ClipItem.PREVIEW + "), len, title, pinned, fav, archived, " +
             "pin_order, kind, created, modified, used";
@@ -204,6 +206,9 @@ final class ClipRepo {
     /**
      * Searches the whole text of every item in a tab (diacritics-, case- and alef-insensitive).
      * The preview of each hit is a snippet that starts shortly before the match.
+     * W48 tag law: when the text search finds nothing, the query falls back to the TAGS
+     * column (a tag matches when its line contains the query as a substring) — tags are
+     * curated metadata, they never win over a real text hit.
      */
     List<ClipItem> search(int tab, long cat, String query, int limit) {
         String q = ClipNorm.of(query).trim();
@@ -211,6 +216,7 @@ final class ClipRepo {
         List<ClipItem> out = items("SELECT id, substr(text, max(1, instr(norm, ?) - 40), " + (ClipItem.PREVIEW + 80) + "), len, title, pinned, fav, archived, " +
                 "pin_order, kind, created, modified, used FROM clips WHERE " + tabWhere(tab, cat) +
                 " AND (instr(norm, ?) > 0 OR instr(lower(COALESCE(title,'')), ?) > 0)" + ORDER + " LIMIT " + limit, q, q, q);
+        if (out.isEmpty()) return searchByTag(tab, cat, query, limit);
         for (ClipItem c : out) {
             int[] m = ClipNorm.find(c.preview, q);
             if (m == null) {
@@ -228,6 +234,14 @@ final class ClipRepo {
             }
         }
         return out;
+    }
+
+    /** The tag fallback of the W48 law: no match spans — the preview stays whole. */
+    private List<ClipItem> searchByTag(int tab, long cat, String query, int limit) {
+        String q0 = query == null ? "" : query.trim();
+        if (q0.isEmpty()) return new ArrayList<>();
+        return items("SELECT " + COLS + " FROM clips WHERE " + tabWhere(tab, cat) +
+                " AND tags IS NOT NULL AND instr(lower(tags), lower(?)) > 0" + ORDER + " LIMIT " + limit, q0);
     }
 
     private String locate(long id, String q) {
@@ -252,11 +266,16 @@ final class ClipRepo {
 
     int searchCount(int tab, String query) { return searchCount(tab, 0, query); }
 
+    /** Same law as {@link #search}: text hits, or — only when the text finds nothing — tag hits. */
     int searchCount(int tab, long cat, String query) {
         String q = ClipNorm.of(query).trim();
         if (q.isEmpty()) return 0;
-        return count("SELECT COUNT(*) FROM clips WHERE " + tabWhere(tab, cat) +
+        int n = count("SELECT COUNT(*) FROM clips WHERE " + tabWhere(tab, cat) +
                 " AND (instr(norm, ?) > 0 OR instr(lower(COALESCE(title,'')), ?) > 0)", q, q);
+        if (n > 0) return n;
+        String q0 = query == null ? "" : query.trim();
+        return q0.isEmpty() ? 0 : count("SELECT COUNT(*) FROM clips WHERE " + tabWhere(tab, cat) +
+                " AND tags IS NOT NULL AND instr(lower(tags), lower(?)) > 0", q0);
     }
 
     /** Schema 1 → 2: adds the search column and fills it in batches. */
@@ -512,6 +531,89 @@ final class ClipRepo {
         ClipItem it = item(id);
         return db.insert("INSERT INTO clips(text,hash,len,created,modified,used,kind,title,norm) VALUES(?,?,?,?,?,?,1,?,?)",
                 t, h, t.length(), now, now, now, it == null ? null : it.title, ClipNorm.of(t));
+    }
+
+    // ------------------------------------------------------------ tags (W48 library phase 6)
+
+    static final int MAX_TAGS = 12, MAX_TAG = 24;
+
+    /** One tag: trimmed, single-line, inner whitespace runs collapsed, capped at {@link #MAX_TAG}. */
+    static String normTag(String t) {
+        if (t == null) return "";
+        String s = t.replace('\n', ' ').replace('\r', ' ').trim();
+        StringBuilder b = new StringBuilder(s.length());
+        boolean ws = false;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (Character.isWhitespace(c)) ws = true;
+            else { if (ws && b.length() > 0) b.append(' '); ws = false; b.append(c); }
+        }
+        return b.length() > MAX_TAG ? b.substring(0, MAX_TAG) : b.toString();
+    }
+
+    /** Replaces the tag set of one item (normalized, deduped, capped). An empty set clears the column. */
+    void setTags(long id, List<String> tags) {
+        java.util.LinkedHashSet<String> keep = new java.util.LinkedHashSet<>();
+        if (tags != null) for (String t : tags) {
+            String n = normTag(t);
+            if (!n.isEmpty()) keep.add(n);
+            if (keep.size() == MAX_TAGS) break;
+        }
+        if (keep.isEmpty()) { db.exec("UPDATE clips SET tags=NULL WHERE id=?", id); return; }
+        StringBuilder b = new StringBuilder();
+        for (String t : keep) { if (b.length() > 0) b.append('\n'); b.append(t); }
+        db.exec("UPDATE clips SET tags=? WHERE id=?", b.toString(), id);
+    }
+
+    /** The tags of one item, in their stored order. */
+    List<String> tagsOf(long id) {
+        List<String> out = new ArrayList<>();
+        List<Object[]> r = db.query("SELECT tags FROM clips WHERE id=?", id);
+        if (!r.isEmpty() && r.get(0)[0] != null)
+            for (String s : ((String) r.get(0)[0]).split("\n", -1)) if (!s.isEmpty()) out.add(s);
+        return out;
+    }
+
+    /** Every distinct tag in the live library (kind=0, not archived), discovery order —
+     *  the add-tag dialog's suggestion list. */
+    List<String> listTags() {
+        List<String> out = new ArrayList<>();
+        for (Object[] r : db.query("SELECT DISTINCT tags FROM clips WHERE kind=0 AND archived=0 AND tags IS NOT NULL"))
+            for (String s : ((String) r[0]).split("\n", -1)) if (!s.isEmpty() && !out.contains(s)) out.add(s);
+        return out;
+    }
+
+    // ------------------------------------------------------------ shortcuts (W48 library phase 6)
+
+    static final int MAX_SC = 32;
+
+    /** Sets a clip's expansion shortcut: one whitespace-free token, ≤{@link #MAX_SC}, lowercased,
+     *  unique across clips (templates stay outside the domain). An empty/blank token clears.
+     *  False = rejected (shape, conflict or template), the old value stays. */
+    boolean setShortcut(long id, String sc) {
+        String s = sc == null ? "" : sc.trim().toLowerCase(java.util.Locale.ROOT);
+        List<Object[]> k = db.query("SELECT kind FROM clips WHERE id=?", id);
+        if (k.isEmpty() || num(k.get(0)[0]) == 1) return false;
+        if (s.isEmpty()) { db.exec("UPDATE clips SET shortcut=NULL WHERE id=?", id); return true; }
+        if (s.length() > MAX_SC) return false;
+        for (int i = 0; i < s.length(); i++) if (Character.isWhitespace(s.charAt(i))) return false;
+        if (!db.query("SELECT id FROM clips WHERE shortcut=? AND id<>? AND kind=0 LIMIT 1", s, id).isEmpty()) return false;
+        db.exec("UPDATE clips SET shortcut=? WHERE id=?", s, id);
+        return true;
+    }
+
+    /** The shortcut of one item, or null. */
+    String shortcutOf(long id) {
+        List<Object[]> r = db.query("SELECT shortcut FROM clips WHERE id=?", id);
+        return r.isEmpty() || r.get(0)[0] == null ? null : (String) r.get(0)[0];
+    }
+
+    /** The live token → clip-id map the suggestion strip expands from. */
+    java.util.Map<String, Long> shortcutMap() {
+        java.util.Map<String, Long> out = new java.util.HashMap<>();
+        for (Object[] r : db.query("SELECT shortcut, id FROM clips WHERE kind=0 AND shortcut IS NOT NULL"))
+            out.put((String) r[0], num(r[1]));
+        return out;
     }
 
     // ------------------------------------------------------------ helpers

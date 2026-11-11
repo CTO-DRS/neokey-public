@@ -159,6 +159,42 @@ final class ClipIOTest {
         ClipIO.Report rf = ClipIO.apply(r6, pf.items, ClipIO.DUP_SKIP, now);
         ClipRepoTest.check("failed import rolls back completely", rf.failed && r5.totalCount() == 1);
 
+        // ---------------------------------------------------------------- W48 library: tags + shortcut ride the formats
+        ClipRepo rT = ClipRepoTest.fresh();
+        rT.add("رسالة ترحيب للعملاء", now, id); long ta = id[0];
+        rT.add("عنوان بارز", now + 1, id);
+        rT.setTags(ta, Arrays.asList("عمل", "جاهز"));
+        rT.setShortcut(ta, "ترحيب");
+        List<ClipIO.Rec> withT = ClipIO.load(rT, ClipIO.SCOPE_ALL, null);
+        ClipIO.Rec ra = null;
+        for (ClipIO.Rec x : withT) if ("رسالة ترحيب للعملاء".equals(x.text)) ra = x;
+        ClipRepoTest.check("load carries tags + shortcut", ra != null && ra.tags.equals(Arrays.asList("عمل", "جاهز")) && "ترحيب".equals(ra.shortcut));
+        String jt = out(ClipIO.F_JSON, withT);
+        ClipRepoTest.check("json carries tags + shortcut verbatim", jt.contains("\"tags\": [\"عمل\", \"جاهز\"]") && jt.contains("\"shortcut\": \"ترحيب\""));
+        ClipIO.Parsed ptw = ClipIO.parse(jt, "t.json", false);
+        ClipRepo rT2 = ClipRepoTest.fresh();
+        ClipIO.markDuplicates(rT2, ptw);
+        ClipIO.apply(rT2, ptw.items, ClipIO.DUP_SKIP, now);
+        long ia = -1;
+        for (ClipItem x : rT2.list(0, 10)) if ("رسالة ترحيب للعملاء".equals(x.preview)) ia = x.id;
+        ClipRepoTest.check("json import restores tags + shortcut", ia > 0 && rT2.tagsOf(ia).equals(Arrays.asList("عمل", "جاهز"))
+                && "ترحيب".equals(rT2.shortcutOf(ia)));
+        ClipRepoTest.check("tag search works right after import", rT2.search(ClipRepo.TAB_ALL, "جاهز", 10).size() == 1
+                && rT2.searchCount(ClipRepo.TAB_ALL, "جاهز") == 1);
+        String ct = out(ClipIO.F_CSV, withT);
+        ClipIO.Parsed pcv = ClipIO.parse(ct, "t.csv", false);
+        ClipIO.Cand candT = null;
+        for (ClipIO.Cand cd : pcv.items) if ("رسالة ترحيب للعملاء".equals(cd.rec.text)) candT = cd;
+        ClipRepoTest.check("csv round trip keeps tags + shortcut", candT != null && candT.rec.tags.equals(Arrays.asList("عمل", "جاهز")) && "ترحيب".equals(candT.rec.shortcut));
+        // import conflict law: the file's first holder keeps the token, later ones import without it
+        ClipIO.Parsed pcf = ClipIO.parse("{\"format\":\"neokey-clipboard\",\"schema\":1,\"items\":[{\"text\":\"أول\",\"shortcut\":\"مفتاح\"},{\"text\":\"ثانٍ\",\"shortcut\":\"مفتاح\"}]}", "c.json", false);
+        ClipRepo rT3 = ClipRepoTest.fresh();
+        ClipIO.markDuplicates(rT3, pcf);
+        ClipIO.Report rf2 = ClipIO.apply(rT3, pcf.items, ClipIO.DUP_SKIP, now);
+        long f1 = -1, f2 = -1;
+        for (ClipItem x : rT3.list(0, 10)) { if ("أول".equals(x.preview)) f1 = x.id; if ("ثانٍ".equals(x.preview)) f2 = x.id; }
+        ClipRepoTest.check("import keeps one shortcut owner", !rf2.failed && rf2.added == 2 && "مفتاح".equals(rT3.shortcutOf(f1)) && rT3.shortcutOf(f2) == null);
+
         // perf: export + parse 1000 mixed items
         ClipRepo r7 = ClipRepoTest.fresh();
         for (int i = 0; i < 1000; i++) r7.add(ClipRepoTest.mixed(200 + i % 50) + i, now + i, id);

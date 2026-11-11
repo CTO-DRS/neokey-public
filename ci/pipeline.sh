@@ -23,7 +23,7 @@ if [ -s build/release/.pubsync-keys.$$ ]; then cat build/release/.pubsync-keys.$
 rm -f build/release/.pubsync-keys.$$
 FAILED=0
 NAMES=(); VERDICTS=()
-WEEK=47  # the live week (the publication lifecycle guards read it — W43)
+WEEK=48  # the live week (the publication lifecycle guards read it — W43)
 
 note() { echo "$@" | tee -a "$LOG"; }
 
@@ -168,6 +168,7 @@ stage_entitlement() { ci/entitlement_gate.sh; }
 
 # ---- 3r: clipboard phase-5 gate (roadmap W47, week 47) ---------------------------
 stage_clipio() { ci/clipio_gate.sh; }
+stage_cliplib() { ci/cliplib_gate.sh; }   # W48 (week 48): clipboard phase-6 library — the 124-check suite fresh
 
 # ---- 3q: phase-3 CLOSING gate (roadmap phase 3, week 4) -----------------------
 stage_phase3() { ci/phase3_gate.sh; }
@@ -466,6 +467,11 @@ collect_gates() {
   echo "CLIPIO_CHECKS=$(echo "$CL_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
   echo "CLIPIO_EXPORT1000_MS=$(echo "$CL_LINE" | sed -E 's/.*export1000=([0-9]+)ms.*/\1/')" >> "$GATES"
   echo "CLIPIO_IMPORT1000_MS=$(echo "$CL_LINE" | sed -E 's/.*import1000=([0-9]+)ms.*/\1/')" >> "$GATES"
+  echo "CLIPLIB_GATE=$(grep -q '^CLIPLIB_GATE_OK$' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
+  CLB_LINE=$(grep '^CLIPLIBGATE ' "$LOG" | tail -1)
+  echo "CLIPLIB_CHECKS=$(echo "$CLB_LINE" | sed -E 's/.*checks=([0-9]+).*/\1/')" >> "$GATES"
+  echo "CLIPLIB_TAGS100_MS=$(echo "$CLB_LINE" | sed -E 's/.*tags100=([0-9]+)ms.*/\1/')" >> "$GATES"
+  echo "CLIPLIB_SCMAP1000_MS=$(echo "$CLB_LINE" | sed -E 's/.*scmap1000=([0-9]+)ms.*/\1/')" >> "$GATES"
   # real-dex-trim gate numbers (phase 4, week 22)
   echo "TRIM_GATE=$(grep -q '^TRIM_GATE_OK' "$LOG" && echo OK || echo NOT_OK)" >> "$GATES"
   TR_LINE=$(grep '^TRIM_GATE_OK' "$LOG" | tail -1)
@@ -527,6 +533,7 @@ run_stage "dictsign" stage_dictsign
 run_stage "storeui" stage_storeui
 run_stage "entitlement" stage_entitlement
 run_stage "clipio" stage_clipio            # W47 (week 47): clipboard import/export — the 93-check suite fresh
+run_stage "cliplib" stage_cliplib          # W48 (week 48): clipboard phase-6 library — the 124-check suite fresh
 if [ "${SKIP_BUILD:-0}" = "1" ]; then
   skip_stage "build" "SKIP_BUILD=1 (JVM gates only)"
 else

@@ -20,7 +20,7 @@
 #        operator-output verifier is EXACT (18 checks, 12/12 negatives,
 #        letters=2 packs=1 swaps=1 — the published identities may not drift).
 #     2. fresh verdict lines == pipeline-log verdict lines == gates.env values.
-#     3. Whole-pipeline state: every previous gate key still OK (34 keys —
+#     3. Whole-pipeline state: every previous gate key still OK (35 keys —
 #        the 29 the phase-7 close guarded + the phase-7 closing gate itself
 #        + the three phase-8 gates + the W47 clipio gate), the phase-7 close itself still
 #        0-regressions, tests >= 1,561 with 0 failures, NQF golden assets
@@ -49,7 +49,7 @@ DEX_CEILING=512000   # LOWERED by the W22 real trim (was 520,000); overflow mean
 VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-8 close floor (was 82)
 VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-8 close floor (was 3.5); the historical close measurement stays pinned in release-manifest.phase8Close
 TESTS_MIN=1561       # shipped test total at phase-8 close (the mass lives in the gates)
-INNER_STAGES=40      # the drill's inner stage count: 38 pre-drill rows + evaudit + opverify (the drill and this closer omit themselves inside — INNER_OMIT); frozen so a shape change re-pins consciously — RE-PINNED 39→40 at W47 (the clipio stage joined the inner profile; the pin bit live when the first post-W47 drill landed stages=40)
+INNER_STAGES=41      # the drill's inner stage count: 39 pre-drill rows + evaudit + opverify (the drill and this closer omit themselves inside — INNER_OMIT); frozen so a shape change re-pins consciously — RE-PINNED 40→41 at W48 (the cliplib stage joined the inner profile, after clipio's 39→40 at W47)
 STATE=build/release/gates.env
 LOGF=build/pipeline.log
 
@@ -178,7 +178,7 @@ LT=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOGF" | awk '{p+=$2; f+=$4}
 [ "${AUDIT:-}" = "OK" ] || fail "secrets audit not OK"
 [ "${TESTS_TOTAL:-0}" -ge "$TESTS_MIN" ] || fail "tests $TESTS_TOTAL < $TESTS_MIN"
 [ "${TESTS_FAILED:-1}" = "0" ] || fail "tests_failed $TESTS_FAILED != 0"
-# every previous gate key must still be OK — no gate regressed (34 keys:
+# every previous gate key must still be OK — no gate regressed (35 keys:
 # the 29 the phase-7 close guarded + the phase-7 closing gate itself + the
 # three phase-8 gates + the W47 clipio gate)
 for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
@@ -187,7 +187,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PHASE3_GATE TLS_GATE DEPLOY_GATE KSDRILL_GATE PHASE4_GATE \
          PROVISION_GATE SIGNEDAPK_GATE UPLOADBUNDLE_GATE PHASE5_GATE \
          PHASE6_GATE BILLING_GATE DEPLOYSRV_GATE PREFLIGHT_GATE \
-         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE CLIPIO_GATE; do
+         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE CLIPIO_GATE CLIPLIB_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
 [ "${NQFPORT_ASSETS:-0}" = 15 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 15 (golden pins drifted)"

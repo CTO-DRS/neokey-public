@@ -47,6 +47,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private long lastShiftTap, lastSpaceAt;
     private List<ClipItem> clipList = new ArrayList<>();
     private ClipStore clipStore;
+    private volatile java.util.Map<String, Long> clipSc = java.util.Collections.emptyMap();   // W48: token → clip id
     private int clipTab = 0, clipPins = 0, clipSearchSeq = 0, clipSearchHits = -1;
     private String clipQuery;
     private boolean clipSearch, clipMore;
@@ -517,6 +518,15 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > 3) s.remove(s.size() - 1); }
         String sc = Theme.shortcuts(this).get(w.toLowerCase());
         if (sc != null) { s.remove(sc); s.add(0, sc); while (s.size() > 3) s.remove(s.size() - 1); }
+        else {
+            // W48 clip shortcut: the typed token expands to its clip — the suggestion carries
+            // the mark + token; the tap dispatches in onSuggestion
+            Long cid = clipSc.get(w.toLowerCase());
+            if (cid != null) {
+                String cs2 = KeyboardView.CLIP_SC_MARK + w.toLowerCase();
+                if (!s.contains(cs2)) { s.add(0, cs2); while (s.size() > 3) s.remove(s.size() - 1); }
+            }
+        }
         String emo = EmojiHints.forWord(w);
         if (emo != null) {
             if (s.size() >= 3) s.set(2, emo); else s.add(emo);
@@ -631,6 +641,16 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             updateSuggestions();
             return;
         }
+        if (word.startsWith(KeyboardView.CLIP_SC_MARK)) {
+            // W48 clip-shortcut expansion: the typed token is replaced by the clip text
+            Long cid = clipSc.get(word.substring(1));
+            if (cid != null) {
+                String cur = currentWord();
+                if (!cur.isEmpty()) ic.deleteSurroundingText(cur.length(), 0);
+                onClipInsert(cid);
+            }
+            return;
+        }
         if (!Character.isLetter(word.charAt(0))) {
             // emoji suggestion: keep the word, add the emoji
             finishWord(currentWord());
@@ -723,12 +743,14 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         final int limit = clipLimit;
         final int[] pins = new int[1];
         final List<List<ClipRepo.Cat>> cats = new ArrayList<>();
+        final List<java.util.Map<String, Long>> scs = new ArrayList<>();
         clipStore.run(new ClipStore.Job<List<ClipItem>>() {
             @Override public List<ClipItem> run(ClipRepo r) {
                 List<ClipItem> l = tab == ClipRepo.TAB_CATS && cat == 0 ? new ArrayList<ClipItem>()
                         : q == null ? r.list(tab, cat, limit) : r.search(tab, cat, q, limit);
                 pins[0] = r.pinCount();
                 cats.add(tab == ClipRepo.TAB_CATS ? r.categories() : new ArrayList<ClipRepo.Cat>());
+                scs.add(r.shortcutMap());   // W48: the suggestion strip rides every panel reload
                 return l;
             }
         }, new ClipStore.Done<List<ClipItem>>() {
@@ -737,6 +759,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 clipList = l;
                 clipPins = pins[0];
                 clipCats = cats.isEmpty() ? new ArrayList<ClipRepo.Cat>() : cats.get(0);
+                clipSc = scs.isEmpty() ? clipSc : scs.get(0);
                 clipMore = l.size() >= limit;
                 if (view != null) view.setClips(clipList, clipTab, clipQuery, clipPins, clipCats, clipCat, clipMore);
             }
@@ -1548,8 +1571,6 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                     case KeyboardView.CA_ARCHIVE: r.setArchived(id, !it.archived); return it.archived ? "رجع من الأرشيف" : "انتقل للأرشيف";
                     case KeyboardView.CA_DELETE: r.delete(id); return "انحذف";
                     case KeyboardView.CA_TEMPLATE: return r.makeTemplate(id, System.currentTimeMillis()) > 0 ? "انحفظ كقالب في تبويب القوالب" : "";
-                    case KeyboardView.CA_UP: r.movePinBy(id, -1); return "";
-                    case KeyboardView.CA_DOWN: r.movePinBy(id, 1); return "";
                     default: return "";
                 }
             }

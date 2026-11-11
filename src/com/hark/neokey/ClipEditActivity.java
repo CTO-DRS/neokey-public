@@ -59,6 +59,9 @@ public class ClipEditActivity extends Activity {
     private LinearLayout catRow;
     private List<ClipRepo.Cat> allCats = new ArrayList<>();
     private java.util.Set<Long> myCats = new java.util.HashSet<>();
+    private LinearLayout tagRow;                       // W48: the tags of this item
+    private List<String> myTags = new ArrayList<>();
+    private EditText scEdit;                           // W48: the clip's expansion shortcut
 
     @Override
     protected void onCreate(Bundle b) {
@@ -148,6 +151,25 @@ public class ClipEditActivity extends Activity {
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-1, -2);
         cl.topMargin = (int) (8 * dp);
         root.addView(cs, cl);
+
+        // W48: tags row — chips with instant persistence, the + chip opens the add dialog
+        tagRow = new LinearLayout(this);
+        tagRow.setGravity(Gravity.CENTER_VERTICAL);
+        HorizontalScrollView ts = new HorizontalScrollView(this);
+        ts.setHorizontalScrollBarEnabled(false);
+        ts.addView(tagRow);
+        LinearLayout.LayoutParams tsl = new LinearLayout.LayoutParams(-1, -2);
+        tsl.topMargin = (int) (6 * dp);
+        root.addView(ts, tsl);
+
+        // W48: the clip's expansion shortcut — typed token → the clip text; the keyboard's
+        // done/✓ action commits (validated by the repo: shape, uniqueness, domain)
+        scEdit = new EditText(this);
+        styleEdit(scEdit, "اختصار للتوسع السريع (كلمة واحدة)");
+        scEdit.setSingleLine(true);
+        scEdit.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
+        scEdit.setOnEditorActionListener((v, a2, ev) -> { saveShortcut(); return true; });
+        root.addView(scEdit, new LinearLayout.LayoutParams(-1, -2));
 
         // find / replace
         findBar = new LinearLayout(this);
@@ -265,6 +287,8 @@ public class ClipEditActivity extends Activity {
         tools.addView(tool("لصق", v -> paste()));
         tools.addView(tool("تراجع", v -> undoRedo(true)));
         tools.addView(tool("إعادة", v -> undoRedo(false)));
+        tools.addView(tool("إزالة التشكيل", v -> transform(ClipText.stripMarks(body.getText().toString()))));
+        tools.addView(tool("تنظيم المسافات", v -> transform(ClipText.tidy(body.getText().toString()))));
         tools.addView(tool("البداية", v -> jump(0)));
         tools.addView(tool("النهاية", v -> jump(body.length())));
         tools.addView(tool("نسخ الكل للحافظة", v -> copyAll()));
@@ -355,7 +379,7 @@ public class ClipEditActivity extends Activity {
             String t = r.getText(id);
             ClipItem it = r.item(id);
             return t == null || it == null ? null : new Object[]{t, it.title == null ? "" : it.title, r.versionCount(id),
-                    r.categories(), r.categoriesOf(id)};
+                    r.categories(), r.categoriesOf(id), r.tagsOf(id), r.shortcutOf(id)};
         }, res -> {
             if (res == null) {
                 Toast.makeText(this, L.t("النص غير موجود، يمكن انحذف"), Toast.LENGTH_LONG).show();
@@ -367,18 +391,107 @@ public class ClipEditActivity extends Activity {
             versions = (Integer) res[2];
             @SuppressWarnings("unchecked") List<ClipRepo.Cat> ac = (List<ClipRepo.Cat>) res[3];
             @SuppressWarnings("unchecked") java.util.Set<Long> mc = (java.util.Set<Long>) res[4];
+            @SuppressWarnings("unchecked") List<String> tg = (List<String>) res[5];
             allCats = ac;
             myCats = mc;
+            myTags = new ArrayList<>(tg);
             renderCats();
+            renderTags();
             loading = true;
             body.setText(original);
             title.setText(originalTitle);
+            scEdit.setText(res[6] == null ? "" : (String) res[6]);
             body.setEnabled(true);
             loading = false;
             undo.clear(); redo.clear();
             updateStats();
             verBtn.setAlpha(versions > 0 ? 1f : 0.4f);
         });
+    }
+
+    // ------------------------------------------------------------ tags + shortcut (W48 library phase 6)
+
+    /** The shared chip: one styled tag/category pill (12sp bold, CARD bg, 6dp gap). */
+    private TextView chip(String label, int color) {
+        TextView t = text(label, 12, Typeface.BOLD, color);
+        t.setPadding((int) (12 * dp), (int) (6 * dp), (int) (12 * dp), (int) (6 * dp));
+        t.setBackground(round(CARD, 16, LINE));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
+        lp.setMarginEnd((int) (6 * dp));
+        t.setLayoutParams(lp);
+        return t;
+    }
+
+    /** Chips: tap removes (tags are cheap to re-add), + opens the add dialog. Persisted instantly,
+     *  exactly like the categories row — the body's own dirty()/save() flow stays text-only. */
+    private void renderTags() {
+        tagRow.removeAllViews();
+        TextView lab = text("الوسوم:", 12, Typeface.NORMAL, MUTED);
+        lab.setPadding(0, 0, (int) (8 * dp), 0);
+        tagRow.addView(lab);
+        for (final String t : myTags) {
+            TextView c = chip(t, Color.WHITE);
+            c.setOnClickListener(v -> { myTags.remove(t); persistTags(); });
+            tagRow.addView(c);
+        }
+        TextView add = chip("+ وسم", 0xFF93C5FD);
+        add.setOnClickListener(v -> tagDialog());
+        tagRow.addView(add);
+    }
+
+    private void persistTags() {
+        ClipStore.get(this).run(r -> { r.setTags(id, myTags); return true; }, ok -> renderTags());
+    }
+
+    /** The add dialog lists the library's existing tags as one-tap adds; "وسم جديد"
+     *  rides the shared nameDialog. No custom view — the platform builds the list. */
+    private void tagDialog() {
+        ClipStore.get(this).run(r -> r.listTags(), tags -> {
+            List<String> names = new ArrayList<>();
+            names.add("＋ وسم جديد");
+            if (tags != null) for (String t : tags) if (!myTags.contains(t)) names.add(t);
+            new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                    .setTitle(L.t("وسم جديد"))
+                    .setItems(names.toArray(new String[0]), (d, w) -> {
+                        if (myTags.size() >= ClipRepo.MAX_TAGS) { Toast.makeText(this, L.t("الحد ١٢ وسماً للنص"), Toast.LENGTH_SHORT).show(); return; }
+                        if (w == 0) nameDialog("وسم جديد", "", n -> { String t = ClipRepo.normTag(n); if (!t.isEmpty() && !myTags.contains(t)) { myTags.add(t); persistTags(); } });
+                        else { myTags.add(names.get(w)); persistTags(); }
+                    })
+                    .setNegativeButton(L.t("إلغاء"), null).show();
+        });
+    }
+
+    /** The token is validated by the repo (shape, uniqueness, domain); the field shows the
+     *  canonical value. Job result: null = rejected, "" = cleared, else the stored token. */
+    private void saveShortcut() {
+        final String sc = scEdit.getText().toString();
+        ClipStore.get(this).run(r -> {
+            if (!r.setShortcut(id, sc)) return null;
+            String cur = r.shortcutOf(id);
+            return cur == null ? "" : cur;
+        }, canon -> {
+            if (canon == null) {
+                Toast.makeText(this, L.t("الاختصار لازم كلمة واحدة بلا مسافات وغير مستخدم"), Toast.LENGTH_LONG).show();
+                return;
+            }
+            scEdit.setText(canon);
+            Toast.makeText(this, L.t(canon.isEmpty() ? "أُزيل الاختصار" : "انحفظ الاختصار"), Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    /** W48 text tools: one undo step for the whole transform (same shape as replaceAll). */
+    private void transform(String out) {
+        if (out == null) return;
+        final String cur = body.getText().toString();
+        if (cur.equals(out)) return;
+        undo.push(new String[]{"0", cur, out});
+        redo.clear();
+        applying = true;
+        body.getText().replace(0, body.length(), out);
+        applying = false;
+        body.setSelection(out.length());
+        scheduleStats();
+        if (findBar.getVisibility() == View.VISIBLE) scheduleFind();
     }
 
     // ------------------------------------------------------------ categories
@@ -390,21 +503,16 @@ public class ClipEditActivity extends Activity {
         catRow.addView(lab);
         for (final ClipRepo.Cat c : allCats) {
             final boolean on = myCats.contains(c.id);
-            TextView t = text(c.name, 12, Typeface.BOLD, Color.WHITE);
-            t.setPadding((int) (12 * dp), (int) (6 * dp), (int) (12 * dp), (int) (6 * dp));
-            t.setBackground(on ? round(BLUE, 16, 0) : round(CARD, 16, LINE));
+            TextView t = chip(c.name, Color.WHITE);
+            if (on) t.setBackground(round(BLUE, 16, 0));
             t.setOnClickListener(v -> ClipStore.get(this).run(r -> { r.setCategory(id, c.id, !on); return true; }, ok -> {
                 if (on) myCats.remove(c.id); else myCats.add(c.id);
                 renderCats();
             }));
             t.setOnLongClickListener(v -> { catDialog(c); return true; });
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
-            lp.setMarginEnd((int) (6 * dp));
-            catRow.addView(t, lp);
+            catRow.addView(t);
         }
-        TextView add = text("+ تصنيف جديد", 12, Typeface.BOLD, 0xFF93C5FD);
-        add.setPadding((int) (12 * dp), (int) (6 * dp), (int) (12 * dp), (int) (6 * dp));
-        add.setBackground(round(CARD, 16, LINE));
+        TextView add = chip("+ تصنيف جديد", 0xFF93C5FD);
         add.setOnClickListener(v -> nameDialog("تصنيف جديد", "", name -> ClipStore.get(this).run(r -> {
             long cid = r.addCategory(name);
             if (cid > 0) r.setCategory(id, cid, true);

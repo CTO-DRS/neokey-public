@@ -33,6 +33,8 @@ final class ClipIO {
         int pinOrder, kind;
         long created, modified, used;
         List<String> cats = new ArrayList<>();
+        List<String> tags = new ArrayList<>();   // W48 library phase 6
+        String shortcut;                          // W48 library phase 6 (null = none)
     }
 
     // ================================================================ export
@@ -59,7 +61,7 @@ final class ClipIO {
             l.add((String) row[1]);
         }
         List<Rec> out = new ArrayList<>();
-        for (Object[] row : r.db.query("SELECT id, text, title, pinned, pin_order, fav, archived, kind, created, modified, used FROM clips WHERE "
+        for (Object[] row : r.db.query("SELECT id, text, title, pinned, pin_order, fav, archived, kind, created, modified, used, tags, shortcut FROM clips WHERE "
                 + where + " ORDER BY kind, pinned DESC, CASE WHEN pinned=1 THEN pin_order ELSE 0 END, used DESC, id DESC")) {
             Rec c = new Rec();
             long id = ClipRepo.num(row[0]);
@@ -74,6 +76,8 @@ final class ClipIO {
             c.modified = ClipRepo.num(row[9]);
             c.used = ClipRepo.num(row[10]);
             if (cats.containsKey(id)) c.cats = cats.get(id);
+            if (row[11] != null) for (String s : ((String) row[11]).split("\n", -1)) if (!s.isEmpty()) c.tags.add(s);
+            c.shortcut = row[12] == null || ((String) row[12]).isEmpty() ? null : (String) row[12];
             out.add(c);
         }
         return out;
@@ -109,7 +113,12 @@ final class ClipIO {
             w.write(", \"last_used\": "); str(w, iso(c.used));
             w.write(", \"categories\": [");
             for (int j = 0; j < c.cats.size(); j++) { if (j > 0) w.write(", "); str(w, c.cats.get(j)); }
-            w.write("]}");
+            w.write("], \"tags\": [");
+            for (int j = 0; j < c.tags.size(); j++) { if (j > 0) w.write(", "); str(w, c.tags.get(j)); }
+            w.write("]");
+            w.write(", \"shortcut\": ");
+            if (c.shortcut == null) w.write("null"); else str(w, c.shortcut);
+            w.write("}");
         }
         w.write(items.isEmpty() ? "]\n}\n" : "\n  ]\n}\n");
     }
@@ -135,14 +144,15 @@ final class ClipIO {
         return text.replace(TXT_SEP, "-\u200B" + TXT_SEP.substring(1));
     }
 
-    static final String[] CSV_HEAD = {"text", "title", "pinned", "favorite", "archived", "template", "pin_order", "created", "modified", "categories"};
+    static final String[] CSV_HEAD = {"text", "title", "pinned", "favorite", "archived", "template", "pin_order", "created", "modified", "categories", "tags", "shortcut"};
 
     static void writeCsv(List<Rec> items, Writer w) throws IOException {
         w.write('\uFEFF');      // lets spreadsheet apps detect UTF-8 (Arabic stays readable)
         csvRow(w, CSV_HEAD);
         for (Rec c : items) {
             csvRow(w, new String[]{c.text, c.title == null ? "" : c.title, b(c.pinned), b(c.fav), b(c.archived), b(c.kind == 1),
-                    String.valueOf(c.pinOrder), iso(c.created), iso(c.modified), join(" | ", c.cats)});
+                    String.valueOf(c.pinOrder), iso(c.created), iso(c.modified), join(" | ", c.cats),
+                    join(" | ", c.tags), c.shortcut == null ? "" : c.shortcut});
         }
     }
 
@@ -321,6 +331,10 @@ final class ClipIO {
                 r.modified = parseTime(cell(row, col, "modified"));
                 String cs = cell(row, col, "categories");
                 if (cs != null) for (String c : cs.split("\\|")) if (!c.trim().isEmpty()) r.cats.add(c.trim());
+                String ts = cell(row, col, "tags");
+                if (ts != null) for (String c : ts.split("\\|")) if (!c.trim().isEmpty()) r.tags.add(c.trim());
+                String sc = cell(row, col, "shortcut");
+                if (sc != null && !sc.trim().isEmpty()) r.shortcut = sc.trim();
             }
             p.items.add(cand(r));
             if (p.items.size() > MAX_ITEMS) return;
@@ -405,6 +419,9 @@ final class ClipIO {
                 r.used = parseTime(m.get("last_used"));
                 if (m.get("categories") instanceof List)
                     for (Object c : (List<?>) m.get("categories")) if (c instanceof String && !((String) c).trim().isEmpty()) r.cats.add(((String) c).trim());
+                if (m.get("tags") instanceof List)
+                    for (Object c : (List<?>) m.get("tags")) if (c instanceof String && !((String) c).trim().isEmpty()) r.tags.add(((String) c).trim());
+                if (m.get("shortcut") instanceof String && !((String) m.get("shortcut")).trim().isEmpty()) r.shortcut = ((String) m.get("shortcut")).trim();
             }
             p.items.add(cand(r));
         }
@@ -566,6 +583,8 @@ final class ClipIO {
                         if (x.created > 0) r.db.exec("UPDATE clips SET created=? WHERE id=? AND created>?", x.created, id, x.created);
                         if (x.pinned) newPins.add(new long[]{id, x.pinOrder, idx});
                         addCats(r, id, x.cats);
+                        if (!x.tags.isEmpty()) r.setTags(id, x.tags);   // empty = file predates W48: the item keeps its tags
+                        if (x.shortcut != null) r.setShortcut(id, x.shortcut);   // best-effort: a conflicting token keeps its first owner
                         rep.replaced++;
                     } else rep.skipped++;      // repeats inside the file have nothing reliable to replace
                     continue;
@@ -578,6 +597,8 @@ final class ClipIO {
                 if (back == null || !back.equals(x.text)) throw new IllegalStateException("فشل التحقق من نص محفوظ");
                 if (x.pinned && x.kind == 0) newPins.add(new long[]{id, x.pinOrder, idx});
                 addCats(r, id, x.cats);
+                r.setTags(id, x.tags);
+                if (x.shortcut != null) r.setShortcut(id, x.shortcut);   // best-effort, same law as replace
                 rep.added++;
             }
             // pins keep their relative order from the file and go after the existing ones, up to the limit

@@ -16,10 +16,10 @@
 #        the additive asset set (>= 3 — weeks 33/42/43 stay, the week's assets
 #        join), the identity floors.
 #     3. State consistency: the gates' own keys in gates.env must be OK and
-#        agree with the fresh lines (PUBSYNC_WEEK=47 — a stale week's
+#        agree with the fresh lines (PUBSYNC_WEEK=48 — a stale week's
 #        publication state must not pass as this week's close).
-#     4. Whole-pipeline state: every previous gate key still OK (35 keys — the
-#        33 the phase-8 close guarded + the two phase-9 gates), the phase-7
+#     4. Whole-pipeline state: every previous gate key still OK (37 keys — the
+#        35 the phase-8 close guarded (CLIPLIB joined at W48) + the two phase-9 gates), the phase-7
 #        AND phase-8 closes still 0-regressions, tests >= 1,581 with 0
 #        failures, R8 dex <= the 512,000B ceiling, versionCode >= 1 AND
 #        versionName >= 0.1.0 — the floor RE-BASED at the v0.1.0 identity
@@ -114,15 +114,15 @@ fi
 [ "${AUDIT:-}" = "OK" ] || fail "secrets audit not OK"
 [ "${TESTS_TOTAL:-0}" -ge "$TESTS_MIN" ] || fail "tests $TESTS_TOTAL < $TESTS_MIN"
 [ "${TESTS_FAILED:-1}" = "0" ] || fail "tests_failed $TESTS_FAILED != 0"
-# every previous gate key must still be OK — no gate regressed (36 keys:
-# the 34 the phase-8 close guards + the two phase-9 gates)
+# every previous gate key must still be OK — no gate regressed (37 keys:
+# the 35 the phase-8 close guards (CLIPLIB joined at W48) + the two phase-9 gates)
 for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          SYNCCLIENT_GATE THEMESTORE_GATE NQFPORT_GATE COMMUNITY_GATE \
          DICTSIGN_GATE STOREUI_GATE ENTGATE REST_GATE PAY_GATE TRIM_GATE \
          PHASE3_GATE TLS_GATE DEPLOY_GATE KSDRILL_GATE PHASE4_GATE \
          PROVISION_GATE SIGNEDAPK_GATE UPLOADBUNDLE_GATE PHASE5_GATE \
          PHASE6_GATE BILLING_GATE DEPLOYSRV_GATE PREFLIGHT_GATE \
-         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE CLIPIO_GATE \
+         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE CLIPIO_GATE CLIPLIB_GATE \
          PUBSYNC_GATE OWNERVERIFY_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
@@ -143,7 +143,7 @@ VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
   || fail "versionName ${VN:-?} < $VN_MIN (no week may ship below the phase-9 close)"
 
 # ---- verdict -------------------------------------------------------------------
-# check count: every "|| fail" line is counted once by grep; the 35-key loop
+# check count: every "|| fail" line is counted once by grep; the 37-key loop
 # line is counted once but executes 35 (+34 net).
 CHECKS=$(( $(grep -cE '\|\| fail ' "$0") + 34 ))
 if [ "$REG" -ne 0 ]; then

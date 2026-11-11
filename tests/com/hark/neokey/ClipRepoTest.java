@@ -232,6 +232,78 @@ public class ClipRepoTest {
         List<ClipItem> ppl = r.pinnedList();
         check("drag reorder to absolute index", ppl.get(0).id == p[4] && ppl.get(1).id == p[0] && ppl.size() == 5);
 
+        // ---------------------------------------------------------------- W48 library: tags
+        r = fresh();
+        r.add("نص وسم", now, id); long tg1 = id[0];
+        r.add("نص وسم آخر", now + 1, id); long tg2 = id[0];
+        r.add("نص ثالث", now + 2, id); long tg3 = id[0];
+        r.setTags(tg1, Arrays.asList(" عمل ", "خاص\nمزدوج", "عمل"));
+        check("tags normalized (trim, single-line, dedupe)", r.tagsOf(tg1).equals(Arrays.asList("عمل", "خاص مزدوج")));
+        r.setTags(tg2, Arrays.asList("عمل", "مهم"));
+        check("second item carries its own tags", r.tagsOf(tg2).equals(Arrays.asList("عمل", "مهم")));
+        List<String> tl = r.listTags();
+        check("listTags distinct live tags", tl.size() == 3 && tl.contains("عمل") && tl.contains("مهم") && tl.contains("خاص مزدوج"));
+        StringBuilder longTag = new StringBuilder();
+        for (int i = 0; i < 30; i++) longTag.append('س');
+        check("tag capped at 24 chars", ClipRepo.normTag(longTag.toString()).length() == ClipRepo.MAX_TAG);
+        List<String> manyTags = new ArrayList<>();
+        for (int i = 0; i < 20; i++) manyTags.add("وسم" + i);
+        r.setTags(tg3, manyTags);
+        check("tag count capped at 12", r.tagsOf(tg3).size() == ClipRepo.MAX_TAGS && r.listTags().size() == 15);
+        check("text hit wins over tag hit", r.search(ClipRepo.TAB_ALL, "وسم", 10).size() == 2 && r.searchCount(ClipRepo.TAB_ALL, "وسم") == 2);
+        check("tag fallback finds tagged only (no span)", r.search(ClipRepo.TAB_ALL, "مهم", 10).size() == 1
+                && r.search(ClipRepo.TAB_ALL, "مهم", 10).get(0).id == tg2
+                && r.search(ClipRepo.TAB_ALL, "مهم", 10).get(0).matchStart == -1
+                && r.searchCount(ClipRepo.TAB_ALL, "مهم") == 1);
+        check("tag fallback respects the tab", r.search(ClipRepo.TAB_FAV, "مهم", 10).isEmpty() && r.searchCount(ClipRepo.TAB_FAV, "مهم") == 0);
+        r.pin(tg2);
+        check("tag fallback inside pinned tab", r.search(ClipRepo.TAB_PINNED, "مهم", 10).size() == 1);
+        r.setTags(tg1, new ArrayList<>());
+        check("empty set clears tags + count drops", r.tagsOf(tg1).isEmpty() && r.listTags().size() == 14);
+        // W48 retention law: tagged and shortcut-carrying items are curated — they survive the policy
+        r = fresh();
+        r.add("معلوم بوسم", now, id); long k1 = id[0]; r.setTags(k1, Arrays.asList("دائم"));
+        r.add("مع اختصار", now + 1, id); long k2 = id[0]; r.setShortcut(k2, "سريع");
+        r.add("عابر 1", now + 2, id);
+        r.add("عابر 2", now + 3, id);
+        check("retention keeps tagged + shortcut, deletes plain", r.clearTemporary() == 2 && r.totalCount() == 2
+                && r.tagsOf(k1).equals(Arrays.asList("دائم")) && "سريع".equals(r.shortcutOf(k2)));
+
+        // ---------------------------------------------------------------- W48 library: shortcuts
+        r = fresh();
+        r.add("نص الاختصار", now, id); long sc1 = id[0];
+        r.add("نص آخر", now + 1, id); long sc2 = id[0];
+        check("shortcut set + live map", r.setShortcut(sc1, "تحية") && r.shortcutMap().size() == 1
+                && r.shortcutMap().get("تحية") == sc1);
+        check("shortcut lowercased", r.setShortcut(sc2, "Hi") && "hi".equals(r.shortcutOf(sc2)));
+        check("whitespace token rejected, old value stays", !r.setShortcut(sc2, "كلمة واحدة") && "hi".equals(r.shortcutOf(sc2)));
+        StringBuilder longSc = new StringBuilder();
+        for (int i = 0; i < 33; i++) longSc.append('س');
+        check("over-32 rejected", !r.setShortcut(sc2, longSc.toString()));
+        check("duplicate token rejected, first owner keeps", !r.setShortcut(sc2, "تحية") && "تحية".equals(r.shortcutOf(sc1)) && "hi".equals(r.shortcutOf(sc2)));
+        check("same owner may re-set", r.setShortcut(sc1, "ترحيب") && "ترحيب".equals(r.shortcutOf(sc1)) && !r.shortcutMap().containsKey("تحية"));
+        check("blank token clears", r.setShortcut(sc2, "hi") && r.setShortcut(sc2, "  ") && r.shortcutOf(sc2) == null && r.shortcutMap().size() == 1);
+        long tplSc = r.makeTemplate(sc1, now);
+        check("templates stay outside the shortcut domain", !r.setShortcut(tplSc, "قالب") && r.shortcutOf(tplSc) == null);
+        check("unknown id rejected", !r.setShortcut(9999, "ما فيش"));
+
+        // ---------------------------------------------------------------- W48 library: text tools
+        check("tidy collapses runs + trims line edges", ClipText.tidy("  أهلاً   بالعالم  \n\n\nسطر\tثانٍ  ").equals("أهلاً بالعالم\n\nسطر ثانٍ"));
+        check("tidy keeps one blank line between paragraphs", ClipText.tidy("أ\n\nب").equals("أ\n\nب"));
+        check("tidy drops edge blanks only", ClipText.tidy("\n\n أ \n\n\n").equals("أ"));
+        check("stripMarks drops tashkeel keeping letters", ClipText.stripMarks("مُحَمَّد").equals("محمد"));
+
+        // perf: the W48 library operations on a 1000-item library (the number is read AFTER the colon)
+        ClipRepo rp = fresh();
+        for (int i = 0; i < 1000; i++) rp.add("عنصر مكتبة " + i, now + i, id);
+        long p0 = System.nanoTime();
+        for (int i = 0; i < 100; i++) rp.setTags(id[0], Arrays.asList("وسم" + (i % 7), "دائم"));
+        long p1 = System.nanoTime();
+        java.util.Map<String, Long> sm = rp.shortcutMap();
+        long p2 = System.nanoTime();
+        System.out.printf("PERF tags set 100: %d ms, shortcut map build 1000: %d ms%n", (p1 - p0) / 1_000_000, (p2 - p1) / 1_000_000);
+        check("library perf run leaves the map empty", sm.isEmpty());
+
         ClipIOTest.run(now);
         System.out.println("RESULT " + pass + " passed, " + fail + " failed");
         if (fail > 0) System.exit(1);

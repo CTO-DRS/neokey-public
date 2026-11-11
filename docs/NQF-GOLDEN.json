@@ -1,7 +1,7 @@
 {
   "spec": "NQF v1",
   "contract": "docs/NQF-PORT.md",
-  "generatedAt": "2026-11-03T15:49:05.010436197Z",
+  "generatedAt": "2026-11-11T04:24:33.439545158Z",
   "assets": {
     "ar.txt": {"bytes": 1923439, "sha256": "fcc6cf243371183db10dbeabd4f5bc5c2bcacb3c341579eb47fe543ec0cf281e", "lines": 150123, "unique": 150123 },
     "ar_gulf.txt": {"bytes": 3723, "sha256": "f3d10c305ed3080c159febe7f23975a8e1e09dcf0d790bc76957488cb0ca3aec", "lines": 371, "unique": 371 },
@@ -17,7 +17,7 @@
     "testset_dialects.txt": {"bytes": 3185, "sha256": "7d9eff437b77af50b7924ed52033f056132c0323e4d4a1dfd57b1de2f35386c9", "lines": 69, "unique": 69 },
     "testset_en.txt": {"bytes": 838, "sha256": "65db9e55dc89f217b83bb66ed0321a8f8bbbe49356040161dc33da73e6c0ed27", "lines": 30, "unique": 30 },
     "testset_switch.txt": {"bytes": 7103, "sha256": "c2a5fe6ab1dadef1c831c0a9d50984a7add7393c773f8356552c6cf344fd14e7", "lines": 59, "unique": 59 },
-    "ui_en.txt": {"bytes": 49106, "sha256": "fdafff3469dd86c01fb735898d3b66c459cd2d31e1efa405bb52ceb4a60cd9d1", "lines": 902, "unique": 901 }
+    "ui_en.txt": {"bytes": 49656, "sha256": "51b5b30eeff72bfeb1d96e3d5334394c740ebc1c1fbc834c7c75b84c3da37697", "lines": 913, "unique": 912 }
   },
   "model": {
     "file": "nnet_ar.nqf",
