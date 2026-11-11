@@ -114,15 +114,15 @@ fi
 [ "${AUDIT:-}" = "OK" ] || fail "secrets audit not OK"
 [ "${TESTS_TOTAL:-0}" -ge "$TESTS_MIN" ] || fail "tests $TESTS_TOTAL < $TESTS_MIN"
 [ "${TESTS_FAILED:-1}" = "0" ] || fail "tests_failed $TESTS_FAILED != 0"
-# every previous gate key must still be OK — no gate regressed (35 keys:
-# the 33 the phase-8 close guarded + the two phase-9 gates)
+# every previous gate key must still be OK — no gate regressed (36 keys:
+# the 34 the phase-8 close guards + the two phase-9 gates)
 for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          SYNCCLIENT_GATE THEMESTORE_GATE NQFPORT_GATE COMMUNITY_GATE \
          DICTSIGN_GATE STOREUI_GATE ENTGATE REST_GATE PAY_GATE TRIM_GATE \
          PHASE3_GATE TLS_GATE DEPLOY_GATE KSDRILL_GATE PHASE4_GATE \
          PROVISION_GATE SIGNEDAPK_GATE UPLOADBUNDLE_GATE PHASE5_GATE \
          PHASE6_GATE BILLING_GATE DEPLOYSRV_GATE PREFLIGHT_GATE \
-         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE \
+         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE CLIPIO_GATE \
          PUBSYNC_GATE OWNERVERIFY_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done

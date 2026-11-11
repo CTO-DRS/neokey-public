@@ -20,7 +20,7 @@
 #        exact tag (no committed record and no ledger state — nothing to
 #        anchor on). Where the vault lives, the full battery re-runs inside
 #        the phase-9 closer as before.
-#     3. Whole-pipeline state: the 33 pre-publication gate keys must all be
+#     3. Whole-pipeline state: the 34 pre-publication gate keys must all be
 #        OK (hard); the publication keys (PUBSYNC_/OWNERVERIFY_) and the
 #        phase-9 closer key are guarded WHEREVER that state exists — a fresh
 #        clone without the owner's vault has no publication state, and the
@@ -90,16 +90,16 @@ if [ "$PCOUNT" = "3" ]; then
   [ "${OWNERVERIFY_GATE:-NOT_OK}" = "OK" ] || fail "ownerverify gate key ${OWNERVERIFY_GATE:-NOT_OK} not OK"
   [ "${PHASE9_GATE:-NOT_OK}" = "OK" ]      || fail "phase9 closer key ${PHASE9_GATE:-NOT_OK} not OK"
 fi
-# every pre-publication gate key must still be OK — no gate regressed (33 keys:
-# the phase-9 close's 35 minus the two publication keys it guarded where its
-# vault lived)
+# every pre-publication gate key must still be OK — no gate regressed (34 keys:
+# the phase-9 close's 36 minus the two publication keys it guarded where its
+# vault lived; the W47 clipio gate joined the guarded set)
 for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          SYNCCLIENT_GATE THEMESTORE_GATE NQFPORT_GATE COMMUNITY_GATE \
          DICTSIGN_GATE STOREUI_GATE ENTGATE REST_GATE PAY_GATE TRIM_GATE \
          PHASE3_GATE TLS_GATE DEPLOY_GATE KSDRILL_GATE PHASE4_GATE \
          PROVISION_GATE SIGNEDAPK_GATE UPLOADBUNDLE_GATE PHASE5_GATE \
          PHASE6_GATE BILLING_GATE DEPLOYSRV_GATE PREFLIGHT_GATE \
-         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE; do
+         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE CLIPIO_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
 [ "${AUDIT:-}" = "OK" ] || fail "secrets audit not OK"

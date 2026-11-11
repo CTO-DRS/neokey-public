@@ -11,7 +11,8 @@
 #     1. rebuild_gate + evaudit_gate + opverify_gate re-run green, each field
 #        pinned at its shipped baseline (no silent regression: the rebuild
 #        drill is EXACT (24 checks, 12/12 negatives, 7/7 pins, the inner
-#        pipeline 39 stages — the shape freeze of the close), the evidence
+#        pipeline 40 stages — the shape pin re-pinned consciously at W47 when
+#        the clipio stage joined the inner profile), the evidence
 #        auditor is EXACT (19 checks, 12/12 negatives — its archive is
 #        MONOTONIC by design: the week's own proof log lands after the code
 #        commit, so members/proofs get BOUNDS against the log, never
@@ -19,9 +20,9 @@
 #        operator-output verifier is EXACT (18 checks, 12/12 negatives,
 #        letters=2 packs=1 swaps=1 — the published identities may not drift).
 #     2. fresh verdict lines == pipeline-log verdict lines == gates.env values.
-#     3. Whole-pipeline state: every previous gate key still OK (33 keys —
+#     3. Whole-pipeline state: every previous gate key still OK (34 keys —
 #        the 29 the phase-7 close guarded + the phase-7 closing gate itself
-#        + the three phase-8 gates), the phase-7 close itself still
+#        + the three phase-8 gates + the W47 clipio gate), the phase-7 close itself still
 #        0-regressions, tests >= 1,561 with 0 failures, NQF golden assets
 #        = 15, theme packs = 25, R8 dex <= the 512,000B lowered ceiling with
 #        all manifest components kept, trim and R8 agree on the same dex
@@ -48,7 +49,7 @@ DEX_CEILING=512000   # LOWERED by the W22 real trim (was 520,000); overflow mean
 VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-8 close floor (was 82)
 VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-8 close floor (was 3.5); the historical close measurement stays pinned in release-manifest.phase8Close
 TESTS_MIN=1561       # shipped test total at phase-8 close (the mass lives in the gates)
-INNER_STAGES=39      # the drill's inner stage count at the close: 37 pre-drill rows + evaudit + opverify (the drill and this closer omit themselves inside — INNER_OMIT); frozen here so a shape change re-pins consciously
+INNER_STAGES=40      # the drill's inner stage count: 38 pre-drill rows + evaudit + opverify (the drill and this closer omit themselves inside — INNER_OMIT); frozen so a shape change re-pins consciously — RE-PINNED 39→40 at W47 (the clipio stage joined the inner profile; the pin bit live when the first post-W47 drill landed stages=40)
 STATE=build/release/gates.env
 LOGF=build/pipeline.log
 
@@ -177,16 +178,16 @@ LT=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOGF" | awk '{p+=$2; f+=$4}
 [ "${AUDIT:-}" = "OK" ] || fail "secrets audit not OK"
 [ "${TESTS_TOTAL:-0}" -ge "$TESTS_MIN" ] || fail "tests $TESTS_TOTAL < $TESTS_MIN"
 [ "${TESTS_FAILED:-1}" = "0" ] || fail "tests_failed $TESTS_FAILED != 0"
-# every previous gate key must still be OK — no gate regressed (33 keys:
+# every previous gate key must still be OK — no gate regressed (34 keys:
 # the 29 the phase-7 close guarded + the phase-7 closing gate itself + the
-# three phase-8 gates)
+# three phase-8 gates + the W47 clipio gate)
 for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          SYNCCLIENT_GATE THEMESTORE_GATE NQFPORT_GATE COMMUNITY_GATE \
          DICTSIGN_GATE STOREUI_GATE ENTGATE REST_GATE PAY_GATE TRIM_GATE \
          PHASE3_GATE TLS_GATE DEPLOY_GATE KSDRILL_GATE PHASE4_GATE \
          PROVISION_GATE SIGNEDAPK_GATE UPLOADBUNDLE_GATE PHASE5_GATE \
          PHASE6_GATE BILLING_GATE DEPLOYSRV_GATE PREFLIGHT_GATE \
-         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE; do
+         PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE CLIPIO_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
 [ "${NQFPORT_ASSETS:-0}" = 15 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 15 (golden pins drifted)"
