@@ -1,0 +1,16 @@
+== communityopen negative proof — 2026-11-11T21:38:17Z ==
+baseline: COMMUNITYOPEN_OK checks=51 negatives=16/16 words=9 contribs=3 batches=6 pack=9 vc=1 vn=0.1.0
+
+--- attack: dead thanks expectation (the harness's demand on the thanks title renamed away — a rehearsal that accepts any thanks page credits nobody)
+bit: COMMUNITYOPEN regression: thanks.format (قسم الشكر يفتح بالعنوان الموثق ويحمل جدول الأعداد)
+restored: green re-verify OK (COMMUNITYOPEN_OK checks=51 negatives=16/16 words=9 contribs=3 batches=6 pack=9 vc=1 vn=0.1.0)
+
+--- attack: the intake's documented gloss line severed (the guide's «أقل من حرفين» replaced by a rogue 0 — the doc-mirror screener accepts what the shipped judge refuses)
+bit: NEG-FAILED neg.gloss_intake (expected BAD_GLOSS, got ACCEPT)
+restored: green re-verify OK (COMMUNITYOPEN_OK checks=51 negatives=16/16 words=9 contribs=3 batches=6 pack=9 vc=1 vn=0.1.0)
+
+--- attack: hidden tool (CommunityOpen.java removed — the gate fails closed at compile)
+bit: COMMUNITYOPEN_FAILED compile
+restored: green re-verify OK (COMMUNITYOPEN_OK checks=51 negatives=16/16 words=9 contribs=3 batches=6 pack=9 vc=1 vn=0.1.0)
+
+PROOF PASSED communityopen 3/3 attacks bit their exact tags and the restores healed (COMMUNITYOPEN_OK checks=51 negatives=16/16 words=9 contribs=3 batches=6 pack=9 vc=1 vn=0.1.0)
