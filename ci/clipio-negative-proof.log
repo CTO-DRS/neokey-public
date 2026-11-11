@@ -1,4 +1,4 @@
-# clipio-negative-proof — W47 (2026-11-16), 2026-11-10T23:28:27Z
+# clipio-negative-proof — W47 (2026-11-16), 2026-11-11T04:54:14Z
 # Three attacks against ci/clipio_gate.sh; each must bite its exact tag,
 # then the clean tree must heal to a full green gate (containment).
 
