@@ -1,16 +1,16 @@
-== deployday negative proof — 2026-11-11T15:23:39Z ==
-baseline: DEPLOYDAY_OK checks=29 negatives=7/7 pin16=3f78f654237f5415 days_left=364 pack_members=6 vc=1 vn=0.1.0
+== deployday negative proof — 2026-11-11T19:28:45Z ==
+baseline: DEPLOYDAY_OK checks=29 negatives=7/7 pin16=437a54c9e648d1ca days_left=364 pack_members=6 vc=1 vn=0.1.0
 
 --- attack: dead decision expectation (the PROVISION_OK prefix renamed away — a rehearsal that accepts any verdict rehearses nothing)
 bit: DEPLOYDAY_FAILED decision.ok
-restored: green re-verify OK (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=8c3a110db4847e28 days_left=364 pack_members=6 vc=1 vn=0.1.0)
+restored: green re-verify OK (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=c832a5dd9e5954ee days_left=364 pack_members=6 vc=1 vn=0.1.0)
 
 --- attack: the pin law severed from the decision (the derived pin replaced by a hardcoded rogue literal — the wire must refuse what nobody derived)
 bit: DEPLOYDAY regression: health.ok (the real probe on the pinned anchored channel (strict name check — the IP SAN matches))
-restored: green re-verify OK (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=cb5f40002012a109 days_left=364 pack_members=6 vc=1 vn=0.1.0)
+restored: green re-verify OK (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=da2468eafbf91ef7 days_left=364 pack_members=6 vc=1 vn=0.1.0)
 
 --- attack: hidden tool (DeployDay.java removed — the gate fails closed at compile)
 bit: DEPLOYDAY_FAILED compile
-restored: green re-verify OK (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=c1d63d0685fa2f67 days_left=364 pack_members=6 vc=1 vn=0.1.0)
+restored: green re-verify OK (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=a6b33722bc725a60 days_left=364 pack_members=6 vc=1 vn=0.1.0)
 
-PROOF PASSED deployday 3/3 attacks bit their exact tags and the restores healed (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=c1d63d0685fa2f67 days_left=364 pack_members=6 vc=1 vn=0.1.0)
+PROOF PASSED deployday 3/3 attacks bit their exact tags and the restores healed (DEPLOYDAY_OK checks=29 negatives=7/7 pin16=a6b33722bc725a60 days_left=364 pack_members=6 vc=1 vn=0.1.0)
