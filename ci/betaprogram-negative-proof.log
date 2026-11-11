@@ -1,0 +1,16 @@
+== betaprogram negative proof — 2026-11-11T19:10:09Z ==
+baseline: BETAPROGRAM_OK checks=33 negatives=6/6 seats=100 batch=22 rate=0.03 vc=1 vn=0.1.0
+
+--- attack: dead week expectation (the harness's demand on the ledger verdict renamed away — a rehearsal that accepts any verdict rehearses nothing)
+bit: BETAPROGRAM regression: ledger.p0 (zero P0 days across the week (the documented exit criterion, mechanically))
+restored: green re-verify OK (BETAPROGRAM_OK checks=33 negatives=6/6 seats=100 batch=22 rate=0.03 vc=1 vn=0.1.0)
+
+--- attack: the P0 law severed (the documented 1% line replaced by a rogue literal 100.0 — a red day passes, the week is called green)
+bit: NEG-FAILED neg.p0_day_rate (expected p0.day_rate, got NO_REFUSAL)
+restored: green re-verify OK (BETAPROGRAM_OK checks=33 negatives=6/6 seats=100 batch=22 rate=0.03 vc=1 vn=0.1.0)
+
+--- attack: hidden tool (BetaProgram.java removed — the gate fails closed at compile)
+bit: BETAPROGRAM_FAILED compile
+restored: green re-verify OK (BETAPROGRAM_OK checks=33 negatives=6/6 seats=100 batch=22 rate=0.03 vc=1 vn=0.1.0)
+
+PROOF PASSED betaprogram 3/3 attacks bit their exact tags and the restores healed (BETAPROGRAM_OK checks=33 negatives=6/6 seats=100 batch=22 rate=0.03 vc=1 vn=0.1.0)
