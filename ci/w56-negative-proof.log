@@ -1,0 +1,9 @@
+[root.seal] BIT RIX_CRC — the strict load refused the WHOLE index (one broken seal byte, zero trusted families)
+[heal-check] assets/root_index.txt restored byte-exact (cmp clean)
+[root.dup] BIT RIX_DUP — one word under two roots refused, never silently resolved
+[heal-check] assets/root_index.txt restored byte-exact (cmp clean)
+[root.bonus] BIT FAIL root.bonus.prefers — the +400 root signal is measured, its quiet removal is a regression
+[heal-check] src/com/hark/neokey/Correction2.java restored byte-exact (cmp clean)
+ROOTGATE_OK checks=46 gold=185/185 accuracy=100.0% testset=126/242 coverage=52.1% dex=508840/512000 margin=3160 roots=3667 covered=84809 failclosed=ON
+[heal] ROOTGATE OK — the clean tree heals green
+PROOF PASSED w56 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: ROOTGATE_OK on the clean tree — battery 46, gold 185/185, dex 508840/512000)
