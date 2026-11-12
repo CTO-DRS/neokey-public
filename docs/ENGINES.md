@@ -16,9 +16,11 @@
 | `ci/harness_gate.sh` | البوابة المستقلة (`HARNESSGATE_OK` — نمط W50-prep، بلا مرحلة في الخط) |
 | `ci/perfbaseline_gate.sh` + `evidence/perf-baseline.tsv` | الأرضية المقاسة (§4) |
 | `tests/PerfBaseline.java` | القياس على الأصول الحقيقية — طورا `--pin` و`--check` |
+| `src/RootEngine.java` + `assets/root_index.txt` | **أول محرك حقيقي عبر العقد (W56)** — المفسّر الرقيق + المعرفة المختومة؛ العقد الواحد له: `docs/ROOT.md` |
+| `tests/RootEngineTest.java` + `ci/root_gate.sh` | بطارية المحرك الأول (46 فحصاً) + بوابة `ROOTGATE_OK` المستقلة |
 
-المحركات القادمة التي ستنفذ العقد: `RootEngine` (W56)، `TashkeelEngine` (W57)،
-`GrammarNudge` (W58)، `AdaptEngine` (W60).
+المحركات القادمة التي ستنفذ العقد: `TashkeelEngine` (W57)،
+`GrammarNudge` (W58)، `AdaptEngine` (W60) — و`RootEngine` (W56) وصِل فعلاً.
 
 ## 2. قوانين العقد الخمسة
 
@@ -37,10 +39,10 @@
    `assets/` والـdex مفسّر رقيق) — بلا إدخال/إخراج، بلا خيوط، بلا شبكة داخل
    `run()` (الشبكة ملك `NetGate` — قانون 10).
 5. **تسجيل صارم**: `Engines.set(...)` يرفض محركاً null أو معرفاً فارغاً أو
-   معرفاً مكرراً **والسجل السابق باقٍ كما هو** — لا سجل نصف مبني أبداً (عُرف
-   `NQF.read`/`Predictor`). نداء `set()` الفارغ يفرّغ السجل (للاختبارات
-   والحفر). السجل يشحن فارغاً: لوحة المفاتيح fail-closed صامتة حتى يوصّل W56
-   أول محرك حقيقي.
+معرفاً مكرراً **والسجل السابق باقٍ كما هو** — لا سجل نصف مبني أبداً (عُرف
+`NQF.read`/`Predictor`). نداء `set()` الفارغ يفرّغ السجل (للاختبارات
+والحفر). السجل وُصل W56: خيط `root-load` في الخدمة يسجل `RootEngine` عند
+نجاح الختم ويتركه فارغاً fail-closed عند أي خرق (`docs/ROOT.md` §5).
 
 ## 3. نقطة الالتحام الواحدة
 
@@ -56,7 +58,8 @@ Engine.Cand[] out = Engines.run(new Engine.Ctx(prev2, prev1, composing), LIMIT);
 
 الدمج حتمي ومكرر-الاختبار: الترتيب = ترتيب التسجيل، إزالة التكرار عبر المحركات
 (أول مصدر يفوز)، السقف `limit` مُكرَّم، والعدّاد `Engines.failures()` دقيق
-عبر البطارية كلها (لا فشل خفي).
+عبر البطارية كلها (لا فشل خفي). W56 وصّل أول محرك حقيقي عبر هذه النقطة
+بالضبط — خيط `root-load` في `NeoKeyService` (`docs/ROOT.md` §5).
 
 ## 4. أرضية الأداء الحقيقية — `PERFBASELINE_OK`
 

@@ -11,7 +11,9 @@ feedback.copy	remaining	1395	mirror-locked: BETAPROGRAM doc §4 is a verbatim mi
 layouts.symbols	remaining	5369	functional symbol layouts — refused by the phase-3 decision (test-bound content)
 cliprepo.defaults	remaining	3418	functional defaults — refused (test-bound content)
 r8.flags	reviewed	0	-allowaccessmodification + -repackageclasses already present since phase 3; LineNumberTable refused (the crash-diagnostic law, docs/R8.md §3)
-engine.contract	shipped	0	src/Engine.java + src/Engines.java — the W55 unified contract; measured fresh: R8 strips the UNWIRED contract to delta 0 (nothing in src references it until W56 wires RootEngine) — the bytes are charged the week the first engine wires, law 5
+engine.contract	wired	0	src/Engine.java + src/Engines.java — the W55 unified contract; W56 wired the first engine — the contract's own bytes now ship INSIDE the root.engine charge below (one measured truth, not two)
+root.engine	shipped	4648	src/RootEngine.java (the strict RIX1 interpreter) + the service load/strip/tree wiring + the Correction2 root signal — measured fresh W56: dex 504192 → 508840 (R8_OK real-R path); the knowledge itself rides assets/root_index.txt (1,079,858B, CRC-sealed), law 6
 dex	pre_trim	511804	the committed record (W53-prep drill line) — byte-exact reproduced in this environment before the trim
-dex	post_trim	504192	W55 re-measured fresh after the engine contract (R8_OK real-R path) — still 504192: the unwired contract strips to 0; the W54 trim record stands
+dex	pre_wire	504192	the W55 record — the anchor the root.engine delta is measured against (the W54 trim record stands)
+dex	post_trim	508840	W56 re-measured fresh after wiring the first engine (R8_OK real-R path) — 504192 + 4648; margin 3160 under the kept ceiling
 ceiling	kept	512000	W54 decision: the ceiling stays; revisit only after the remaining levers with a measured shortfall; any raise = a documented owner decision (build_r8.sh: overflow means trim)

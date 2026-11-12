@@ -131,6 +131,25 @@ final class Correction2 {
     /** Why the last fix() decided what it did — gate attribution, single-threaded. */
     static String lastReason = "";
 
+    // ------------------------------------------------- the W56 root signal
+
+    /**
+     * The W56 root-preservation signal (docs/ROOT.md §4): when a verified
+     * RootEngine rides (RootEngine.attach), a candidate that KEEPS the typed
+     * word's root scores ROOT_WEIGHT above one that breaks it — التصحيح
+     * الواعي بالجذر (ROADMAP-V2 W56). Null when detached — the scorer is then
+     * BYTE-IDENTICAL to the measured W55 baseline (the detach law; the W56
+     * gate and its negative proof bite any other reading). The interface
+     * lives here so Correction2 compiles — and every gate compiles it —
+     * WITHOUT RootEngine: the engine implements it, never the reverse.
+     */
+    interface RootSignal { int rootOf(String word); }
+    static RootSignal rootSignal;
+    /** The documented root-preserving bonus: between the substitution priors
+     *  (600/unit) and one bigram context vote (3×corpus-rank) — big enough to
+     *  reorder honest ties, never big enough to outvote real context. */
+    private static final int ROOT_WEIGHT = 400;
+
     /** Scores one candidate: frequency + context (previous word) + confusion prior. */
     static int score(String typed, String cand, String prev, Dictionary dict) {
         return score(typed, cand, prev, "", dict);
@@ -151,6 +170,14 @@ final class Correction2 {
                     if (one > p) p = one;
                 }
             sc += p * PRIOR_WEIGHT;
+        }
+        // W56 root signal: a detached keyboard scores EXACTLY as the W55
+        // baseline (sig == null → this block never runs); an attached one
+        // prefers the candidate that keeps the root (docs/ROOT.md §4).
+        RootSignal sig = rootSignal;
+        if (sig != null) {
+            int rt = sig.rootOf(typed);
+            if (rt >= 0 && rt == sig.rootOf(cand)) sc += ROOT_WEIGHT;
         }
         return sc;
     }

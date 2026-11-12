@@ -66,6 +66,9 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private String dialectMode = SmartSwitch.AUTO;
     private volatile Predictor predictor;   // A2 neural next-word model (async load, fail-open)
     private boolean suggest = true, dblSpace = true, sensitive, selecting, pickedSuggestion;
+    /** W56: the long-press family tree owns the strip until the next tap or key
+     *  (any strip rebuild clears it — the tree is an idle-state view, never a mode). */
+    private boolean familyTree;
     private Bitmap photo;
     private long photoStamp = -1;
     private Bitmap avatarBmp;
@@ -132,6 +135,29 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 predictor = null; // fail-open: typing is never disrupted by the model
             }
         }}, "nnet-load").start();
+        // W56: the root-family engine (assets/root_index.txt — RIX1, CRC32-sealed,
+        // 3,667 roots over 84,809 dictionary words, derived deterministically by
+        // ci/make_root_index.py) loads in the background like the neural model;
+        // the keyboard never waits for it. Fail-closed: ANY breach of the seal
+        // (magic/header/CRC/count/dup — RootEngine.load refuses the WHOLE index)
+        // leaves the engines registry EMPTY, correction root-neutral, typing
+        // untouched — the W55 law: the keyboard is fail-closed silent.
+        new Thread(new Runnable() { public void run() {
+            try {
+                java.io.InputStream in = getAssets().open("root_index.txt");
+                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[65536];
+                int n;
+                while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                in.close();
+                RootEngine e = RootEngine.load(bo.toByteArray());
+                Engines.set(e);        // the first real engine through the W55 contract
+                RootEngine.attach(e);  // the Correction2 root signal rides the same truth
+            } catch (Throwable t) {
+                Engines.set();         // fail-closed: the registry stays empty
+                RootEngine.detach();
+            }
+        }}, "root-load").start();
     }
 
     @Override
@@ -514,6 +540,13 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             return;
         }
         List<String> s = mergedSuggest(w, activeDialectId(), 3);
+        // W56: the root-family branch rides the strip tail through the W55
+        // contract (Engines.run — the ONE call site): dict completions keep
+        // their lead slots, the first family branch takes the tail; the
+        // fixes/shortcuts/emoji manipulations below still claim their slots.
+        // An empty registry (corrupt index / detached) answers empty — silent.
+        Engine.Cand[] fam = Engines.run(new Engine.Ctx(null, null, w), 6);
+        RootEngine.familyInto(s, fam, 3);
         String fx = ArabicFixes.fix(w);
         if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > 3) s.remove(s.size() - 1); }
         String sc = Theme.shortcuts(this).get(w.toLowerCase());
@@ -616,6 +649,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     public void onSuggestion(String word) {
         InputConnection ic = getCurrentInputConnection();
         if (ic == null) return;
+        if (familyTree) {
+            // W56: a tree chip tapped — ✕ exits back to the normal strip, a
+            // family member commits through the ordinary suggestion path below.
+            familyTree = false;
+            if (word.startsWith("✕")) { updateSuggestions(); return; }
+        }
         if (clipSearch) {
             if (word.startsWith("✕")) { clipSearch = false; view.showPanel(KeyboardView.PANEL_CLIP); updateSuggestions(); return; }
             if (word.startsWith("🔎")) finishClipSearch();
@@ -681,6 +720,24 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         pickedSuggestion = true;
         if (mode == Layouts.EN && shift == KeyboardView.SHIFT_ON) shift = KeyboardView.SHIFT_OFF;
         updateAutoCaps();
+    }
+
+    /**
+     * W56: long-press on a suggestion reveals its morphological family tree
+     * (الكيبورد الذي يعرف أصل الكلمة): the ✕ root chip exits, up to 10 family
+     * members commit on tap. Fail-closed everywhere — no attached engine, no
+     * root, no family (or a trivial one-member family) → the press is a haptic
+     * no-op, exactly the pre-W56 behavior.
+     */
+    @Override
+    public void onSuggestionLong(String word) {
+        RootEngine e = RootEngine.attached();
+        if (e == null || word == null || word.isEmpty()) return;
+        String root = e.rootValue(word);
+        String[] fam = e.familyTree(word);
+        if (root == null || fam == null || fam.length < 2) return;
+        familyTree = true;
+        view.setSuggestions(RootEngine.treeChips(root, fam));
     }
 
     // ------------------------------------------------------------ clipboard

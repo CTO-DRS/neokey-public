@@ -41,6 +41,7 @@ public class KeyboardView extends View {
         void onText(String text);
         void onEmoji(String emoji);
         void onSuggestion(String word);
+        void onSuggestionLong(String word);   // W56: long-press = the root family tree (docs/ROOT.md §5)
         void onDelete();
         void onEnter();
         void onShift();
@@ -2068,7 +2069,7 @@ public class KeyboardView extends View {
                     listener.onShift();
                 }
                 if (k.alts != null || k.type == Key.SPACE || k.type == Key.CLIP
-                        || (k.type == Key.SUGG && k.label != null && k.label.startsWith(CLIP_MARK))) handler.postDelayed(longPress, lpDelay);
+                        || (k.type == Key.SUGG && k.label != null)) handler.postDelayed(longPress, lpDelay);
                 glideCand = glideOn && panel == PANEL_KEYS && action == MotionEvent.ACTION_DOWN && isLetterKey(k);
                 gliding = false;
                 if (glideCand) {
@@ -2202,7 +2203,8 @@ public class KeyboardView extends View {
         }
         if (active.type == Key.SUGG) {
             performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-            listener.onClipChipMenu();
+            if (active.label != null && active.label.startsWith(CLIP_MARK)) listener.onClipChipMenu();
+            else listener.onSuggestionLong(active.text);   // W56: the family tree — the service no-ops when unmapped/detached
             return;
         }
         if (active.type == Key.SPACE) {

@@ -1,0 +1,51 @@
+PASS root.realasset.present
+PASS root.realasset.load
+PASS root.realasset.header
+PASS root.lookup.same_root
+PASS root.value.norm
+PASS root.family.ranked
+PASS root.family.defensive_copy
+PASS root.unmapped.safe
+PASS root.id
+PASS root.run.excludes_self_capped
+PASS root.run.short_composing
+PASS root.run.unmapped
+PASS root.run.empty_ctx
+PASS root.contract.labeled
+PASS root.contract.empty_registry_silent
+PASS root.fixture.load
+PASS root.neg.magic [RIX_MAGIC]
+PASS root.neg.header_shape [RIX_HEADER]
+PASS root.neg.made_format [RIX_MADE]
+PASS root.neg.source [RIX_SOURCE]
+PASS root.neg.crc_field [RIX_CRC_FIELD]
+PASS root.neg.crc_value [RIX_CRC]
+PASS root.neg.roots_claim [RIX_ROOTS_COUNT]
+PASS root.neg.covered_claim [RIX_COVERED_COUNT]
+PASS root.neg.line_shape [RIX_LINE]
+PASS root.neg.empty_member [RIX_MEMBERS]
+PASS root.neg.dup_key [RIX_DUP]
+PASS root.failclosed.registry_empty
+PASS root.failclosed.no_attach
+PASS root.determinism
+PASS strip.family.appends
+PASS strip.family.replaces_tail
+PASS strip.family.skips_shown
+PASS strip.family.skips_holes
+PASS strip.family.null_safe
+PASS strip.treechips.shape
+PASS strip.treechips.cap10
+PASS strip.treechips.null_family
+PASS root.corr.dict_loaded
+PASS root.corr.precondition
+PASS root.corr.attach_wires
+PASS root.bonus.prefers
+PASS root.neutral.detached
+PASS root.corr.zero_annoyance_intact
+PASS root.static.lookup_live
+PASS root.static.lookup_dead
+RESULT 46 passed, 0 failed
+ROOTINDEX_CHECK_OK bytes=1079858 words=150123 roots=3667 covered=84809
+GOLD 185/185 accuracy=100.0%
+TESTSET 126/242 coverage=52.1%
+ROOTGATE_OK checks=46 gold=185/185 accuracy=100.0% testset=126/242 coverage=52.1% dex=508840/512000 margin=3160 roots=3667 covered=84809 failclosed=ON
