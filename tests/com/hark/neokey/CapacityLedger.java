@@ -51,7 +51,7 @@ public class CapacityLedger {
         check("ledger.shape", shape);
         check("ledger.levers", byKey.containsKey("writer.templates.done")
                 && byKey.containsKey("theme.phrases.done")
-                && byKey.containsKey("feedback.copy.remaining")
+                && byKey.containsKey("feedback.copy.pulled")
                 && byKey.containsKey("layouts.symbols.remaining")
                 && byKey.containsKey("cliprepo.defaults.remaining")
                 && byKey.containsKey("r8.flags.reviewed"));
@@ -104,19 +104,28 @@ public class CapacityLedger {
                 && !theme.contains("public static final String[] ADHKAR"));
 
         // ---- 4. dex vs the ledger (the fresh measurement decides) ----------------
-        int pre = Integer.parseInt(byKey.get("dex.pre_trim")[2]);
+        // W57 re-anchor (the documented ceiling decision): the part-A engines
+        // legitimately EXCEED the W54 pre-trim record — the honest-delta law is
+        // now the measured SUM EQUALITY (post == pre_wire + every engine row +
+        // the batch-2 net), stricter than the old inequality.
+        int preWire = Integer.parseInt(byKey.get("dex.pre_wire")[2]);
         int post = Integer.parseInt(byKey.get("dex.post_trim")[2]);
-        int ceiling = Integer.parseInt(byKey.get("ceiling.kept")[2]);
-        check("dex.below.pre_trim", dex < pre);
+        int ceiling = Integer.parseInt(byKey.get("ceiling.raised")[2]);
+        int eng = 0;
+        for (String k : new String[]{"root.engine.shipped", "tashkeel.engine.shipped", "feedback.copy.pulled"})
+            eng += Integer.parseInt(byKey.get(k)[2]);
         check("dex.claim.current", dex <= post);
         check("dex.under.ceiling", dex <= ceiling);
-        check("ledger.delta.honest", post < pre);
+        check("ledger.delta.honest", post == preWire + eng);
+        check("dex.batch2.measured", byKey.get("feedback.copy.pulled")[3].startsWith("measured net"));
 
         // ---- 5. the ceiling decision is documented (no silent raise, ever) -------
-        check("ceiling.decision.ledger", byKey.containsKey("ceiling.kept")
-                && "512000".equals(byKey.get("ceiling.kept")[2]));
+        check("ceiling.decision.ledger", byKey.containsKey("ceiling.raised")
+                && "513000".equals(byKey.get("ceiling.raised")[2])
+                && byKey.get("ceiling.raised")[3].startsWith("W57 decision"));
         String roadmap = new String(Files.readAllBytes(Paths.get("ROADMAP-V2.md")), StandardCharsets.UTF_8);
-        check("ceiling.decision.roadmap", roadmap.contains("W54-CEILING-DECISION"));
+        check("ceiling.decision.roadmap", roadmap.contains("W54-CEILING-DECISION")
+                && roadmap.contains("W57-CEILING-RAISE"));
 
         // ---- 6. the round-trip evidence is on disk (the trim's behavioral proof) --
         String proof;

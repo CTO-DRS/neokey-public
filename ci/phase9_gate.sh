@@ -43,7 +43,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-DEX_CEILING=512000
+DEX_CEILING=513000   # W57-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)
 VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-9 close floor (was 85)
 VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-9 close floor (was 3.8); the historical close measurement stays pinned in release-manifest.phase9Close
 TESTS_MIN=1581       # shipped test total at phase-9 close
@@ -126,7 +126,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PUBSYNC_GATE OWNERVERIFY_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
-[ "${NQFPORT_ASSETS:-0}" = 18 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 18 (golden pins drifted)"
+[ "${NQFPORT_ASSETS:-0}" = 21 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 18 (golden pins drifted)"
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 echo "${PHASE7_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE7_REGRESSIONS ${PHASE7_REGRESSIONS:-?} is not 0/n (the phase-7 close regressed)"
 echo "${PHASE8_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE8_REGRESSIONS ${PHASE8_REGRESSIONS:-?} is not 0/n (the phase-8 close regressed)"

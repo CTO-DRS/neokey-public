@@ -35,7 +35,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-DEX_CEILING=512000   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
+DEX_CEILING=513000   # W57-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
 VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-6 close floor (was 74)
 VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-6 close floor (was 2.7); the historical close measurement stays pinned in release-manifest.phase6Close
 TESTS_MIN=1424       # shipped test total at phase-6 close (the mass lives in the gates)
@@ -175,7 +175,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PROVISION_GATE SIGNEDAPK_GATE UPLOADBUNDLE_GATE PHASE5_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
-[ "${NQFPORT_ASSETS:-0}" = 18 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 18 (golden pins drifted)"
+[ "${NQFPORT_ASSETS:-0}" = 21 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 18 (golden pins drifted)"
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 # the phase-5 close itself must still be zero-regression in THIS run
 echo "${PHASE5_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE5_REGRESSIONS ${PHASE5_REGRESSIONS:-?} is not 0/n (the phase-5 close regressed)"

@@ -1,0 +1,69 @@
+PASS tsx.realasset.present
+PASS tsx.realasset.load
+PASS tsx.realasset.header
+PASS tsx.lexicon.single
+PASS tsx.normfold.tee_marbuta
+PASS tsx.normfold.hamza_seat
+PASS tsx.ambig.variants
+PASS tsx.antigemination.umam
+PASS tsx.antigemination.sabab
+PASS tsx.partial.sun_r2
+PASS tsx.comp.moon
+PASS tsx.comp.sun
+PASS tsx.conj.waw
+PASS tsx.defensive_copy
+PASS tsx.unmapped.safe
+PASS tsx.id
+PASS tsx.run.off
+PASS tsx.run.ambig_single_silent
+PASS tsx.run.ambig_multi
+PASS tsx.run.full_single
+PASS tsx.run.full_partial
+PASS tsx.run.short
+PASS tsx.run.unmapped
+PASS tsx.run.empty_ctx
+PASS tsx.static.detached
+PASS tsx.static.attach_wires
+PASS tsx.static.full
+PASS tsx.static.ambig
+PASS tsx.static.off
+PASS tsx.static.detach
+PASS tsx.contract.labeled
+PASS tsx.contract.empty_registry_silent
+PASS tsx.fixture.load
+PASS tsx.neg.magic [TSX_MAGIC]
+PASS tsx.neg.header_shape [TSX_HEADER]
+PASS tsx.neg.made_format [TSX_MADE]
+PASS tsx.neg.source [TSX_SOURCE]
+PASS tsx.neg.crc_field [TSX_CRC_FIELD]
+PASS tsx.neg.crc_value [TSX_CRC]
+PASS tsx.neg.entries_claim [TSX_ENTRIES_COUNT]
+PASS tsx.neg.covered_claim [TSX_COVERED_COUNT]
+PASS tsx.neg.line_shape [TSX_LINE]
+PASS tsx.neg.key_not_normed [TSX_KEY]
+PASS tsx.neg.form_does_not_fold [TSX_FORM]
+PASS tsx.neg.empty_form [TSX_FORMS]
+PASS tsx.neg.dup_key [TSX_DUP]
+PASS tsx.failclosed.registry_empty
+PASS tsx.failclosed.no_attach
+PASS tsx.determinism
+PASS tsx.ride.full_strip_untouched
+PASS tsx.ride.appends
+PASS tsx.ride.skip_shown
+PASS tsx.ride.skips_holes
+PASS tsx.ride.null_safe
+PASS tsx.chips.shape
+PASS tsx.chips.cap8
+PASS tsx.chips.null_forms
+PASS tsx.apply.full
+PASS tsx.apply.ambig
+PASS tsx.apply.already_vocalized
+PASS tsx.apply.digits_latin
+PASS tsx.apply.off_identical
+PASS tsx.apply.null_text
+RESULT 63 passed, 0 failed
+TASHKEELINDEX_CHECK_OK bytes=939777 words=150123 entries=28020 covered=28196
+FEEDBACK_CHECK_OK bytes=1671
+GOLD 41/41 accuracy=100.0%
+TESTSET words=82 full=75 (91.5%) coverage=77 (93.9%) contradictions=0
+TASHKEELGATE_OK checks=63 gold=41/41 accuracy=100.0% testset=words=82 full=75 (91.5%) coverage=77 (93.9%) contradictions=0 dex=512928/513000 margin=72 entries=28020 covered=28196 failclosed=ON

@@ -19,6 +19,12 @@ public class FeedbackTest {
     }
 
     public static void run() {
+        // W57 batch-2 lever: the wording lives in assets/feedback_copy.txt —
+        // the test feeds the REAL committed asset through the REAL strict
+        // loader (the NeoKeyService path, the W54 WriterTest pattern); until
+        // init answers the banks are empty by design (fail-closed).
+        try { Feedback.init(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("assets/feedback_copy.txt"))); }
+        catch (java.io.IOException e) { throw new RuntimeException("feedback.copy.probe", e); }
         System.out.println("== Feedback: envelope ==");
 
         // The address is a hard contract: PlayGate asserts play/listing.txt shows

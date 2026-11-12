@@ -66,7 +66,7 @@ public class SignedApkTest {
         check("statement carries the schema + fields",
                 s1.contains("\"schema\": \"neokey-signedapk-1\"")
                         && s1.contains("\"v1Scheme\": true") && s1.contains("\"v2Scheme\": true")
-                        && s1.contains("\"dexCeiling\": 512000"));
+                        && s1.contains("\"dexCeiling\": 513000"));
 
         System.out.println("== SignedApk: raw zip utilities ==");
         File z = File.createTempFile("nkzip", ".zip");

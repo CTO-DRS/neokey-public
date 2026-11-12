@@ -18,9 +18,11 @@
 | `tests/PerfBaseline.java` | القياس على الأصول الحقيقية — طورا `--pin` و`--check` |
 | `src/RootEngine.java` + `assets/root_index.txt` | **أول محرك حقيقي عبر العقد (W56)** — المفسّر الرقيق + المعرفة المختومة؛ العقد الواحد له: `docs/ROOT.md` |
 | `tests/RootEngineTest.java` + `ci/root_gate.sh` | بطارية المحرك الأول (46 فحصاً) + بوابة `ROOTGATE_OK` المستقلة |
+| `src/TashkeelEngine.java` + `assets/tashkeel_index.txt` | **المحرك الثاني عبر العقد (W57)** — المفسّر الرقيق RIX2 + الدرجات الثلاث؛ العقد الواحد له: `docs/TASHKEEL.md` |
+| `tests/TashkeelTest.java` + `ci/tashkeel_gate.sh` | بطارية المحرك الثاني (63 فحصاً) + بوابة `TASHKEELGATE_OK` المستقلة |
 
-المحركات القادمة التي ستنفذ العقد: `TashkeelEngine` (W57)،
-`GrammarNudge` (W58)، `AdaptEngine` (W60) — و`RootEngine` (W56) وصِل فعلاً.
+المحركات القادمة التي ستنفذ العقد: `GrammarNudge` (W58)،
+`AdaptEngine` (W60) — و`RootEngine` (W56) و`TashkeelEngine` (W57) وصِلا فعلاً.
 
 ## 2. قوانين العقد الخمسة
 

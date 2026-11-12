@@ -13,7 +13,7 @@
 #     • trim_gate + dialect_gate re-run fresh green on this tree
 #     • the behavioral round-trip evidence is committed (ci/capacity-roundtrip.log)
 #
-#   Verdict: CAPACITYGATE_OK checks=… dex=…/512000 margin=… levers=…/… ceiling=kept
+#   Verdict: CAPACITYGATE_OK checks=… dex=…/CEIL margin=… levers=…/… ceiling=W57-RAISE
 #            / CAPACITYGATE_FAILED <reason> (exit 1)
 #   Standalone by the W50-prep pattern: no pipeline stage (42 byte-stable), no
 #   gates.env keys, no closer list moves — the suite counter stays byte-stable.
@@ -58,4 +58,4 @@ echo "$DIA" | tail -1
 POST=$(awk -F'\t' '$1=="dex" && $2=="post_trim" {print $3}' ci/capacity_ledger.tsv)
 CEIL=$(awk -F'\t' '$1=="ceiling" {print $3}' ci/capacity_ledger.tsv)
 MARGIN=$((CEIL - DEXY))
-echo "CAPACITYGATE_OK checks=$CHECKS dex=$DEXY/$CEIL margin=$MARGIN levers=2/5 r8=reviewed ceiling=kept"
+echo "CAPACITYGATE_OK checks=$CHECKS dex=$DEXY/$CEIL margin=$MARGIN levers=3/5 r8=reviewed ceiling=W57-RAISE"

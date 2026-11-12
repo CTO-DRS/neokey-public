@@ -121,6 +121,17 @@ public final class BetaProgram {
                 "the feedback subject carries the build identity: " + subject);
 
         // ---- 2: وثيقة البرنامج — تُقرأ وتُفحص لا تُؤتى بها --------------------
+        // W57 batch-2: the survey/join wording loads from assets/feedback_copy.txt
+        // (the strict init — any drift refuses the WHOLE bank and every
+        // Feedback check below bites). The §4 mirror is doc↔asset now — the
+        // same one-truth law, re-anchored by the documented delta.
+        try {
+            byte[] fraw = Files.readAllBytes(Paths.get("assets/feedback_copy.txt"));
+            Feedback.init(fraw);
+        } catch (Exception e) {
+            fail("feedback.copy.unreadable (assets/feedback_copy.txt missing or corrupt)");
+            return;
+        }
         Path doc = Paths.get("play/beta-program.md");
         String md;
         try { md = new String(Files.readAllBytes(doc), StandardCharsets.UTF_8); }

@@ -55,15 +55,54 @@ public final class Feedback {
     /**
      * The 5-question first-impression survey — the in-app mirror of
      * play/beta-program.md §4. Same questions, same order, sent as plain text.
+     *
+     * W57 batch-2 lever pull (law 5, the W54 Writer/Theme pattern): the
+     * wording lives in assets/feedback_copy.txt (ci/make_feedback_asset.py —
+     * the ONE derivation, parse-proven against the captured runtime truth);
+     * init(byte[]) is the thin strict interpreter — any drift refuses the
+     * WHOLE bank (never a half-loaded one). Until init answers, the banks
+     * are EMPTY — the fail-closed state (the survey copies nothing, the join
+     * dialog shows nothing) — the mail loop's step 1 (SUPPORT_EMAIL + the
+     * subject) is a code constant and never dies.
      */
     public static String[] surveyQuestions() {
-        return new String[]{
-                "وش أول شي لاحظته بعد التفعيل؟",
-                "صار لك عطل؟ وش كنت تسوي لحظتها؟ (لو موجود: انسخ تقرير الاستقرار المجهول)",
-                "وش الميزة اللي استخدمتها أكثر؟",
-                "وش الشي اللي أبعدك أو أزعجك؟",
-                "من 10، كم احتمال ترشح نيو كيبورد لصديق؟"
-        };
+        String[] s = survey;
+        return s == null ? new String[0] : s.clone();
+    }
+
+    private static volatile String[] survey;
+    private static volatile String joinBody;
+
+    /**
+     * Strict load (fail-closed): F rows (the 5 survey questions, sequential
+     * ids, non-empty) + J rows (the 8 join lines, sequential ids, empty
+     * separator lines legal) — any drift in shape refuses the whole bank.
+     * The %E/%S placeholders fold to the code constants at init (the one
+     * truth for the support address).
+     */
+    public static void init(byte[] raw) {
+        String[] sv = new String[5];
+        StringBuilder jb = new StringBuilder(320);
+        int fc = 0, jc = 0;
+        for (String line : new String(raw, java.nio.charset.StandardCharsets.UTF_8).split("\n", -1)) {
+            if (line.isEmpty() || line.charAt(0) == '#') continue;
+            String[] p = line.split("\t", 3);
+            if (p.length != 3) throw new IllegalArgumentException("feedback.copy.columns");
+            int v;
+            try { v = Integer.parseInt(p[1]); }
+            catch (NumberFormatException ex) { throw new IllegalArgumentException("feedback.copy.index"); }
+            if (p[0].equals("F")) {
+                if (v != fc || fc >= 5 || p[2].isEmpty()) throw new IllegalArgumentException("feedback.copy.survey");
+                sv[fc++] = p[2];
+            } else if (p[0].equals("J")) {
+                if (v != jc || jc >= 8) throw new IllegalArgumentException("feedback.copy.join");
+                if (jc > 0) jb.append('\n');
+                jb.append(p[2].replace("%E", SUPPORT_EMAIL).replace("%S", JOIN_SUBJECT));
+                jc++;
+            } else throw new IllegalArgumentException("feedback.copy.row");
+        }
+        if (fc != 5 || jc != 8) throw new IllegalArgumentException("feedback.copy.count");
+        survey = sv; joinBody = jb.toString();
     }
 
     /** The survey as one paste-ready text block (used by the dialog's copy action). */
@@ -78,16 +117,11 @@ public final class Feedback {
     /**
      * Join steps shown in the dialog — they work even before a tester link
      * exists: the first step is the mail (Feedback.JOIN_SUBJECT), so the loop
-     * is never dead. Pure text; SetupActivity shows it in an AlertDialog.
+     * is never dead. Loaded from assets/feedback_copy.txt (init — the W57
+     * batch-2 lever); empty until init answers (fail-closed).
      */
     public static String joinSteps() {
-        return "مختبر البيتا: 100 مقعد، دورتان كل شهر، وملاحظاتك هي التي تحدد ترتيب الإصلاحات.\n\n"
-                + "1) أرسل لنا بريداً على " + SUPPORT_EMAIL + " وعنوانه «" + JOIN_SUBJECT
-                + "» (زر النسخ في هذا القسم يجهز العنوان لك).\n"
-                + "2) نرد عليك برابط الاختبار الداخلي من Google Play.\n"
-                + "3) افتح الرابط واضغط «اشترك في الاختبار»، ثم ثبّت نيو كيبورد من المتجر.\n"
-                + "4) بعد يوم من الاستخدام أرسل نموذج الانطباع الأول (5 أسئلة) على البريد.\n\n"
-                + "الخصوصية مع المختبرين: كل تقرير تخرجه مجهول بالكامل (أرقام فقط بلا أي "
-                + "بيانات شخصية)، ولا نجمع شيئاً منك بأي نظام خارجي.";
+        String j = joinBody;
+        return j == null ? "" : j;
     }
 }

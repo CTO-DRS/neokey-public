@@ -135,29 +135,59 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 predictor = null; // fail-open: typing is never disrupted by the model
             }
         }}, "nnet-load").start();
-        // W56: the root-family engine (assets/root_index.txt — RIX1, CRC32-sealed,
-        // 3,667 roots over 84,809 dictionary words, derived deterministically by
-        // ci/make_root_index.py) loads in the background like the neural model;
-        // the keyboard never waits for it. Fail-closed: ANY breach of the seal
-        // (magic/header/CRC/count/dup — RootEngine.load refuses the WHOLE index)
-        // leaves the engines registry EMPTY, correction root-neutral, typing
-        // untouched — the W55 law: the keyboard is fail-closed silent.
+        // W57: the tashkeel degree seeds from prefs (shipped CLOSED — the
+        // quiet default); ClipEdit's cycle updates this mirror live.
+        TashkeelEngine.mode = Theme.prefs(this).getInt("tashkeel_mode", TashkeelEngine.MODE_OFF);
+        // W57: the engines-load thread — BOTH real engines load here in one
+        // background thread (the keyboard never waits): the W56 root family
+        // (assets/root_index.txt — RIX1) and the W57 tashkeel index (assets/
+        // tashkeel_index.txt — RIX2). Fail-closed PER ENGINE: a corrupt asset
+        // detaches ITS engine only (the strict load refuses the WHOLE index —
+        // never a half-built engine), the verified survivor(s) still register
+        // in contract order, typing untouched either way — the W55 law.
         new Thread(new Runnable() { public void run() {
-            try {
-                java.io.InputStream in = getAssets().open("root_index.txt");
-                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
-                byte[] buf = new byte[65536];
-                int n;
-                while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
-                in.close();
-                RootEngine e = RootEngine.load(bo.toByteArray());
-                Engines.set(e);        // the first real engine through the W55 contract
-                RootEngine.attach(e);  // the Correction2 root signal rides the same truth
-            } catch (Throwable t) {
-                Engines.set();         // fail-closed: the registry stays empty
-                RootEngine.detach();
-            }
-        }}, "root-load").start();
+            RootEngine re = null;
+            TashkeelEngine te = null;
+            try { re = RootEngine.load(assetBytes("root_index.txt")); }
+            catch (Throwable t) { re = null; }
+            try { te = TashkeelEngine.load(assetBytes("tashkeel_index.txt")); }
+            catch (Throwable t) { te = null; }
+            // W57 batch-2: the feedback wording rides the same thread (the
+            // strict init; a corrupt asset leaves the banks EMPTY — fail-closed)
+            try { Feedback.init(assetBytes("feedback_copy.txt")); }
+            catch (Throwable t) { }
+            // strict registration: verified engines only — never a half-built registry
+            if (re != null && te != null) Engines.set(re, te);
+            else if (re != null) Engines.set(re);
+            else if (te != null) Engines.set(te);
+            else Engines.set();    // fail-closed: the registry stays empty
+            if (re != null) RootEngine.attach(re); else RootEngine.detach();
+            if (te != null) TashkeelEngine.attach(te); else TashkeelEngine.detach();
+        }}, "engines-load").start();
+    }
+
+    /** One asset read for the engines-load thread (the strict-load feed). */
+    private byte[] assetBytes(String name) throws java.io.IOException {
+        java.io.InputStream in = getAssets().open(name);
+        try {
+            java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[65536];
+            int n;
+            while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+            return bo.toByteArray();
+        } finally {
+            in.close();
+        }
+    }
+
+    /** The engine cands of ONE source (the strip rides are per-engine). */
+    private static Engine.Cand[] pickSrc(Engine.Cand[] cands, String src) {
+        int n = 0;
+        if (cands != null) for (Engine.Cand c : cands) if (c != null && src.equals(c.source)) n++;
+        Engine.Cand[] out = new Engine.Cand[n];
+        int i = 0;
+        if (cands != null) for (Engine.Cand c : cands) if (c != null && src.equals(c.source)) out[i++] = c;
+        return out;
     }
 
     @Override
@@ -540,13 +570,15 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             return;
         }
         List<String> s = mergedSuggest(w, activeDialectId(), 3);
-        // W56: the root-family branch rides the strip tail through the W55
-        // contract (Engines.run — the ONE call site): dict completions keep
-        // their lead slots, the first family branch takes the tail; the
-        // fixes/shortcuts/emoji manipulations below still claim their slots.
-        // An empty registry (corrupt index / detached) answers empty — silent.
-        Engine.Cand[] fam = Engines.run(new Engine.Ctx(null, null, w), 6);
-        RootEngine.familyInto(s, fam, 3);
+        // W57: both engines ride the strip through the W55 contract (Engines.run
+        // — the ONE call site): dict completions keep their lead slots, the root
+        // family keeps the W56 tail slot, the tashkeel reading appends ONLY when
+        // there is room (it never displaces the family). Source-filtered —
+        // familyInto rides "root" cands only, tashkeelInto rides "tashkeel"
+        // only; an empty registry (corrupt index / detached) answers empty.
+        Engine.Cand[] eng = Engines.run(new Engine.Ctx(null, null, w), 8);
+        RootEngine.familyInto(s, pickSrc(eng, "root"), 3);
+        TashkeelEngine.tashkeelInto(s, pickSrc(eng, "tashkeel"), 3);
         String fx = ArabicFixes.fix(w);
         if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > 3) s.remove(s.size() - 1); }
         String sc = Theme.shortcuts(this).get(w.toLowerCase());
@@ -732,12 +764,24 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     @Override
     public void onSuggestionLong(String word) {
         RootEngine e = RootEngine.attached();
-        if (e == null || word == null || word.isEmpty()) return;
-        String root = e.rootValue(word);
-        String[] fam = e.familyTree(word);
-        if (root == null || fam == null || fam.length < 2) return;
+        if (e != null && word != null && !word.isEmpty()) {
+            String root = e.rootValue(word);
+            String[] fam = e.familyTree(word);
+            if (root != null && fam != null && fam.length >= 2) {
+                familyTree = true;
+                view.setSuggestions(RootEngine.treeChips(root, fam));
+                return;
+            }
+        }
+        // W57 fallback: no root family — the tashkeel reading picker (the
+        // mode-gated attested readings; OFF / single reading / unmapped →
+        // the haptic no-op, exactly the pre-W57 behavior).
+        TashkeelEngine te = TashkeelEngine.attached();
+        if (te == null || word == null || word.isEmpty()) return;
+        String[] vs = TashkeelEngine.variants(word);
+        if (vs.length < 2) return;
         familyTree = true;
-        view.setSuggestions(RootEngine.treeChips(root, fam));
+        view.setSuggestions(TashkeelEngine.variantChips(word, vs));
     }
 
     // ------------------------------------------------------------ clipboard

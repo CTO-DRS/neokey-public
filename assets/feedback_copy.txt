@@ -1,0 +1,19 @@
+# assets/feedback_copy.txt — W54 batch-2 lever (law 6, the W57 same-commit
+# repayment): the survey + join wording extracted byte-exactly from
+# src/Feedback.java history by ci/make_feedback_asset.py (the ONE derivation;
+# --check byte-compares a fresh derivation). Strict init in Feedback.java
+# refuses any drift — never a half-loaded bank. %E/%S fold to the code
+# constants at init (the one truth for the support address).
+F	0	وش أول شي لاحظته بعد التفعيل؟
+F	1	صار لك عطل؟ وش كنت تسوي لحظتها؟ (لو موجود: انسخ تقرير الاستقرار المجهول)
+F	2	وش الميزة اللي استخدمتها أكثر؟
+F	3	وش الشي اللي أبعدك أو أزعجك؟
+F	4	من 10، كم احتمال ترشح نيو كيبورد لصديق؟
+J	0	مختبر البيتا: 100 مقعد، دورتان كل شهر، وملاحظاتك هي التي تحدد ترتيب الإصلاحات.
+J	1	
+J	2	1) أرسل لنا بريداً على %E وعنوانه «%S» (زر النسخ في هذا القسم يجهز العنوان لك).
+J	3	2) نرد عليك برابط الاختبار الداخلي من Google Play.
+J	4	3) افتح الرابط واضغط «اشترك في الاختبار»، ثم ثبّت نيو كيبورد من المتجر.
+J	5	4) بعد يوم من الاستخدام أرسل نموذج الانطباع الأول (5 أسئلة) على البريد.
+J	6	
+J	7	الخصوصية مع المختبرين: كل تقرير تخرجه مجهول بالكامل (أرقام فقط بلا أي بيانات شخصية)، ولا نجمع شيئاً منك بأي نظام خارجي.

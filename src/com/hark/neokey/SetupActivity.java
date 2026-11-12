@@ -2569,6 +2569,10 @@ public class SetupActivity extends Activity {
         // promised by the store listing, wired to the tested Feedback contract).
         section("تواصل ومختبر بيتا");
         LinearLayout fbc = cardBox();
+        // W57 batch-2: the survey/join wording rides the keyboard's engines-load
+        // thread (assets/feedback_copy.txt — Feedback.init is strict; a corrupt
+        // asset leaves the banks EMPTY — fail-closed, the mail row is a code
+        // constant and never dies).
         TextView fbt = text(getString(R.string.nk_setupactivity_section_22)
                 + getString(R.string.nk_setupactivity_section_23),
                 13, Typeface.NORMAL, 0xFFB9BECA);

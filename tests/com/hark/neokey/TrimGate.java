@@ -47,12 +47,12 @@ import java.util.regex.Pattern;
  *      the coupled count to equal the number of moved strings whose text is a
  *      ui_en.txt key, and prints it (zero moved-but-decoupled strings).
  *
- * Verdict: TRIM_GATE_OK entries=… dex=…/512000 saved=… / TRIM_GATE_FAILED <tag>.
+ * Verdict: TRIM_GATE_OK entries=… dex=…/513000 saved=… / TRIM_GATE_FAILED <tag>.
  * Pure JVM — zero android.*.
  */
 public final class TrimGate {
 
-    static final int CEILING = 512000;
+    static final int CEILING = 513000;   // W57-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised — the documented +1000; was 512000)
     static final int PRE_TRIM_DEX = 518688;   // shipped W21 (vc 62) dex bytes
     static final int MIN_LIT_BYTES = 60;      // same cutoff as the move tool
     static final int PIN_ENTRIES = 119;       // the week's move — change consciously

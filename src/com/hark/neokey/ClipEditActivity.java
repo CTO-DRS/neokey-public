@@ -288,6 +288,14 @@ public class ClipEditActivity extends Activity {
         tools.addView(tool("تراجع", v -> undoRedo(true)));
         tools.addView(tool("إعادة", v -> undoRedo(false)));
         tools.addView(tool("إزالة التشكيل", v -> transform(ClipText.stripMarks(body.getText().toString()))));
+        // W57: the tashkeel tools — the chip cycles the three degrees (shipped
+        // CLOSED; persisted), the tool applies the mode-gated first forms
+        // through the attached engine (uncovered words are never guessed) —
+        // the inverse of إزالة التشكيل rides beside it.
+        final TextView tashChip = tool(tashLabel(), null);
+        tashChip.setOnClickListener(v -> cycleTashkeel(tashChip));
+        tools.addView(tashChip);
+        tools.addView(tool("تشكيل النص", v -> applyTashkeel()));
         tools.addView(tool("تنظيم المسافات", v -> transform(ClipText.tidy(body.getText().toString()))));
         tools.addView(tool("البداية", v -> jump(0)));
         tools.addView(tool("النهاية", v -> jump(body.length())));
@@ -480,6 +488,28 @@ public class ClipEditActivity extends Activity {
     }
 
     /** W48 text tools: one undo step for the whole transform (same shape as replaceAll). */
+    /** W57: the chip label for the current tashkeel degree (shipped CLOSED). */
+    private String tashLabel() {
+        int m = TashkeelEngine.mode;
+        return m == TashkeelEngine.MODE_FULL ? "التشكيل: كاملة"
+                : m == TashkeelEngine.MODE_AMBIG ? "التشكيل: الالتباس" : "التشكيل: مغلقة";
+    }
+
+    /** W57: cycle the three degrees — the static mirror + the persisted pref. */
+    private void cycleTashkeel(TextView chip) {
+        int m = (TashkeelEngine.mode + 1) % 3;
+        TashkeelEngine.mode = m;
+        Theme.prefs(this).edit().putInt("tashkeel_mode", m).apply();
+        chip.setText(L.t(tashLabel()));
+    }
+
+    /** W57: apply the mode-gated tashkeel to the whole text (OFF → no-op). */
+    private void applyTashkeel() {
+        TashkeelEngine e = TashkeelEngine.attached();
+        if (e == null || TashkeelEngine.mode == TashkeelEngine.MODE_OFF) return;
+        transform(TashkeelEngine.apply(body.getText().toString(), e, TashkeelEngine.mode));
+    }
+
     private void transform(String out) {
         if (out == null) return;
         final String cur = body.getText().toString();

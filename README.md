@@ -43,6 +43,7 @@ ci/pipeline.sh      # خط الإثبات الكامل — 44+ مرحلة، ال
 | [`ROADMAP-V2.md`](ROADMAP-V2.md) | خارطة v2 «العربية العميقة» — الابتكار الشامل من W54 (سار التنفيذ) |
 | [`docs/ENGINES.md`](docs/ENGINES.md) | عقد المحركات الموحد W55 (fail-closed) + أرضية الأداء الحقيقية المثبتة |
 | [`docs/ROOT.md`](docs/ROOT.md) | محرك الجذر RootEngine W56 (RIX1 المختوم + الاشتقاق الحتمي + إشارة الجذر + شجرة العائلة) |
+| [`docs/TASHKEEL.md`](docs/TASHKEEL.md) | محرك التشكيل TashkeelEngine W57 (RIX2 المختوم + الدرجات الثلاث + منتقي القراءات + تشكيل النص) |
 | [`CI.md`](CI.md) | مرجع خط الإثبات: كل بوابة وما تحميه |
 | [`NOTES.md`](NOTES.md) | دفتر الملاحظات التشغيلي |
 | [`HISTORY.md`](HISTORY.md) | السجل الأسبوعي الكامل (الأسابيع 1–45) |
