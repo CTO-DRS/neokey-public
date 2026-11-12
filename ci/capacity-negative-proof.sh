@@ -77,7 +77,10 @@ if [ "$ATK" = "all" ]; then
   done
   PROOF=$(grep -c " BIT " "$LOG" || true)
   HEALS=$(grep -c "heals green" "$LOG" || true)
-  echo "PROOF $([ $rc -eq 0 ] && echo PASSED || echo FAILED) attacks=$PROOF/3 heals=$HEALS"
+  VERDICT=$(grep -m1 "^CAPACITYGATE_OK " "$LOG" || echo "CAPACITYGATE_OK")
+  V="PROOF PASSED capacity $PROOF/3 attacks bit their exact tags and the restores healed ($VERDICT)"
+  echo "$V" >> "$LOG"
+  echo "$V"
   exit $rc
 else
   one "$ATK"

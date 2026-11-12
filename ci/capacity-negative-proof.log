@@ -1,0 +1,11 @@
+[ledger.dex] BIT dex.claim.current — the gate refused the tampered tree (exit non-zero: 1 verdict(s))
+[heal-check] ci/capacity_ledger.tsv restored byte-exact (cmp clean)
+[assets.theme] BIT assets.theme.shape — the gate refused the tampered tree (exit non-zero: 1 verdict(s))
+[heal-check] assets/theme_phrases.txt restored byte-exact (cmp clean)
+[ceiling.decision] BIT ceiling.decision.roadmap — the gate refused the tampered tree (exit non-zero: 1 verdict(s))
+[heal-check] ROADMAP-V2.md restored byte-exact (cmp clean)
+TRIM_GATE OK
+DIALECT_GATE OK
+CAPACITYGATE_OK checks=14 dex=504192/512000 margin=7808 levers=2/5 r8=reviewed ceiling=kept
+[heal] CAPACITYGATE_OK — the clean tree heals green
+PROOF PASSED capacity 3/3 attacks bit their exact tags and the restores healed (CAPACITYGATE_OK checks=14 dex=504192/512000 margin=7808 levers=2/5 r8=reviewed ceiling=kept)

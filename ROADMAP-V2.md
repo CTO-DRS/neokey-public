@@ -310,7 +310,8 @@
 
 | الأسبوع | الحالة | الدليل |
 |---|---|---|
-| W54–W63 | ⬜ لم يبدأ | — |
+| W54 | ✅ السعة مقاسة والمقصّة منفذة: dex `511804 → 504192` (−7612) — Writer (6325B) + Theme (2171B) هاجرا بايت-لطرفاً إلى `assets/` (round-trip: 14,976 استدعاء compose + 44 عبارة بايت-مطابقة، `ci/capacity-roundtrip.log`)، R8 مراجَع بقواعده الحالية (رفض موثق لـ LineNumberTable)، `CAPACITYGATE_OK checks=14 dex=504192/512000 margin=7808 levers=2/5 ceiling=kept` (قرار السقف موثق في السجل والخارطة)، `DIALECT_GATE_OK` طازجة، الأنبوب الداخلي `PIPELINE_OK tests 1864/0`، الـ drill على HEAD المرسَل `REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=41/41 tests=1859/0 dex=504192/512000`، اللحم 42=42 (234s من أرتقف الـ drill)، `PHASE8_OK 0/91` + `PHASE10_OK 0/54`، الإثبات السلبي `PROOF PASSED capacity 3/3` + شفاء بايت-دقيق، ودبابيس nqfport عضّت كما صُممت وأعيد تثبيتها (أصول 15→17 في 8 بوابات + تجديد Golden بأصلين جديدين) | `4f8dcd0` + كوميت الإغلاق + `ci/capacity_ledger.tsv` + `ci/capacity-roundtrip.log` + `ci/capacity-negative-proof.log` |
+| W55–W63 | ⬜ لم يبدأ | — |
 | W64–W72 | ⬜ لم يبدأ | — |
 | W73–W80 | ⬜ لم يبدأ | — |
 
