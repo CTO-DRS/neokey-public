@@ -1,0 +1,38 @@
+PASS ctx.null_safe.prev2
+PASS ctx.null_safe.prev2_only
+PASS ctx.toString.privacy
+PASS cand.null_safe
+PASS cand.equals_hash
+PASS empty.registry.run_not_null
+PASS empty.registry.ids_empty
+PASS probe.family.labeled
+PASS probe.empty_context.empty
+PASS probe.falls_back_to_prev1
+PASS run.null_ctx_safe
+PASS merge.order.registration
+PASS merge.dedupe.first_source_wins
+PASS cap.limit.two
+PASS cap.limit.zero
+PASS shape.flood.truncated
+PASS shape.slot.trimmed
+PASS set.duplicate_id.refused
+PASS set.null_element.refused
+PASS set.blank_id.refused
+PASS ids.defensive_copy
+PASS neg.thrower.others_still_flow
+PASS neg.thrower.contained (delta=1 expect=1)
+PASS neg.error.others_still_flow
+PASS neg.error.contained (delta=1 expect=1)
+PASS neg.null.others_still_flow
+PASS neg.null_output.contained (delta=1 expect=1)
+PASS neg.holes.clean_slots_flow
+PASS neg.holes.dropped_counted (delta=2 expect=2)
+PASS neg.holes.mixed_flow
+PASS neg.holes.then_others_flow (delta=2 expect=2)
+PASS failures.counter.exact
+PASS determinism.same_ctx.same_output
+PASS isolation.end_to_end_green
+PASS failures.counter.exact_end
+RESULT 35 passed, 0 failed
+HARNESSGATE_OK checks=35 engines=2 failclosed=7
+HARNESSGATE OK

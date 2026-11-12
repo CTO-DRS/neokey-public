@@ -1,0 +1,21 @@
+# evidence/perf-baseline.tsv — the W55 perf floor (ROADMAP-V2 W55)
+# jvm rows: kind=key value=measured@pin budget=enforced line (the gate re-measures and enforces measured<=budget)
+# device rows: value=Perf.LIMITS good budget=LIMITS ok — the anti-rewrite guard compares src/Perf.java vs this file
+# the record is SELF-CONSISTENT: every jvm budget == derive(value) at %.3f (p50 v*1.5+1 / p95 v*1.5+2 / load v*2+500 / heap v*2+10)
+# changing any line = a documented owner decision in NOTES.md (the W54 ceiling pattern) — never a quiet edit
+# pinned: 2026-11-12T07:00:39.913426170Z java 21.0.13
+jvm	nnet.top3.p50	1.142	2.713
+jvm	nnet.top3.p95	1.216	3.824
+jvm	dict.suggest.p50	0.198	1.297
+jvm	dict.suggest.p95	0.550	2.825
+jvm	dict.predict.p50	0.001	1.002
+jvm	dict.predict.p95	0.006	2.009
+jvm	dict.load.ms	556.000	1612.000
+jvm	heap.mb	65.267	140.534
+device	create	400	900
+device	show	120	300
+device	key	8	20
+device	frame	24	50
+device	sugg	12	35
+device	ai	2500	7000
+device	mem	90	160

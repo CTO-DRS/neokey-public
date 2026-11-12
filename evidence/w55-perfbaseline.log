@@ -1,0 +1,30 @@
+PASS dict.loaded.real_134k
+PASS nnet.loaded.real_model
+PASS record.readable.strict
+PASS device.source.guard
+PASS device.floor.create
+PASS device.floor.show
+PASS device.floor.key
+PASS device.floor.frame
+PASS device.floor.sugg
+PASS device.floor.ai
+PASS device.floor.mem
+PASS jvm.nnet.top3.p50.self_consistent
+PASS jvm.nnet.top3.p50.within_budget
+PASS jvm.nnet.top3.p95.self_consistent
+PASS jvm.nnet.top3.p95.within_budget
+PASS jvm.dict.suggest.p50.self_consistent
+PASS jvm.dict.suggest.p50.within_budget
+PASS jvm.dict.suggest.p95.self_consistent
+PASS jvm.dict.suggest.p95.within_budget
+PASS jvm.dict.predict.p50.self_consistent
+PASS jvm.dict.predict.p50.within_budget
+PASS jvm.dict.predict.p95.self_consistent
+PASS jvm.dict.predict.p95.within_budget
+PASS jvm.dict.load.ms.self_consistent
+PASS jvm.dict.load.ms.within_budget
+PASS jvm.heap.mb.self_consistent
+PASS jvm.heap.mb.within_budget
+measured: load=526.000ms nnet=1.146/1.220ms sugg=0.583ms pred=0.001ms heap=66.267MB
+PERFBASELINE_OK checks=27 metrics=8 device=7
+PERFBASELINE OK
