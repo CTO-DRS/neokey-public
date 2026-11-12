@@ -1,6 +1,15 @@
 package com.hark.neokey;
 
-/** Offline professional message templates (Arabic + English). Every result is a draft the user edits. */
+import java.nio.charset.StandardCharsets;
+
+/** Offline professional message templates (Arabic + English). Every result is a draft the user edits.
+ *
+ *  W54 capacity trim (law 6 — knowledge out of the dex): the template text lives in
+ *  assets/writer_templates.txt, extracted byte-exactly from this file's history by
+ *  scripts/trim_w54.py (the ONE derivation). This class is the thin strict interpreter:
+ *  init(byte[]) refuses anything but the exact documented shape — 7 categories,
+ *  3/3/3/3/8/3/3 variants per language, sequential variant ids, no empty text — so a
+ *  truncated or tampered asset is a loud failure, never a half-loaded template bank. */
 final class Writer {
     static final String[] CATS = {"رسمية", "خدمة العملاء", "عمل", "توظيف", "ردود مختصرة", "اعتذار", "شكر"};
     static final String[] TONES = {"رسمي", "مهني ودّي", "مختصر"};
@@ -9,90 +18,52 @@ final class Writer {
 
     private Writer() {}
 
-    private static final String[][] AR = {
-            { // formal
-                    "أتقدم إليكم بهذا الخطاب بخصوص {t}، راجياً التكرم بالاطلاع عليه واتخاذ ما ترونه مناسباً حياله. وأنا على استعداد لتزويدكم بأي معلومات إضافية.",
-                    "إشارةً إلى {t}، أود إفادتكم برغبتنا في متابعة هذا الموضوع. ونأمل التكرم بإفادتنا بالإجراءات اللازمة والمدة المتوقعة لإنجازه.",
-                    "يسرني أن أرفع إليكم طلبي المتعلق بـ{t}، آملاً النظر فيه بعين الاعتبار. وقد أرفقت المستندات المطلوبة لتسهيل دراسته.",
-            },
-            { // customer service
-                    "شكراً لتواصلك معنا بخصوص {t}. نعتذر عن أي إزعاج سببه ذلك، وقد رفعنا طلبك للفريق المختص وسنوافيك بالتحديث خلال ٢٤ ساعة.",
-                    "نقدّر صبرك وتواصلك معنا. بخصوص {t}، تحققنا من طلبك والمشكلة قيد المعالجة الآن. إن احتجت أي مساعدة إضافية فنحن هنا لخدمتك.",
-                    "شكراً على ملاحظتك حول {t}. لمساعدتك بشكل أسرع، نرجو تزويدنا برقم الطلب وصورة توضح المشكلة إن أمكن.",
-            },
-            { // business
-                    "أود متابعة موضوع {t}. هل يمكننا تحديد اجتماع قصير هذا الأسبوع لمناقشة الخطوات القادمة؟ يناسبني أي وقت يناسبكم.",
-                    "إليكم تحديثاً بخصوص {t}: أُنجزت المرحلة الحالية، والخطوة التالية تحتاج إلى اعتمادكم. أرجو موافاتي بملاحظاتكم.",
-                    "بالإشارة إلى {t}، نرجو تأكيد استلامكم لهذه الرسالة وإفادتنا بالموعد المتوقع للتنفيذ.",
-            },
-            { // job
-                    "أتقدم بطلب التوظيف لوظيفة {t} لديكم. أمتلك خبرة عملية ومهارات تتوافق مع متطلبات الوظيفة، وأتطلع إلى الانضمام لفريقكم والمساهمة في نجاحه. أرفقت سيرتي الذاتية للاطلاع.",
-                    "اطلعت باهتمام على إعلانكم عن وظيفة {t}، وأرى أن خبراتي ومهاراتي تؤهلني لهذا الدور. يسعدني إجراء مقابلة في الوقت الذي يناسبكم.",
-                    "أود الاستفسار عن حالة طلبي لوظيفة {t} الذي تقدمت به مؤخراً، وأؤكد اهتمامي الكبير بالانضمام إليكم.",
-            },
-            { // short replies
-                    "تم، شكراً لك.", "وصلت، وسأرد عليك قريباً إن شاء الله.", "تمام، موافق.",
-                    "أعتذر، لا أستطيع حالياً، وسأعود إليك لاحقاً.", "ممتاز، نلتقي على الموعد.", "شكراً على التوضيح.",
-                    "سأراجع الموضوع وأفيدك.", "أنا في اجتماع الآن، سأتواصل معك بعد قليل.",
-            },
-            { // apology
-                    "أعتذر بصدق عن {t}، وأتحمل المسؤولية كاملة. سأحرص على ألا يتكرر ذلك، وأقدّر تفهمك.",
-                    "تقبّل اعتذاري عن {t}؛ لم يكن ذلك مقصوداً. اتخذت الإجراءات اللازمة لتصحيح الوضع، وأشكرك على سعة صدرك.",
-                    "نعتذر عن {t} وما سببه من إزعاج. يهمنا رضاك، وقد عملنا على معالجة الأمر فوراً.",
-            },
-            { // thanks
-                    "أتقدم بخالص الشكر والتقدير على {t}. كان لدعمكم أثر كبير، وأتطلع لمواصلة التعاون معكم.",
-                    "شكراً جزيلاً على {t}؛ أقدّر وقتك واهتمامك كثيراً.",
-                    "لا يسعني إلا أن أشكركم على {t}، وجزاكم الله خيراً.",
-            },
-    };
+    /** Variants per category — the shape the asset must reproduce exactly. */
+    private static final int[] PER_CAT = {3, 3, 3, 3, 8, 3, 3};
+    private static volatile String[][] AR, EN;
 
-    private static final String[][] EN = {
-            {
-                    "I am writing to you regarding {t}. I would be grateful if you could review this matter and take the action you deem appropriate. I am happy to provide any further information.",
-                    "With reference to {t}, we would like to follow up on this matter. Kindly advise us of the required procedures and the expected timeline.",
-                    "I am pleased to submit my request concerning {t} for your kind consideration. The required documents are attached for your review.",
-            },
-            {
-                    "Thank you for contacting us about {t}. We apologise for any inconvenience. Your request has been escalated to the relevant team and we will update you within 24 hours.",
-                    "We appreciate your patience. Regarding {t}, we have reviewed your request and the issue is now being resolved. If you need anything else, we are here to help.",
-                    "Thank you for your feedback about {t}. To help you faster, please share your order number and a screenshot of the issue if possible.",
-            },
-            {
-                    "I would like to follow up on {t}. Could we schedule a short meeting this week to discuss next steps? I am flexible with timing.",
-                    "Here is an update on {t}: the current phase is complete and the next step needs your approval. I look forward to your feedback.",
-                    "With reference to {t}, please confirm receipt of this message and let us know the expected delivery date.",
-            },
-            {
-                    "I am applying for the {t} position. My experience and skills match the role's requirements, and I look forward to contributing to your team. Please find my CV attached.",
-                    "I read your {t} vacancy with great interest and believe my background makes me a strong fit. I would welcome the chance to interview at your convenience.",
-                    "I am writing to ask about the status of my recent application for the {t} position and to confirm my strong interest in joining your team.",
-            },
-            {
-                    "Done, thank you.", "Received, I will get back to you shortly.", "Sounds good, agreed.",
-                    "Sorry, I can't right now. I will get back to you later.", "Great, see you then.", "Thanks for clarifying.",
-                    "I will look into it and let you know.", "I'm in a meeting, I will call you shortly.",
-            },
-            {
-                    "I sincerely apologise for {t} and take full responsibility. I will make sure it does not happen again, and I appreciate your understanding.",
-                    "Please accept my apology for {t}; it was not intended. I have taken steps to correct it, and thank you for your patience.",
-                    "We apologise for {t} and any inconvenience it caused. Your satisfaction matters to us and we have addressed the issue right away.",
-            },
-            {
-                    "I would like to express my sincere thanks for {t}. Your support made a real difference, and I look forward to continuing our work together.",
-                    "Thank you so much for {t}; I truly appreciate your time and care.",
-                    "I cannot thank you enough for {t}. It is greatly appreciated.",
-            },
-    };
+    /** Strict load (fail-closed): any drift in shape refuses the whole bank. */
+    static void init(byte[] raw) {
+        String[][] a = new String[7][], e = new String[7][];
+        int[] ac = new int[7], ec = new int[7];
+        for (String line : new String(raw, StandardCharsets.UTF_8).split("\n", -1)) {
+            if (line.isEmpty() || line.charAt(0) == '#') continue;
+            String[] p = line.split("\t", 4);
+            if (p.length != 4) throw new IllegalArgumentException("writer.templates.columns");
+            int lang;
+            switch (p[0]) { case "A": lang = 0; break; case "E": lang = 1; break; default: throw new IllegalArgumentException("writer.templates.lang"); }
+            int cat, v;
+            try { cat = Integer.parseInt(p[1]); v = Integer.parseInt(p[2]); }
+            catch (NumberFormatException ex) { throw new IllegalArgumentException("writer.templates.index"); }
+            if (cat < 0 || cat > 6 || p[3].isEmpty()) throw new IllegalArgumentException("writer.templates.shape");
+            int[] cnt = lang == 0 ? ac : ec;
+            if (v != cnt[cat] || ++cnt[cat] > PER_CAT[cat]) throw new IllegalArgumentException("writer.templates.order");
+            String[][] tgt = lang == 0 ? a : e;
+            if (tgt[cat] == null) tgt[cat] = new String[PER_CAT[cat]];
+            tgt[cat][v] = p[3];
+        }
+        for (int c = 0; c < 7; c++) {
+            if (ac[c] != PER_CAT[c] || ec[c] != PER_CAT[c]) throw new IllegalArgumentException("writer.templates.count");
+            for (int v = 0; v < PER_CAT[c]; v++)
+                if (a[c][v] == null || e[c][v] == null) throw new IllegalArgumentException("writer.templates.hole");
+        }
+        AR = a; EN = e;
+    }
 
-    static int variants(int cat, int lang) { return (lang == 1 ? EN : AR)[cat].length; }
+    private static String[][] set(int lang) {
+        String[][] s = lang == 1 ? EN : AR;
+        if (s == null) throw new IllegalStateException("writer.templates.not_loaded");
+        return s;
+    }
 
-    static String[] shortReplies(int lang) { return (lang == 1 ? EN : AR)[SHORT]; }
+    static int variants(int cat, int lang) { return set(lang)[cat].length; }
+
+    static String[] shortReplies(int lang) { return set(lang)[SHORT]; }
 
     /** Builds a draft. Empty fields become [brackets] so the user sees what to fill in. */
     static String compose(int cat, int tone, int lang, String to, String from, String topic, int variant) {
         boolean en = lang == 1;
-        String[] set = (en ? EN : AR)[cat];
+        String[] set = set(lang)[cat];
         String body = set[((variant % set.length) + set.length) % set.length];
         if (cat == SHORT) return body;
         String t = topic == null || topic.trim().isEmpty() ? (en ? "[subject]" : "[الموضوع]") : topic.trim();

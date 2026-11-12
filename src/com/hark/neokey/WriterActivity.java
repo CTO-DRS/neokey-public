@@ -37,6 +37,13 @@ public class WriterActivity extends Screen {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        // W54: templates live in assets/writer_templates.txt (law 6) — strict load, fail-closed
+        try (java.io.InputStream in = getAssets().open("writer_templates.txt")) {
+            java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+            byte[] wbuf = new byte[4096]; int wn;
+            while ((wn = in.read(wbuf)) > 0) bo.write(wbuf, 0, wn);
+            Writer.init(bo.toByteArray());
+        } catch (java.io.IOException e) { throw new IllegalStateException("writer.templates.asset", e); }
         SharedPreferences p = Theme.prefs(this);
         cat = p.getInt("w_cat", 0);
         tone = p.getInt("w_tone", 1);

@@ -3213,7 +3213,7 @@ public class SetupActivity extends Activity {
         section("العبارات الجاهزة");
         LinearLayout chips = new LinearLayout(this);
         chips.setOrientation(LinearLayout.VERTICAL);
-        for (String ph : Theme.DEFAULT_PHRASES) {
+        for (String ph : Theme.defaultPhrases(this)) {
             TextView t = text(ph, 14, Typeface.NORMAL, 0xFFD1D5DB);
             t.setPadding((int) (14 * dp), (int) (10 * dp), (int) (14 * dp), (int) (10 * dp));
             t.setBackground(round(CARD, 16, LINE));

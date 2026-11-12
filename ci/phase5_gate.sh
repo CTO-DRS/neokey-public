@@ -170,7 +170,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PHASE3_GATE TLS_GATE DEPLOY_GATE KSDRILL_GATE PHASE4_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
-[ "${NQFPORT_ASSETS:-0}" = 15 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 15 (golden pins drifted)"
+[ "${NQFPORT_ASSETS:-0}" = 17 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 17 (golden pins drifted)"
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 # the phase-4 close itself must still be zero-regression in THIS run
 echo "${PHASE4_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE4_REGRESSIONS ${PHASE4_REGRESSIONS:-?} is not 0/n (the phase-4 close regressed)"

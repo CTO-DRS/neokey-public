@@ -1,0 +1,16 @@
+# ci/capacity_ledger.tsv — W54 capacity engineering (ROADMAP-V2 W54)
+# The living capacity book: every lever, its state, its measured bytes.
+# Law 5 (the byte-cost law): a feature week that moves dex updates the
+# dex/post_trim row in the same commit — the gate bites a stale claim.
+# Law 6 (knowledge/logic separation): relocated knowledge lives in assets/,
+# the dex carries the thin strict interpreter.
+lever	state	raw_bytes	note
+writer.templates	done	6325	assets/writer_templates.txt — round-trip proven: 14976 compose calls byte-exact vs the pre-trim class
+theme.phrases	done	2171	assets/theme_phrases.txt — round-trip proven: 44/44 byte-exact vs the pre-trim arrays
+feedback.copy	remaining	1395	mirror-locked: BETAPROGRAM doc §4 is a verbatim mirror of Feedback.surveyQuestions() — needs its gate re-anchored first
+layouts.symbols	remaining	5369	functional symbol layouts — refused by the phase-3 decision (test-bound content)
+cliprepo.defaults	remaining	3418	functional defaults — refused (test-bound content)
+r8.flags	reviewed	0	-allowaccessmodification + -repackageclasses already present since phase 3; LineNumberTable refused (the crash-diagnostic law, docs/R8.md §3)
+dex	pre_trim	511804	the committed record (W53-prep drill line) — byte-exact reproduced in this environment before the trim
+dex	post_trim	504192	W54 measured fresh (R8_OK real-R path) — delta -7612
+ceiling	kept	512000	W54 decision: the ceiling stays; revisit only after the remaining levers with a measured shortfall; any raise = a documented owner decision (build_r8.sh: overflow means trim)

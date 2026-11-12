@@ -1,0 +1,57 @@
+# NeoKey writer templates — W54 capacity trim (law 6: knowledge lives in assets,
+# the dex carries the thin strict interpreter). ONE derivation: extracted
+# byte-exactly from src/com/hark/neokey/Writer.java history by scripts/trim_w54.py.
+# Format: L C V <TAB> text  — L in {A,E}, C 0..6, V sequential per (L,C).
+# Counts per category: 3/3/3/3/8/3/3 — the loader refuses anything else.
+A	0	0	أتقدم إليكم بهذا الخطاب بخصوص {t}، راجياً التكرم بالاطلاع عليه واتخاذ ما ترونه مناسباً حياله. وأنا على استعداد لتزويدكم بأي معلومات إضافية.
+A	0	1	إشارةً إلى {t}، أود إفادتكم برغبتنا في متابعة هذا الموضوع. ونأمل التكرم بإفادتنا بالإجراءات اللازمة والمدة المتوقعة لإنجازه.
+A	0	2	يسرني أن أرفع إليكم طلبي المتعلق بـ{t}، آملاً النظر فيه بعين الاعتبار. وقد أرفقت المستندات المطلوبة لتسهيل دراسته.
+A	1	0	شكراً لتواصلك معنا بخصوص {t}. نعتذر عن أي إزعاج سببه ذلك، وقد رفعنا طلبك للفريق المختص وسنوافيك بالتحديث خلال ٢٤ ساعة.
+A	1	1	نقدّر صبرك وتواصلك معنا. بخصوص {t}، تحققنا من طلبك والمشكلة قيد المعالجة الآن. إن احتجت أي مساعدة إضافية فنحن هنا لخدمتك.
+A	1	2	شكراً على ملاحظتك حول {t}. لمساعدتك بشكل أسرع، نرجو تزويدنا برقم الطلب وصورة توضح المشكلة إن أمكن.
+A	2	0	أود متابعة موضوع {t}. هل يمكننا تحديد اجتماع قصير هذا الأسبوع لمناقشة الخطوات القادمة؟ يناسبني أي وقت يناسبكم.
+A	2	1	إليكم تحديثاً بخصوص {t}: أُنجزت المرحلة الحالية، والخطوة التالية تحتاج إلى اعتمادكم. أرجو موافاتي بملاحظاتكم.
+A	2	2	بالإشارة إلى {t}، نرجو تأكيد استلامكم لهذه الرسالة وإفادتنا بالموعد المتوقع للتنفيذ.
+A	3	0	أتقدم بطلب التوظيف لوظيفة {t} لديكم. أمتلك خبرة عملية ومهارات تتوافق مع متطلبات الوظيفة، وأتطلع إلى الانضمام لفريقكم والمساهمة في نجاحه. أرفقت سيرتي الذاتية للاطلاع.
+A	3	1	اطلعت باهتمام على إعلانكم عن وظيفة {t}، وأرى أن خبراتي ومهاراتي تؤهلني لهذا الدور. يسعدني إجراء مقابلة في الوقت الذي يناسبكم.
+A	3	2	أود الاستفسار عن حالة طلبي لوظيفة {t} الذي تقدمت به مؤخراً، وأؤكد اهتمامي الكبير بالانضمام إليكم.
+A	4	0	تم، شكراً لك.
+A	4	1	وصلت، وسأرد عليك قريباً إن شاء الله.
+A	4	2	تمام، موافق.
+A	4	3	أعتذر، لا أستطيع حالياً، وسأعود إليك لاحقاً.
+A	4	4	ممتاز، نلتقي على الموعد.
+A	4	5	شكراً على التوضيح.
+A	4	6	سأراجع الموضوع وأفيدك.
+A	4	7	أنا في اجتماع الآن، سأتواصل معك بعد قليل.
+A	5	0	أعتذر بصدق عن {t}، وأتحمل المسؤولية كاملة. سأحرص على ألا يتكرر ذلك، وأقدّر تفهمك.
+A	5	1	تقبّل اعتذاري عن {t}؛ لم يكن ذلك مقصوداً. اتخذت الإجراءات اللازمة لتصحيح الوضع، وأشكرك على سعة صدرك.
+A	5	2	نعتذر عن {t} وما سببه من إزعاج. يهمنا رضاك، وقد عملنا على معالجة الأمر فوراً.
+A	6	0	أتقدم بخالص الشكر والتقدير على {t}. كان لدعمكم أثر كبير، وأتطلع لمواصلة التعاون معكم.
+A	6	1	شكراً جزيلاً على {t}؛ أقدّر وقتك واهتمامك كثيراً.
+A	6	2	لا يسعني إلا أن أشكركم على {t}، وجزاكم الله خيراً.
+E	0	0	I am writing to you regarding {t}. I would be grateful if you could review this matter and take the action you deem appropriate. I am happy to provide any further information.
+E	0	1	With reference to {t}, we would like to follow up on this matter. Kindly advise us of the required procedures and the expected timeline.
+E	0	2	I am pleased to submit my request concerning {t} for your kind consideration. The required documents are attached for your review.
+E	1	0	Thank you for contacting us about {t}. We apologise for any inconvenience. Your request has been escalated to the relevant team and we will update you within 24 hours.
+E	1	1	We appreciate your patience. Regarding {t}, we have reviewed your request and the issue is now being resolved. If you need anything else, we are here to help.
+E	1	2	Thank you for your feedback about {t}. To help you faster, please share your order number and a screenshot of the issue if possible.
+E	2	0	I would like to follow up on {t}. Could we schedule a short meeting this week to discuss next steps? I am flexible with timing.
+E	2	1	Here is an update on {t}: the current phase is complete and the next step needs your approval. I look forward to your feedback.
+E	2	2	With reference to {t}, please confirm receipt of this message and let us know the expected delivery date.
+E	3	0	I am applying for the {t} position. My experience and skills match the role's requirements, and I look forward to contributing to your team. Please find my CV attached.
+E	3	1	I read your {t} vacancy with great interest and believe my background makes me a strong fit. I would welcome the chance to interview at your convenience.
+E	3	2	I am writing to ask about the status of my recent application for the {t} position and to confirm my strong interest in joining your team.
+E	4	0	Done, thank you.
+E	4	1	Received, I will get back to you shortly.
+E	4	2	Sounds good, agreed.
+E	4	3	Sorry, I can't right now. I will get back to you later.
+E	4	4	Great, see you then.
+E	4	5	Thanks for clarifying.
+E	4	6	I will look into it and let you know.
+E	4	7	I'm in a meeting, I will call you shortly.
+E	5	0	I sincerely apologise for {t} and take full responsibility. I will make sure it does not happen again, and I appreciate your understanding.
+E	5	1	Please accept my apology for {t}; it was not intended. I have taken steps to correct it, and thank you for your patience.
+E	5	2	We apologise for {t} and any inconvenience it caused. Your satisfaction matters to us and we have addressed the issue right away.
+E	6	0	I would like to express my sincere thanks for {t}. Your support made a real difference, and I look forward to continuing our work together.
+E	6	1	Thank you so much for {t}; I truly appreciate your time and care.
+E	6	2	I cannot thank you enough for {t}. It is greatly appreciated.

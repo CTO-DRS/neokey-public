@@ -507,14 +507,46 @@ public final class Theme {
     public static int oneHand(Context c) { return prefs(c).getInt("onehand", 0); }
     public static int photoDim(Context c) { return prefs(c).getInt("dim", 45); }
 
-    public static final String[] DEFAULT_PHRASES = {
-            "السلام عليكم ورحمة الله وبركاته", "وعليكم السلام ورحمة الله", "إن شاء الله",
-            "ما شاء الله تبارك الله", "الحمد لله", "جزاك الله خير", "بارك الله فيك",
-            "الله يعطيك العافية", "صباح الخير ☀️", "مساء الخير 🌙", "تصبح على خير",
-            "شكراً جزيلاً 🌹", "على الرحب والسعة", "أبشر", "كل عام وأنتم بخير", "عيد مبارك 🎉",
-            "رمضان كريم 🌙", "جمعة مباركة", "الله يسعدك", "تم ✅", "دقائق وأكون عندك",
-            "أنا في الطريق 🚗", "أكلمك بعدين", "لا إله إلا الله",
-    };
+    /** W54 capacity trim (law 6 — knowledge out of the dex): the phrase data lives in
+     *  assets/theme_phrases.txt (24 defaults + 20 adhkar, byte-exact relocation by
+     *  scripts/trim_w54.py — the ONE derivation); this is the thin strict loader — a
+     *  count or marker drift refuses the whole set, never a half-loaded panel. */
+    private static final int DEF_COUNT = 24, ADHKAR_COUNT = 20;
+    private static volatile String[] DEF_PHRASES, ADHKAR_ARR;
+
+    /** Strict parse (pure — no android here; the JVM probe hands the file bytes). */
+    static void initPhrases(byte[] raw) {
+        String[] def = new String[DEF_COUNT], adh = new String[ADHKAR_COUNT];
+        int d = 0, k = 0, section = 0;
+        for (String line : new String(raw, java.nio.charset.StandardCharsets.UTF_8).split("\n", -1)) {
+            if (line.isEmpty()) continue;
+            if (line.charAt(0) == '#') {
+                if (line.equals("#defaults")) section = 1;
+                else if (line.equals("#adhkar")) section = 2;
+                else if (!line.startsWith("# ")) throw new IllegalArgumentException("theme.phrases.marker");
+                continue;
+            }
+            if (section == 1) { if (d >= DEF_COUNT) throw new IllegalArgumentException("theme.phrases.count"); def[d++] = line; }
+            else if (section == 2) { if (k >= ADHKAR_COUNT) throw new IllegalArgumentException("theme.phrases.count"); adh[k++] = line; }
+            else throw new IllegalArgumentException("theme.phrases.order");
+        }
+        if (d != DEF_COUNT || k != ADHKAR_COUNT) throw new IllegalArgumentException("theme.phrases.count");
+        DEF_PHRASES = def; ADHKAR_ARR = adh;
+    }
+
+    private static synchronized void ensurePhrases(Context c) {
+        if (DEF_PHRASES != null) return;
+        try (java.io.InputStream in = c.getAssets().open("theme_phrases.txt")) {
+            java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[4096]; int n;
+            while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+            initPhrases(bo.toByteArray());
+        } catch (java.io.IOException e) { throw new IllegalStateException("theme.phrases.asset", e); }
+    }
+
+    /** Defaults for the phrase editor (SetupActivity). */
+    public static String[] defaultPhrases(Context c) { ensurePhrases(c); return DEF_PHRASES; }
+
 
     public static java.util.List<String> userPhrases(Context c) {
         java.util.List<String> l = new java.util.ArrayList<>();
@@ -551,23 +583,14 @@ public final class Theme {
     }
 
     /** Daily adhkar and short duas, shown in the phrases panel when pref "adhkar" is on. */
-    public static final String[] ADHKAR = {
-            "سبحان الله وبحمده، سبحان الله العظيم", "لا حول ولا قوة إلا بالله", "أستغفر الله العظيم وأتوب إليه",
-            "اللهم صلِّ وسلم على نبينا محمد", "لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير",
-            "سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر", "حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم",
-            "بسم الله الذي لا يضر مع اسمه شيء في الأرض ولا في السماء وهو السميع العليم",
-            "أصبحنا وأصبح الملك لله، والحمد لله", "أمسينا وأمسى الملك لله، والحمد لله",
-            "اللهم بك أصبحنا وبك أمسينا وبك نحيا وبك نموت وإليك النشور",
-            "رضيت بالله رباً وبالإسلام ديناً وبمحمد ﷺ نبياً", "اللهم إني أسألك العفو والعافية في الدنيا والآخرة",
-            "ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة وقنا عذاب النار", "اللهم اغفر له وارحمه وعافه واعف عنه",
-            "اللهم اشفه شفاءً لا يغادر سقماً", "أحسن الله عزاءكم وغفر لميتكم", "تقبل الله منا ومنكم",
-            "اللهم بارك لهما وبارك عليهما واجمع بينهما في خير", "الله يرحمه ويغفر له ويسكنه فسيح جناته",
-    };
+    /** (W54: the adhkar text itself lives in assets/theme_phrases.txt — loaded strictly.) */
+
 
     public static java.util.List<String> allPhrases(Context c) {
+        ensurePhrases(c);
         java.util.List<String> l = userPhrases(c);
-        for (String p : DEFAULT_PHRASES) l.add(p);
-        if (prefs(c).getBoolean("adhkar", true)) for (String p : ADHKAR) l.add(p);
+        for (String p : DEF_PHRASES) l.add(p);
+        if (prefs(c).getBoolean("adhkar", true)) for (String p : ADHKAR_ARR) l.add(p);
         return l;
     }
 

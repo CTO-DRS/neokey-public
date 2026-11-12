@@ -1,0 +1,6 @@
+# W54 trim round-trip evidence (committed) — 2026-11-12T01:38Z
+# method: tools/w54/*.java — the FULL compose grid (lang x cat x tone x variant incl. negatives x to x from x topic)
+# and the theme phrase arrays, parsed by the SHIPPED loaders, diffed against the pre-trim reference.
+WRITER OK: 14976 compose calls byte-exact vs the pre-trim class
+THEME OK: 44/44 byte-exact vs the pre-trim arrays
+dex: 511804 -> 504192 (-7612) — R8_OK real-R path, manifest components 10/10, TRIM_GATE_OK, DIALECT_GATE_OK, tests 1616/0

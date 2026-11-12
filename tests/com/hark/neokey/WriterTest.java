@@ -9,6 +9,8 @@ public class WriterTest {
     }
 
     public static void run() {
+        try { Writer.init(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("assets/writer_templates.txt"))); }
+        catch (java.io.IOException e) { throw new RuntimeException("writer.templates.probe", e); }
         System.out.println("== Writer:catalog integrity ==");
         check("7 categories", Writer.CATS.length == 7);
         check("3 tones", Writer.TONES.length == 3);
