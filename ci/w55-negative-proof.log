@@ -1,0 +1,10 @@
+[perf.record] BIT record.readable.strict — the strict reader refused the mutilated floor record
+[heal-check] evidence/perf-baseline.tsv restored byte-exact (cmp clean)
+[device.floor] BIT device.source.guard — the anti-rewrite guard refused the quietly rewritten floor
+[heal-check] src/com/hark/neokey/Perf.java restored byte-exact (cmp clean)
+[engine.contract] BIT FAIL neg.thrower.contained — the exact-delta law caught the silently weakened containment
+[heal-check] src/com/hark/neokey/Engines.java restored byte-exact (cmp clean)
+PERFBASELINE OK
+HARNESSGATE OK
+[heal] PERFBASELINE OK + HARNESSGATE OK — the clean tree heals green
+PROOF PASSED w55 3/3 attacks bit their exact tags and the restores healed (heal=1: PERFBASELINE_OK checks=27 + HARNESSGATE_OK checks=35)
