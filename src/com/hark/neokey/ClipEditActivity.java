@@ -52,6 +52,10 @@ public class ClipEditActivity extends Activity {
     private List<int[]> hits = new ArrayList<>();
     private int cur = -1;
     private final Handler ui = new Handler(Looper.getMainLooper());
+    /** W67 (PanicWipe): رمز التأكيد المُسلّح للخطوة الثانية، ونهاية التخفي المؤقت. */
+    private String panicArmed;
+    private long panicStealthUntil;
+    private final Runnable stealthExpire = this::stealthExpire;
     private final ArrayDeque<String[]> undo = new ArrayDeque<>(), redo = new ArrayDeque<>();
     private long lastTypeAt;
     private String[] pendingEdit;   // {start, removed} captured before a change
@@ -309,6 +313,8 @@ public class ClipEditActivity extends Activity {
         tools.addView(tool(otpShieldLabel(), v -> cycleOtpTimeout()));
         tools.addView(tool(integrityCertLabel(), v -> Toast.makeText(this,
                 L.t(integrityCertLabel()), Toast.LENGTH_LONG).show()));
+        tools.addView(tool(panicLabel(), v -> panicStep()));
+        tools.addView(tool(stealthLabel(), v -> stealthStep()));
         tools.addView(tool("تنظيم المسافات", v -> transform(ClipText.tidy(body.getText().toString()))));
         tools.addView(tool("البداية", v -> jump(0)));
         tools.addView(tool("النهاية", v -> jump(body.length())));
@@ -328,6 +334,87 @@ public class ClipEditActivity extends Activity {
         sealView.setTextSize(12);
         sealView.setPadding(0, (int) (10 * dp), 0, (int) (10 * dp));
         root.addView(sealView);
+    }
+
+    /**
+     * W67 (PanicWipe): الطمأنينة — المسح الفوري الشامل بتأكيد حتمي من
+     * خطوتين عبر النقي، والتنفيذ الحي عبر المسارات القائمة: سجل الحافظة
+     * والمعاينات (ClipRepo.clearAllClips) والتكيّف الشخصي (مسار W60)،
+     * والنسخ الموقعة محصنة دوماً — الاستعادة تبقى ممكنة عبر المسار القائم.
+     */
+    private String panicLabel() {
+        return panicArmed == null
+                ? "الطمأنينة — مسح الطوارئ"
+                : "الطمأنينة — الرمز " + panicArmed + " (اضغط للتأكيد)";
+    }
+
+    private List<PanicWipe.Store> panicTargets() {
+        List<PanicWipe.Store> l = new ArrayList<>();
+        l.add(new PanicWipe.Store("clipboard-history", new byte[0]));
+        l.add(new PanicWipe.Store("personal-adaptation", new byte[0]));
+        l.add(new PanicWipe.Store("previews", new byte[0]));
+        return l;
+    }
+
+    private void panicStep() {
+        List<PanicWipe.Store> targets = panicTargets();
+        if (panicArmed == null) {
+            panicArmed = PanicWipe.armToken(targets);
+            Toast.makeText(this, L.t("سلاح: الرمز " + panicArmed
+                    + " — اضغط ثانية للتنفيذ. النسخ الموقعة محصنة."),
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        String expected = PanicWipe.armToken(targets);
+        PanicWipe.Result res = PanicWipe.wipeAll(targets, panicArmed, expected);
+        panicArmed = null;
+        if (PanicWipe.REFUSED.equals(res.state)) {
+            Toast.makeText(this, L.t("الطمأنينة: رُفض التنفيذ — لا تأكيد مطابق"),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ClipStore.get(this).run(r -> {
+            r.clearAllClips();
+            return true;
+        }, ok -> { });
+        new java.io.File(getFilesDir(), "adapt_store.txt").delete();
+        new java.io.File(getFilesDir(), "strip_accept.txt").delete();
+        Theme.prefs(this).edit().putBoolean("adapt_reset", true).apply();
+        Toast.makeText(this, L.t("الطمأنينة: " + res.wipedStores
+                + " مخازن بايت-فارغة — النسخ الموقعة محصنة والاستعادة تبقى ممكنة"),
+                Toast.LENGTH_LONG).show();
+    }
+
+    /** W67: وضع التخفي المؤقت — بمؤقت يعود فيه كل شيء مغلقًا (قانون ALL_CLOSED). */
+    private String stealthLabel() {
+        return panicStealthUntil == 0
+                ? "الطمأنينة — تخفي مؤقت 60 ثانية"
+                : "الطمأنينة — التخفي نشط (اضغط للإلغاء)";
+    }
+
+    private void stealthStep() {
+        if (panicStealthUntil != 0) {
+            ui.removeCallbacks(stealthExpire);
+            panicStealthUntil = 0;
+            Toast.makeText(this, L.t("أُلغي التخفي المؤقت"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        long now = System.currentTimeMillis() / 1000;
+        panicStealthUntil = PanicWipe.stealthBegin(now, 60);
+        if (panicStealthUntil < 0) {
+            Toast.makeText(this, L.t("الطمأنينة: رُفض بدء التخفي — مدة غير موجبة"),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ui.postDelayed(stealthExpire, 60_000L);
+        Toast.makeText(this, L.t("التخفي المؤقت نشط 60 ثانية — عند الانتهاء كل شيء مغلق"),
+                Toast.LENGTH_LONG).show();
+    }
+
+    private void stealthExpire() {
+        panicStealthUntil = 0;
+        Toast.makeText(this, L.t("انتهى التخفي — كل شيء مغلق (ALL_CLOSED)"),
+                Toast.LENGTH_SHORT).show();
     }
 
     /**

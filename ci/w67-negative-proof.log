@@ -1,0 +1,11 @@
+───── attack: panic.confirm ─────
+bit: panic.confirm → FAIL confirm: رمز خاطئ → PANIC_REFUSED (البيانات سليمة)
+healed: src/com/hark/neokey/PanicWipe.java byte-exact (git-clean; PANICGATE_OK on the clean tree)
+───── attack: panic.zerofill ─────
+bit: panic.zerofill → FAIL wiped: اللمسة المؤكدة → PANIC_WIPED وكل بايت صفر بطول الأصل
+healed: src/com/hark/neokey/PanicWipe.java byte-exact (git-clean; PANICGATE_OK on the clean tree)
+───── attack: panic.protect ─────
+bit: panic.protect → FAIL protect: النسخة الموقعة بايت-لطرفاً بعد اللمسة وتظهر في kept
+healed: src/com/hark/neokey/PanicWipe.java byte-exact (git-clean; PANICGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w67 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: PANICGATE_OK on the clean tree — battery 10, the literal byte-void wipe with the signed-backup immunity and the stealth ALL_CLOSED)
