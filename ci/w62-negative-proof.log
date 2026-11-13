@@ -1,0 +1,11 @@
+───── attack: assert.root ─────
+bit: assert.root → GATE-FAIL root(index): the LIVE asset (HEAD) loads
+healed: assets/root_index.txt byte-exact (git-clean vs HEAD)
+───── attack: assert.gram ─────
+bit: assert.gram → GATE-FAIL grammar(rules): the LIVE asset (HEAD) loads
+healed: assets/grammar_rules.txt byte-exact (git-clean vs HEAD)
+───── attack: assert.nqf ─────
+bit: assert.nqf → GATE-FAIL nnet(nqf): the LIVE asset (HEAD) loads
+healed: assets/nnet_ar.nqf byte-exact (git-clean vs HEAD)
+───── heal ─────
+PROOF PASSED w62 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: REASSERTGATE_OK with a fresh dex margin above the documented floor=500)
