@@ -72,6 +72,58 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     // W60 (AdaptEngine): طبقة التكرار الشخصية — المثيل الوحيد المسجّل في
     // Engines (العقد الواحد)، المتجر نص محلي في filesDir لا يغادر الجهاز.
     private volatile AdaptEngine adaptEngine;
+    // W61 (StripAccept): قياس القبول المحلي — عدّادات المصادر المعلَمة وقت
+    // الضغط فقط (personal/root/clip/strip) — نص محلي في filesDir لا يغادر الجهاز.
+    private StripAccept stripAccept;
+    /** W61: بوابة التخفي الواحدة على الالتحام — وضع التخفي يخضع المحركات
+     *  كلها مرة واحدة (فارغة آمنة بدل النتائج، والركوبات تتجاهلها طبيعياً). */
+    private Engine.Cand[] engineRun(Engine.Ctx ctx, int limit) {
+        if (incognito) return new Engine.Cand[0];
+        return Engines.run(ctx, limit);
+    }
+    /** W61: قياس القبول المحلي — المصدر المعلَم وقت الضغط فقط، والتخفي لا يسجل. */
+    private void recordAccept(String source) {
+        if (incognito) return;
+        stripAccept().accept(source);
+    }
+    /** W61: عدّادات القبول — تحميل خفيف عند أول حاجة (فارغ آمن). */
+    private StripAccept stripAccept() {
+        if (stripAccept == null) {
+            String text = "";
+            try {
+                java.io.FileInputStream in = new java.io.FileInputStream(
+                        new File(getFilesDir(), "strip_accept.txt"));
+                try {
+                    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                    byte[] buf = new byte[4096];
+                    int n;
+                    while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                    text = new String(bo.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+                } finally {
+                    in.close();
+                }
+            } catch (Exception e) {
+                text = "";   // لا ملف بعد = حالة مصنع (fail-open للقراءة فقط)
+            }
+            stripAccept = StripAccept.parse(text);
+        }
+        return stripAccept;
+    }
+
+    /** W61: حفظ عدّادات القبول عند الخروج — الفارغ يحذف الملف (حالة مصنع). */
+    private void saveStripAccept() {
+        if (stripAccept == null) return;
+        String s = stripAccept.serialize();
+        File f = new File(getFilesDir(), "strip_accept.txt");
+        if (s.isEmpty()) { f.delete(); return; }
+        try {
+            java.io.FileOutputStream out = new java.io.FileOutputStream(f);
+            try { out.write(s.getBytes(java.nio.charset.StandardCharsets.UTF_8)); }
+            finally { out.close(); }
+        } catch (Exception ignored) {
+            // التخزين قد يفشل مؤقتاً — الكتابة تُعاد في الخروج القادم
+        }
+    }
     /** W60: نص حوار مصدر الاقتراح — ثابت ساكن (نطاق TrimGate يعفي الساكن:
      *  الحرف الطويل ≥60B في جسم دالة يعود للقصّ — القانون نفسه). */
     private static final String W60_SOURCE_MSG =
@@ -316,7 +368,9 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             adaptEngine.setToday((int) (System.currentTimeMillis() / 86400000L));
         if (sp.getBoolean("adapt_reset", false)) {
             sp.edit().remove("adapt_reset").apply();
+            // W61: زر المسح الواحد يمحو الطبقة الشخصية وعدّادات القبول معاً.
             if (adaptEngine != null) adaptEngine.wipe();
+            if (stripAccept != null) stripAccept.wipe();
         }
         if (sp.getBoolean("reset_learn", false)) {
             dictAr.clearUser();
@@ -368,6 +422,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         dictEn.save();
         saveDialectProfiles();
         saveAdaptStore();
+        saveStripAccept();
     }
 
     @Override
@@ -697,18 +752,20 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // there is room (it never displaces the family). Source-filtered —
         // familyInto rides "root" cands only, tashkeelInto rides "tashkeel"
         // only; an empty registry (corrupt index / detached) answers empty.
-        Engine.Cand[] eng = Engines.run(new Engine.Ctx(null, null, w), 8);
+        Engine.Cand[] eng = engineRun(new Engine.Ctx(null, null, w), 8);
         RootEngine.familyInto(s, pickSrc(eng, "root"), 3);
         TashkeelEngine.tashkeelInto(s, pickSrc(eng, "tashkeel"), 3);
         // W58: the grammar correction rides LAST (an optional tap-to-apply
         // suggestion — the engine explains, it never force-corrects) and NEVER
         // in incognito (وضع التخفي: لا تحليل — the scan surface refuses too).
-        if (!incognito) GrammarNudge.nudgeInto(s, pickSrc(eng, "grammar"), 3);
+        // W61: no scattered incognito checks — the ONE gate (engineRun)
+        // already returned empty cands, so these rides are natural no-ops.
+        GrammarNudge.nudgeInto(s, pickSrc(eng, "grammar"), 3);
         // W60: the personal repetition layer rides LAST (append-only — it
         // never displaces the dict lead or the root family tail; every chip
         // carries the ★ badge — the user SEES why the keyboard suggested it)
         // and NEVER in incognito (وقف تام — the law).
-        if (!incognito) AdaptEngine.personalInto(s, pickSrc(eng, "personal"), 3);
+        AdaptEngine.personalInto(s, pickSrc(eng, "personal"), 3);
         String fx = ArabicFixes.fix(w);
         if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > 3) s.remove(s.size() - 1); }
         String sc = Theme.shortcuts(this).get(w.toLowerCase());
@@ -770,14 +827,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // effective score, temporal decay applied) fills BEFORE the neural
         // fill: the documented weighting is dict → personal → neural (the
         // repetition layer beats the model for the user's own words, never
-        // the dictionary). Via the ONE contract dispatch (Engines.run) —
-        // no scattered engine calls — and never in incognito (وقف تام).
-        if (!incognito) {
-            Engine.Cand[] pe = Engines.run(new Engine.Ctx(null, prev, ""), 8);
-            for (Engine.Cand c : pickSrc(pe, "personal")) {
-                if (out.size() >= 3) break;
-                if (!out.contains(c.text)) { out.add(c.text); break; }   // المقعد الواحد
-            }
+        // the dictionary). Via the ONE contract dispatch + the ONE incognito
+        // gate (engineRun) — no scattered checks anywhere (W61).
+        Engine.Cand[] pe = engineRun(new Engine.Ctx(null, prev, ""), 8);
+        for (Engine.Cand c : pickSrc(pe, "personal")) {
+            if (out.size() >= 3) break;
+            if (!out.contains(c.text)) { out.add(c.text); break; }   // المقعد الواحد
         }
         // A2: neural top-3 completes the strip — it never displaces the
         // dictionary path, it only fills what the bigram table left empty
@@ -860,6 +915,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             // family member commits through the ordinary suggestion path below.
             familyTree = false;
             if (word.startsWith("✕")) { updateSuggestions(); return; }
+            recordAccept(StripAccept.ROOT);   // W61: مصدر معلَم — عضو شجرة العائلة
         }
         if (clipSearch) {
             if (word.startsWith("✕")) { clipSearch = false; view.showPanel(KeyboardView.PANEL_CLIP); updateSuggestions(); return; }
@@ -880,6 +936,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             return;
         }
         if (clipChip != null && word.equals(clipChip) && freshClip != null) {
+            recordAccept(StripAccept.CLIP);   // W61: مصدر معلَم — رقاقة حافظة
             ic.commitText(freshClip, 1);
             freshClip = null;
             clipChip = null;
@@ -888,6 +945,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         }
         if (word.startsWith(KeyboardView.CLIP_SC_MARK)) {
             // W48 clip-shortcut expansion: the typed token is replaced by the clip text
+            recordAccept(StripAccept.CLIP);   // W61: مصدر معلَم — اختصار حافظة
             Long cid = clipSc.get(word.substring(1));
             if (cid != null) {
                 String cur = currentWord();
@@ -896,9 +954,16 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             }
             return;
         }
-        // W60: the ★ badge is stripped before any dispatch — the tap commits
-        // the bare word (which finishWord then re-learns: the reinforcement).
-        if (word.startsWith(AdaptEngine.MARK)) word = word.substring(AdaptEngine.MARK.length());
+        // W60/W61: the ★ badge is stripped before any dispatch — the tap
+        // commits the bare word (which finishWord then re-learns), the
+        // acceptance is RECORDED (the honest labeled source) and FEEDS the
+        // personal layer with the documented +1 reinforcement weight.
+        if (word.startsWith(AdaptEngine.MARK)) {
+            recordAccept(StripAccept.PERSONAL);
+            word = word.substring(AdaptEngine.MARK.length());
+            stripAccept().feed(adaptEngine, word,
+                    (int) (System.currentTimeMillis() / 86400000L));
+        }
         if (!Character.isLetter(word.charAt(0))) {
             // emoji suggestion: keep the word, add the emoji
             finishWord(currentWord());
@@ -923,6 +988,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (!cur.isEmpty()) ic.deleteSurroundingText(cur.length(), 0);
         ic.commitText(word + " ", 1);
         ic.endBatchEdit();
+        recordAccept(StripAccept.STRIP);   // W61: رقاقة الشريط العامة — الدلو الصادق
         finishWord(word);
         chars += word.length() + 1;
         corrApplied = null;

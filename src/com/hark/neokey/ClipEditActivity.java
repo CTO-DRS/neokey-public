@@ -544,6 +544,7 @@ public class ClipEditActivity extends Activity {
                 .setMessage(L.t("تُمحى كل الكلمات التي تعلّمها الكيبورد منك محلياً والعودة لحالة المصنع. لا شيء يغادر جهازك."))
                 .setPositiveButton(L.t("مسح"), (d, w) -> {
                     new java.io.File(getFilesDir(), "adapt_store.txt").delete();
+                    new java.io.File(getFilesDir(), "strip_accept.txt").delete();
                     Theme.prefs(this).edit().putBoolean("adapt_reset", true).apply();
                     Toast.makeText(this, L.t("تم المسح — التنبؤ الشخصي في حالة المصنع"), Toast.LENGTH_SHORT).show();
                 })
