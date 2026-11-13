@@ -58,13 +58,13 @@ import java.util.regex.Pattern;
  *   n6 evidence not in ui_en  → ui.decoupled
  *
  * Verdict: UPLOADBUNDLEGATE_OK checks=14 negatives=6/6 members=8 evidence=8
- *          permissions=3 vc=1 vn=0.1.0 apk_sha256=…  /  FAILED <reason>
+ *          permissions=3 vc=2 vn=0.2.0 apk_sha256=…  /  FAILED <reason>
  */
 public final class UploadBundleGate {
     private UploadBundleGate() {}
 
-    static final String EXPECTED_VC = "1";
-    static final String EXPECTED_VN = "0.1.0";
+    static final String EXPECTED_VC = "2";
+    static final String EXPECTED_VN = "0.2.0";
 
     static int CHECKS = 0;
     static int NEG_OK = 0;

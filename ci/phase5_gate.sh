@@ -32,8 +32,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 DEX_CEILING=530000   # W58-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
-VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-5 close floor (was 70)
-VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-5 close floor (was 2.3); the historical close measurement stays pinned in release-manifest.phase5Close
+VC_MIN=2             # v0.1.0 identity reset — re-based from the phase-5 close floor (was 70)
+VN_MIN=0.2           # v0.1.0 identity reset — re-based from the phase-5 close floor (was 2.3); the historical close measurement stays pinned in release-manifest.phase5Close
 TESTS_MIN=1354       # shipped test total at phase-5 close (1,354 = weeks 26-28; the mass lives in the gates)
 STATE=build/release/gates.env
 LOGF=build/pipeline.log

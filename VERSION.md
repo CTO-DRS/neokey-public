@@ -1,6 +1,6 @@
 # VERSION — الهوية الموحدة / The ONE Identity
 
-**الإصدار الحالي: `v0.1.0` — versionCode `1` — versionName `0.1.0`**
+**الإصدار الحالي: `v0.2.0` — versionCode `2` — versionName `0.2.0`** (الترقية المرحلية الأولى فوق v0.1.0 — W63 من خارطة v2)
 **تاريخ التوحيد: 2026-11-09**
 
 ---
@@ -10,7 +10,7 @@
 الهوية تُقرأ من مكان واحد فقط:
 
 ```
-AndroidManifest.xml → android:versionCode="1" android:versionName="0.1.0"
+AndroidManifest.xml → android:versionCode="2" android:versionName="0.2.0"
 ```
 
 كل ما عدا ذلك **نقاط تثبيت (pins)** يجب أن تتحرك مع المصدر في الكوميت نفسه —
@@ -33,12 +33,12 @@ AndroidManifest.xml → android:versionCode="1" android:versionName="0.1.0"
 
 | الطبقة | الملفات | ما تحمله |
 |---|---|---|
-| المصدر | `AndroidManifest.xml` | `versionCode="1"` + `versionName="0.1.0"` |
-| ثوابت Java | `SignedApkGate` / `UploadBundleGate` | `EXPECTED_VC="1"` / `EXPECTED_VN="0.1.0"` |
-| مصدر الهوية الواحد | `SyncServerPack` | `VC="1"` / `VN="0.1.0"` |
+| المصدر | `AndroidManifest.xml` | `versionCode="2"` + `versionName="0.2.0"` |
+| ثوابت Java | `SignedApkGate` / `UploadBundleGate` | `EXPECTED_VC="2"` / `EXPECTED_VN="0.2.0"` |
+| مصدر الهوية الواحد | `SyncServerPack` | `VC="2"` / `VN="0.2.0"` |
 | تأكيدات حية | `UploadBundleTest` | قراءة الـ manifest الحي ومطابقته |
 | مراساة الفوترة | `BillingGate` | `anchor.vc` / `anchor.vn` + سطر الحكم |
-| مراساة bash | `billing/deploysrv/opverify/ownerverify/pubsync/rebuild/evaudit` gates | `PUB_VC=1` / `PUB_VN=0.1.0` |
+| مراساة bash | `billing/deploysrv/opverify/ownerverify/pubsync/rebuild/evaudit` gates | `PUB_VC=2` / `PUB_VN=0.2.0` |
 | الحدود الدنيا | `phase3…phase9` gates | `VC_MIN=1` و `VN_MIN=0.1` (أعيد تأسيسها من 62/66/70/74/78/82/85 و 2.3/2.7/3.1/3.5/3.8) |
 | توثيق الحكم | `Preflight` / `PreflightGate` / `RebuildGate` / رؤوس البوابات | أمثلة سطور الحكم بالهوية الجديدة |
 
@@ -58,7 +58,7 @@ AndroidManifest.xml → android:versionCode="1" android:versionName="0.1.0"
 
 ## 5. من هنا فصاعدًا
 
-1. أي bump جديد يبدأ من `0.1.0` ويحرك **كل** النقاط أعلاه في كوميت واحد.
+1. أي bump جديد يبدأ من `0.2.0` ويحرك **كل** النقاط أعلاه في كوميت واحد (v0.2.0 نفسها حملتها هكذا — W63: 18 ملفاً في كوميت واحد).
 2. الترقيم semver: `0.1.x` تطوير، `0.x.0` مراحل، `1.0.0` الإصدار الأول للنشر الواسع.
 3. خارطة تنفيذ الأسابيع القادمة: **ROADMAP.md**. سجل التغييرات: **CHANGELOG.md**.
 

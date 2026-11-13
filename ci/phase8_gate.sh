@@ -46,8 +46,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 DEX_CEILING=530000   # W58-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
-VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-8 close floor (was 82)
-VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-8 close floor (was 3.5); the historical close measurement stays pinned in release-manifest.phase8Close
+VC_MIN=2             # v0.1.0 identity reset — re-based from the phase-8 close floor (was 82)
+VN_MIN=0.2           # v0.1.0 identity reset — re-based from the phase-8 close floor (was 3.5); the historical close measurement stays pinned in release-manifest.phase8Close
 TESTS_MIN=1561       # shipped test total at phase-8 close (the mass lives in the gates)
 INNER_STAGES=41      # the drill's inner stage count: 39 pre-drill rows + evaudit + opverify (the drill and this closer omit themselves inside — INNER_OMIT); frozen so a shape change re-pins consciously — RE-PINNED 40→41 at W48 (the cliplib stage joined the inner profile, after clipio's 39→40 at W47)
 STATE=build/release/gates.env

@@ -50,8 +50,8 @@ fi || fail "compile"
 # on the shipped APK == the manifest == the gate's pinned literals.
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
-PUB_VC=1
-PUB_VN=0.1.0
+PUB_VC=2
+PUB_VN=0.2.0
 [ "$VC" = "$PUB_VC" ] || fail "anchor.identity.vc (manifest declares $VC — the week carrying the adapter is $PUB_VC)"
 [ "$VN" = "$PUB_VN" ] || fail "anchor.identity.vn (manifest declares $VN — the week carrying the adapter is $PUB_VN)"
 [ -f build/NeoKey-2036.apk ] || fail "anchor.apk.missing (run the build stage first)"
