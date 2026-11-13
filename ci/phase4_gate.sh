@@ -31,7 +31,7 @@ cd "$(dirname "$0")/.."
 # override) silently biases them; the budgets always measure what ships.
 unset JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS
 
-DEX_CEILING=513000   # W57-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
+DEX_CEILING=522000   # W58-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
 VC_MIN=1             # v0.1.0 identity reset (re-based from the phase-4 close floor 66; the closing week still must carry the manifest identity)
 TESTS_MIN=1334       # shipped test total at phase-4 close (1,334 = week 24)
 STATE=build/release/gates.env
@@ -95,7 +95,12 @@ TR_UIEN=$(field "$TR" ui_en_coupled)
 # tashkeel engine (ROADMAP-V2 W57, +4108 measured) and the W57-CEILING-RAISE
 # (+1000, ci/capacity_ledger.tsv ceiling.raised): dex 508840 -> 512928, the
 # measured lever shrinks by the documented delta (the W48 re-pin pattern).
-[ "${TR_SAVED:-0}" -ge 5760 ]  || fail "trim saved ${TR_SAVED:-0} < 5760 (the lever shrank)"
+# W58 re-pin (documented weekly baseline): 5760 -> 480 — the grammar engine
+# (ROADMAP-V2 W58, +8592 measured) adds ZERO trimmable content (law 6: the
+# knowledge rides assets/grammar_rules.txt — nothing to trim inside the dex),
+# the trim pool is measured and the floor follows the measurement (the W48
+# re-pin pattern; regrown=0 stays the behavioral law).
+[ "${TR_SAVED:-0}" -ge 480 ]  || fail "trim saved ${TR_SAVED:-0} < 480 (the lever shrank)"
 [ "${TR_CEIL:-0}"  = "$DEX_CEILING" ] || fail "trim ceiling ${TR_CEIL:-0} != $DEX_CEILING"
 [ "${TR_DEX:-999999}" -le "$DEX_CEILING" ] || fail "trim dex $TR_DEX > ceiling $DEX_CEILING"
 
@@ -192,7 +197,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PHASE3_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
-[ "${NQFPORT_ASSETS:-0}" = 21 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 18 (golden pins drifted)"
+[ "${NQFPORT_ASSETS:-0}" = 23 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 23 (golden pins drifted)"
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 
 # versionCode bumped this week

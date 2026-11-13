@@ -20,9 +20,11 @@
 | `tests/RootEngineTest.java` + `ci/root_gate.sh` | بطارية المحرك الأول (46 فحصاً) + بوابة `ROOTGATE_OK` المستقلة |
 | `src/TashkeelEngine.java` + `assets/tashkeel_index.txt` | **المحرك الثاني عبر العقد (W57)** — المفسّر الرقيق RIX2 + الدرجات الثلاث؛ العقد الواحد له: `docs/TASHKEEL.md` |
 | `tests/TashkeelTest.java` + `ci/tashkeel_gate.sh` | بطارية المحرك الثاني (63 فحصاً) + بوابة `TASHKEELGATE_OK` المستقلة |
+| `src/GrammarNudge.java` + `assets/grammar_rules.txt` | **المحرك الثالث عبر العقد (W58)** — المفسّر الرقيق GRX1 + الأوضاع الثلاث + قانون الجانب عند التحميل؛ العقد الواحد له: `docs/GRAMMAR.md` |
+| `tests/GrammarNudgeTest.java` + `ci/nudge_gate.sh` | بطارية المحرك الثالث (110 فحصاً) + بوابة `NUDGEGATE_OK` المستقلة |
 
-المحركات القادمة التي ستنفذ العقد: `GrammarNudge` (W58)،
-`AdaptEngine` (W60) — و`RootEngine` (W56) و`TashkeelEngine` (W57) وصِلا فعلاً.
+المحركات القادمة التي ستنفذ العقد: `AdaptEngine` (W60) — و`RootEngine`
+(W56) و`TashkeelEngine` (W57) و`GrammarNudge` (W58) صِلت فعلاً.
 
 ## 2. قوانين العقد الخمسة
 

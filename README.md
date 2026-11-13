@@ -44,6 +44,7 @@ ci/pipeline.sh      # خط الإثبات الكامل — 44+ مرحلة، ال
 | [`docs/ENGINES.md`](docs/ENGINES.md) | عقد المحركات الموحد W55 (fail-closed) + أرضية الأداء الحقيقية المثبتة |
 | [`docs/ROOT.md`](docs/ROOT.md) | محرك الجذر RootEngine W56 (RIX1 المختوم + الاشتقاق الحتمي + إشارة الجذر + شجرة العائلة) |
 | [`docs/TASHKEEL.md`](docs/TASHKEEL.md) | محرك التشكيل TashkeelEngine W57 (RIX2 المختوم + الدرجات الثلاث + منتقي القراءات + تشكيل النص) |
+| [`docs/GRAMMAR.md`](docs/GRAMMAR.md) | النحّاخ الخفيف GrammarNudge W58 (GRX1 المختوم + الأوضاع الثلاث + قانون الإزعاج المقاس + تدقيق النص التعليمي) |
 | [`CI.md`](CI.md) | مرجع خط الإثبات: كل بوابة وما تحميه |
 | [`NOTES.md`](NOTES.md) | دفتر الملاحظات التشغيلي |
 | [`HISTORY.md`](HISTORY.md) | السجل الأسبوعي الكامل (الأسابيع 1–45) |

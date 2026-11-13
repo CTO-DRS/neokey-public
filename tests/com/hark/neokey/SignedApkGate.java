@@ -32,7 +32,7 @@ import java.util.zip.ZipOutputStream;
  *                          re-derives the pinned fingerprint
  *   7  v1.entries          META-INF/MANIFEST.MF + *.SF + *.RSA present (v1 layout)
  *   8  dex.carried         classes.dex inside the artifact is byte-equal to the
- *                          pipeline R8 dex and under the 513,000B ceiling (W57-CEILING-RAISE)
+ *                          pipeline R8 dex and under the 522,000B ceiling (W58-CEILING-RAISE — the measured raise; W57 had raised 512,000→513,000)
  *   9  assets.carried      assets/community_ar.dpack + assets/ar.txt ride the
  *                          artifact byte-equal
  *  10  align.arsc          resources.arsc STORED (uncompressed) and 4-byte
@@ -55,7 +55,7 @@ import java.util.zip.ZipOutputStream;
  *   n5 wrong alias     → alias_missing    n6 tampered dex   → not_verified
  *
  * Verdict: SIGNEDAPKGATE_OK checks=14 negatives=6/6 fp16=… v1=1 v2=1 vc=73
- *          vn=2.6 apk_sha256=… dex=…/513000  /  SIGNEDAPKGATE_FAILED <reason>
+ *          vn=2.6 apk_sha256=… dex=…/522000  /  SIGNEDAPKGATE_FAILED <reason>
  */
 public final class SignedApkGate {
     private SignedApkGate() {}
@@ -67,7 +67,7 @@ public final class SignedApkGate {
     static final String EXPECTED_FP16 = EXPECTED_FP.substring(0, 16);
     static final String EXPECTED_VC = "1";
     static final String EXPECTED_VN = "0.1.0";
-    static final long DEX_CEILING = 513000; // W57-CEILING-RAISE (capacity_ledger ceiling.raised)
+    static final long DEX_CEILING = 522000; // W58-CEILING-RAISE (capacity_ledger ceiling.raised — the measured raise; W57 had raised 512000→513000)
 
     static int CHECKS = 0;
     static int NEG_OK = 0;

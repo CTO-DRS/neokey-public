@@ -138,6 +138,9 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // W57: the tashkeel degree seeds from prefs (shipped CLOSED — the
         // quiet default); ClipEdit's cycle updates this mirror live.
         TashkeelEngine.mode = Theme.prefs(this).getInt("tashkeel_mode", TashkeelEngine.MODE_OFF);
+        // W58: the grammar mode seeds the same way (shipped CLOSED — law 8);
+        // ClipEdit's chip cycles it live and persists it.
+        GrammarNudge.mode = Theme.prefs(this).getInt("grammar_mode", GrammarNudge.MODE_OFF);
         // W57: the engines-load thread — BOTH real engines load here in one
         // background thread (the keyboard never waits): the W56 root family
         // (assets/root_index.txt — RIX1) and the W57 tashkeel index (assets/
@@ -148,21 +151,32 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         new Thread(new Runnable() { public void run() {
             RootEngine re = null;
             TashkeelEngine te = null;
+            GrammarNudge ge = null;
             try { re = RootEngine.load(assetBytes("root_index.txt")); }
             catch (Throwable t) { re = null; }
             try { te = TashkeelEngine.load(assetBytes("tashkeel_index.txt")); }
             catch (Throwable t) { te = null; }
+            // W58: the third engine joins the SAME thread (assets/
+            // grammar_rules.txt — GRX1) — a corrupt asset detaches ITS engine
+            // only, the survivors still register in contract order.
+            try { ge = GrammarNudge.load(assetBytes("grammar_rules.txt")); }
+            catch (Throwable t) { ge = null; }
             // W57 batch-2: the feedback wording rides the same thread (the
             // strict init; a corrupt asset leaves the banks EMPTY — fail-closed)
             try { Feedback.init(assetBytes("feedback_copy.txt")); }
             catch (Throwable t) { }
             // strict registration: verified engines only — never a half-built registry
-            if (re != null && te != null) Engines.set(re, te);
+            if (re != null && te != null && ge != null) Engines.set(re, te, ge);
+            else if (re != null && te != null) Engines.set(re, te);
+            else if (re != null && ge != null) Engines.set(re, ge);
+            else if (te != null && ge != null) Engines.set(te, ge);
             else if (re != null) Engines.set(re);
             else if (te != null) Engines.set(te);
+            else if (ge != null) Engines.set(ge);
             else Engines.set();    // fail-closed: the registry stays empty
             if (re != null) RootEngine.attach(re); else RootEngine.detach();
             if (te != null) TashkeelEngine.attach(te); else TashkeelEngine.detach();
+            if (ge != null) GrammarNudge.attach(ge); else GrammarNudge.detach();
         }}, "engines-load").start();
     }
 
@@ -579,6 +593,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         Engine.Cand[] eng = Engines.run(new Engine.Ctx(null, null, w), 8);
         RootEngine.familyInto(s, pickSrc(eng, "root"), 3);
         TashkeelEngine.tashkeelInto(s, pickSrc(eng, "tashkeel"), 3);
+        // W58: the grammar correction rides LAST (an optional tap-to-apply
+        // suggestion — the engine explains, it never force-corrects) and NEVER
+        // in incognito (وضع التخفي: لا تحليل — the scan surface refuses too).
+        if (!incognito) GrammarNudge.nudgeInto(s, pickSrc(eng, "grammar"), 3);
         String fx = ArabicFixes.fix(w);
         if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > 3) s.remove(s.size() - 1); }
         String sc = Theme.shortcuts(this).get(w.toLowerCase());

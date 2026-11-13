@@ -296,6 +296,13 @@ public class ClipEditActivity extends Activity {
         tashChip.setOnClickListener(v -> cycleTashkeel(tashChip));
         tools.addView(tashChip);
         tools.addView(tool("تشكيل النص", v -> applyTashkeel()));
+        // W58: the grammar chip cycles the three modes (shipped CLOSED;
+        // persisted), and تدقيق النص scans the whole text and EXPLAINS each
+        // nudge — the tap applies that one (one undo step, never قهراً).
+        final TextView gramChip = tool(gramLabel(), null);
+        gramChip.setOnClickListener(v -> cycleGrammar(gramChip));
+        tools.addView(gramChip);
+        tools.addView(tool("تدقيق النص", v -> scanGrammar()));
         tools.addView(tool("تنظيم المسافات", v -> transform(ClipText.tidy(body.getText().toString()))));
         tools.addView(tool("البداية", v -> jump(0)));
         tools.addView(tool("النهاية", v -> jump(body.length())));
@@ -508,6 +515,54 @@ public class ClipEditActivity extends Activity {
         TashkeelEngine e = TashkeelEngine.attached();
         if (e == null || TashkeelEngine.mode == TashkeelEngine.MODE_OFF) return;
         transform(TashkeelEngine.apply(body.getText().toString(), e, TashkeelEngine.mode));
+    }
+
+    /** W58: the chip label for the current grammar mode (shipped CLOSED). */
+    private String gramLabel() {
+        int m = GrammarNudge.mode;
+        return m == GrammarNudge.MODE_STRICT ? "التدقيق: صارم"
+                : m == GrammarNudge.MODE_SOFT ? "التدقيق: ناعم" : "التدقيق: مغلقة";
+    }
+
+    /** W58: cycle the three grammar modes — the static mirror + the persisted pref. */
+    private void cycleGrammar(TextView chip) {
+        int m = (GrammarNudge.mode + 1) % 3;
+        GrammarNudge.mode = m;
+        Theme.prefs(this).edit().putInt("grammar_mode", m).apply();
+        chip.setText(L.t(gramLabel()));
+    }
+
+    /** W58: the whole-text educational scan (detached/OFF → a quiet toast; the
+     *  nudges EXPLAIN — التدخل تعليمي يشرح لا يصحح قهراً — and a tap applies
+     *  that ONE nudge through the W48 transform, one undo step). */
+    private void scanGrammar() {
+        GrammarNudge e = GrammarNudge.attached();
+        if (e == null || GrammarNudge.mode == GrammarNudge.MODE_OFF) {
+            Toast.makeText(this, L.t("التدقيق مغلقة — شغّله من رقاقة «التدقيق»"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String text = body.getText().toString();
+        java.util.List<GrammarNudge.Nudge> ns =
+                GrammarNudge.scan(text, e, GrammarNudge.mode, false);
+        if (ns.isEmpty()) {
+            Toast.makeText(this, L.t("لا ملاحظات — ما لقينا شي ننبّه عليه"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final String[] rows = new String[ns.size()];
+        for (int i = 0; i < ns.size(); i++) {
+            GrammarNudge.Nudge n = ns.get(i);
+            rows[i] = text.substring(n.start, n.end) + " ← " + n.fix
+                    + " — " + n.explain;
+        }
+        new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(L.t("تدقيق النص — " + ns.size() + " ملاحظة"))
+                .setItems(rows, (d, which) -> {
+                    GrammarNudge.Nudge n = ns.get(which);
+                    String out = GrammarNudge.applyOne(body.getText().toString(), n);
+                    if (!out.equals(body.getText().toString())) transform(out);
+                })
+                .setNegativeButton(L.t("النص كما هو"), null)
+                .show();
     }
 
     private void transform(String out) {

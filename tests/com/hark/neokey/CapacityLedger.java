@@ -112,7 +112,7 @@ public class CapacityLedger {
         int post = Integer.parseInt(byKey.get("dex.post_trim")[2]);
         int ceiling = Integer.parseInt(byKey.get("ceiling.raised")[2]);
         int eng = 0;
-        for (String k : new String[]{"root.engine.shipped", "tashkeel.engine.shipped", "feedback.copy.pulled"})
+        for (String k : new String[]{"root.engine.shipped", "tashkeel.engine.shipped", "feedback.copy.pulled", "grammar.engine.shipped"})
             eng += Integer.parseInt(byKey.get(k)[2]);
         check("dex.claim.current", dex <= post);
         check("dex.under.ceiling", dex <= ceiling);
@@ -121,11 +121,12 @@ public class CapacityLedger {
 
         // ---- 5. the ceiling decision is documented (no silent raise, ever) -------
         check("ceiling.decision.ledger", byKey.containsKey("ceiling.raised")
-                && "513000".equals(byKey.get("ceiling.raised")[2])
-                && byKey.get("ceiling.raised")[3].startsWith("W57 decision"));
+                && "522000".equals(byKey.get("ceiling.raised")[2])
+                && byKey.get("ceiling.raised")[3].startsWith("W58 decision"));
         String roadmap = new String(Files.readAllBytes(Paths.get("ROADMAP-V2.md")), StandardCharsets.UTF_8);
         check("ceiling.decision.roadmap", roadmap.contains("W54-CEILING-DECISION")
-                && roadmap.contains("W57-CEILING-RAISE"));
+                && roadmap.contains("W57-CEILING-RAISE")
+                && roadmap.contains("W58-CEILING-RAISE"));
 
         // ---- 6. the round-trip evidence is on disk (the trim's behavioral proof) --
         String proof;
