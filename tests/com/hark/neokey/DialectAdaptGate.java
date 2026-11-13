@@ -35,7 +35,8 @@ public class DialectAdaptGate {
     public static void main(String[] args) throws Exception {
         // ---- 1) البطارية الكاملة ------------------------------------------------
         DialectAdaptTest.run();
-        ok(true, "battery DialectAdaptTest completed");
+        ok(DialectAdaptTest.fail == 0, "battery DialectAdaptTest green ("
+                + DialectAdaptTest.pass + " checks, " + DialectAdaptTest.fail + " failed)");
 
         // ---- 2) الدقة على المجموعة المرجعية (الحد الموثق أول قياس) --------------
         Map<String, List<String>> byClass = new HashMap<>();

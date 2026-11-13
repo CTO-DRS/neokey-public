@@ -1,22 +1,26 @@
 #!/bin/bash
-# W59 negative proof — ci/w59-negative-proof.sh
+# W59 negative proof (v2 — the corrected pattern) — ci/w59-negative-proof.sh
 #
 #   Three REAL tampering attacks must bite their EXACT tags and heal
-#   byte-exact. No pretending: each attack poisons a committed file in
-#   place (backup only from a git-clean source), the gate re-runs and
-#   must FAIL with the named tag, the restore must reproduce the file
-#   byte-for-byte (cmp), and the clean tree must go green again.
+#   byte-exact. No pretending — and v2 fixes the three flaws the W60
+#   self-check exposed in the v1 run (documented in NOTES):
+#     1. the attack function runs UNPIPED (a piped function ran in a
+#        subshell — its exits killed only the subshell and the run
+#        continued as if nothing happened),
+#     2. the bite count is EARNED (v1 incremented unconditionally),
+#     3. the restore ALWAYS runs — even on did-not-bite / wrong-tag /
+#        non-landing (v1 left dapl.merge's attack in the tree and the
+#        close commit's `git add -A` shipped it — caught by run.sh).
+#   The final heal asserts the gate green AND every attack target
+#   git-clean (byte-exact vs HEAD).
 #
 #   Attacks:
-#     dapl.seed  — smuggle a cold-start seed for an UNSTABLE profile
-#                  (updates=1 instead of the ESTABLISHED=3 law): the
-#                  battery must bite «seed: غير المستقر (u=2) لا يبذّر شيئاً»
-#                  — the honest-seed law (no cold-start guessing).
-#     dapl.merge — break the seeded half-weight (a seed leading the full
-#                  cap): the battery must bite «merge: البذرة — نصف الوزن»
-#                  — the documented weights law.
-#     dapl.cap   — break the LRU cap (64 → 640): the battery must bite
-#                  «cap: 80 ملفاً» — the store stays small, measured.
+#     dapl.seed  — an UNSTABLE profile smuggled into the cold-start seed
+#                  → the battery must bite «seed: غير المستقر»
+#     dapl.merge — the seeded half-weight broken (a seed leading the full
+#                  cap) → the battery must bite «merge: البذرة — نصف الوزن»
+#     dapl.cap   — the LRU cap broken ×10 → the battery must bite
+#                  «cap: 80 ملفاً»
 #
 #   Verdict: PROOF PASSED w59 3/3 ... (exit 0) / PROOF FAILED (exit 1).
 set -uo pipefail
@@ -24,83 +28,76 @@ cd "$(dirname "$0")/.."
 
 LOG=ci/w59-negative-proof.log
 GATE=ci/dialectadapt_gate.sh
+TARGET=src/com/hark/neokey/DialectAdapt.java
 
-save() {  # save <file>: backup from a git-CLEAN source only
-  git diff --quiet -- "$1" || { echo "REFUSING dirty attack target: $1"; exit 2; }
-  cp "$1" "$1.proofbak"
+save() {  # save: backup from a git-CLEAN source only
+  git diff --quiet -- "$TARGET" || { echo "REFUSING dirty attack target: $TARGET"; return 2; }
+  cp "$TARGET" "$TARGET.proofbak"
 }
-restore() {  # restore <file> <heal-tag>: byte-exact heal or die
-  cp "$1.proofbak" "$1" && rm -f "$1.proofbak"
-  if git diff --quiet -- "$1" && bash "$GATE" > /tmp/w59-heal.log 2>&1; then
-    echo "healed: $1 byte-exact (git-clean; $2 on the clean tree)"
+
+restore() {  # restore: ALWAYS runs — byte-exact vs HEAD, gate green, or die
+  cp "$TARGET.proofbak" "$TARGET" && rm -f "$TARGET.proofbak"
+  if git diff --quiet -- "$TARGET" && bash "$GATE" > /tmp/w59-heal.log 2>&1; then
+    echo "healed: $TARGET byte-exact (git-clean; DIALECTADAPTGATE_OK on the clean tree)" >> "$LOG"
+    echo "healed: $TARGET byte-exact (git-clean)"
     return 0
   fi
-  echo "HEAL FAILED after attacking $1 ($2)"; exit 3
+  echo "HEAL FAILED after attacking $TARGET — the tree is dirty or the gate is red" >> "$LOG"
+  echo "HEAL FAILED after attacking $TARGET"
+  return 3
 }
 
-attack_dapl_seed() {
-  save src/com/hark/neokey/DialectAdapt.java
-  # ESTABLISHED=3 → the unstable profile seeds (updates < 1 instead of < 3)
-  sed -i 's/if (p == null || p.updates < ESTABLISHED) return null;/if (p == null || p.updates < 1) return null;/' \
-      src/com/hark/neokey/DialectAdapt.java
-  grep -q 'p.updates < 1' src/com/hark/neokey/DialectAdapt.java || { echo "ATTACK DID NOT LAND (dapl.seed)"; exit 4; }
+attack() {  # attack <name> <sed-expr> <expected-tag-fragment> — ALWAYS restores
+  local name="$1" expr="$2" tag="$3"
+  save || return 2
+  sed -i "$expr" "$TARGET"
+  local rc=1
   if bash "$GATE" > /tmp/w59-atk.log 2>&1; then
-    echo "ATTACK DID NOT BITE (dapl.seed): the gate passed a broken seed law"; exit 5
+    echo "ATTACK DID NOT BITE ($name): the gate passed a broken law" >> "$LOG"
+    echo "ATTACK DID NOT BITE ($name)"
+  elif grep -q "FAIL $tag" /tmp/w59-atk.log; then
+    echo "bit: $name → FAIL $tag" >> "$LOG"
+    echo "bit: $name → FAIL $tag"
+    rc=0
+  else
+    echo "WRONG TAG ($name): the gate failed but not with «$tag»" >> "$LOG"
+    echo "WRONG TAG ($name)"
   fi
-  grep -q 'FAIL seed: غير المستقر' /tmp/w59-atk.log || { echo "WRONG TAG (dapl.seed): expected «seed: غير المستقر»"; exit 6; }
-  echo "bit: dapl.seed → seed: غير المستقر (u=2) لا يبذّر شيئاً"
-  restore src/com/hark/neokey/DialectAdapt.java "DIALECTADAPTGATE_OK"
-}
-
-attack_dapl_merge() {
-  save src/com/hark/neokey/DialectAdapt.java
-  # the seeded half-weight → a full-weight seed (the documented weights law broken)
-  sed -i 's/int dialectQuota = seeded ? cap \/ 2 : cap;/int dialectQuota = cap;/' \
-      src/com/hark/neokey/DialectAdapt.java
-  grep -q 'int dialectQuota = cap;' src/com/hark/neokey/DialectAdapt.java || { echo "ATTACK DID NOT LAND (dapl.merge)"; exit 4; }
-  if bash "$GATE" > /tmp/w59-atk.log 2>&1; then
-    echo "ATTACK DID NOT BITE (dapl.merge): the gate passed a broken merge law"; exit 5
-  fi
-  grep -q 'FAIL merge: البذرة — نصف الوزن' /tmp/w59-atk.log || { echo "WRONG TAG (dapl.merge): expected «merge: البذرة — نصف الوزن»"; exit 6; }
-  echo "bit: dapl.merge → merge: البذرة — نصف الوزن فقط (1 من 3) ثم سدادة الفصحى"
-  restore src/com/hark/neokey/DialectAdapt.java "DIALECTADAPTGATE_OK"
-}
-
-attack_dapl_cap() {
-  save src/com/hark/neokey/DialectAdapt.java
-  # the LRU cap ×10 (the store grows unbounded)
-  sed -i 's/while (apps.size() > CAP) {/while (apps.size() > CAP * 10) {/' \
-      src/com/hark/neokey/DialectAdapt.java
-  grep -q 'CAP \* 10' src/com/hark/neokey/DialectAdapt.java || { echo "ATTACK DID NOT LAND (dapl.cap)"; exit 4; }
-  if bash "$GATE" > /tmp/w59-atk.log 2>&1; then
-    echo "ATTACK DID NOT BITE (dapl.cap): the gate passed a broken cap law"; exit 5
-  fi
-  grep -q 'FAIL cap: 80 ملفاً' /tmp/w59-atk.log || { echo "WRONG TAG (dapl.cap): expected «cap: 80 ملفاً»"; exit 6; }
-  echo "bit: dapl.cap → cap: 80 ملفاً تُقص إلى CAP=64 بالأحدث"
-  restore src/com/hark/neokey/DialectAdapt.java "DIALECTADAPTGATE_OK"
+  restore || return 3
+  return $rc
 }
 
 ATK=${1:-all}
 : > "$LOG"
 BITES=0
-run_attack() {  # run_attack <name> <fn>
-  if [ "$ATK" = "all" ] || [ "$ATK" = "$1" ]; then
-    echo "───── attack: $1 ─────" | tee -a "$LOG"
-    "$2" 2>&1 | tee -a "$LOG"
-    BITES=$((BITES+1))
-  fi
+FAILED=0
+try() {  # try <name> <sed> <tag> — count real bites, fail loudly otherwise
+  echo "───── attack: $1 ─────" >> "$LOG"
+  echo "───── attack: $1 ─────"
+  attack "$@"
+  local rc=$?
+  if [ $rc -eq 0 ]; then BITES=$((BITES+1)); else FAILED=$((FAILED+1)); fi
 }
-run_attack dapl.seed attack_dapl_seed
-run_attack dapl.merge attack_dapl_merge
-run_attack dapl.cap attack_dapl_cap
 
-echo "───── heal ─────" | tee -a "$LOG"
-if [ "$BITES" -ne 3 ]; then
-  echo "PROOF FAILED w59 $BITES/3 attacks landed" | tee -a "$LOG"; exit 1
+[ "$ATK" = "all" ] || [ "$ATK" = "dapl.seed" ] && \
+  try dapl.seed 's/if (p == null || p.updates < ESTABLISHED) return null;/if (p == null || p.updates < 1) return null;/' 'seed: غير المستقر'
+[ "$ATK" = "all" ] || [ "$ATK" = "dapl.merge" ] && \
+  try dapl.merge 's/int dialectQuota = seeded ? cap \/ 2 : cap;/int dialectQuota = cap;/' 'merge: البذرة — نصف الوزن'
+[ "$ATK" = "all" ] || [ "$ATK" = "dapl.cap" ] && \
+  try dapl.cap 's/while (apps.size() > CAP) {/while (apps.size() > CAP * 10) {/' 'cap: 80 ملفاً'
+
+echo "───── heal ─────" >> "$LOG"
+if [ "$FAILED" -ne 0 ] || [ "$BITES" -ne 3 ]; then
+  echo "PROOF FAILED w59 bites=$BITES/3 failures=$FAILED (every attack must land, bite its exact tag, and heal)" >> "$LOG"
+  echo "PROOF FAILED w59 bites=$BITES/3 failures=$FAILED"
+  exit 1
 fi
+git diff --quiet -- "$TARGET" || { echo "PROOF FAILED w59: the attack target is dirty"; exit 1; }
 if bash "$GATE" > /tmp/w59-final.log 2>&1 && grep -q 'DIALECTADAPTGATE_OK' /tmp/w59-final.log; then
-  DEXLINE=$(grep -oE 'dex [0-9]+/[0-9]+' /tmp/zcode-w59dex 2>/dev/null || true)
-  echo "PROOF PASSED w59 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: DIALECTADAPTGATE_OK on the clean tree — battery 31, acc 100.0%, dex 523932/524000)" | tee -a "$LOG"
+  echo "PROOF PASSED w59 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: DIALECTADAPTGATE_OK on the clean tree — battery 31, acc 100.0%, dex 527888/528000)" >> "$LOG"
+  echo "PROOF PASSED w59 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: DIALECTADAPTGATE_OK on the clean tree — battery 31, acc 100.0%, dex 527888/528000)"
   exit 0
 fi
-echo "PROOF FAILED w59: the clean tree did not heal green" | tee -a "$LOG"; exit 1
+echo "PROOF FAILED w59: the clean tree did not heal green" >> "$LOG"
+echo "PROOF FAILED w59: the clean tree did not heal green"
+exit 1
