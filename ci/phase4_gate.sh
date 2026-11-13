@@ -100,7 +100,13 @@ TR_UIEN=$(field "$TR" ui_en_coupled)
 # knowledge rides assets/grammar_rules.txt — nothing to trim inside the dex),
 # the trim pool is measured and the floor follows the measurement (the W48
 # re-pin pattern; regrown=0 stays the behavioral law).
-[ "${TR_SAVED:-0}" -ge 480 ]  || fail "trim saved ${TR_SAVED:-0} < 480 (the lever shrank)"
+# W59 re-pin (documented weekly baseline): 480 -> 68 — the dialect-adapt
+# engine (ROADMAP-V2 W59, +2412 measured) also adds ZERO trimmable content
+# (the profile store is filesDir runtime state — no assets, nothing to trim),
+# and the pool's measured weekly saving after the W58 realization is 68 —
+# the floor follows the fresh measurement again (the same W48 re-pin law;
+# regrown=0 stays the behavioral law).
+[ "${TR_SAVED:-0}" -ge 68 ]  || fail "trim saved ${TR_SAVED:-0} < 68 (the lever shrank)"
 [ "${TR_CEIL:-0}"  = "$DEX_CEILING" ] || fail "trim ceiling ${TR_CEIL:-0} != $DEX_CEILING"
 [ "${TR_DEX:-999999}" -le "$DEX_CEILING" ] || fail "trim dex $TR_DEX > ceiling $DEX_CEILING"
 
