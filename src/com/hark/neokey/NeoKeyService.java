@@ -1061,10 +1061,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             }
             final int max = Theme.prefs(this).getInt("clip_max", 50);
             final long days = Theme.prefs(this).getInt("clip_days", 0);
+            final long[] outId = new long[1];
             clipStore.run(new ClipStore.Job<Integer>() {
                 @Override public Integer run(ClipRepo r) {
                     long now = System.currentTimeMillis();
-                    int res = r.add(s, now, null);
+                    int res = r.add(s, now, outId);
                     r.prune(max, days * 86400000L, now);
                     return res;
                 }
@@ -1072,11 +1073,85 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 @Override public void done(Integer res) {
                     if (res == null || res == ClipRepo.VERIFY_FAIL || res == ClipRepo.ERROR)
                         Toast.makeText(NeoKeyService.this, L.t("تعذّر حفظ النص في الحافظة"), Toast.LENGTH_SHORT).show();
+                    else if (res == ClipRepo.OK)
+                        scheduleOtpWipe(outId[0], s);
                     reloadClips();
                 }
             });
         } catch (Exception ignored) {
             // clipboard can be restricted while the keyboard is not focused
+        }
+    }
+
+    /**
+     * W65 (OTPShield): درع الرموز — «كشف رمز التحقق الواصل للحافظة + عداد
+     * انتهاء + مسح تلقائي موثق من الحافظة والسجل بعد مهلة يضبطها المستخدم».
+     * الشروط الصارمة: الإعداد يعمل، وليس في التخفي (قانون isOtpAllowed —
+     * والالتقاط نفسه يعود مبكراً في التخفي قبل التخزين بنيوياً)، والنص يطابق
+     * الغلاف الموثق. عند الحين: حذف صف السجل بالمعرّف + إفراغ حافظة النظام
+     * إن ما زالت تحمل النص نفسه + سطر تدقيق محلي بلا محتوى الرمز أبداً.
+     * (الرموز المعلَّمة حساسة من التطبيقات لا تُخزَّن أصلاً — أقوى من المسح.)
+     */
+    private void scheduleOtpWipe(final long rowId, final String text) {
+        try {
+            if (rowId <= 0 || !OTPShield.isOtp(text)) return;
+            android.content.SharedPreferences p = Theme.prefs(this);
+            boolean on = p.getBoolean("otp_shield", true);
+            if (!OTPShield.isOtpAllowed(incognito, on)) return;
+            final int timeout = OTPShield.clampTimeout(p.getInt("otp_timeout", OTPShield.DEFAULT_TIMEOUT));
+            final long delay = OTPShield.expiryAt(0L, timeout);
+            main.postDelayed(new Runnable() {
+                @Override public void run() {
+                    clipStore.run(new ClipStore.Job<Integer>() {
+                        @Override public Integer run(ClipRepo r) {
+                            r.delete(rowId);
+                            return 0;
+                        }
+                    }, new ClipStore.Done<Integer>() {
+                        @Override public void done(Integer res) {
+                            clearClipboardIfSame(text);
+                            otpAudit("AUTO_WIPE", timeout);
+                            reloadClips();
+                        }
+                    });
+                }
+            }, delay);
+            otpAudit("ARMED", timeout);
+        } catch (Exception ignored) {
+            // جدولة الدرع لا تكسر الالتقاط أبداً
+        }
+    }
+
+    /** W65: إفراغ حافظة النظام فقط إن ما زالت تحمل النص ذاته (لا يُمسّ غيره). */
+    private void clearClipboardIfSame(String text) {
+        try {
+            if (cm == null || !cm.hasPrimaryClip()) return;
+            ClipData d = cm.getPrimaryClip();
+            if (d == null || d.getItemCount() == 0) return;
+            CharSequence cur = d.getItemAt(0).coerceToText(this);
+            if (cur != null && text != null && text.contentEquals(cur)) {
+                cm.setPrimaryClip(ClipData.newPlainText("", ""));
+            }
+        } catch (Exception ignored) {
+            // بعض الأجهزة تقيد الكتابة على الحافظة — السجل حُذف وهو الجوهر
+        }
+    }
+
+    /** W65: سطر التدقيق المحلي (20 سطراً كأحدث حد — أرقام وأوسام فقط). */
+    private void otpAudit(String action, int timeout) {
+        try {
+            android.content.SharedPreferences p = Theme.prefs(this);
+            String line = OTPShield.auditLine(action, timeout, System.currentTimeMillis());
+            String all = p.getString("otp_audit", "");
+            all = all.isEmpty() ? line : line + "\n" + all;
+            String[] parts = all.split("\n");
+            if (parts.length > 20) {
+                StringBuilder b = new StringBuilder();
+                for (int i = 0; i < 20; i++) b.append(parts[i]).append(i < 19 ? "\n" : "");
+                all = b.toString();
+            }
+            p.edit().putString("otp_audit", all).apply();
+        } catch (Exception ignored) {
         }
     }
 

@@ -1,0 +1,11 @@
+───── attack: otp.detect ─────
+bit: otp.detect → FAIL reference: الدقة 100%
+healed: src/com/hark/neokey/OTPShield.java byte-exact (git-clean; OTPGATE_OK on the clean tree)
+───── attack: otp.expiry ─────
+bit: otp.expiry → FAIL expiry: الحساب الحتمي بالبايت
+healed: src/com/hark/neokey/OTPShield.java byte-exact (git-clean; OTPGATE_OK on the clean tree)
+───── attack: otp.incog ─────
+bit: otp.incog → FAIL incog: التخفي يمنع الدرع كلياً
+healed: src/com/hark/neokey/OTPShield.java byte-exact (git-clean; OTPGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w65 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: OTPGATE_OK on the clean tree — battery 26, reference 26/26)

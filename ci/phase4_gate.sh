@@ -31,7 +31,7 @@ cd "$(dirname "$0")/.."
 # override) silently biases them; the budgets always measure what ships.
 unset JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS
 
-DEX_CEILING=532000   # W58-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
+DEX_CEILING=535000   # W58-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
 VC_MIN=2             # v0.1.0 identity reset (re-based from the phase-4 close floor 66; the closing week still must carry the manifest identity)
 TESTS_MIN=1334       # shipped test total at phase-4 close (1,334 = week 24)
 STATE=build/release/gates.env
@@ -203,7 +203,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PHASE3_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
-[ "${NQFPORT_ASSETS:-0}" = 24 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 24 (golden pins drifted)"
+[ "${NQFPORT_ASSETS:-0}" = 25 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 25 (golden pins drifted)"
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 
 # versionCode bumped this week

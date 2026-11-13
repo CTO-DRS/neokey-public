@@ -99,6 +99,10 @@
       "bytes": 2234,
       "sha256": "d3e66d0d0f1771d389b31781e40b37bbaa51d65297cd03f7df3e4e3adc5cbe9c"
     },
+    "testset_otp.txt": {
+      "bytes": 1726,
+      "sha256": "d5a86915b91ffca2ed8b5de665ebb4630760916d24ca0bfd53fb0117d6fc8dad"
+    },
     "testset_switch.txt": {
       "bytes": 7103,
       "sha256": "c2a5fe6ab1dadef1c831c0a9d50984a7add7393c773f8356552c6cf344fd14e7",

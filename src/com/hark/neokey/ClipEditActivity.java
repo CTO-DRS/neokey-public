@@ -306,6 +306,7 @@ public class ClipEditActivity extends Activity {
         // W60: مسح كامل من زر واحد — طبقة التكرار الشخصية تعود لحالة المصنع
         // بايتياً (الملف يحذف والخدمة تمحو نسختها عند بدء الحقل القادم).
         tools.addView(tool("مسح التنبؤ الشخصي", v -> wipePersonal()));
+        tools.addView(tool(otpShieldLabel(), v -> cycleOtpTimeout()));
         tools.addView(tool("تنظيم المسافات", v -> transform(ClipText.tidy(body.getText().toString()))));
         tools.addView(tool("البداية", v -> jump(0)));
         tools.addView(tool("النهاية", v -> jump(body.length())));
@@ -325,6 +326,24 @@ public class ClipEditActivity extends Activity {
         sealView.setTextSize(12);
         sealView.setPadding(0, (int) (10 * dp), 0, (int) (10 * dp));
         root.addView(sealView);
+    }
+
+    /** W65: درع الرموز — الصف الدائم يعرض الحالة والمهلة المضبوطة. */
+    private String otpShieldLabel() {
+        android.content.SharedPreferences gp = Theme.prefs(this);
+        boolean on = gp.getBoolean("otp_shield", true);
+        int to = OTPShield.clampTimeout(gp.getInt("otp_timeout", OTPShield.DEFAULT_TIMEOUT));
+        return on ? "درع الرموز: نشط — مهلة " + to + " ث"
+                  : "درع الرموز: متوقف";
+    }
+
+    /** W65: دورة المهلة المضبوطة من المستخدم (60→120→300→600→30→60). */
+    private void cycleOtpTimeout() {
+        android.content.SharedPreferences gp = Theme.prefs(this);
+        int cur = OTPShield.clampTimeout(gp.getInt("otp_timeout", OTPShield.DEFAULT_TIMEOUT));
+        int next = cur >= 600 ? 30 : cur == 300 ? 600 : cur == 120 ? 300 : cur == 60 ? 120 : 60;
+        gp.edit().putInt("otp_timeout", next).apply();
+        Toast.makeText(this, L.t("مهلة مسح الرموز: " + next + " ثانية"), Toast.LENGTH_SHORT).show();
     }
 
     /** W64: الختم الحي — الحالة من prefs NetGate والأحداث من الملف المحلي. */
