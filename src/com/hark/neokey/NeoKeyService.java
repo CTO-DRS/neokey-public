@@ -69,6 +69,13 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private String currentApp = "";
     private boolean dialectSeeded;
     private DialectAdapt dialectAdapt;
+    // W60 (AdaptEngine): طبقة التكرار الشخصية — المثيل الوحيد المسجّل في
+    // Engines (العقد الواحد)، المتجر نص محلي في filesDir لا يغادر الجهاز.
+    private volatile AdaptEngine adaptEngine;
+    /** W60: نص حوار مصدر الاقتراح — ثابت ساكن (نطاق TrimGate يعفي الساكن:
+     *  الحرف الطويل ≥60B في جسم دالة يعود للقصّ — القانون نفسه). */
+    private static final String W60_SOURCE_MSG =
+            "المصدر: طبقة التكرار الشخصية — تعلّم الكيبورد هذه الكلمة من كتابتك، محلياً في جهازك فقط، وتُمسح من زر واحد (مسح التنبؤ الشخصي) في أداة الحافظة.";
     private volatile Predictor predictor;   // A2 neural next-word model (async load, fail-open)
     private boolean suggest = true, dblSpace = true, sensitive, selecting, pickedSuggestion;
     /** W56: the long-press family tree owns the strip until the next tap or key
@@ -166,19 +173,37 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             // only, the survivors still register in contract order.
             try { ge = GrammarNudge.load(assetBytes("grammar_rules.txt")); }
             catch (Throwable t) { ge = null; }
+            // W60: the personal repetition layer — no asset to corrupt (its
+            // store is filesDir runtime state; parse skips bad lines and never
+            // throws), so it registers ALWAYS in contract order (4th); an
+            // absent store = factory-empty (the engine answers empty until
+            // the user types).
+            AdaptEngine ae = new AdaptEngine();
+            try {
+                java.io.FileInputStream ain = new java.io.FileInputStream(new File(getFilesDir(), "adapt_store.txt"));
+                try {
+                    java.io.ByteArrayOutputStream abo = new java.io.ByteArrayOutputStream();
+                    byte[] abuf = new byte[4096];
+                    int an;
+                    while ((an = ain.read(abuf)) > 0) abo.write(abuf, 0, an);
+                    ae = AdaptEngine.parse(new String(abo.toByteArray(), java.nio.charset.StandardCharsets.UTF_8));
+                } finally { ain.close(); }
+            } catch (Throwable t) { /* no store yet = factory-empty — still registered */ }
+            adaptEngine = ae;
             // W57 batch-2: the feedback wording rides the same thread (the
             // strict init; a corrupt asset leaves the banks EMPTY — fail-closed)
             try { Feedback.init(assetBytes("feedback_copy.txt")); }
             catch (Throwable t) { }
-            // strict registration: verified engines only — never a half-built registry
-            if (re != null && te != null && ge != null) Engines.set(re, te, ge);
-            else if (re != null && te != null) Engines.set(re, te);
-            else if (re != null && ge != null) Engines.set(re, ge);
-            else if (te != null && ge != null) Engines.set(te, ge);
-            else if (re != null) Engines.set(re);
-            else if (te != null) Engines.set(te);
-            else if (ge != null) Engines.set(ge);
-            else Engines.set();    // fail-closed: the registry stays empty
+            // strict registration: verified engines only — never a half-built
+            // registry. W60: the branch ladder is the append form of the SAME
+            // law — contract order preserved, every non-null subset registers
+            // exactly as the branch form did, an empty registry stays empty.
+            java.util.List<Engine> reg = new ArrayList<>();
+            if (re != null) reg.add(re);
+            if (te != null) reg.add(te);
+            if (ge != null) reg.add(ge);
+            if (ae != null) reg.add(ae);
+            Engines.set(reg.toArray(new Engine[0]));
             if (re != null) RootEngine.attach(re); else RootEngine.detach();
             if (te != null) TashkeelEngine.attach(te); else TashkeelEngine.detach();
             if (ge != null) GrammarNudge.attach(ge); else GrammarNudge.detach();
@@ -285,6 +310,14 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         view.setIncognito(incognito);
         // W59: التطبيق الحالي هو مفتاح الملف لكل تطبيق (فارغ إن لم يعلنه النظام).
         currentApp = info == null || info.packageName == null ? "" : info.packageName;
+        // W60: يوم الطبقة الشخصية (حتمي — بلا ساعة داخل المحرك) + زر المسح
+        // الواحد من ClipEdit يمحو النسخة الحية عند بدء الحقل القادم.
+        if (adaptEngine != null)
+            adaptEngine.setToday((int) (System.currentTimeMillis() / 86400000L));
+        if (sp.getBoolean("adapt_reset", false)) {
+            sp.edit().remove("adapt_reset").apply();
+            if (adaptEngine != null) adaptEngine.wipe();
+        }
         if (sp.getBoolean("reset_learn", false)) {
             dictAr.clearUser();
             dictEn.clearUser();
@@ -334,6 +367,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         dictAr.save();
         dictEn.save();
         saveDialectProfiles();
+        saveAdaptStore();
     }
 
     @Override
@@ -540,6 +574,21 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         }
     }
 
+    /** W60: حفظ المتجر الشخصي عند الخروج من الحقل — الفارغ يحذف الملف (حالة مصنع). */
+    private void saveAdaptStore() {
+        if (adaptEngine == null) return;
+        String s = adaptEngine.serialize();
+        File f = new File(getFilesDir(), "adapt_store.txt");
+        if (s.isEmpty()) { f.delete(); return; }
+        try {
+            java.io.FileOutputStream out = new java.io.FileOutputStream(f);
+            try { out.write(s.getBytes(java.nio.charset.StandardCharsets.UTF_8)); }
+            finally { out.close(); }
+        } catch (Exception ignored) {
+            // التخزين قد يفشل مؤقتاً — الكتابة تُعاد في الخروج القادم
+        }
+    }
+
     /**
      * ترشيحات مدمجة: كلمات اللهجة النشطة أولاً ثم سدادة الفصحى (حد cap، بلا تكرار).
      * W59: الأوزان بحسب الكشف عبر mergeLines — الكشف الحي يتصدر حتى cap،
@@ -655,6 +704,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // suggestion — the engine explains, it never force-corrects) and NEVER
         // in incognito (وضع التخفي: لا تحليل — the scan surface refuses too).
         if (!incognito) GrammarNudge.nudgeInto(s, pickSrc(eng, "grammar"), 3);
+        // W60: the personal repetition layer rides LAST (append-only — it
+        // never displaces the dict lead or the root family tail; every chip
+        // carries the ★ badge — the user SEES why the keyboard suggested it)
+        // and NEVER in incognito (وقف تام — the law).
+        if (!incognito) AdaptEngine.personalInto(s, pickSrc(eng, "personal"), 3);
         String fx = ArabicFixes.fix(w);
         if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > 3) s.remove(s.size() - 1); }
         String sc = Theme.shortcuts(this).get(w.toLowerCase());
@@ -712,6 +766,19 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 }
             }
         }
+        // W60: the personal seat — the ONE personal candidate (the highest
+        // effective score, temporal decay applied) fills BEFORE the neural
+        // fill: the documented weighting is dict → personal → neural (the
+        // repetition layer beats the model for the user's own words, never
+        // the dictionary). Via the ONE contract dispatch (Engines.run) —
+        // no scattered engine calls — and never in incognito (وقف تام).
+        if (!incognito) {
+            Engine.Cand[] pe = Engines.run(new Engine.Ctx(null, prev, ""), 8);
+            for (Engine.Cand c : pickSrc(pe, "personal")) {
+                if (out.size() >= 3) break;
+                if (!out.contains(c.text)) { out.add(c.text); break; }   // المقعد الواحد
+            }
+        }
         // A2: neural top-3 completes the strip — it never displaces the
         // dictionary path, it only fills what the bigram table left empty
         // (the model's measured top-3 is the NNETGATE2 section of the gate).
@@ -756,6 +823,13 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         lastWord = w;
         words++;
         recordDialectDecision();
+        // W60: طبقة التكرار الشخصية — التعلم خلف حارسي التخفي وlearnOn
+        // (return أعلاه) وقرار كل كلمة مكتملة لا كل ضغطة.
+        if (adaptEngine != null) {
+            int day = (int) (System.currentTimeMillis() / 86400000L);
+            adaptEngine.setToday(day);
+            adaptEngine.learn(w, day);
+        }
     }
 
     /**
@@ -822,6 +896,9 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             }
             return;
         }
+        // W60: the ★ badge is stripped before any dispatch — the tap commits
+        // the bare word (which finishWord then re-learns: the reinforcement).
+        if (word.startsWith(AdaptEngine.MARK)) word = word.substring(AdaptEngine.MARK.length());
         if (!Character.isLetter(word.charAt(0))) {
             // emoji suggestion: keep the word, add the emoji
             finishWord(currentWord());
@@ -863,6 +940,17 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
      */
     @Override
     public void onSuggestionLong(String word) {
+        // W60: the ★ chip's long-press is the source dialog (شفافية المصدر —
+        // the user sees WHY, and where the one-tap wipe lives) — the family
+        // tree / reading picker never run for a personal chip.
+        if (word != null && word.startsWith(AdaptEngine.MARK)) {
+            new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                    .setTitle(L.t("لماذا هذا الاقتراح؟"))
+                    .setMessage(L.t(W60_SOURCE_MSG))
+                    .setPositiveButton(L.t("حسنا"), null)
+                    .create().show();
+            return;
+        }
         RootEngine e = RootEngine.attached();
         if (e != null && word != null && !word.isEmpty()) {
             String root = e.rootValue(word);

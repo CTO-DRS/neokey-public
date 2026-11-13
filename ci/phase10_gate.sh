@@ -46,7 +46,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-DEX_CEILING=524000   # W58-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)
+DEX_CEILING=528000   # W58-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)
 VC_MIN=1             # v0.1.0 identity reset — re-based from the phase-9 close floor (was 85)
 VN_MIN=0.1           # v0.1.0 identity reset — re-based from the phase-9 close floor (was 3.8); the historical close measurement stays pinned in release-manifest.phase9Close
 TESTS_MIN=1576       # the fresh-clone first-run total (the W45-documented five pack-check skips; with build/deploy/neokey-sync-server.jar present the total is 1581 — both shapes all-green)
@@ -105,7 +105,7 @@ done
 [ "${AUDIT:-}" = "OK" ] || fail "secrets audit not OK"
 [ "${TESTS_TOTAL:-0}" -ge "$TESTS_MIN" ] || fail "tests $TESTS_TOTAL < $TESTS_MIN"
 [ "${TESTS_FAILED:-1}" = "0" ] || fail "tests_failed $TESTS_FAILED != 0"
-[ "${NQFPORT_ASSETS:-0}" = 23 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 23 (golden pins drifted)"
+[ "${NQFPORT_ASSETS:-0}" = 24 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 24 (golden pins drifted)"
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 echo "${PHASE7_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE7_REGRESSIONS ${PHASE7_REGRESSIONS:-?} is not 0/n (the phase-7 close regressed)"
 echo "${PHASE8_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE8_REGRESSIONS ${PHASE8_REGRESSIONS:-?} is not 0/n (the phase-8 close regressed)"

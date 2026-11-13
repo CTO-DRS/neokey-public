@@ -1,9 +1,11 @@
 ───── attack: dapl.seed ─────
-bit: dapl.seed → seed: غير المستقر (u=2) لا يبذّر شيئاً
+bit: dapl.seed → FAIL seed: غير المستقر
 healed: src/com/hark/neokey/DialectAdapt.java byte-exact (git-clean; DIALECTADAPTGATE_OK on the clean tree)
 ───── attack: dapl.merge ─────
-ATTACK DID NOT BITE (dapl.merge): the gate passed a broken merge law
+bit: dapl.merge → FAIL merge: البذرة — نصف الوزن
+healed: src/com/hark/neokey/DialectAdapt.java byte-exact (git-clean; DIALECTADAPTGATE_OK on the clean tree)
 ───── attack: dapl.cap ─────
-REFUSING dirty attack target: src/com/hark/neokey/DialectAdapt.java
+bit: dapl.cap → FAIL cap: 80 ملفاً
+healed: src/com/hark/neokey/DialectAdapt.java byte-exact (git-clean; DIALECTADAPTGATE_OK on the clean tree)
 ───── heal ─────
-PROOF PASSED w59 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: DIALECTADAPTGATE_OK on the clean tree — battery 31, acc 100.0%, dex 523932/524000)
+PROOF PASSED w59 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: DIALECTADAPTGATE_OK on the clean tree — battery 31, acc 100.0%, dex 527888/528000)

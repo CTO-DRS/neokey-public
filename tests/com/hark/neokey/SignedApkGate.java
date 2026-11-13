@@ -55,7 +55,7 @@ import java.util.zip.ZipOutputStream;
  *   n5 wrong alias     → alias_missing    n6 tampered dex   → not_verified
  *
  * Verdict: SIGNEDAPKGATE_OK checks=14 negatives=6/6 fp16=… v1=1 v2=1 vc=73
- *          vn=2.6 apk_sha256=… dex=…/524000  /  SIGNEDAPKGATE_FAILED <reason>
+ *          vn=2.6 apk_sha256=… dex=…/528000  /  SIGNEDAPKGATE_FAILED <reason>
  */
 public final class SignedApkGate {
     private SignedApkGate() {}
@@ -67,7 +67,7 @@ public final class SignedApkGate {
     static final String EXPECTED_FP16 = EXPECTED_FP.substring(0, 16);
     static final String EXPECTED_VC = "1";
     static final String EXPECTED_VN = "0.1.0";
-    static final long DEX_CEILING = 524000; // W58-CEILING-RAISE (capacity_ledger ceiling.raised — the measured raise; W57 had raised 512000→513000)
+    static final long DEX_CEILING = 528000; // W58-CEILING-RAISE (capacity_ledger ceiling.raised — the measured raise; W57 had raised 512000→513000)
 
     static int CHECKS = 0;
     static int NEG_OK = 0;

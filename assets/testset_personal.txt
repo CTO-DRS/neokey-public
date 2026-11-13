@@ -1,0 +1,48 @@
+# W60 personal testset — the measured improvement, not the claim.
+#
+# Format (TAB-separated):
+#   learn	<word>	<day>	<times>   — replay the typing session: the word is
+#                                        learned <times> times on <day> (epochDay).
+#   query	<word>	<day>	<path>    — measure the re-typing: the word's rank in
+#                                        the personal seat at <day> via <path>
+#                                        (compose = prefix match on the first two
+#                                        letters, predict = the single personal seat
+#                                        after a prev-word). rank 1..3 = hit, 4 = miss.
+#
+# The honesty anchors (enforced by ci/personal_gate.sh):
+#   • every queried token is verified ABSENT from assets/ar.txt (the base
+#     dictionary) — the baseline (no personal layer) cannot surface it from
+#     the dictionary path, so the measured improvement is real, not assumed.
+#   • the final query is a DECAYED token (learned once, 59 days stale —
+#     score 1·0.5^(59/14) < MIN_SCORE): the honest miss — the half-life law
+#     measured, not just the hits.
+
+learn	نبيل_العمري	1	6
+learn	مكتب_العمل_شعبة	1	4
+learn	الجلسة_الأسبوعية	2	3
+learn	دورية_الفجر	2	5
+learn	حساب_الادارة	3	3
+learn	فريق_التصميم	3	2
+learn	تقرير_الشهر	4	3
+learn	اجتماع_النجدين	5	2
+learn	العمري_ابو_فهد	6	2
+learn	رابط_الاجتماع	6	2
+learn	منطقة_الرياض_شمال	7	2
+learn	رقم_التجربة	7	1
+learn	تقرير_الأسبوع	4	2
+learn	تقرير_الأسبوع	4	2
+
+query	نبيل_العمري	8	compose
+query	مكتب_العمل_شعبة	8	compose
+query	الجلسة_الأسبوعية	8	compose
+query	دورية_الفجر	8	compose
+query	حساب_الادارة	8	compose
+query	فريق_التصميم	8	compose
+query	تقرير_الشهر	8	compose
+query	اجتماع_النجدين	8	compose
+query	نبيل_العمري	9	predict
+query	العمري_ابو_فهد	9	compose
+query	رابط_الاجتماع	9	compose
+query	منطقة_الرياض_شمال	9	compose
+query	تقرير_الشهر	9	compose
+query	رقم_التجربة	66	predict

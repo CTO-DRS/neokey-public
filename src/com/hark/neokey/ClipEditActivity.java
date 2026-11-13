@@ -303,6 +303,9 @@ public class ClipEditActivity extends Activity {
         gramChip.setOnClickListener(v -> cycleGrammar(gramChip));
         tools.addView(gramChip);
         tools.addView(tool("تدقيق النص", v -> scanGrammar()));
+        // W60: مسح كامل من زر واحد — طبقة التكرار الشخصية تعود لحالة المصنع
+        // بايتياً (الملف يحذف والخدمة تمحو نسختها عند بدء الحقل القادم).
+        tools.addView(tool("مسح التنبؤ الشخصي", v -> wipePersonal()));
         tools.addView(tool("تنظيم المسافات", v -> transform(ClipText.tidy(body.getText().toString()))));
         tools.addView(tool("البداية", v -> jump(0)));
         tools.addView(tool("النهاية", v -> jump(body.length())));
@@ -530,6 +533,22 @@ public class ClipEditActivity extends Activity {
         GrammarNudge.mode = m;
         Theme.prefs(this).edit().putInt("grammar_mode", m).apply();
         chip.setText(L.t(gramLabel()));
+    }
+
+    /** W60: مسح كامل من زر واحد — طبقة التكرار الشخصية تعود لحالة المصنع
+     *  بايتياً: الملف المحلي يحذف وعلم adapt_reset يمحو النسخة الحية في
+     *  الخدمة عند بدء الحقل القادم. لا شيء يغادر الجهاز (قانون 8). */
+    private void wipePersonal() {
+        new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(L.t("مسح التنبؤ الشخصي؟"))
+                .setMessage(L.t("تُمحى كل الكلمات التي تعلّمها الكيبورد منك محلياً والعودة لحالة المصنع. لا شيء يغادر جهازك."))
+                .setPositiveButton(L.t("مسح"), (d, w) -> {
+                    new java.io.File(getFilesDir(), "adapt_store.txt").delete();
+                    Theme.prefs(this).edit().putBoolean("adapt_reset", true).apply();
+                    Toast.makeText(this, L.t("تم المسح — التنبؤ الشخصي في حالة المصنع"), Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton(L.t("إلغاء"), null)
+                .create().show();
     }
 
     /** W58: the whole-text educational scan (detached/OFF → a quiet toast; the
