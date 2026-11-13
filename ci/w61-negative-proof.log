@@ -1,0 +1,11 @@
+───── attack: acc.truth ─────
+bit: acc.truth → FAIL accept: المجهول/الفارغ/null
+healed: src/com/hark/neokey/StripAccept.java byte-exact (git-clean; STRIPGATE_OK on the clean tree)
+───── attack: acc.wipe ─────
+bit: acc.wipe → FAIL wipe: serialize() == ""
+healed: src/com/hark/neokey/StripAccept.java byte-exact (git-clean; STRIPGATE_OK on the clean tree)
+───── attack: acc.feed ─────
+bit: acc.feed → FAIL the documented acceptance feed
+healed: src/com/hark/neokey/StripAccept.java byte-exact (git-clean; STRIPGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w61 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: STRIPGATE_OK on the clean tree)
