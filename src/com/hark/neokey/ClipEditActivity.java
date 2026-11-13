@@ -307,6 +307,8 @@ public class ClipEditActivity extends Activity {
         // بايتياً (الملف يحذف والخدمة تمحو نسختها عند بدء الحقل القادم).
         tools.addView(tool("مسح التنبؤ الشخصي", v -> wipePersonal()));
         tools.addView(tool(otpShieldLabel(), v -> cycleOtpTimeout()));
+        tools.addView(tool(integrityCertLabel(), v -> Toast.makeText(this,
+                L.t(integrityCertLabel()), Toast.LENGTH_LONG).show()));
         tools.addView(tool("تنظيم المسافات", v -> transform(ClipText.tidy(body.getText().toString()))));
         tools.addView(tool("البداية", v -> jump(0)));
         tools.addView(tool("النهاية", v -> jump(body.length())));
@@ -326,6 +328,24 @@ public class ClipEditActivity extends Activity {
         sealView.setTextSize(12);
         sealView.setPadding(0, (int) (10 * dp), 0, (int) (10 * dp));
         root.addView(sealView);
+    }
+
+    /**
+     * W66 (IntegrityCert): شاشة «هوية بنائي» — sha256 الأثر المثبت
+     * (sourceDir الحقيقي) مقابل البيان المرفوع (ثابت البناء الموقّع —
+     * apkSha256 من signedapk-statement.json)، حالة الهوية، وعدّاد بوابات
+     * آخر كوميت. الحكم من البايتات لا من الادعاء، وفشل مغلق: المجهول لا
+     * يُعرض كمطابقة أبداً.
+     */
+    private String integrityCertLabel() {
+        try {
+            String apk = getApplicationInfo().sourceDir;
+            return IntegrityCert.evaluate(apk,
+                    "0274d153a497a86cf94ff38f98e7b9ebe804ca699316d7395d3f86b80e096e75",
+                    2, "0.2.0", 2238).display;
+        } catch (Exception e) {
+            return "الشهادة: مجهولة — الأثر غير مقروء، ولا تعرض كمطابقة أبداً";
+        }
     }
 
     /** W65: درع الرموز — الصف الدائم يعرض الحالة والمهلة المضبوطة. */

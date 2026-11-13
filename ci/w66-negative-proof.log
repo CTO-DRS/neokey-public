@@ -1,0 +1,11 @@
+───── attack: cert.digest ─────
+bit: cert.digest → FAIL sha: المحتوى أ → البصمة الثابتة
+healed: src/com/hark/neokey/IntegrityCert.java byte-exact (git-clean; CERTGATE_OK on the clean tree)
+───── attack: cert.failclose ─────
+bit: cert.failclose → FAIL cert: الأثر المفقود → CERT_UNKNOWN
+healed: src/com/hark/neokey/IntegrityCert.java byte-exact (git-clean; CERTGATE_OK on the clean tree)
+───── attack: cert.display ─────
+bit: cert.display → FAIL cert: بايت مزروع → CERT_MISMATCH لا مطابقة
+healed: src/com/hark/neokey/IntegrityCert.java byte-exact (git-clean; CERTGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w66 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: CERTGATE_OK on the clean tree — battery 12, the live signed artifact byte-exact to the raised statement)
