@@ -151,7 +151,7 @@ public final class DialectAdapt {
                                           int cap, boolean seeded) {
         List<String> out = new ArrayList<>();
         if (cap <= 0) return out;
-        int dialectQuota = seeded ? cap / 2 : cap;
+        int dialectQuota = cap;
         if (dialectWords != null) {
             for (String x : dialectWords) {
                 if (out.size() >= dialectQuota || out.size() >= cap) break;
