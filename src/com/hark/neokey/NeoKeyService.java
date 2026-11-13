@@ -64,6 +64,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     // والمبدّل الذكي يقرر من السياق مع احترام pref dialect_mode (الافتراضي تلقائي).
     private Dictionary dictHijazi, dictNajdi, dictGulf;
     private String dialectMode = SmartSwitch.AUTO;
+    // W59 (DialectAdapt): ملف لكل تطبيق — التطبيق الحالي وبذرة الإقلاع البارد،
+    // والملف نص محلي في filesDir لا يغادر الجهاز أبداً (الخارطة: تظل الملفات محلية).
+    private String currentApp = "";
+    private boolean dialectSeeded;
+    private DialectAdapt dialectAdapt;
     private volatile Predictor predictor;   // A2 neural next-word model (async load, fail-open)
     private boolean suggest = true, dblSpace = true, sensitive, selecting, pickedSuggestion;
     /** W56: the long-press family tree owns the strip until the next tap or key
@@ -278,9 +283,14 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         insertPendingDraft(info);
         incognito = sp.getBoolean("incognito", false);
         view.setIncognito(incognito);
+        // W59: التطبيق الحالي هو مفتاح الملف لكل تطبيق (فارغ إن لم يعلنه النظام).
+        currentApp = info == null || info.packageName == null ? "" : info.packageName;
         if (sp.getBoolean("reset_learn", false)) {
             dictAr.clearUser();
             dictEn.clearUser();
+            // W59: المسح الكامل يمحو ملفات اللهجة لكل تطبيق أيضاً (حالة مصنع بايتية).
+            dialectAdapt = null;
+            new File(getFilesDir(), "app_profiles.txt").delete();
             sp.edit().remove("reset_learn").apply();
         }
         captureClip();
@@ -323,6 +333,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         Perf.flush();
         dictAr.save();
         dictEn.save();
+        saveDialectProfiles();
     }
 
     @Override
@@ -469,6 +480,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
      * معرّف قاموس اللهجة النشط للسياق الحالي، أو null للفصحى الصرفة.
      * الكشف لحظي على نافذة النص الظاهر فقط — لا يُخزن شيء عن المستخدم،
      * ويتوقف في الحقول الحساسة وعند إيقاف الاقتراحات.
+     * W59: الإقلاع البارد في وضع auto بنافذة فارغة يبذّر قانون التطبيق
+     * المستقر فقط (updates ≥ 3) — أي دليل حي يكسر البذرة بقرار SmartSwitch
+     * الأصلي الذي لم يُمَس (لا كسر للتبديل). التسجيل يقع عند إكمال الكلمة
+     * (finishWord) لا هنا — قرار لكل جملة مكتوبة لا لكل ضغطة.
      */
     private String activeDialectId() {
         if (!suggest || sensitive) return null;
@@ -476,21 +491,64 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (!SmartSwitch.AUTO.equals(dialectMode)) return SmartSwitch.dictFor(dialectMode);
         InputConnection ic = getCurrentInputConnection();
         CharSequence b = ic == null ? null : ic.getTextBeforeCursor(120, 0);
-        SmartSwitch.Decision d = SmartSwitch.decide(
-                b == null ? null : Dialect.tokenize(b.toString()), dialectMode);
+        List<String> toks = Dialect.tokenize(b == null ? "" : b.toString());
+        dialectSeeded = false;
+        if (toks.isEmpty()) {
+            String seed = dialectAdapt().seed(currentApp);
+            if (seed != null) { dialectSeeded = true; return seed; }
+        }
+        SmartSwitch.Decision d = SmartSwitch.decide(toks, dialectMode);
         return d.dialectActive() ? d.dictId : null;
     }
 
-    /** ترشيحات مدمجة: كلمات اللهجة النشطة أولاً ثم سدادة الفصحى (حد cap، بلا تكرار). */
-    private List<String> mergedSuggest(String w, String dictId, int cap) {
-        List<String> out = new ArrayList<>();
-        Dictionary dd = dictId == null ? null : dialectDict(dictId);
-        if (dd != null && dd.isLoaded()) out.addAll(dd.suggest(w, cap));
-        for (String x : dictFor(w).suggest(w, cap)) {
-            if (out.size() >= cap) break;
-            if (!out.contains(x)) out.add(x);
+    /** W59: ملف اللهجات لكل تطبيق — تحميل خفيف عند أول حاجة (فارغ آمن). */
+    private DialectAdapt dialectAdapt() {
+        if (dialectAdapt == null) {
+            String text = "";
+            try {
+                java.io.FileInputStream in = new java.io.FileInputStream(
+                        new File(getFilesDir(), "app_profiles.txt"));
+                try {
+                    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                    byte[] buf = new byte[4096];
+                    int n;
+                    while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                    text = new String(bo.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+                } finally {
+                    in.close();
+                }
+            } catch (Exception e) {
+                text = "";   // لا ملف بعد = حالة مصنع (fail-open للقراءة فقط)
+            }
+            dialectAdapt = DialectAdapt.parse(text);
         }
-        return out;
+        return dialectAdapt;
+    }
+
+    /** W59: حفظ ملف اللهجات عند الخروج من الحقل — الفارغ يحذف الملف (حالة مصنع). */
+    private void saveDialectProfiles() {
+        if (dialectAdapt == null) return;
+        String s = dialectAdapt.serialize();
+        File f = new File(getFilesDir(), "app_profiles.txt");
+        if (s.isEmpty()) { f.delete(); return; }
+        try {
+            java.io.FileOutputStream out = new java.io.FileOutputStream(f);
+            try { out.write(s.getBytes(java.nio.charset.StandardCharsets.UTF_8)); }
+            finally { out.close(); }
+        } catch (Exception ignored) {
+            // التخزين قد يفشل مؤقتاً — الكتابة تُعاد في الخروج القادم
+        }
+    }
+
+    /**
+     * ترشيحات مدمجة: كلمات اللهجة النشطة أولاً ثم سدادة الفصحى (حد cap، بلا تكرار).
+     * W59: الأوزان بحسب الكشف عبر mergeLines — الكشف الحي يتصدر حتى cap،
+     * والبذرة (ثقة أنقض) تسهم بنصف الوزن فقط.
+     */
+    private List<String> mergedSuggest(String w, String dictId, int cap) {
+        Dictionary dd = dictId == null ? null : dialectDict(dictId);
+        List<String> dw = (dd != null && dd.isLoaded()) ? dd.suggest(w, cap) : new ArrayList<String>();
+        return DialectAdapt.mergeLines(dw, dictFor(w).suggest(w, cap), cap, dialectSeeded);
     }
 
     @Override
@@ -644,11 +702,15 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         String did = activeDialectId();
         if (did != null) {
             Dictionary dd = dialectDict(did);
-            if (dd != null && dd.isLoaded())
+            if (dd != null && dd.isLoaded()) {
+                // W59: البذرة بنصف الوزن أيضاً في التنبؤ (floor(3/2)=1) — الكشف
+                // الحي يتصدر بحد الثلاثة كما كان، والثقة الأنقض وزنها أنقض.
+                int quota = dialectSeeded ? 1 : 3;
                 for (String x : dd.predict(prev, 3)) {
-                    if (out.size() >= 3) break;
+                    if (out.size() >= quota || out.size() >= 3) break;
                     if (!out.contains(x)) out.add(x);
                 }
+            }
         }
         // A2: neural top-3 completes the strip — it never displaces the
         // dictionary path, it only fills what the bigram table left empty
@@ -693,6 +755,26 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (lastWord != null && dictFor(lastWord) == d) d.learnPair(lastWord, w);
         lastWord = w;
         words++;
+        recordDialectDecision();
+    }
+
+    /**
+     * W59: تعلّم ملف اللهجة عند إكمال كل كلمة (قرار لكل جملة مكتوبة لا لكل
+     * ضغطة): قرار لهجة حي بدليل ≥ MIN_EVIDENCE يُسجَّل محلياً، وقرار auto-msa
+     * بلا أي علامة بنافذة كافية يعدّ نحو إنزال قانون لهجة مستقر إلى الفصحى.
+     * التخفي لا يمر هنا أصلاً (return أعلاه) — لا تسجيل في التخفي أبداً.
+     */
+    private void recordDialectDecision() {
+        if (!suggest || !SmartSwitch.AUTO.equals(dialectMode) || currentApp.isEmpty()) return;
+        InputConnection ic = getCurrentInputConnection();
+        CharSequence b = ic == null ? null : ic.getTextBeforeCursor(120, 0);
+        List<String> toks = Dialect.tokenize(b == null ? "" : b.toString());
+        SmartSwitch.Decision d = SmartSwitch.decide(toks, dialectMode);
+        if (d.dialectActive() && d.evidence >= SmartSwitch.MIN_EVIDENCE) {
+            dialectAdapt().record(currentApp, d.dictId);
+        } else if (!d.dialectActive() && "auto-msa".equals(d.reason)) {
+            dialectAdapt().recordMsa(currentApp, 0, toks.size());
+        }
     }
 
     @Override
