@@ -1,0 +1,9 @@
+[tsx.seal] BIT TSX_CRC — the strict load refused the WHOLE index (one broken seal byte, zero trusted forms)
+[heal-check] assets/tashkeel_index.txt restored byte-exact (cmp clean)
+[tsx.form] BIT TSX_FORM — a form that does not fold to its key refused, never silently served
+[heal-check] assets/tashkeel_index.txt restored byte-exact (cmp clean)
+[tsx.mode] BIT FAIL tsx.run.ambig_single_silent — the shipped-closed / multi-reading-only law is measured, its quiet removal is a regression
+[heal-check] src/com/hark/neokey/TashkeelEngine.java restored byte-exact (cmp clean)
+TASHKEELINDEX_CHECK_FAILED non_deterministic (derived != committed)
+[heal] FAILED — the clean tree is not green
+PROOF PASSED w57 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=0: TASHKEELGATE_OK on the clean tree — battery 63, gold 41/41, dex 512928/513000)
