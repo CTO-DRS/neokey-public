@@ -1,0 +1,11 @@
+───── attack: pers.decay ─────
+bit: pers.decay → FAIL decay: بعد 14 يوماً ينصفي
+healed: src/com/hark/neokey/AdaptEngine.java byte-exact (git-clean; PERSONALGATE_OK on the clean tree)
+───── attack: pers.cap ─────
+bit: pers.cap → FAIL cap: 300 كلمة تُقص
+healed: src/com/hark/neokey/AdaptEngine.java byte-exact (git-clean; PERSONALGATE_OK on the clean tree)
+───── attack: pers.wipe ─────
+bit: pers.wipe → FAIL wipe: serialize() == ""
+healed: src/com/hark/neokey/AdaptEngine.java byte-exact (git-clean; PERSONALGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w60 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: PERSONALGATE_OK on the clean tree — battery 29, p50 4->1, dex 527900/528000)
