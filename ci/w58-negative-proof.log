@@ -1,0 +1,9 @@
+[grx.seal] BIT GRX_CRC — the strict load refused the WHOLE asset (one broken seal byte, zero trusted rules)
+[heal-check] assets/grammar_rules.txt restored byte-exact (cmp clean)
+[grx.side] BIT GRX_SIDE_B — a wrong-side example refused at load, the agreement law lives inside the engine
+[heal-check] assets/grammar_rules.txt restored byte-exact (cmp clean)
+[grx.mode] BIT FAIL 'OFF: run(Ctx) answers empty' — the shipped-closed default is measured, its quiet removal is a regression
+[heal-check] src/com/hark/neokey/GrammarNudge.java restored byte-exact (cmp clean)
+NUDGEGATE_OK checks=110 rules=28 pairs=48 examples=56 rate=0.0 bound=2.0 agreement=28/28 dex=521520/522000 margin=480 failclosed=ON
+[heal] NUDGEGATE OK — the clean tree heals green
+PROOF PASSED w58 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: NUDGEGATE_OK on the clean tree — battery 110, rules 28, dex 521520/522000)
