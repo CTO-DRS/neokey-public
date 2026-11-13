@@ -1,0 +1,11 @@
+───── attack: airseal.fake ─────
+bit: airseal.fake → FAIL fake: ادعاء جلسة معلنة ببصمة بلا شبكة يُرفض
+healed: src/com/hark/neokey/AirSeal.java byte-exact (git-clean; AIRSEALGATE_OK on the clean tree)
+───── attack: airseal.forget ─────
+bit: airseal.forget → FAIL event: الختم انقلب إلى breached
+healed: src/com/hark/neokey/AirSeal.java byte-exact (git-clean; AIRSEALGATE_OK on the clean tree)
+───── attack: airseal.fp ─────
+bit: airseal.fp → FAIL fp: نفس الحالة = نفس البصمة على أي مثيل
+healed: src/com/hark/neokey/AirSeal.java byte-exact (git-clean; AIRSEALGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w64 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: AIRSEALGATE_OK on the clean tree — battery 22, dex 531308/532000)

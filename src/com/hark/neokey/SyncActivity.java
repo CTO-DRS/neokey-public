@@ -504,6 +504,57 @@ public class SyncActivity extends Screen {
             all = b.toString();
         }
         p.edit().putString("net_audit", all).apply();
+        // W64 (AirSeal): رفض صريح أثناء محاولة مزامنة = محاولة شبكة خارج
+        // البوابات المعلنة — يسجّل حدثاً محلياً وينقلب الختم ولا ينسى.
+        if (!d.allowed && !d.ask) {
+            AirSeal seal = airSeal();
+            seal.recordOutOfGate("gate_deny_" + d.reason, System.currentTimeMillis());
+            saveAirSeal(seal);
+        }
+    }
+
+    /** W64: ختم الهواء لهذا النشاط — الأحداث تُحمّل من الملف المحلي مرة واحدة. */
+    private AirSeal airSeal() {
+        if (airSeal == null) {
+            String text = "";
+            try {
+                java.io.FileInputStream in = new java.io.FileInputStream(
+                        new java.io.File(getFilesDir(), "airseal_events.txt"));
+                try {
+                    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                    byte[] buf = new byte[4096];
+                    int n;
+                    while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                    text = new String(bo.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+                } finally { in.close(); }
+            } catch (Exception e) { text = ""; }
+            AirSeal s = new AirSeal();
+            for (String line : text.split("\n")) {
+                if (line == null || line.isEmpty()) continue;
+                String[] f = line.split("\t");
+                if (f.length == 4 && "AIRSEAL".equals(f[0]) && "OUT_OF_GATE".equals(f[1])) {
+                    try { s.recordOutOfGate(f[2], Long.parseLong(f[3])); }
+                    catch (NumberFormatException e) { /* سطر فاسد يُتخطى */ }
+                }
+            }
+            airSeal = s;
+        }
+        return airSeal;
+    }
+
+    private AirSeal airSeal;
+
+    /** W64: حفظ أحداث الختم عند الخروج — الفارغ يحذف الملف (حالة مصنع). */
+    private void saveAirSeal(AirSeal s) {
+        StringBuilder b = new StringBuilder();
+        for (String line : s.events()) b.append(line).append('\n');
+        java.io.File f = new java.io.File(getFilesDir(), "airseal_events.txt");
+        if (b.length() == 0) { f.delete(); return; }
+        try {
+            java.io.FileOutputStream out = new java.io.FileOutputStream(f);
+            try { out.write(b.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)); }
+            finally { out.close(); }
+        } catch (Exception ignored) { /* تُعاد الكتابة في الحدث القادم */ }
     }
 
     private boolean registered() {

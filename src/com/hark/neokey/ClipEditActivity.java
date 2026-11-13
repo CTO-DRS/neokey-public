@@ -318,6 +318,39 @@ public class ClipEditActivity extends Activity {
         hs.setHorizontalScrollBarEnabled(false);
         hs.addView(tools);
         root.addView(hs);
+        // W64: ختم الهواء — شاهد دائم في الواجهة، مشتق من حالة NetGate الحية
+        // (لا وعد مخزن) مع بصمة قابلة للمقارنة وأي خروج خارج البوابات يظهر.
+        TextView sealView = new TextView(this);
+        sealView.setText(L.t(AirSeal.statusLine(airSealSeal())));
+        sealView.setTextSize(12);
+        sealView.setPadding(0, (int) (10 * dp), 0, (int) (10 * dp));
+        root.addView(sealView);
+    }
+
+    /** W64: الختم الحي — الحالة من prefs NetGate والأحداث من الملف المحلي. */
+    private AirSeal.Seal airSealSeal() {
+        android.content.SharedPreferences gp = Theme.prefs(this);
+        AirSeal s = new AirSeal();
+        try {
+            java.io.FileInputStream in = new java.io.FileInputStream(
+                    new java.io.File(getFilesDir(), "airseal_events.txt"));
+            try {
+                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[4096];
+                int n;
+                while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                for (String line : new String(bo.toByteArray(), java.nio.charset.StandardCharsets.UTF_8).split("\n")) {
+                    String[] f = line.split("\t");
+                    if (f.length == 4 && "AIRSEAL".equals(f[0]) && "OUT_OF_GATE".equals(f[1])) {
+                        try { s.recordOutOfGate(f[2], Long.parseLong(f[3])); }
+                        catch (NumberFormatException e) { /* سطر فاسد يُتخطى */ }
+                    }
+                }
+            } finally { in.close(); }
+        } catch (Exception e) { /* لا ملف بعد = لا أحداث */ }
+        return s.sealOf(gp.getString(NetGate.MASTER_PREF, "off"),
+                gp.getString(NetGate.capPref(NetGate.CAP_SYNC), "off"),
+                gp.getString(NetGate.capPref(NetGate.CAP_WRITER_AI), "off"));
     }
 
     private interface Get { boolean get(); }
