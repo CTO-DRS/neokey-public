@@ -66,8 +66,8 @@ ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
 pub_gh() { if [ "${PUBSYNC_CURL_DEBUG:-0}" = "1" ]; then curl -sSL --trace-ascii "$PUBDIR/curl-trace.txt" -H "Authorization: token $TOKEN" "$@"; else curl -sSL -H "Authorization: token $TOKEN" "$@"; fi; }
 
 # ---- 0: المراساة + الاعتماد — المرجع = المنشور --------------------------------
-PUB_VC=2
-PUB_VN=0.2.0
+PUB_VC=3
+PUB_VN=0.3.0
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 [ "$VC" = "$PUB_VC" ] || fail "anchor.identity.vc (manifest declares $VC — the publication week is $PUB_VC)"

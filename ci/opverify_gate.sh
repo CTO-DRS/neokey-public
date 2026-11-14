@@ -42,12 +42,12 @@ STATE=build/release/gates.env
 LOGF=build/pipeline.log
 
 # ---- 0: THE ANCHOR — المرجع = المنشور ----------------------------------------
-PUB_VC=2
-PUB_VN=0.2.0
+PUB_VC=3
+PUB_VN=0.3.0
 
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
-[ "$VC" = "$PUB_VC" ] || fail "anchor.identity.vc (manifest declares $VC — the verifier week is $PUB_VC)"
+[ "$VC" = "$PUB_VC" ] || fail "anchor.identity.vc (manifest declares $VC — XX)"
 [ "$VN" = "$PUB_VN" ] || fail "anchor.identity.vn (manifest declares $VN — the verifier week is $PUB_VN)"
 [ -f tests/tls/arena-server.p12 ] || fail "fixtures (tests/tls/arena-server.p12 missing — the anchor)"
 [ -f src/com/hark/neokey/StoreActivity.java ] || fail "fixtures (StoreActivity missing — the gated line lives there)"

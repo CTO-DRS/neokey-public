@@ -68,8 +68,8 @@ CHECKS=0
 ck() { CHECKS=$((CHECKS + 1)); [ "$1" = "$2" ] || fail "$3 (${4:-got rc=$1})"; }
 
 # ---- 0: المراساة — المرجع = المنشور -------------------------------------------
-PUB_VC=2
-PUB_VN=0.2.0
+PUB_VC=3
+PUB_VN=0.3.0
 MANIFEST="${OWNERVERIFY_MANIFEST:-AndroidManifest.xml}"
 VC=$(grep -o 'versionCode="[0-9]*"' "$MANIFEST" | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' "$MANIFEST" | cut -d'"' -f2)
