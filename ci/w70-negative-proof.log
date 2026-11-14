@@ -1,0 +1,11 @@
+───── attack: aac.det ─────
+bit: aac.det → FAIL det: نفس الفئة والمستودع = نفس الصفوف والعبارات حرفاً
+healed: src/com/hark/neokey/AACBoard.java byte-exact (git-clean; AACGATE_OK on the clean tree)
+───── attack: aac.cats ─────
+bit: aac.cats → FAIL cats: الفئات الأربع الثابتة بالترتيب الموثق (احتياجات/مشاعر/تحيات/طوارئ)
+healed: src/com/hark/neokey/AACBoard.java byte-exact (git-clean; AACGATE_OK on the clean tree)
+───── attack: aac.insert ─────
+bit: aac.insert → FAIL insert: العبارة الفاضية/null ترفض موثقاً (AAC_EMPTY_PHRASE)
+healed: src/com/hark/neokey/AACBoard.java byte-exact (git-clean; AACGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w70 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: AACGATE_OK on the clean tree — battery 13, the four fixed categories documented and fail-closed, the determinism law measured twice, the big-touch grid capped at 3 per row, the community-dictionary customization with its 12 cap and its non-Arabic declaration, and the pure insert plan refusing empty/over-limit)

@@ -181,6 +181,43 @@ public class WriterActivity extends Screen {
         ln.setPadding(0, (int) (6 * dp), 0, 0);
         local.addView(ln);
         body.addView(local);
+
+        // W70 (AACBoard): صوت لمن لا صوت له — لوحة عبارات عربية بالفئات على
+        // مسار الإدراج القائم: أزرار المس الكبيرة تدخل العبارة في المسودة
+        // الحية، والتخصيص يعيش في القاموس المجتمعي نفسه (قصاصات موسومة
+        // «aac:الفئة» — تقاس بالبطارية على الصنف النقي).
+        sectionIn("لوحة التواصل — صوت لمن لا صوت له");
+        LinearLayout aac = card();
+        for (final String cat : AACBoard.categories()) {
+            final AACBoard.Snapshot snap = AACBoard.snapshotFor(cat, null);
+            if (snap == null) continue;
+            TextView catBtn = text("• " + cat, 14, Typeface.BOLD, 0xFF93B4FF);
+            catBtn.setMinHeight((int) (44 * dp));
+            catBtn.setGravity(Gravity.CENTER_VERTICAL);
+            aac.addView(catBtn, top(6));
+            for (AACBoard.Row r : snap.rows) {
+                LinearLayout rr = new LinearLayout(this);
+                for (final String ph : r.phrases) {
+                    LinearLayout.LayoutParams p1 = new LinearLayout.LayoutParams(0, -2, 1f);
+                    p1.setMarginEnd((int) (6 * dp));
+                    rr.addView(button(ph, "record_voice_over", false, v -> aacInsert(ph)), p1);
+                }
+                aac.addView(rr, top(6));
+            }
+        }
+        TextView aacNote = text("كل عبارة تدخل المسودة عبر مسار الإدراج القائم — والتخصيص من قصاصاتك الموسومة «aac:الفئة»", 12, Typeface.NORMAL, 0xFF8A8FA3);
+        aacNote.setPadding(0, (int) (8 * dp), 0, 0);
+        aac.addView(aacNote);
+        body.addView(aac);
+    }
+
+    /** W70 (AACBoard): الإدراج عبر المسار القائم — النص يعيش في المسودة لا طبقة ثانية. */
+    private void aacInsert(String ph) {
+        AACBoard.Insert ins = AACBoard.insertPlan(ph);
+        if (!ins.ok) { Toast.makeText(this, L.t(ins.refusal), Toast.LENGTH_SHORT).show(); return; }
+        String cur = result.getText().toString();
+        result.setText(cur.isEmpty() ? ins.phrase : cur + " " + ins.phrase);
+        count.setText(result.length() + " حرف · قابل للتعديل\n" + clarityLine());
     }
 
     private View divider() {
