@@ -63,12 +63,12 @@ echo "[phase4] $RS"
 echo "[phase4] $PY"
 
 # ---- 2: pinned baselines on the FRESH values — shipped numbers may not sink --
-# real dex trim (W1/week 22): 120 entries (W69 +1: the GenThemes inventory class), nothing regrown, purity holds
+# real dex trim (W1/week 22): 121 entries (W70 +1: AACBoard joins the inventory; W69 +1 was GenThemes), nothing regrown, purity holds
 TR_ENT=$(field "$TR" entries);   TR_SAVED=$(field "$TR" saved)
 TR_DEX=$(field "$TR" dex | cut -d/ -f1); TR_CEIL=$(field "$TR" dex | cut -d/ -f2)
 TR_REG=$(field "$TR" regrown);   TR_PUR=$(field "$TR" purity)
 TR_UIEN=$(field "$TR" ui_en_coupled)
-[ "${TR_ENT:-0}"   = 120 ]      || fail "trim entries ${TR_ENT:-0} != 120 (the trim inventory moved silently)"
+[ "${TR_ENT:-0}"   = 121 ]      || fail "trim entries ${TR_ENT:-0} != 121 (the trim inventory moved silently)"
 [ "${TR_REG:-1}"   = 0 ]        || fail "trim regrown ${TR_REG:-?} != 0 (a shell-class literal regrew)"
 [ "${TR_PUR:-0}"   -ge 36 ]     || fail "trim purity $TR_PUR < 36 (android imports lost their stubs)"
 [ "${TR_UIEN:-0}"  -ge 80 ]     || fail "trim ui_en_coupled ${TR_UIEN:-0} < 80 (translation coupling broke)"
