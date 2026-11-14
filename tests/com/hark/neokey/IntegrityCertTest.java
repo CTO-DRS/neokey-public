@@ -53,8 +53,8 @@ public class IntegrityCertTest {
                 3, "0.3.0", 2329);
         check("cert: المطابقة من البايتات نفسها",
                 IntegrityCert.MATCH.equals(ok.state)
-                        && ok.display.contains("vc 2 / 0.2.0")
-                        && ok.display.contains("2238"));
+                        && ok.display.contains("vc 3 / 0.3.0")
+                        && ok.display.contains("2329"));
 
         // ---- القانون 2: زرع بايت غريب يعضّ (السلبي الحي) -------------------------
         File planted = vec("neokey-integrity-w66-a-X".getBytes(StandardCharsets.UTF_8));
@@ -104,7 +104,7 @@ public class IntegrityCertTest {
             String actual = IntegrityCert.sha256Of(apk.getPath());
             boolean pairMatches = actual != null && actual.equalsIgnoreCase(want);
             IntegrityCert.Cert live = IntegrityCert.evaluate(apk.getPath(),
-                    want, vcN, vn, 2238);
+                    want, vcN, vn, 2329);
             check("live: الحكم الحي يطابق الحقيقة المقاسة للاقتران الحي",
                     live.state.equals(pairMatches
                             ? IntegrityCert.MATCH : IntegrityCert.MISMATCH)
@@ -122,7 +122,7 @@ public class IntegrityCertTest {
             in.close();
             tampered.deleteOnExit();
             IntegrityCert.Cert liveBite = IntegrityCert.evaluate(tampered.getPath(),
-                    want, vcN, vn, 2238);
+                    want, vcN, vn, 2329);
             check("live: بايت غريب مزروع على الأرتِفْت الحقيقي → يعضّ فوراً",
                     IntegrityCert.MISMATCH.equals(liveBite.state) && total > 0);
         } else {
