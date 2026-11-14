@@ -209,6 +209,39 @@ public class WriterActivity extends Screen {
         aacNote.setPadding(0, (int) (8 * dp), 0, 0);
         aac.addView(aacNote);
         body.addView(aac);
+
+        // W71 (NumSmart): الأرقام الذكية — تبديل هندية/عربية وتاريخ هجري
+        // حسابي أثناء الكتابة ضمن شريط الأدوات — كل التحويلات عبر الصنف
+        // النقي (الجدول المرجعي المقاس)، والرفض الموثق لا التخمين.
+        sectionIn(getString(R.string.nk_writeractivity_numsection));
+        LinearLayout num = card();
+        LinearLayout numRow = new LinearLayout(this);
+        LinearLayout.LayoutParams n1 = new LinearLayout.LayoutParams(0, -2, 1f);
+        n1.setMarginEnd((int) (8 * dp));
+        numRow.addView(button("أرقام هندية", "swap_horiz", false, v -> numConvert(true)), n1);
+        numRow.addView(button("أرقام عربية", "swap_horiz", false, v -> numConvert(false)), new LinearLayout.LayoutParams(0, -2, 1f));
+        num.addView(numRow, top(8));
+        num.addView(button("التاريخ الهجري اليوم", "event", false, v -> numHijri()), top(8));
+        TextView numNote = text(getString(R.string.nk_writeractivity_numnote), 12, Typeface.NORMAL, 0xFF8A8FA3);
+        numNote.setPadding(0, (int) (8 * dp), 0, 0);
+        num.addView(numNote);
+        body.addView(num);
+    }
+
+    /** W71 (NumSmart): التبديل الهندية/العربية على المسودة الحية — عبر الصنف النقي. */
+    private void numConvert(boolean arabicIndic) {
+        String s = result.getText().toString();
+        result.setText(arabicIndic ? NumSmart.toArabicIndic(s) : NumSmart.normalizeDigits(s));
+        count.setText(result.length() + " حرف · قابل للتعديل\n" + clarityLine());
+    }
+
+    /** W71 (NumSmart): تاريخ اليوم هجرياً — حسابي موثق؛ خارج النطاق يعلن لا يخمّن. */
+    private void numHijri() {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        NumSmart.Hijri h = NumSmart.toHijri(c.get(java.util.Calendar.YEAR),
+                c.get(java.util.Calendar.MONTH) + 1, c.get(java.util.Calendar.DAY_OF_MONTH));
+        Toast.makeText(this, L.t(h == null ? NumSmart.OUT_OF_RANGE : "اليوم: " + h.display()),
+                Toast.LENGTH_LONG).show();
     }
 
     /** W70 (AACBoard): الإدراج عبر المسار القائم — النص يعيش في المسودة لا طبقة ثانية. */

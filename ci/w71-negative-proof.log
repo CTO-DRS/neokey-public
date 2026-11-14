@@ -1,0 +1,11 @@
+───── attack: num.group ─────
+bit: num.group → FAIL group: التجميع الثلاثي بالفاصل «٬» (1234567→١٬٢٣٤٬٥٦٧)
+healed: src/com/hark/neokey/NumSmart.java byte-exact (git-clean; NUMGATE_OK on the clean tree)
+───── attack: num.currency ─────
+bit: num.currency → FAIL currency: «١٬٢٣٤٫٥٠ ر.س» بالجدول (SAR gold)
+healed: src/com/hark/neokey/NumSmart.java byte-exact (git-clean; NUMGATE_OK on the clean tree)
+───── attack: num.hijri.epoch ─────
+bit: num.hijri.epoch → FAIL hijri: القلم المعياري 1 محرم 1400هـ = 16 نوفمبر 1979م (ذهاب)
+healed: src/com/hark/neokey/NumSmart.java byte-exact (git-clean; NUMGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w71 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: NUMGATE_OK on the clean tree — battery 20, the reference table with gold values, the pinned Hijri epoch, the full go/return over ~66k days, and the sensitive-date refusals)

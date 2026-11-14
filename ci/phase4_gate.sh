@@ -31,7 +31,7 @@ cd "$(dirname "$0")/.."
 # override) silently biases them; the budgets always measure what ships.
 unset JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS
 
-DEX_CEILING=550000   # W69-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
+DEX_CEILING=552000   # W69-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
 VC_MIN=2             # v0.1.0 identity reset (re-based from the phase-4 close floor 66; the closing week still must carry the manifest identity)
 TESTS_MIN=1334       # shipped test total at phase-4 close (1,334 = week 24)
 STATE=build/release/gates.env
@@ -63,12 +63,12 @@ echo "[phase4] $RS"
 echo "[phase4] $PY"
 
 # ---- 2: pinned baselines on the FRESH values — shipped numbers may not sink --
-# real dex trim (W1/week 22): 121 entries (W70 +1: AACBoard joins the inventory; W69 +1 was GenThemes), nothing regrown, purity holds
+# real dex trim (W1/week 22): 123 entries (W71 +2: NumSmart joins with its toolbar glue; W70 +1 was AACBoard), nothing regrown, purity holds
 TR_ENT=$(field "$TR" entries);   TR_SAVED=$(field "$TR" saved)
 TR_DEX=$(field "$TR" dex | cut -d/ -f1); TR_CEIL=$(field "$TR" dex | cut -d/ -f2)
 TR_REG=$(field "$TR" regrown);   TR_PUR=$(field "$TR" purity)
 TR_UIEN=$(field "$TR" ui_en_coupled)
-[ "${TR_ENT:-0}"   = 121 ]      || fail "trim entries ${TR_ENT:-0} != 121 (the trim inventory moved silently)"
+[ "${TR_ENT:-0}"   = 123 ]      || fail "trim entries ${TR_ENT:-0} != 123 (the trim inventory moved silently)"
 [ "${TR_REG:-1}"   = 0 ]        || fail "trim regrown ${TR_REG:-?} != 0 (a shell-class literal regrew)"
 [ "${TR_PUR:-0}"   -ge 36 ]     || fail "trim purity $TR_PUR < 36 (android imports lost their stubs)"
 [ "${TR_UIEN:-0}"  -ge 80 ]     || fail "trim ui_en_coupled ${TR_UIEN:-0} < 80 (translation coupling broke)"

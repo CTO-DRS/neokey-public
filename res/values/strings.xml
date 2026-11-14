@@ -256,4 +256,8 @@
     <string name="nk_setupactivity_genthemes_msg">نفس البذرة = نفس الثيم على أي جهاز: ألوان وفن رياضي يحتسب لحظياً — الحزم أرقام لا صور.</string>
     <!-- origin: WriterActivity.java:208 -->
     <string name="nk_writeractivity_aacnote">كل عبارة تدخل المسودة عبر مسار الإدراج القائم — والتخصيص من قصاصاتك الموسومة «aac:الفئة»</string>
+    <!-- origin: WriterActivity.java:216 -->
+    <string name="nk_writeractivity_numsection">الأرقام الذكية — هندية/عربية والهجري</string>
+    <!-- origin: WriterActivity.java:225 -->
+    <string name="nk_writeractivity_numnote">التبديل على المسودة الحية عبر الصنف النقي — والتواريخ خارج النطاق تعلن ولا تخمَّن</string>
 </resources>
