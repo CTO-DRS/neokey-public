@@ -122,7 +122,7 @@ public class WriterActivity extends Screen {
         body.addView(result, new LinearLayout.LayoutParams(-1, -2));
         detach(count);
         body.addView(count);
-        count.setText(result.length() + " حرف · قابل للتعديل");
+        count.setText(result.length() + " حرف · قابل للتعديل\n" + clarityLine());
 
         LinearLayout acts = new LinearLayout(this);
         if (fromKeyboard) {
@@ -282,6 +282,26 @@ public class WriterActivity extends Screen {
 
     private static void detach(View v) {
         if (v.getParent() instanceof android.view.ViewGroup) ((android.view.ViewGroup) v.getParent()).removeView(v);
+    }
+
+    /**
+     * W68 (ClarityMeter): مقياس الوضوح العربي الخالص على النص الحي —
+     * يظهر مع كل توليد تحت المسودة مباشرة، درجة مركبة معلومة المكونات
+     * (الجملة/التكرار/الحشو/التشكيل/التنوع)، حتمي بلا شبكة ولا نموذج.
+     * للنص غير العربي يعلن أنه عربي خالص لا يُقاس على غير عربي.
+     */
+    private String clarityLine() {
+        String s = result.getText() == null ? ""
+                : result.getText().toString();
+        boolean arabic = false;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) >= '\u0621' && s.charAt(i) <= '\u064A') {
+                arabic = true;
+                break;
+            }
+        }
+        if (!arabic) return ClarityMeter.NON_ARABIC;
+        return ClarityMeter.evaluate(s).display;
     }
 
     private void save() {
