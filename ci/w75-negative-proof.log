@@ -1,0 +1,11 @@
+───── attack: sv.body ─────
+bit: sv.body → FAIL forge: دبوس محتوى مزور بإعادة توقيع المهاجم يعض (DPACK_PIN_MISMATCH)
+healed: src/com/hark/neokey/SyncV2.java byte-exact (git-clean; SYNCV2GATE_OK on the clean tree)
+───── attack: sv.sig ─────
+bit: sv.sig → FAIL forge: توقيع خارجي مفسود بالقيمة يعض (DPACK_SIG)
+healed: src/com/hark/neokey/SyncV2.java byte-exact (git-clean; SYNCV2GATE_OK on the clean tree)
+───── attack: sv.op ─────
+bit: sv.op → FAIL forge: سطر عملية فوق الحجم يعض (SYNCV2_OP)
+healed: src/com/hark/neokey/SyncV2.java byte-exact (git-clean; SYNCV2GATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w75 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: SYNCV2GATE_OK on the clean tree — the content pin over the ordered op lines, the envelope signature law, and the size cap on an op line)
