@@ -1,0 +1,11 @@
+───── attack: genthemes.det ─────
+bit: genthemes.det → FAIL det: نفس البذرة والحجم = نفس البكسلات بايتياً
+healed: src/com/hark/neokey/GenThemes.java byte-exact (git-clean; GENTHEMESGATE_OK on the clean tree)
+───── attack: genthemes.contrast ─────
+bit: genthemes.contrast → FAIL contrast: نسبة نص المميز فوق المميز ≥ 3.0 على 300 بذرة
+healed: src/com/hark/neokey/GenThemes.java byte-exact (git-clean; GENTHEMESGATE_OK on the clean tree)
+───── attack: genthemes.hash ─────
+bit: genthemes.hash → FAIL hash: تحوير بكسل واحد يغيّر الختم (م كاشف التحريف)
+healed: src/com/hark/neokey/GenThemes.java byte-exact (git-clean; GENTHEMESGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w69 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: GENTHEMESGATE_OK on the clean tree — battery 19, the determinism law byte-exact, the contrast law measured on 300 seeds, five reference pixel hashes, and the tamper-detector hash)

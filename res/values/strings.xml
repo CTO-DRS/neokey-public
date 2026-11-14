@@ -252,4 +252,6 @@
     <string name="nk_neokeyservice_askreplacepin_1">ألغِ تثبيت آخر عنصر في قائمة المثبّتات وثبّت هذا مكانه؟</string>
     <!-- origin: NeoKeyService.java:1666 -->
     <string name="nk_neokeyservice_startactivity_1">الكتابة بالصوت تحتاج تطبيق Google على جهازك</string>
+    <!-- origin: SetupActivity.java:1545 -->
+    <string name="nk_setupactivity_genthemes_msg">نفس البذرة = نفس الثيم على أي جهاز: ألوان وفن رياضي يحتسب لحظياً — الحزم أرقام لا صور.</string>
 </resources>

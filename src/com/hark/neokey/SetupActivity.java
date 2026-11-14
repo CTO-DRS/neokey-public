@@ -865,6 +865,7 @@ public class SetupActivity extends Activity {
         actions.addView(studioBtn("سمة جديدة", "add", v -> newFromScratch()), a1);
         actions.addView(studioBtn("استيراد", "download", v -> importDialog()), a2);
         actions.addView(studioBtn("تصدير", "upload", v -> exportDialog(Theme.current(this))), a3);
+        actions.addView(studioBtn("مولّد", "star", v -> genDialog()), a3);
         LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(-1, -2);
         alp.topMargin = (int) (16 * dp);
         content.addView(actions, alp);
@@ -1529,6 +1530,42 @@ public class SetupActivity extends Activity {
     }
 
     // ---------------------------------------------------------------- theme editor
+
+    /** W69: ثيم مولّد من بذرة — عبارة واحدة تولّد الألوان والخلفية، صفر صور. */
+    private void genDialog() {
+        EditText seed = new EditText(this);
+        seed.setSingleLine(true);
+        seed.setTextColor(Color.WHITE);
+        seed.setHintTextColor(0xFF6B7280);
+        seed.setHint(L.t("اكتب أي عبارة — بذرة الثيم"));
+        seed.setPadding((int) (14 * dp), (int) (12 * dp), (int) (14 * dp), (int) (12 * dp));
+        seed.setBackground(round(CARD, 16, LINE));
+        new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(L.t("ثيم مولّد من بذرة"))
+                .setMessage(getString(R.string.nk_setupactivity_genthemes_msg))
+                .setView(seed)
+                .setPositiveButton(L.t("ولّد"), (d, w) -> {
+                    String sd = seed.getText().toString().trim();
+                    if (sd.isEmpty()) sd = "neokey";
+                    try {
+                        org.json.JSONObject o = new org.json.JSONObject();
+                        o.put("neokey", 1);
+                        o.put("name", "مولَّد: " + sd);
+                        o.put("gen", sd);
+                        o.put("bg", "#FF15161B"); o.put("key", "#FF2A2C33");
+                        o.put("text", "#FFFFFFFF"); o.put("enter", "#FF2563EB");
+                        int idx = Theme.importPack(this, o);
+                        selectTheme(idx);
+                        tab = 0;
+                        refresh();
+                        Toast.makeText(this, L.t("الثيم ولد من بذرك — صفر بايت صور"), Toast.LENGTH_SHORT).show();
+                    } catch (Exception ex) {
+                        Toast.makeText(this, L.t("تعذر التوليد — جرّب عبارة أخرى"), Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton(L.t("إلغاء"), null)
+                .show();
+    }
 
     private void newFromScratch() {
         org.json.JSONObject o = new org.json.JSONObject();

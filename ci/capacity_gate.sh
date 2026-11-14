@@ -14,7 +14,7 @@
 #     • the behavioral round-trip evidence is committed (ci/capacity-roundtrip.log)
 #
 #   Verdict: CAPACITYGATE_OK checks=… dex=…/CEIL margin=… levers=…/… ceiling=W58-RAISE
-#            / CAPACITYGATE_FAILED <reason> (exit 1)
+#            (the LAST ceiling.raised row decides — the ledger keeps the raise history)
 #   Standalone by the W50-prep pattern: no pipeline stage (42 byte-stable), no
 #   gates.env keys, no closer list moves — the suite counter stays byte-stable.
 set -uo pipefail
@@ -56,6 +56,6 @@ DIA=$(ci/dialect_gate.sh 2>&1) || { echo "CAPACITYGATE_FAILED dialect_gate"; ech
 echo "$DIA" | tail -1
 
 POST=$(awk -F'\t' '$1=="dex" && $2=="post_trim" {print $3}' ci/capacity_ledger.tsv)
-CEIL=$(awk -F'\t' '$1=="ceiling" {print $3}' ci/capacity_ledger.tsv)
+CEIL=$(awk -F'\t' '$1=="ceiling" {c=$3} END {print c}' ci/capacity_ledger.tsv)
 MARGIN=$((CEIL - DEXY))
-echo "CAPACITYGATE_OK checks=$CHECKS dex=$DEXY/$CEIL margin=$MARGIN levers=3/5 r8=reviewed ceiling=W58-RAISE"
+echo "CAPACITYGATE_OK checks=$CHECKS dex=$DEXY/$CEIL margin=$MARGIN levers=3/5 r8=reviewed ceiling=W69-RAISE"

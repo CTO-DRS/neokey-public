@@ -22,6 +22,7 @@ public final class Theme {
     public boolean hyper;    // v21 futuristic glass: gradient neon edges (glow -> glow2), glowing enter, glass toolbar pill
     public String cat;       // category label (optional)
     public int anim = -1;    // animated background (Backdrops.drawAnim index), -1 = static
+    public String gen = "";  // W69: seed phrase — "" = generator off (law 8: closed by default)
 
     Theme(String name, int bg, int key, int keyPressed, int text, int special, int specialText,
           int shadow, int enter, int enterText, int icon, int hint, int popup, int popupText,
@@ -267,6 +268,7 @@ public final class Theme {
             if (t.border != 0) { o.put("border", hex(t.border)); o.put("borderW", t.borderW); }
             o.put("font", t.font); o.put("glass", t.glass); o.put("photo", t.photo);
             if (t.anim >= 0) o.put("anim", t.anim);
+            if (t.gen != null && !t.gen.isEmpty()) o.put("gen", t.gen);
             if (t.neon) { o.put("neon", true); o.put("glow", hex(t.glow)); o.put("glow2", hex(t.glow2)); }
         } catch (Exception ignored) { }
         return o;
@@ -292,6 +294,15 @@ public final class Theme {
         t.glass = o.optBoolean("glass", false);
         t.photo = o.optBoolean("photo", false);
         t.anim = Math.max(-1, Math.min(Backdrops.animCount() - 1, o.optInt("anim", -1)));
+        t.gen = o.optString("gen", "");
+        if (!t.gen.isEmpty()) {           // W69: الألوان السبعة ولدت من البذرة قبل البناء (الحقول final)
+            int[] cs = GenThemes.colors(GenThemes.make(GenThemes.seedOf(t.gen)));
+            t = new Theme(t.name, cs[0], cs[2], cs[3], cs[4], cs[5], cs[6],
+                    col(o, "shadow", d.shadow), enter, col(o, "enterText", d.enterText),
+                    col(o, "icon", d.icon), col(o, "hint", d.hint), col(o, "popup", d.popup),
+                    col(o, "popupText", d.popupText), d.neon, d.glow, d.glow2);
+            t.bg2 = cs[1];
+        }
         return t;
     }
 
@@ -380,6 +391,7 @@ public final class Theme {
 
     /** Category used by the theme filter chips. */
     public static String category(Theme t) {
+        if (t.gen != null && !t.gen.isEmpty()) return "مولَّدة";
         if (t.anim >= 0) return "متحركة";
         if (t.photo) return "صور";
         if (t.neon) return "نيون";
@@ -389,7 +401,7 @@ public final class Theme {
         return light(t.bg | 0xFF000000) ? "فاتحة" : "داكنة";
     }
 
-    public static final String[] CATS = {"الكل", "فاتحة", "داكنة", "زجاج", "متدرجة", "نيون", "برمجة", "صور"};
+    public static final String[] CATS = {"الكل", "مولَّدة", "فاتحة", "داكنة", "زجاج", "متدرجة", "نيون", "برمجة", "صور"};
 
     /** The user's own colour builder theme (legacy entry point). */
     public static Theme customLegacy(Context c) {

@@ -1121,6 +1121,23 @@ public class KeyboardView extends View {
 
     // ------------------------------------------------------------------ drawing
 
+    private static Bitmap genBm;      // W69: خبيئة الخلفية المولّدة (بذرة×مقاس واحد)
+    private static String genBmKey = "";
+
+    /** يصيّر خلفية البذرة إلى بكسلات GenThemes الحتمية ثم إلى Bitmap (خبيئة واحدة). */
+    private Bitmap genBackdrop(String seed, int w, int h) {
+        String k = seed + "|" + w + "x" + h;
+        if (genBm == null || !k.equals(genBmKey)) {
+            GenThemes.Pal p = GenThemes.make(GenThemes.seedOf(seed));
+            int[] buf = GenThemes.render(p, Math.max(1, w), Math.max(1, h));
+            Bitmap bm = Bitmap.createBitmap(Math.max(1, w), Math.max(1, h), Bitmap.Config.ARGB_8888);
+            bm.setPixels(buf, 0, Math.max(1, w), 0, 0, Math.max(1, w), Math.max(1, h));
+            genBm = bm;
+            genBmKey = k;
+        }
+        return genBm;
+    }
+
     @Override
     protected void onDraw(Canvas c) {
         long now = SystemClock.uptimeMillis();
@@ -1135,6 +1152,12 @@ public class KeyboardView extends View {
         fillP.setColor(theme.bg);
         c.drawPath(bgPath, fillP);
         fillP.setShader(null);
+        if (theme.gen != null && theme.gen.length() > 0) {   // W69: خلفية مولّدة من البذرة (صفر أصول)
+            c.save();
+            c.clipPath(bgPath);
+            c.drawBitmap(genBackdrop(theme.gen, w, h), 0, 0, null);
+            c.restore();
+        }
         int ab = theme.anim >= 0 ? theme.anim : (theme.photo ? animBg : -1);
         animBgOn = false;
         if (ab >= 0) {
