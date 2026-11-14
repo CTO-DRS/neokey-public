@@ -428,8 +428,8 @@ public class ClipEditActivity extends Activity {
         try {
             String apk = getApplicationInfo().sourceDir;
             return IntegrityCert.evaluate(apk,
-                    "0274d153a497a86cf94ff38f98e7b9ebe804ca699316d7395d3f86b80e096e75",
-                    2, "0.2.0", 2238).display;
+                    "883eaf93707dd76e03b8258e33a769dd800ecbe3a68082276866811e789f0141",
+                    3, "0.3.0", 2329).display;
         } catch (Exception e) {
             return "الشهادة: مجهولة — الأثر غير مقروء، ولا تعرض كمطابقة أبداً";
         }

@@ -65,8 +65,8 @@ public final class SignedApkGate {
     // fp16 is derived from it for verdicts.
     static final String EXPECTED_FP = "a80e71b9a5d1554619afe7853b6ef4b20fbbcc05d6e9f4f73a9c98d04092f587";
     static final String EXPECTED_FP16 = EXPECTED_FP.substring(0, 16);
-    static final String EXPECTED_VC = "2";
-    static final String EXPECTED_VN = "0.2.0";
+    static final String EXPECTED_VC = "3";
+    static final String EXPECTED_VN = "0.3.0";
     static final long DEX_CEILING = 552000; // W69-CEILING-RAISE (capacity_ledger ceiling.raised — the measured raise; W57 had raised 512000→513000)
 
     static int CHECKS = 0;

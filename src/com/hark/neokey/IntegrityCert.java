@@ -20,7 +20,7 @@ import java.security.MessageDigest;
  *      العدّاد، والبصمة الكاملة لا تدخل سطر الشاشة (مختصرة 12).
  *
  * الحساب الحي المؤكد عند التصميم: build/NeoKey-2036.apk (5,648,680 بايت)
- * sha256 = 0274d153a497a86cf94ff38f98e7b9ebe804ca699316d7395d3f86b80e096e75
+ * sha256 = 883eaf93707dd76e03b8258e33a769dd800ecbe3a68082276866811e789f0141 (the W72 official artifact, vc=3 vn=0.3.0)
  * يطابق البيان المرفوع بايت-لطرفاً.
  */
 public final class IntegrityCert {

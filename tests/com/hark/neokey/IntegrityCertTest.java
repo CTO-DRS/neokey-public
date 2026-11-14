@@ -50,7 +50,7 @@ public class IntegrityCertTest {
         // ---- القانون 1: الحكم من البايتات ---------------------------------------
         IntegrityCert.Cert ok = IntegrityCert.evaluate(a.getPath(),
                 "b7378c9b3b3822f567e044db663c4628e6b4d25d81858597351e0ad0c00a9933",
-                2, "0.2.0", 2238);
+                3, "0.3.0", 2329);
         check("cert: المطابقة من البايتات نفسها",
                 IntegrityCert.MATCH.equals(ok.state)
                         && ok.display.contains("vc 2 / 0.2.0")
@@ -60,7 +60,7 @@ public class IntegrityCertTest {
         File planted = vec("neokey-integrity-w66-a-X".getBytes(StandardCharsets.UTF_8));
         IntegrityCert.Cert bite = IntegrityCert.evaluate(planted.getPath(),
                 "b7378c9b3b3822f567e044db663c4628e6b4d25d81858597351e0ad0c00a9933",
-                2, "0.2.0", 2238);
+                3, "0.3.0", 2329);
         check("cert: بايت مزروع → CERT_MISMATCH لا مطابقة",
                 IntegrityCert.MISMATCH.equals(bite.state)
                         && !bite.display.startsWith("الشهادة: مطابقة"));
@@ -68,12 +68,12 @@ public class IntegrityCertTest {
         // ---- القانون 3: الفشل المغلق — المجهول لا يُعرض مطابقة -------------------
         IntegrityCert.Cert unk = IntegrityCert.evaluate("/no/such/artifact.apk",
                 "b7378c9b3b3822f567e044db663c4628e6b4d25d81858597351e0ad0c00a9933",
-                2, "0.2.0", 2238);
+                3, "0.3.0", 2329);
         check("cert: الأثر المفقود → CERT_UNKNOWN (لا يُعرض كمطابقة أبداً)",
                 IntegrityCert.UNKNOWN.equals(unk.state)
                         && !unk.display.startsWith("الشهادة: مطابقة"));
         IntegrityCert.Cert nullSha = IntegrityCert.evaluate(a.getPath(), null,
-                2, "0.2.0", 2238);
+                3, "0.3.0", 2329);
         check("cert: بيان ناقص (sha=null) → غير مطابق لا مطابقة",
                 IntegrityCert.MISMATCH.equals(nullSha.state));
 
