@@ -1,5 +1,11 @@
 ───── attack: clarity.det ─────
+bit: clarity.det → FAIL det: نفس النص = نفس الدرجة والمكونات وسطر العرض حرفاً
+healed: src/com/hark/neokey/ClarityMeter.java byte-exact (git-clean; CLARITYGATE_OK on the clean tree)
 ───── attack: clarity.sent ─────
+bit: clarity.sent → FAIL sent: النص الطويل الجملة يفشل
+healed: src/com/hark/neokey/ClarityMeter.java byte-exact (git-clean; CLARITYGATE_OK on the clean tree)
 ───── attack: clarity.filler ─────
+bit: clarity.filler → FAIL filler: الحشو المعلن يُكتسب ظاهرياً ويُفشل
+healed: src/com/hark/neokey/ClarityMeter.java byte-exact (git-clean; CLARITYGATE_OK on the clean tree)
 ───── heal ─────
-PROOF FAILED w68 bites=0/3 failures=3
+PROOF PASSED w68 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: CLARITYGATE_OK on the clean tree — battery 17, a reference test for each of the five metrics plus determinism, fail-closed, and the display line)
