@@ -1,0 +1,11 @@
+───── attack: stv.body ─────
+bit: stv.body → FAIL forge: دبوس محتوى مزور بإعادة توقيع المهاجم يعض (DPACK_PIN_MISMATCH)
+healed: src/com/hark/neokey/StoreV2.java byte-exact (git-clean; STOREV2GATE_OK on the clean tree)
+───── attack: stv.sig ─────
+bit: stv.sig → FAIL forge: توقيع خارجي مفسود بالقيمة يعض (DPACK_SIG)
+healed: src/com/hark/neokey/StoreV2.java byte-exact (git-clean; STOREV2GATE_OK on the clean tree)
+───── attack: stv.req ─────
+bit: stv.req → FAIL forge: حقل مطلوب غائب يعض عند الفتح (REQUIRED_MISSING)
+healed: src/com/hark/neokey/StoreV2.java byte-exact (git-clean; STOREV2GATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w76 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: STOREV2GATE_OK on the clean tree — the content pin over the ordered fields, the envelope signature law, and the required-fields law)
