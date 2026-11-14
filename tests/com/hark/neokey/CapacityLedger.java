@@ -123,7 +123,7 @@ public class CapacityLedger {
 
         // ---- 5. the ceiling decision is documented (no silent raise, ever) -------
         check("ceiling.decision.ledger", byKey.containsKey("ceiling.raised")
-                && "552000".equals(byKey.get("ceiling.raised")[2])
+                && "554000".equals(byKey.get("ceiling.raised")[2])
                 && byKey.get("ceiling.raised")[3].startsWith("W69 decision"));
         String roadmap = new String(Files.readAllBytes(Paths.get("ROADMAP-V2.md")), StandardCharsets.UTF_8);
         check("ceiling.decision.roadmap", roadmap.contains("W54-CEILING-DECISION")

@@ -260,4 +260,10 @@
     <string name="nk_writeractivity_numsection">الأرقام الذكية — هندية/عربية والهجري</string>
     <!-- origin: WriterActivity.java:225 -->
     <string name="nk_writeractivity_numnote">التبديل على المسودة الحية عبر الصنف النقي — والتواريخ خارج النطاق تعلن ولا تخمَّن</string>
+    <!-- origin: SetupActivity.java:870 -->
+    <string name="nk_setupactivity_themechannel">neokey-themechan-1\npin eba452bea5b7daef36f907a69bdbc2f555f640d522b79ee0115f1023208acb57\nseed\tليل الصحراء فوق الرمال\tstyle\t0\nseed\tقهوة الصباح والنافذة\tstyle\t2\nseed\tزجاج المدينة ليلًا\tstyle\t3\nsig 2cc1ed0713f14103c7369b074fd06bc73173c2463af3bbe9ab05feaedecb7273\n</string>
+    <!-- origin: SetupActivity.java:1558 -->
+    <string name="nk_setupactivity_channeltoast" formatted="false">استوردت %1$d ثيمات موقّعة</string>
+    <!-- origin: SetupActivity.java:1560 -->
+    <string name="nk_setupactivity_channelrefuse">القناة مرفوضة — التوقيع لا يطابق</string>
 </resources>

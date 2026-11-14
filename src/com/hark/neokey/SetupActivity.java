@@ -31,6 +31,7 @@ import android.net.Uri;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -866,6 +867,7 @@ public class SetupActivity extends Activity {
         actions.addView(studioBtn("استيراد", "download", v -> importDialog()), a2);
         actions.addView(studioBtn("تصدير", "upload", v -> exportDialog(Theme.current(this))), a3);
         actions.addView(studioBtn("مولّد", "star", v -> genDialog()), a3);
+        actions.addView(studioBtn("القناة المنسّقة", "verified", v -> channelThemes()), a3);
         LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(-1, -2);
         alp.topMargin = (int) (16 * dp);
         content.addView(actions, alp);
@@ -1532,6 +1534,33 @@ public class SetupActivity extends Activity {
     // ---------------------------------------------------------------- theme editor
 
     /** W69: ثيم مولّد من بذرة — عبارة واحدة تولّد الألوان والخلفية، صفر صور. */
+    /** W74: القناة المنسّقة الموقّعة — تُفتح بايت-دقيقة وتُستورد بذورها حية عبر GenThemes. */
+    private void channelThemes() {
+        String chan = getString(R.string.nk_setupactivity_themechannel);
+        try {
+            ThemeChannel.Open o = ThemeChannel.open(chan.getBytes(StandardCharsets.UTF_8));
+            int n = 0;
+            for (ThemeChannel.Entry en : o.entries) {
+                GenThemes.Pal p = GenThemes.make(GenThemes.seedOf(en.seed));
+                org.json.JSONObject ob = new org.json.JSONObject();
+                ob.put("neokey", 1);
+                ob.put("name", "منسّق: " + en.seed);
+                ob.put("gen", en.seed);
+                ob.put("bg", hex8(p.bg)); ob.put("key", hex8(p.key));
+                ob.put("text", hex8(p.text)); ob.put("enter", hex8(p.special));
+                Theme.importPack(this, ob);
+                n++;
+            }
+            Toast.makeText(this, L.t(getString(R.string.nk_setupactivity_channeltoast).replace("%1$d", String.valueOf(n))), Toast.LENGTH_SHORT).show();
+            tab = 0;
+            refresh();
+        } catch (Exception ex) {
+            Toast.makeText(this, L.t(getString(R.string.nk_setupactivity_channelrefuse)), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private static String hex8(int c) { return String.format("#%08X", c & 0xFFFFFF); }
+
     private void genDialog() {
         EditText seed = new EditText(this);
         seed.setSingleLine(true);

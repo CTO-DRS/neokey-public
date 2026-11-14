@@ -1,0 +1,11 @@
+───── attack: chan.pin ─────
+bit: chan.pin → FAIL forge: دبوس مزور بإعادة توقيع المهاجم يعض (DPACK_PIN_MISMATCH)
+healed: src/com/hark/neokey/ThemeChannel.java byte-exact (git-clean; THEMECHANNELGATE_OK on the clean tree)
+───── attack: chan.sig ─────
+bit: chan.sig → FAIL forge: توقيع خارجي مفسود بالقيمة يعض (DPACK_SIG)
+healed: src/com/hark/neokey/ThemeChannel.java byte-exact (git-clean; THEMECHANNELGATE_OK on the clean tree)
+───── attack: chan.style ─────
+bit: chan.style → FAIL forge: النشر يرفض قالباً خارج النطاق (CHAN_ENTRY)
+healed: src/com/hark/neokey/ThemeChannel.java byte-exact (git-clean; THEMECHANNELGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w74 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: THEMECHANNELGATE_OK on the clean tree — the golden pin over the header+entries, the envelope signature law, and the seal refusing an out-of-range style)
