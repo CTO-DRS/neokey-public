@@ -1,0 +1,11 @@
+───── attack: dpack.pin ─────
+bit: dpack.pin → FAIL forge: دبوس مزور بإعادة توقيع المهاجم يعض بالدبوس الذهبي (DPACK_PIN_MISMATCH)
+healed: src/com/hark/neokey/DialectPack.java byte-exact (git-clean; PACKGATE_OK on the clean tree)
+───── attack: dpack.seal ─────
+bit: dpack.seal → FAIL forge: توقيع ختم مزور يعض (DPACK_SIG)
+healed: src/com/hark/neokey/DialectPack.java byte-exact (git-clean; PACKGATE_OK on the clean tree)
+───── attack: dpack.dialect ─────
+bit: dpack.dialect → FAIL pin: لهجة تالفة تعيد سلسلة فارغة (مطبّع موثق)
+healed: src/com/hark/neokey/DialectPack.java byte-exact (git-clean; PACKGATE_OK on the clean tree)
+───── heal ─────
+PROOF PASSED w73 3/3 attacks bit their exact tags and the restores healed byte-exact (heal=1: PACKGATE_OK on the clean tree — the golden pin deterministic with the dialect identity inside it, the self-signed pin forgery biting DPACK_PIN_MISMATCH, the envelope signature law, and the dialect normalizer refusing the malformed)

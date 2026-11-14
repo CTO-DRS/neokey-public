@@ -49,7 +49,7 @@ SRC="src/com/hark/neokey/ClipItem.java src/com/hark/neokey/ClipRepo.java src/com
  src/com/hark/neokey/Dictionary.java src/com/hark/neokey/ArabicFixes.java src/com/hark/neokey/EmojiHints.java \
  src/com/hark/neokey/EmojiSearch.java src/com/hark/neokey/Writer.java src/com/hark/neokey/Decor.java src/com/hark/neokey/Integrity.java src/com/hark/neokey/CrashReport.java src/com/hark/neokey/Feedback.java src/com/hark/neokey/Correction2.java src/com/hark/neokey/Exceptions.java src/com/hark/neokey/SendPreview.java \
  src/com/hark/neokey/NQF.java src/com/hark/neokey/NNet.java src/com/hark/neokey/Predictor.java \
- src/com/hark/neokey/Engine.java src/com/hark/neokey/Engines.java src/com/hark/neokey/RootEngine.java src/com/hark/neokey/TashkeelEngine.java src/com/hark/neokey/GrammarNudge.java src/com/hark/neokey/AdaptEngine.java src/com/hark/neokey/StripAccept.java src/com/hark/neokey/AirSeal.java src/com/hark/neokey/OTPShield.java src/com/hark/neokey/IntegrityCert.java src/com/hark/neokey/PanicWipe.java src/com/hark/neokey/ClarityMeter.java src/com/hark/neokey/GenThemes.java src/com/hark/neokey/AACBoard.java src/com/hark/neokey/NumSmart.java \
+ src/com/hark/neokey/Engine.java src/com/hark/neokey/Engines.java src/com/hark/neokey/RootEngine.java src/com/hark/neokey/TashkeelEngine.java src/com/hark/neokey/GrammarNudge.java src/com/hark/neokey/AdaptEngine.java src/com/hark/neokey/StripAccept.java src/com/hark/neokey/AirSeal.java src/com/hark/neokey/OTPShield.java src/com/hark/neokey/IntegrityCert.java src/com/hark/neokey/PanicWipe.java src/com/hark/neokey/ClarityMeter.java src/com/hark/neokey/GenThemes.java src/com/hark/neokey/AACBoard.java src/com/hark/neokey/NumSmart.java src/com/hark/neokey/DialectPack.java \
  src/com/hark/neokey/Dialect.java src/com/hark/neokey/SmartSwitch.java src/com/hark/neokey/Assistant.java src/com/hark/neokey/NetGate.java \
  src/com/hark/neokey/DialectAdapt.java \
  src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncServerSim.java \
@@ -83,6 +83,8 @@ java -cp build/test:$JAR com.hark.neokey.ClarityMeterTest
 java -cp build/test:$JAR com.hark.neokey.GenThemesTest
 java -cp build/test:$JAR com.hark.neokey.AACBoardTest
 java -cp build/test:$JAR com.hark.neokey.NumSmartTest
+java -cp build/test:$JAR com.hark.neokey.DialectPackTest
+java -cp build/test:$JAR com.hark.neokey.DialectPackMergeTest
 java -cp build/test:$JAR com.hark.neokey.CoreTests
 java -cp build/test:$JAR com.hark.neokey.DialectTest
 java -cp build/test:$JAR com.hark.neokey.DialectAdaptTest
