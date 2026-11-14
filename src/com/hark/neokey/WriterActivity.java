@@ -205,7 +205,7 @@ public class WriterActivity extends Screen {
                 aac.addView(rr, top(6));
             }
         }
-        TextView aacNote = text("كل عبارة تدخل المسودة عبر مسار الإدراج القائم — والتخصيص من قصاصاتك الموسومة «aac:الفئة»", 12, Typeface.NORMAL, 0xFF8A8FA3);
+        TextView aacNote = text(getString(R.string.nk_writeractivity_aacnote), 12, Typeface.NORMAL, 0xFF8A8FA3);
         aacNote.setPadding(0, (int) (8 * dp), 0, 0);
         aac.addView(aacNote);
         body.addView(aac);

@@ -55,7 +55,7 @@ public final class TrimGate {
     static final int CEILING = 550000;   // W69-CEILING-RAISE (capacity_ledger ceiling.raised — the measured raise; was 513000; W57 had raised 512000→513000)
     static final int PRE_TRIM_DEX = 550000;   // the W58 re-anchor: the W21 shipped record (518,688) was the proxy until W58 crossed it with NEW engine code (+8592 documented) — after W58 the regrowth proxy rides the ceiling; the trim's own behavioral laws (the saved-floor + the roundtrip proof) carry the regrowth detection
     static final int MIN_LIT_BYTES = 60;      // same cutoff as the move tool
-    static final int PIN_ENTRIES = 120;       // W69: +1 (genthemes_msg — the seed dialog copy); change consciously
+    static final int PIN_ENTRIES = 121;       // W70: +1 (aacnote — the AAC board note); W69 was 120 (genthemes_msg); change consciously
     static final String[] SHELL_FILES = {
         "src/com/hark/neokey/SetupActivity.java",
         "src/com/hark/neokey/ClipIOActivity.java",
