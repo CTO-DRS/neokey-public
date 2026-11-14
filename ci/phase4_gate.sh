@@ -63,12 +63,12 @@ echo "[phase4] $RS"
 echo "[phase4] $PY"
 
 # ---- 2: pinned baselines on the FRESH values — shipped numbers may not sink --
-# real dex trim (W1/week 22): 119 entries, nothing regrown, purity holds
+# real dex trim (W1/week 22): 120 entries (W69 +1: the GenThemes inventory class), nothing regrown, purity holds
 TR_ENT=$(field "$TR" entries);   TR_SAVED=$(field "$TR" saved)
 TR_DEX=$(field "$TR" dex | cut -d/ -f1); TR_CEIL=$(field "$TR" dex | cut -d/ -f2)
 TR_REG=$(field "$TR" regrown);   TR_PUR=$(field "$TR" purity)
 TR_UIEN=$(field "$TR" ui_en_coupled)
-[ "${TR_ENT:-0}"   = 119 ]      || fail "trim entries ${TR_ENT:-0} != 119 (the trim inventory moved silently)"
+[ "${TR_ENT:-0}"   = 120 ]      || fail "trim entries ${TR_ENT:-0} != 120 (the trim inventory moved silently)"
 [ "${TR_REG:-1}"   = 0 ]        || fail "trim regrown ${TR_REG:-?} != 0 (a shell-class literal regrew)"
 [ "${TR_PUR:-0}"   -ge 36 ]     || fail "trim purity $TR_PUR < 36 (android imports lost their stubs)"
 [ "${TR_UIEN:-0}"  -ge 80 ]     || fail "trim ui_en_coupled ${TR_UIEN:-0} < 80 (translation coupling broke)"
@@ -81,7 +81,7 @@ TR_UIEN=$(field "$TR" ui_en_coupled)
 # built against the REAL R (aapt2 — the artifact path, the W22 stub would ship
 # wrong resource IDs); R.* constants inline as 32-bit, shifting the measured
 # trim delta 13424 -> 13052 (-372 = exactly the real-R size delta). The lever
-# itself is unchanged (entries=119, regrown=0, purity intact).
+# itself is unchanged (entries=120, regrown=0, purity intact).
 # W47 re-pin (roadmap W47, documented weekly baseline): 13052 -> 12984 — the
 # clip escapeTxt law (ci/clipio_gate.sh, HISTORY W47) grew the source by 68
 # dex bytes, the measured lever shrinks by the same delta; dex 505704/512000.
