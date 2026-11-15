@@ -51,7 +51,7 @@ if grep -q '^PUBSYNC_GATE=OK' build/release/gates.env 2>/dev/null; then
 else
   TOTAL=$((TOTAL+1)); SKIPPED=$((SKIPPED+1))
   echo "  skip ownerverif (no publication state — nothing to audit; the pipeline's guard mirrored)"
-fi"
+fi
 # ---- 4) the signed families, week by week -----------------------------------
 step dictsign   "bash ci/dictsign_gate.sh"
 step community  "bash ci/community_gate.sh"
