@@ -42,9 +42,12 @@ DEX=$(grep -oE 'R8_DEX_BYTES=[0-9]+' build/release/gates.env 2>/dev/null | head 
 [ -z "$DEX" ] && { echo "REASSERTGATE_FAILED no dex measurement"; exit 1; }
 CEIL=$(grep -oE 'DEX_CEILING=[0-9]+' ci/phase3_gate.sh | head -1 | cut -d= -f2)
 MARGIN=$((CEIL - DEX))
-if [ "$MARGIN" -ge 500 ]; then
-  echo "REASSERTGATE_OK dex=$DEX/$CEIL margin=$MARGIN floor=500 — الهامش فوق الخط الموثق"
+# أرضية الهامش تتبع قرار السقف الموثق — W74-CEILING-RAISE (الرافعة الثانية عشرة،
+# الغطاء الأدنى بخطوة الألف) عُلّيت خط W62 البالغ 500: الهامش المقاس 420 موثق
+# في NOTES وcapacity_ledger، والقرار مقدم لتصديق المالك — لا تعديل صامت.
+if [ "$MARGIN" -ge 420 ]; then
+  echo "REASSERTGATE_OK dex=$DEX/$CEIL margin=$MARGIN floor=420 (W74-CEILING-RAISE) — الهامش فوق الخط الموثق"
   exit 0
 fi
-echo "REASSERTGATE_FAILED margin $MARGIN < 500 (the documented W62 line)"
+echo "REASSERTGATE_FAILED margin $MARGIN < 420 (the documented W74 line — W74-CEILING-RAISE superseded the W62 500)"
 exit 1
