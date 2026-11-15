@@ -8,7 +8,7 @@
 #   the HEAD hash: a green verdict on a moving head is worthless, so the
 #   final hash check is part of the law.
 #
-#   Verdict: REASSERT2GATE_OK gates=N/N head=<sha12> (exit 0)
+#   Verdict: REASSERT2GATE_OK gates=N/N skipped=K head=<sha12> (exit 0)
 #            / REASSERT2GATE_FAILED <gate> (exit 1).
 #   Standalone (W50-prep pattern — no pipeline stage).
 set -uo pipefail
@@ -30,7 +30,7 @@ run() { # $1 label, $2 command
   exit 1
 }
 
-N=0; TOTAL=0
+N=0; TOTAL=0; SKIPPED=0
 step() { TOTAL=$((TOTAL+1)); run "$1" "$2" && N=$((N+1)); }
 
 # ---- 1) the battery ----------------------------------------------------------
@@ -43,8 +43,15 @@ step billing    "bash ci/billing_gate.sh"
 step preflight  "bash ci/preflight_gate.sh"
 step uploadbdl  "bash ci/uploadbundle_gate.sh"
 step deploysrv  "bash ci/deploysrv_gate.sh"
-step pubsync    "bash ci/pubsync_gate.sh"   # النشر أولاً — ownerverify يتحقق من حالته
-step ownerverif "bash ci/ownerverify_gate.sh"
+# النشر فعل المالك بعهدته (fail-closed: لا نشر بلا اعتماد المالك ولا تظاهر) —
+# إعادة التأكيد لا تنشر شيئاً أبداً؛ هي تتحقق فقط. ownerverify يُجري شرطياً
+# عند وجود حالة نشر قائمة (مرآة حارس الخط نفسه).
+if grep -q '^PUBSYNC_GATE=OK' build/release/gates.env 2>/dev/null; then
+  step ownerverif "bash ci/ownerverify_gate.sh"
+else
+  TOTAL=$((TOTAL+1)); SKIPPED=$((SKIPPED+1))
+  echo "  skip ownerverif (no publication state — nothing to audit; the pipeline's guard mirrored)"
+fi"
 # ---- 4) the signed families, week by week -----------------------------------
 step dictsign   "bash ci/dictsign_gate.sh"
 step community  "bash ci/community_gate.sh"
@@ -62,7 +69,7 @@ step reassert62 "bash ci/reassert_gate.sh"
 HEAD1=$(git rev-parse HEAD)
 git diff --quiet || { echo "REASSERT2GATE_FAILED the tree is dirty after the run"; exit 1; }
 if [ "$HEAD0" = "$HEAD1" ]; then
-  echo "REASSERT2GATE_OK gates=$N/$TOTAL head=${HEAD1:0:12}"
+  echo "REASSERT2GATE_OK gates=$N/$TOTAL skipped=$SKIPPED head=${HEAD1:0:12}"
   exit 0
 fi
 echo "REASSERT2GATE_FAILED the head moved during the run ($HEAD0 -> $HEAD1)"
