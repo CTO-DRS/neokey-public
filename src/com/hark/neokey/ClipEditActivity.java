@@ -300,6 +300,10 @@ public class ClipEditActivity extends Activity {
         tashChip.setOnClickListener(v -> cycleTashkeel(tashChip));
         tools.addView(tashChip);
         tools.addView(tool("تشكيل النص", v -> applyTashkeel()));
+        // W84: the voweled EXPORT rides the existing clipboard path non-
+        // destructively — the editor text stays as written while the copy
+        // carries the mode-gated forms; OFF/detached refuses loudly.
+        tools.addView(tool("تصدير مشكول", v -> exportTashkeel()));
         // W58: the grammar chip cycles the three modes (shipped CLOSED;
         // persisted), and تدقيق النص scans the whole text and EXPLAINS each
         // nudge — the tap applies that one (one undo step, never قهراً).
@@ -360,17 +364,15 @@ public class ClipEditActivity extends Activity {
         List<PanicWipe.Store> targets = panicTargets();
         if (panicArmed == null) {
             panicArmed = PanicWipe.armToken(targets);
-            Toast.makeText(this, L.t("سلاح: الرمز " + panicArmed
-                    + " — اضغط ثانية للتنفيذ. النسخ الموقعة محصنة."),
-                    Toast.LENGTH_LONG).show();
+            toastL("سلاح: الرمز " + panicArmed
+                    + " — اضغط ثانية للتنفيذ. النسخ الموقعة محصنة.");
             return;
         }
         String expected = PanicWipe.armToken(targets);
         PanicWipe.Result res = PanicWipe.wipeAll(targets, panicArmed, expected);
         panicArmed = null;
         if (PanicWipe.REFUSED.equals(res.state)) {
-            Toast.makeText(this, L.t("الطمأنينة: رُفض التنفيذ — لا تأكيد مطابق"),
-                    Toast.LENGTH_SHORT).show();
+            toast("الطمأنينة: رُفض التنفيذ — لا تأكيد مطابق");
             return;
         }
         ClipStore.get(this).run(r -> {
@@ -380,9 +382,8 @@ public class ClipEditActivity extends Activity {
         new java.io.File(getFilesDir(), "adapt_store.txt").delete();
         new java.io.File(getFilesDir(), "strip_accept.txt").delete();
         Theme.prefs(this).edit().putBoolean("adapt_reset", true).apply();
-        Toast.makeText(this, L.t("الطمأنينة: " + res.wipedStores
-                + " مخازن بايت-فارغة — النسخ الموقعة محصنة والاستعادة تبقى ممكنة"),
-                Toast.LENGTH_LONG).show();
+        toastL("الطمأنينة: " + res.wipedStores
+                + " مخازن بايت-فارغة — النسخ الموقعة محصنة والاستعادة تبقى ممكنة");
     }
 
     /** W67: وضع التخفي المؤقت — بمؤقت يعود فيه كل شيء مغلقًا (قانون ALL_CLOSED). */
@@ -396,25 +397,22 @@ public class ClipEditActivity extends Activity {
         if (panicStealthUntil != 0) {
             ui.removeCallbacks(stealthExpire);
             panicStealthUntil = 0;
-            Toast.makeText(this, L.t("أُلغي التخفي المؤقت"), Toast.LENGTH_SHORT).show();
+            toast("أُلغي التخفي المؤقت");
             return;
         }
         long now = System.currentTimeMillis() / 1000;
         panicStealthUntil = PanicWipe.stealthBegin(now, 60);
         if (panicStealthUntil < 0) {
-            Toast.makeText(this, L.t("الطمأنينة: رُفض بدء التخفي — مدة غير موجبة"),
-                    Toast.LENGTH_SHORT).show();
+            toast("الطمأنينة: رُفض بدء التخفي — مدة غير موجبة");
             return;
         }
         ui.postDelayed(stealthExpire, 60_000L);
-        Toast.makeText(this, L.t("التخفي المؤقت نشط 60 ثانية — عند الانتهاء كل شيء مغلق"),
-                Toast.LENGTH_LONG).show();
+        toastL("التخفي المؤقت نشط 60 ثانية — عند الانتهاء كل شيء مغلق");
     }
 
     private void stealthExpire() {
         panicStealthUntil = 0;
-        Toast.makeText(this, L.t("انتهى التخفي — كل شيء مغلق (ALL_CLOSED)"),
-                Toast.LENGTH_SHORT).show();
+        toast("انتهى التخفي — كل شيء مغلق (ALL_CLOSED)");
     }
 
     /**
@@ -450,7 +448,7 @@ public class ClipEditActivity extends Activity {
         int cur = OTPShield.clampTimeout(gp.getInt("otp_timeout", OTPShield.DEFAULT_TIMEOUT));
         int next = cur >= 600 ? 30 : cur == 300 ? 600 : cur == 120 ? 300 : cur == 60 ? 120 : 60;
         gp.edit().putInt("otp_timeout", next).apply();
-        Toast.makeText(this, L.t("مهلة مسح الرموز: " + next + " ثانية"), Toast.LENGTH_SHORT).show();
+        toast("مهلة مسح الرموز: " + next + " ثانية");
     }
 
     /** W64: الختم الحي — الحالة من prefs NetGate والأحداث من الملف المحلي. */
@@ -493,6 +491,12 @@ public class ClipEditActivity extends Activity {
         t.setLayoutParams(lp);
         return t;
     }
+
+    /** one toast through L — the inline glue collapses onto one shape
+     *  (the W54 discipline, the law-5 trim riding the W84 export commit;
+     *  same L.t, same durations — zero behavior change). */
+    private void toast(String s) { toast(s); }
+    private void toastL(String s) { toastL(s); }
 
     private TextView tool(String label, View.OnClickListener l) {
         TextView t = btn(label, false);
@@ -559,7 +563,7 @@ public class ClipEditActivity extends Activity {
                     r.categories(), r.categoriesOf(id), r.tagsOf(id), r.shortcutOf(id)};
         }, res -> {
             if (res == null) {
-                Toast.makeText(this, L.t("النص غير موجود، يمكن انحذف"), Toast.LENGTH_LONG).show();
+                toastL("النص غير موجود، يمكن انحذف");
                 finish();
                 return;
             }
@@ -630,7 +634,7 @@ public class ClipEditActivity extends Activity {
             new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                     .setTitle(L.t("وسم جديد"))
                     .setItems(names.toArray(new String[0]), (d, w) -> {
-                        if (myTags.size() >= ClipRepo.MAX_TAGS) { Toast.makeText(this, L.t("الحد ١٢ وسماً للنص"), Toast.LENGTH_SHORT).show(); return; }
+                        if (myTags.size() >= ClipRepo.MAX_TAGS) { toast("الحد ١٢ وسماً للنص"); return; }
                         if (w == 0) nameDialog("وسم جديد", "", n -> { String t = ClipRepo.normTag(n); if (!t.isEmpty() && !myTags.contains(t)) { myTags.add(t); persistTags(); } });
                         else { myTags.add(names.get(w)); persistTags(); }
                     })
@@ -648,11 +652,11 @@ public class ClipEditActivity extends Activity {
             return cur == null ? "" : cur;
         }, canon -> {
             if (canon == null) {
-                Toast.makeText(this, L.t("الاختصار لازم كلمة واحدة بلا مسافات وغير مستخدم"), Toast.LENGTH_LONG).show();
+                toastL("الاختصار لازم كلمة واحدة بلا مسافات وغير مستخدم");
                 return;
             }
             scEdit.setText(canon);
-            Toast.makeText(this, L.t(canon.isEmpty() ? "أُزيل الاختصار" : "انحفظ الاختصار"), Toast.LENGTH_SHORT).show();
+            toast(canon.isEmpty() ? "أُزيل الاختصار" : "انحفظ الاختصار");
         });
     }
 
@@ -672,11 +676,32 @@ public class ClipEditActivity extends Activity {
         chip.setText(L.t(tashLabel()));
     }
 
+    /** the shared ready-guard: the attached engine or null (OFF/detached
+     *  — one honest refusal path for both tashkeel tools). */
+    private TashkeelEngine tashReady() {
+        TashkeelEngine e = TashkeelEngine.attached();
+        return (e == null || TashkeelEngine.mode == TashkeelEngine.MODE_OFF) ? null : e;
+    }
+
     /** W57: apply the mode-gated tashkeel to the whole text (OFF → no-op). */
     private void applyTashkeel() {
-        TashkeelEngine e = TashkeelEngine.attached();
-        if (e == null || TashkeelEngine.mode == TashkeelEngine.MODE_OFF) return;
+        TashkeelEngine e = tashReady();
+        if (e == null) return;
         transform(TashkeelEngine.apply(body.getText().toString(), e, TashkeelEngine.mode));
+    }
+
+    /** W84: the voweled export — the whole-text forms through the attached
+     *  engine land in the CLIPBOARD, never back into the editor (unlike
+     *  تشكيل النص which transforms in place). OFF or a detached engine
+     *  refuses loudly — uncovered words ride apply()'s honest pass-through. */
+    private void exportTashkeel() {
+        TashkeelEngine e = tashReady();
+        if (e == null) {
+            toastL("التشكيل غير متاح الآن");
+            return;
+        }
+        setClip(TashkeelEngine.apply(body.getText().toString(), e, TashkeelEngine.mode));
+        toast("انسخ النص مشكولاً");
     }
 
     /** W58: the chip label for the current grammar mode (shipped CLOSED). */
@@ -705,7 +730,7 @@ public class ClipEditActivity extends Activity {
                     new java.io.File(getFilesDir(), "adapt_store.txt").delete();
                     new java.io.File(getFilesDir(), "strip_accept.txt").delete();
                     Theme.prefs(this).edit().putBoolean("adapt_reset", true).apply();
-                    Toast.makeText(this, L.t("تم المسح — التنبؤ الشخصي في حالة المصنع"), Toast.LENGTH_SHORT).show();
+                    toast("تم المسح — التنبؤ الشخصي في حالة المصنع");
                 })
                 .setNegativeButton(L.t("إلغاء"), null)
                 .create().show();
@@ -717,14 +742,14 @@ public class ClipEditActivity extends Activity {
     private void scanGrammar() {
         GrammarNudge e = GrammarNudge.attached();
         if (e == null || GrammarNudge.mode == GrammarNudge.MODE_OFF) {
-            Toast.makeText(this, L.t("التدقيق مغلقة — شغّله من رقاقة «التدقيق»"), Toast.LENGTH_SHORT).show();
+            toast("التدقيق مغلقة — شغّله من رقاقة «التدقيق»");
             return;
         }
         String text = body.getText().toString();
         java.util.List<GrammarNudge.Nudge> ns =
                 GrammarNudge.scan(text, e, GrammarNudge.mode, false);
         if (ns.isEmpty()) {
-            Toast.makeText(this, L.t("لا ملاحظات — ما لقينا شي ننبّه عليه"), Toast.LENGTH_SHORT).show();
+            toast("لا ملاحظات — ما لقينا شي ننبّه عليه");
             return;
         }
         final String[] rows = new String[ns.size()];
@@ -815,7 +840,7 @@ public class ClipEditActivity extends Activity {
                     if (which == 0) nameDialog("إعادة تسمية", c.name, n -> ClipStore.get(this).run(r -> {
                         if (!r.renameCategory(c.id, n)) return null;
                         return new Object[]{r.categories(), r.categoriesOf(id)};
-                    }, res -> { if (res == null) Toast.makeText(this, L.t("الاسم مستخدم"), Toast.LENGTH_SHORT).show(); else applyCats(res); }));
+                    }, res -> { if (res == null) toast("الاسم مستخدم"); else applyCats(res); }));
                     else ClipStore.get(this).run(r -> { r.deleteCategory(c.id); return new Object[]{r.categories(), r.categoriesOf(id)}; }, this::applyCats);
                 }).show();
     }
@@ -828,8 +853,8 @@ public class ClipEditActivity extends Activity {
         if (loading) return;
         final String t = body.getText().toString();
         final String tt = title.getText().toString();
-        if (t.trim().isEmpty()) { Toast.makeText(this, L.t("ما ينفع تحفظ نص فاضي"), Toast.LENGTH_SHORT).show(); return; }
-        if (t.length() > ClipRepo.MAX_LEN) { Toast.makeText(this, L.t("النص أطول من ٥٠٠ ألف حرف"), Toast.LENGTH_LONG).show(); return; }
+        if (t.trim().isEmpty()) { toast("ما ينفع تحفظ نص فاضي"); return; }
+        if (t.length() > ClipRepo.MAX_LEN) { toastL("النص أطول من ٥٠٠ ألف حرف"); return; }
         ClipStore.get(this).run(r -> {
             long now = System.currentTimeMillis();
             if (asNew) {
@@ -844,21 +869,21 @@ public class ClipEditActivity extends Activity {
         }, res -> {
             if (res != null && res == ClipRepo.OK) {
                 if (!asNew) { original = t; originalTitle = tt.trim(); versions++; verBtn.setAlpha(1f); }
-                Toast.makeText(this, L.t(asNew ? "انحفظ كنص جديد" : "انحفظت التعديلات"), Toast.LENGTH_SHORT).show();
+                toast(asNew ? "انحفظ كنص جديد" : "انحفظت التعديلات");
             } else {
-                Toast.makeText(this, L.t("تعذّر الحفظ، النص الأصلي ما تغيّر"), Toast.LENGTH_LONG).show();
+                toastL("تعذّر الحفظ، النص الأصلي ما تغيّر");
             }
         });
     }
 
     private void restoreVersion() {
-        if (versions == 0) { Toast.makeText(this, L.t("ما فيه نسخة سابقة لهذا النص"), Toast.LENGTH_SHORT).show(); return; }
+        if (versions == 0) { toast("ما فيه نسخة سابقة لهذا النص"); return; }
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle(L.t("استعادة النسخة السابقة؟"))
                 .setMessage(L.t("النص الحالي ينحفظ كنسخة، فتقدر ترجع له."))
                 .setPositiveButton(L.t("استعادة"), (d, w) -> ClipStore.get(this).run(r -> r.restorePrevious(id, System.currentTimeMillis()), res -> {
                     if (res != null && res == ClipRepo.OK) load();
-                    else Toast.makeText(this, L.t("تعذّرت الاستعادة"), Toast.LENGTH_SHORT).show();
+                    else toast("تعذّرت الاستعادة");
                 }))
                 .setNegativeButton(L.t("إلغاء"), null).show();
     }
@@ -878,7 +903,7 @@ public class ClipEditActivity extends Activity {
 
     private void cutCopy(boolean cut) {
         int s = Math.min(body.getSelectionStart(), body.getSelectionEnd()), e = Math.max(body.getSelectionStart(), body.getSelectionEnd());
-        if (s < 0 || s == e) { Toast.makeText(this, L.t("حدّد نص أول"), Toast.LENGTH_SHORT).show(); return; }
+        if (s < 0 || s == e) { toast("حدّد نص أول"); return; }
         setClip(body.getText().subSequence(s, e).toString());
         if (cut) body.getText().delete(s, e);
     }
@@ -895,7 +920,7 @@ public class ClipEditActivity extends Activity {
 
     private void copyAll() {
         setClip(body.getText().toString());
-        Toast.makeText(this, L.t("انسخ النص كامل"), Toast.LENGTH_SHORT).show();
+        toast("انسخ النص كامل");
     }
 
     private void setClip(String s) {

@@ -39,6 +39,12 @@ import java.util.List;
 
 public class NeoKeyService extends InputMethodService implements KeyboardView.Listener {
 
+    /** one toast through L — the inline glue collapses onto one shape
+     *  (the W54 discipline; the law-5 trim riding the W84 export commit;
+     *  same L.t, same durations — zero behavior change). */
+    private void toast(String s) { Toast.makeText(this, L.t(s), Toast.LENGTH_SHORT).show(); }
+    private void toastL(String s) { Toast.makeText(this, L.t(s), Toast.LENGTH_LONG).show(); }
+
     private static final String SEP = "\u0001";
     private KeyboardView view;
     private boolean arabic = true;
@@ -1056,7 +1062,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             freshTime = SystemClock.elapsedRealtime();
             if (incognito) return;
             if (s.length() > ClipRepo.MAX_LEN) {
-                Toast.makeText(this, L.t(getString(R.string.nk_neokeyservice_captureclip_1)), Toast.LENGTH_LONG).show();
+                toastL(getString(R.string.nk_neokeyservice_captureclip_1));
                 return;
             }
             final int max = Theme.prefs(this).getInt("clip_max", 50);
@@ -2015,7 +2021,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private void shareText(String t) {
         if (t.length() > 100_000) {
             // binder transactions cap around 1 MB; very long texts are copied or exported instead
-            Toast.makeText(this, L.t(getString(R.string.nk_neokeyservice_sharetext_1)), Toast.LENGTH_LONG).show();
+            toastL(getString(R.string.nk_neokeyservice_sharetext_1));
             return;
         }
         Intent send = new Intent(Intent.ACTION_SEND);
@@ -2024,7 +2030,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         Intent ch = Intent.createChooser(send, L.t("مشاركة النص"));
         ch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try { startActivity(ch); } catch (Exception e) {
-            Toast.makeText(this, L.t("ما فيه تطبيق للمشاركة"), Toast.LENGTH_SHORT).show();
+            toast("ما فيه تطبيق للمشاركة");
         }
     }
 
@@ -2051,7 +2057,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     /** 101st pin: offer to give up the last pinned item, or cancel. */
     private void askReplacePin(final long id) {
         if (view == null || view.getWindowToken() == null) {
-            Toast.makeText(this, L.t("وصلت للحد الأقصى ١٠٠ مثبّت"), Toast.LENGTH_LONG).show();
+            toastL("وصلت للحد الأقصى ١٠٠ مثبّت");
             return;
         }
         android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
@@ -2077,7 +2083,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             win.addFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         }
         try { dlg.show(); } catch (Exception e) {
-            Toast.makeText(this, L.t("وصلت للحد الأقصى ١٠٠ مثبّت"), Toast.LENGTH_LONG).show();
+            toastL("وصلت للحد الأقصى ١٠٠ مثبّت");
         }
     }
 
