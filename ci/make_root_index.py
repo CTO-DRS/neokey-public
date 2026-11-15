@@ -9,6 +9,9 @@
 #   the payload + root lines) — law 6: the knowledge lives in assets/, the dex
 #   carries the thin strict interpreter (RootEngine). Deterministic: the same
 #   dictionary bytes produce the same index bytes, always. No randomness.
+#   (F2, audit 2026-11-15: the PAYLOAD is deterministic; the `made` header
+#   line is the creation-day stamp, and --check normalizes exactly that line
+#   so the byte-proof survives across days.)
 #
 #   The derivation is FAIL-CLOSED: a word gets a root ONLY when a rule fires
 #   AND the derived root verifies (an attested norm key, or a member of the
@@ -48,7 +51,7 @@
 #     python3 ci/make_root_index.py --check    # byte-compare vs committed asset
 #     python3 ci/make_root_index.py --gold     # gold-set accuracy report
 #     python3 ci/make_root_index.py --trace كلمة  # one word, final derivation
-import sys, zlib, os
+import sys, zlib, os, re
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -487,7 +490,18 @@ def main():
     text, st = build()
     if mode == "--check":
         committed = open(OUT, encoding="utf-8").read()
-        if text != committed:
+        # F2 (the full audit, 2026-11-15): the `made` header line is the
+        # creation-day stamp — date.today() made the byte-compare bite on any
+        # later day though the payload stays deterministic. The check
+        # normalizes EXACTLY that line, nothing else, and stays fail-closed:
+        # the committed stamp must still be a real ISO date.
+        if re.search(r"^made\t\d{4}-\d{2}-\d{2}$", committed, re.M) is None:
+            print("ROOTINDEX_CHECK_FAILED made_stamp_missing_or_malformed")
+            sys.exit(1)
+        def _norm_made(s):  # compare all bytes except the `made` day stamp
+            return "\n".join(("made\tCHECK-NORMALIZED" if l.startswith("made\t") else l)
+                             for l in s.split("\n"))
+        if _norm_made(text) != _norm_made(committed):
             print("ROOTINDEX_CHECK_FAILED non_deterministic (derived != committed)")
             sys.exit(1)
         print("ROOTINDEX_CHECK_OK bytes=%d words=%d roots=%d covered=%d"

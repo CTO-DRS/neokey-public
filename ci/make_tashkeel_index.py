@@ -50,7 +50,7 @@
 #     python3 ci/make_tashkeel_index.py --gold     # gold-set accuracy report
 #     python3 ci/make_tashkeel_index.py --testset  # gold + the reference-testset report
 #     python3 ci/make_tashkeel_index.py --trace كلمة # one word, its ladder output
-import sys, zlib, os
+import sys, zlib, os, re
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -575,7 +575,16 @@ def main():
     text, st = build()
     if mode == "--check":
         committed = open(OUT, encoding="utf-8").read()
-        if text != committed:
+        # F2 (the full audit, 2026-11-15): the `made` header line is the
+        # creation-day stamp — see make_root_index.py; normalize exactly that
+        # line and keep the committed stamp fail-closed on its ISO shape.
+        if re.search(r"^made\t\d{4}-\d{2}-\d{2}$", committed, re.M) is None:
+            print("TASHKEELINDEX_CHECK_FAILED made_stamp_missing_or_malformed")
+            sys.exit(1)
+        def _norm_made(s):  # compare all bytes except the `made` day stamp
+            return "\n".join(("made\tCHECK-NORMALIZED" if l.startswith("made\t") else l)
+                             for l in s.split("\n"))
+        if _norm_made(text) != _norm_made(committed):
             print("TASHKEELINDEX_CHECK_FAILED non_deterministic (derived != committed)")
             sys.exit(1)
         print("TASHKEELINDEX_CHECK_OK bytes=%d words=%d entries=%d covered=%d"

@@ -120,3 +120,7 @@ if [ -n "${APKSIG_SUITE:-}" ]; then
 else
   echo "SKIP SignedApkTest (tools/apksig.jar absent — see docs/R8.md; the SIGNEDAPK gate requires it)"
 fi
+# audit F6 (2026-11-15): the per-suite RESULT lines include embedded gate
+# checks; the documented tally (tests 2381/0 at W78) counts tests only —
+# both measures must show zero failed. Reached only on a full green run.
+echo "BATTERY_END note: RESULT totals include embedded gate checks — the documented tally (2381/0 at W78) counts tests only; zero failed is the bar on both measures."
