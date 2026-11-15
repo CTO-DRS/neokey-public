@@ -43,8 +43,8 @@ step billing    "bash ci/billing_gate.sh"
 step preflight  "bash ci/preflight_gate.sh"
 step uploadbdl  "bash ci/uploadbundle_gate.sh"
 step deploysrv  "bash ci/deploysrv_gate.sh"
+step pubsync    "bash ci/pubsync_gate.sh"   # النشر أولاً — ownerverify يتحقق من حالته
 step ownerverif "bash ci/ownerverify_gate.sh"
-step pubsync    "bash ci/pubsync_gate.sh"
 # ---- 4) the signed families, week by week -----------------------------------
 step dictsign   "bash ci/dictsign_gate.sh"
 step community  "bash ci/community_gate.sh"
