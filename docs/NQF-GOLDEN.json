@@ -38,8 +38,12 @@
       "sha256": "f457bd7b6b4d6dd73488b767c3d7ad5bb41599c964a1e913808fa93d0f659a45"
     },
     "dialect_proverbs.txt": {
-      "bytes": 3647,
-      "sha256": "c5b9cb1d346b70c027338aa6c610acd51c9f7887921d71c798f109a707c7e388"
+      "bytes": 3637,
+      "sha256": "0a8f9975d4e22cd78bd7c357af76324ce5c7c85957682392393e27556a8725e0"
+    },
+    "dialect_soften.txt": {
+      "bytes": 862,
+      "sha256": "08557490d78dfd2e81d82bd2c36ed8e4e066d6ac008e67d0ac309e3895e2dda5"
     },
     "dialect_synonyms.txt": {
       "bytes": 2351,

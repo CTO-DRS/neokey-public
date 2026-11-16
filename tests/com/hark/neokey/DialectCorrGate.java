@@ -276,7 +276,7 @@ public final class DialectCorrGate {
         // row's proverb (no trigger claimed twice), pinned samples, non-triggers stay null.
         String provText = new String(java.nio.file.Files.readAllBytes(
                 java.nio.file.Paths.get("assets/dialect_proverbs.txt")), "UTF-8");
-        Dialect.provLoad(provText);
+        java.util.Map<String, String> pm = Dialect.pairs(provText);
         int provN = 0, trigN = 0;
         java.util.Set<String> seenTrig = new java.util.HashSet<>();
         for (String line : provText.split("\n")) {
@@ -286,15 +286,38 @@ public final class DialectCorrGate {
             provN++;
             for (String w : f[0].split("،")) {
                 need(seenTrig.add(Dialect.normAr(w.trim())), "prov.dup " + w);
-                need(f[1].trim().equals(Dialect.proverb(w.trim())), "prov.map " + w);
+                need(f[1].trim().equals(pm.get(Dialect.normAr(w.trim()))), "prov.map " + w);
                 trigN++;
             }
         }
-        need("الجار قبل الدار".equals(Dialect.proverb("جيراني")), "prov.pin jar");
-        need("الصبر مفتاح الفرج".equals(Dialect.proverb("صبرت")), "prov.pin sabr");
+        need("الجار قبل الدار".equals(pm.get(Dialect.normAr("جيراني"))), "prov.pin jar");
+        need("الصبر مفتاح الفرج".equals(pm.get(Dialect.normAr("صبرت"))), "prov.pin sabr");
         for (String w : new String[]{"وقت", "كلام", "مال", "شكرا", "الحين", "وش", "ابي"})
-            need(Dialect.proverb(w) == null, "prov.common " + w);
+            need(pm.get(Dialect.normAr(w)) == null, "prov.common " + w);
         System.out.println("DIALECTCORR proverbs=" + provN + " triggers=" + trigN);
+
+        // ---- 3h. «الكتابة اللطيفة» (W96): each hurtful trigger maps to its gentler
+        // phrase, no trigger shared with a proverb, no gentle phrase carries a trigger.
+        String softText = new String(java.nio.file.Files.readAllBytes(
+                java.nio.file.Paths.get("assets/dialect_soften.txt")), "UTF-8");
+        java.util.Map<String, String> sm = Dialect.pairs(softText);
+        int softN = 0;
+        for (String line : softText.split("\n")) {
+            if (line.isEmpty() || line.charAt(0) == '#') continue;
+            String[] f = line.split("\t");
+            need(f.length == 2 && !f[1].trim().isEmpty(), "soft.shape " + line);
+            for (String w : f[0].split("،")) {
+                String k = Dialect.normAr(w.trim());
+                need(f[1].trim().equals(sm.get(k)), "soft.map " + w);
+                need(pm.get(k) == null, "soft.prov " + w);
+                softN++;
+            }
+        }
+        for (String g : sm.values())
+            for (String x : g.split(" ")) need(sm.get(Dialect.normAr(x)) == null, "soft.self " + g);
+        need("خلنا نهدأ شوي".equals(sm.get(Dialect.normAr("اسكت"))), "soft.pin");
+        for (String w : new String[]{"حبيبي", "زين", "الحين", "مجنون"}) need(sm.get(Dialect.normAr(w)) == null, "soft.kind " + w);
+        System.out.println("DIALECTCORR soften triggers=" + softN);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];

@@ -231,10 +231,9 @@ public final class Dialect {
         syn = m;
     }
 
-    private static Map<String, String> prov;
-
-    /** W95 «الأمثال الشعبية الذكية»: assets/dialect_proverbs.txt rows «triggers TAB proverb». */
-    static void provLoad(String text) {
+    /** W95/W96: «triggers TAB text» rows (assets/dialect_proverbs.txt, dialect_soften.txt)
+     *  as a normAr(trigger) → text map; '#' lines and malformed rows are skipped. */
+    static Map<String, String> pairs(String text) {
         Map<String, String> m = new HashMap<>();
         if (text != null)
             for (String line : text.split("\n")) {
@@ -242,11 +241,8 @@ public final class Dialect {
                 if (line.isEmpty() || line.charAt(0) == '#' || t < 0) continue;
                 for (String w : line.substring(0, t).split("،")) m.put(normAr(w.trim()), line.substring(t + 1).trim());
             }
-        prov = m;
+        return m;
     }
-
-    /** The proverb a just-finished word triggers, or null. */
-    static String proverb(String word) { return prov == null ? null : prov.get(normAr(word)); }
 
     /** W94 «محوّل اللهجات»: every word of a synonym row becomes that row's column
      *  {@code col} (0 فصحى، 1 حجازي، 2 نجدي، 3 خليجي), first alternative; a leading

@@ -37,14 +37,14 @@ import java.util.regex.Pattern;
  *      (SyncServerPack.VC/VN).
  *
  * الحكم: `REBUILDGATE_OK checks=N negatives=M/12 pins=7/7 stages=37/37
- * tests=T/F dex=D/556000 vc=1 vn=0.1.0` / `REBUILDGATE_FAILED <reason>` (exit 1).
+ * tests=T/F dex=D/557000 vc=1 vn=0.1.0` / `REBUILDGATE_FAILED <reason>` (exit 1).
  * السلبيات الاثنتا عشرة تعضّ بأوسامها الحرفية على نسخ متسخة مؤقتة ثم
  * يُعاد التحقق أخضر على المدخلات الحقيقية — والحفرية نفسها (ci/rebuild.sh)
  * هي التي تُنتج المدخلات الحية.
  */
 public class RebuildGate {
 
-    static final String DEX_CEILING = "556000"; // W69-CEILING-RAISE
+    static final String DEX_CEILING = "557000"; // W69-CEILING-RAISE
     /** شكل الأنبوب الحالي: 39 مرحلة خارجية، والحفريات تُسقط نفسها داخلها
      *  (38 صفًا) — يتحرك مع نمو الأنبوب مثل الهوية في مواضعها. */
     static final int INNER_STAGES = 38;

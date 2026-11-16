@@ -142,7 +142,9 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private String voiceDialect;
     private int convCol;
     private static final String PROV = "❝ ";   // W95: a proverb chip's visible mark
-    private Boolean prov;   // W95: proverbs asset loaded once   // W94: the dialect the last «محوّل اللهجات» tap produced   // W91: the dialect the open voice session listens for
+    private static final String SOFT = "🕊 ";   // W96: a gentler-phrase chip's mark
+    private java.util.Map<String, String> prov, soft;   // W95/W96: loaded once
+    private String softFrom;   // W96: the word the gentle chip replaces   // W94: the dialect the last «محوّل اللهجات» tap produced   // W91: the dialect the open voice session listens for
     private Bitmap photo;
     private long photoStamp = -1;
     private Bitmap avatarBmp;
@@ -873,12 +875,16 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         }
         // W95: a trigger word earns a proverb chip in the lead slot; the strip keeps
         // one prediction beside it so the chip gets half the width.
-        if (prov == null) {
-            try { Dialect.provLoad(new String(assetBytes("dialect_proverbs.txt"), "UTF-8")); }
-            catch (Exception x) { Dialect.provLoad(null); }
-            prov = Boolean.TRUE;
+        if (prov == null) { prov = pairsAsset("dialect_proverbs.txt"); soft = pairsAsset("dialect_soften.txt"); }
+        // W96: a hurtful word earns a gentler same-dialect phrase first (tap replaces it).
+        String sf = soft.get(Dialect.normAr(prev));
+        if (sf != null) {
+            softFrom = prev;
+            while (out.size() > 1) out.remove(out.size() - 1);
+            out.add(0, SOFT + sf);
+            return out;
         }
-        String pv = Dialect.proverb(prev);
+        String pv = prov.get(Dialect.normAr(prev));
         if (pv != null) {
             while (out.size() > 1) out.remove(out.size() - 1);
             out.add(0, PROV + pv);
@@ -997,6 +1003,15 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             word = word.substring(AdaptEngine.MARK.length());
             stripAccept().feed(adaptEngine, word,
                     (int) (System.currentTimeMillis() / 86400000L));
+        }
+        if (word.startsWith(SOFT) && softFrom != null) {
+            CharSequence b = ic.getTextBeforeCursor(softFrom.length() + 1, 0);
+            ic.beginBatchEdit();
+            if (b != null && b.toString().equals(softFrom + " ")) ic.deleteSurroundingText(b.length(), 0);
+            ic.commitText(word.substring(SOFT.length()) + " ", 1);   // W96: the gentler phrase
+            ic.endBatchEdit();
+            softFrom = null;
+            return;
         }
         if (word.startsWith(PROV)) {
             ic.commitText(word.substring(PROV.length()) + " ", 1);   // W95: the proverb itself
@@ -1839,6 +1854,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (b == null) return null;
         String t = b.toString();
         return t.substring(t.lastIndexOf('\n') + 1);
+    }
+
+    private java.util.Map<String, String> pairsAsset(String name) {
+        try { return Dialect.pairs(new String(assetBytes(name), "UTF-8")); }
+        catch (Exception x) { return Dialect.pairs(null); }
     }
 
     private void synEnsure() {
