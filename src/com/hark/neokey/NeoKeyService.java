@@ -843,7 +843,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // W102: «1500 ريال» earns the cheque form «فقط … ريال سعودي لا غير» (💰, tap replaces both).
         if (i < end && i > 1 && b.charAt(i - 1) == ' ') {
             int r = i - 1;
-            while (r > 0 && Character.isDigit(b.charAt(r - 1))) r--;
+            while (r > 0 && (Character.isDigit(b.charAt(r - 1)) || b.charAt(r - 1) == '.' || b.charAt(r - 1) == '٫')) r--;   // W103: halalas
             String aw = r < i - 1 && (r == 0 || !Character.isLetter(b.charAt(r - 1)))
                     ? Dialect.amountWords(b.subSequence(r, i - 1).toString(), b.subSequence(i, end).toString()) : null;
             if (aw != null) {

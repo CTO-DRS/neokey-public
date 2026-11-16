@@ -277,12 +277,37 @@ public final class Dialect {
     }
 
     /** W102 «المبلغ كتابةً»: «1500» + «ريال» (ريالات/ريالًا) → «فقط ألف وخمسمائة ريال سعودي لا غير»
-     *  (the cheque/invoice form); 1 … 999,999,999; else null. */
+     *  (the cheque/invoice form); W103 adds halalas «1500.50» → «… ريال وخمسون هللة لا غير». */
+    private static final String[] F3 = {"ثلاث", "أربع", "خمس", "ست", "سبع", "ثماني", "تسع", "عشر"};
+
+    private static String intWords(String n) {
+        return n.length() == 1 && Character.digit(n.charAt(0), 10) > 0 ? N1[Character.digit(n.charAt(0), 10)] : numWords(n);
+    }
+
+    /** W103: the halala tail (1 … 99) in the cheque register. */
+    private static String halala(int h) {
+        if (h == 1) return "هللة واحدة";
+        if (h == 2) return "هللتان";
+        if (h <= 10) return F3[h - 3] + " هللات";
+        return under1000(h) + " هللة";
+    }
+
     static String amountWords(String num, String unit) {
         if (num == null || unit == null || !normAr(unit).replace("ً", "").startsWith("ريال")) return null;
-        String w = num.length() == 1 && Character.digit(num.charAt(0), 10) > 0
-                ? N1[Character.digit(num.charAt(0), 10)] : numWords(num);
-        return w == null ? null : "فقط " + w + " ريال سعودي لا غير";
+        int dot = Math.max(num.indexOf('.'), num.indexOf('٫'));
+        String ip = dot < 0 ? num : num.substring(0, dot), fp = dot < 0 ? "" : num.substring(dot + 1);
+        if (dot >= 0 && (fp.isEmpty() || fp.length() > 2 || ip.isEmpty())) return null;
+        int h = 0;
+        for (int i = 0; i < fp.length(); i++) {
+            int d = Character.digit(fp.charAt(i), 10);
+            if (d < 0) return null;
+            h = h * 10 + d;
+        }
+        if (fp.length() == 1) h *= 10;
+        String w = ip.equals("0") || ip.equals("٠") ? "" : intWords(ip);
+        if (w == null || (w.isEmpty() && h == 0)) return null;
+        String out = w.isEmpty() ? halala(h) : w + " ريال" + (h > 0 ? " و" + halala(h) : " سعودي");
+        return "فقط " + out + " لا غير";
     }
 
     static Map<String, String> pairs(String text) {

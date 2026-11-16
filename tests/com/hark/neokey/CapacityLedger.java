@@ -116,7 +116,7 @@ public class CapacityLedger {
                 "claritymeter.engine.shipped", "panicwipe.engine.shipped", "integritycert.engine.shipped", "otpshield.engine.shipped",
                 "airseal.engine.shipped", "strip.engine.shipped", "personal.engine.shipped", "dialect.engine.shipped", "genthemes.engine.shipped",
                 "aacboard.engine.shipped", "numsmart.engine.shipped", "themechannel.engine.shipped",
-                "root.recover.shipped", "root.recover.verbs.shipped", "trim.toasts.shipped", "drift.w75_80.shipped", "dialect.correction.shipped", "dialect.vocab.shipped", "dialect.context.shipped", "dialect.synonyms.shipped", "dialect.voice.shipped", "dialect.convert.shipped", "dialect.proverbs.shipped", "dialect.soften.shipped", "dialect.occasions.shipped", "dialect.complete.shipped", "dialect.emoji.shipped", "dialect.date.shipped", "dialect.numwords.shipped", "dialect.amount.shipped"})
+                "root.recover.shipped", "root.recover.verbs.shipped", "trim.toasts.shipped", "drift.w75_80.shipped", "dialect.correction.shipped", "dialect.vocab.shipped", "dialect.context.shipped", "dialect.synonyms.shipped", "dialect.voice.shipped", "dialect.convert.shipped", "dialect.proverbs.shipped", "dialect.soften.shipped", "dialect.occasions.shipped", "dialect.complete.shipped", "dialect.emoji.shipped", "dialect.date.shipped", "dialect.numwords.shipped", "dialect.amount.shipped", "dialect.halala.shipped"})
             eng += Integer.parseInt(byKey.get(k)[2]);
         check("dex.claim.current", dex <= post);
         check("dex.under.ceiling", dex <= ceiling);

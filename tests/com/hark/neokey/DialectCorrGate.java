@@ -398,6 +398,13 @@ public final class DialectCorrGate {
         need(Dialect.amountWords("1500", "دولار") == null && Dialect.amountWords("0", "ريال") == null
                 && Dialect.amountWords("0500", "ريال") == null, "amt.refuse");
         System.out.println("DIALECTCORR amount pins=" + amPins.length);
+        // ---- 3o. halalas (W103).
+        String[][] hlPins = {{"1500.50", "فقط ألف وخمسمائة ريال وخمسون هللة لا غير"}, {"10.5", "فقط عشرة ريال وخمسون هللة لا غير"},
+                {"25.05", "فقط خمسة وعشرون ريال وخمس هللات لا غير"}, {"0.75", "فقط خمسة وسبعون هللة لا غير"},
+                {"3.01", "فقط ثلاثة ريال وهللة واحدة لا غير"}, {"٢٠٫٢٥", "فقط عشرون ريال وخمسة وعشرون هللة لا غير"}};
+        for (String[] p : hlPins) need(p[1].equals(Dialect.amountWords(p[0], "ريال")), "hal.pin " + p[0] + " → " + Dialect.amountWords(p[0], "ريال"));
+        for (String w : new String[]{"10.", ".5", "10.505", "0.00", "1.2.3"}) need(Dialect.amountWords(w, "ريال") == null, "hal.refuse " + w);
+        System.out.println("DIALECTCORR halala pins=" + hlPins.length);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
