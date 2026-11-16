@@ -91,6 +91,7 @@ java -cp build/test:$JAR com.hark.neokey.StoreV2Test
 java -cp build/test:$JAR com.hark.neokey.CoreTests
 java -cp build/test:$JAR com.hark.neokey.DialectTest
 java -cp build/test:$JAR com.hark.neokey.DialectAdaptTest
+java -cp build/test:$JAR com.hark.neokey.DialectCorrGate   # W87: dialect-respecting correction
 java -cp build/test:$JAR com.hark.neokey.SmartSwitchTest
 java -cp build/test:$JAR com.hark.neokey.AssistantTest
 java -cp build/test:$JAR com.hark.neokey.NetGateTest

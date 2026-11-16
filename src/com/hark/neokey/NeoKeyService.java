@@ -571,6 +571,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         return null;
     }
 
+    /** W87: القواميس الثلاثة محمية من التحويل إلى الفصحى — إلا إذا اختار المستخدم الفصحى صراحة. */
+    private Dictionary[] dialectLexicons() {
+        if (SmartSwitch.MSA.equals(dialectMode)) return null;
+        return new Dictionary[]{dialectDict("ar_hijazi"), dialectDict("ar_najdi"), dialectDict("ar_gulf")};
+    }
+
     /**
      * معرّف قاموس اللهجة النشط للسياق الحالي، أو null للفصحى الصرفة.
      * الكشف لحظي على نافذة النص الظاهر فقط — لا يُخزن شيء عن المستخدم،
@@ -1265,9 +1271,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                             ? getCurrentInputConnection().getTextAfterCursor(40, 0) : null;
                     String prev = Correction2.previousWord(b == null ? "" : b.toString(), w.length());
                     String next = Correction2.nextWord(a == null ? "" : a.toString());
-                    c = Correction2.fix(w, prev, next, dictFor(w), noCorrect);
-                }
-                if (c == null) c = dictFor(w).correction(w);
+                    // W87: the dialect lexicons are protected spellings and the active
+                    // dialect repairs unknown words first (Correction2.dialectFix).
+                    String adid = activeDialectId();
+                    c = Correction2.dialectFix(w, prev, next, dictFor(w),
+                            adid == null ? null : dialectDict(adid), dialectLexicons(), noCorrect);
+                } else if (c == null) c = dictFor(w).correction(w);
                 if (c != null && !c.equals(w)) {
                     if (Character.isUpperCase(w.charAt(0))) c = Character.toUpperCase(c.charAt(0)) + c.substring(1);
                     ic.deleteSurroundingText(w.length(), 0);

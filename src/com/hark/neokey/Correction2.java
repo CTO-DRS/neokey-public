@@ -294,6 +294,38 @@ final class Correction2 {
         return best;
     }
 
+    // ------------------------------------------- W87: التصحيح الذي يحترم اللهجة
+
+    /**
+     * W87 — «يصحح العامية دون تحويلها إلى الفصحى». The shipped dialect lexicons
+     * (ar_hijazi / ar_najdi / ar_gulf) become protected spellings:
+     *   (1) a typed word ANY lexicon knows is re-spelled only by the hamza/ة
+     *       standard-orthography class (السالفه→السالفة) — never into another
+     *       word (measured live before W87: دحين→دين، مليح→مليء، طاري→طارئ،
+     *       وشلون→وشؤون، عيل→على);
+     *   (2) a word unknown to the MSA dictionary is repaired from the ACTIVE
+     *       dialect lexicon first (ذحين→ذلحين، ابغئ→ابغى) — the MSA chain only after.
+     * Null active + null lexicons = byte-identical to the pre-W87 chain
+     * (fix → msa.correction) — the detach law, bitten by DialectCorrGate.
+     */
+    static String dialectFix(String typed, String prev, String next, Dictionary msa,
+                             Dictionary active, Dictionary[] lexicons, Set<String> exceptions) {
+        if (typed == null || msa == null) return null;
+        boolean prot = false;
+        if (lexicons != null)
+            for (Dictionary x : lexicons)
+                if (x != null && x.isLoaded() && x.knows(typed)) { prot = true; break; }
+        String c = null;
+        if (active != null && active.isLoaded() && !msa.knows(typed)) c = active.correction(typed);
+        if (c == null) c = fix(typed, prev, next, msa, exceptions);
+        if (c == null) c = msa.correction(typed);
+        if (prot && c != null && !(c.length() == typed.length() && isStandardOnlyDirection(typed, c))) {
+            lastReason = "dialect-protected";
+            return null;
+        }
+        return c;
+    }
+
     /** True when the change STRIPS hamza/ة from the typed word (أ→ا، ة→ه…) —
      *  degrading the standard orthography regardless of what the informal corpus
      *  prefers (أرسل→ارسل is never an acceptable auto-correction). */
