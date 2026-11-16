@@ -391,6 +391,14 @@ public final class DialectCorrGate {
         for (String w : new String[]{"7", "05", "1234567890", "12a", ""}) need(Dialect.numWords(w) == null, "num.refuse " + w);
         System.out.println("DIALECTCORR numwords pins=" + nwPins.length);
 
+        // ---- 3n. «المبلغ كتابةً» (W102): the cheque form after a number + ريال.
+        String[][] amPins = {{"1500", "ريال", "فقط ألف وخمسمائة ريال سعودي لا غير"}, {"5", "ريالات", "فقط خمسة ريال سعودي لا غير"},
+                {"250", "ريالًا", "فقط مئتان وخمسون ريال سعودي لا غير"}, {"١٠٠٠", "ريال", "فقط ألف ريال سعودي لا غير"}};
+        for (String[] p : amPins) need(p[2].equals(Dialect.amountWords(p[0], p[1])), "amt.pin " + p[0] + " → " + Dialect.amountWords(p[0], p[1]));
+        need(Dialect.amountWords("1500", "دولار") == null && Dialect.amountWords("0", "ريال") == null
+                && Dialect.amountWords("0500", "ريال") == null, "amt.refuse");
+        System.out.println("DIALECTCORR amount pins=" + amPins.length);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

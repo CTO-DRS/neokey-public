@@ -144,6 +144,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String PROV = "❝ ";   // W95: a proverb chip's visible mark
     private static final String SOFT = "🕊 ";   // W96: a gentler-phrase chip's mark
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
+    private static final String SAR = "💰 ";   // W102: amount-in-words chip mark (tap replaces «1500 ريال»)
     private static final String NUM = "🔢 ";   // W101: number-in-words chip mark (tap replaces the number)
     private static final String DATE = "📅 ";   // W100: today's date chip mark (inserts after the word)
     private static final String CMP = "✍ ", AZ = "⇄ ";   // W98: completion / Arabizi chip marks (both replace)
@@ -839,6 +840,18 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             out.add(AZ + az);
             return out;
         }
+        // W102: «1500 ريال» earns the cheque form «فقط … ريال سعودي لا غير» (💰, tap replaces both).
+        if (i < end && i > 1 && b.charAt(i - 1) == ' ') {
+            int r = i - 1;
+            while (r > 0 && Character.isDigit(b.charAt(r - 1))) r--;
+            String aw = r < i - 1 && (r == 0 || !Character.isLetter(b.charAt(r - 1)))
+                    ? Dialect.amountWords(b.subSequence(r, i - 1).toString(), b.subSequence(i, end).toString()) : null;
+            if (aw != null) {
+                softFrom = b.subSequence(r, end).toString();
+                out.add(SAR + aw);
+                return out;
+            }
+        }
         // W101: a typed number (1500 / ١٥٠٠) earns its Arabic words (🔢, tap replaces).
         int q = end;
         while (q > 0 && Character.isDigit(b.charAt(q - 1))) q--;
@@ -1043,7 +1056,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             stripAccept().feed(adaptEngine, word,
                     (int) (System.currentTimeMillis() / 86400000L));
         }
-        if ((word.startsWith(SOFT) || word.startsWith(CMP) || word.startsWith(AZ) || word.startsWith(NUM)) && softFrom != null) {
+        if ((word.startsWith(SOFT) || word.startsWith(CMP) || word.startsWith(AZ) || word.startsWith(NUM) || word.startsWith(SAR)) && softFrom != null) {
             CharSequence b = ic.getTextBeforeCursor(softFrom.length() + 1, 0);
             ic.beginBatchEdit();
             if (b != null && b.toString().equals(softFrom + " ")) ic.deleteSurroundingText(b.length(), 0);

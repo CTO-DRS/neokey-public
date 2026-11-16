@@ -276,6 +276,15 @@ public final class Dialect {
         return b.toString();
     }
 
+    /** W102 «المبلغ كتابةً»: «1500» + «ريال» (ريالات/ريالًا) → «فقط ألف وخمسمائة ريال سعودي لا غير»
+     *  (the cheque/invoice form); 1 … 999,999,999; else null. */
+    static String amountWords(String num, String unit) {
+        if (num == null || unit == null || !normAr(unit).replace("ً", "").startsWith("ريال")) return null;
+        String w = num.length() == 1 && Character.digit(num.charAt(0), 10) > 0
+                ? N1[Character.digit(num.charAt(0), 10)] : numWords(num);
+        return w == null ? null : "فقط " + w + " ريال سعودي لا غير";
+    }
+
     static Map<String, String> pairs(String text) {
         Map<String, String> m = new HashMap<>();
         if (text != null)
