@@ -116,7 +116,7 @@ public class CapacityLedger {
                 "claritymeter.engine.shipped", "panicwipe.engine.shipped", "integritycert.engine.shipped", "otpshield.engine.shipped",
                 "airseal.engine.shipped", "strip.engine.shipped", "personal.engine.shipped", "dialect.engine.shipped", "genthemes.engine.shipped",
                 "aacboard.engine.shipped", "numsmart.engine.shipped", "themechannel.engine.shipped",
-                "root.recover.shipped", "trim.toasts.shipped", "drift.w75_80.shipped"})
+                "root.recover.shipped", "root.recover.verbs.shipped", "trim.toasts.shipped", "drift.w75_80.shipped"})
             eng += Integer.parseInt(byKey.get(k)[2]);
         check("dex.claim.current", dex <= post);
         check("dex.under.ceiling", dex <= ceiling);

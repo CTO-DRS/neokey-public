@@ -1,7 +1,7 @@
 {
   "spec": "NQF v1",
   "contract": "docs/NQF-PORT.md",
-  "generatedAt": "2026-11-16T00:00:00.000000000Z",
+  "generatedAt": "2026-11-16",
   "assets": {
     "ar.txt": {
       "bytes": 1923439,
@@ -66,8 +66,8 @@
       "sha256": "7100f5d45ad0cdc0ffbfb41e1cdb7d403ea190a0057c62c3c4a35ccc7c46ac08"
     },
     "root_index.txt": {
-      "bytes": 1079858,
-      "sha256": "daadc220af31cb28a33552914d49539787dd96559638967c761df16f9233bb24"
+      "bytes": 1122469,
+      "sha256": "900a9e6a8d8834f06ecd5b3075958faefdd0a1b91762f7866f9c736d40ec9342"
     },
     "tashkeel_index.txt": {
       "bytes": 939777,

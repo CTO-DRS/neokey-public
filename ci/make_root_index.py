@@ -41,6 +41,9 @@
 #     9) single-char prefixes (إ ا أ و ف ب ل ت — س refused: سجود is not
 #        future-س; ك refused: مبارك's ك is a root letter; ت refused when fem:
 #        ترجمة keeps its ت)
+#    10) W86ب the present-verb layer: ي/ن strips at depth 0 ONLY (len>=4,
+#        plain-alef refusal, attested-intermediate law) — the layer §8 waits
+#        for: يكتب/نكتب/ينجم join their stems' attested families
 #
 #   Root values are norm form with the broken hamza folded to alef (قرء→قرا),
 #   and a FUNCTION-ROOT guard refuses roots that are function words (الي، من،
@@ -241,7 +244,7 @@ class Deriver:
                 return r
         return None
 
-    def attempt(self, w, depth, fem):
+    def _attempt_core(self, w, depth, fem):
         if not (3 <= len(w) <= 12) or depth > 3:
             return None
         n = norm(w)
@@ -316,6 +319,42 @@ class Deriver:
                     return r
         return None
 
+    def attempt(self, w, depth, fem):
+        """The W86ب wrapper: the FULL shipped machinery first (the fem-final
+        strip RETURNS mid-function — an embedded layer never sees the
+        نأخذه-class), then — only when everything failed AT DEPTH 0 — the
+        present-verb layer. A present prefix sits on the word, never on a
+        recursive remnant (ميدان's inner يدان must never derail its ميد
+        root). Fail-closed on every axis:
+          • word len>=4 — نعم/نجم/نار keep their root-letter ن
+          • prefix ∈ {ي, ن} only (أ and ت already live in PREFIXES_SINGLE)
+          • a PLAIN alef right after ي/ن is the vocative يا or a foreign
+            remnant — refused (ناتو/ياماتو/يااخي-class all die here)
+          • a len3 remainder must be ATTESTED (the layers 7-9 law — the
+            recursion itself keeps it: يكتبون→كتبون→ون→كتب rides the suffix
+            machinery)
+        The strip joins the family of whatever root the SHIPPED machinery
+        already chose for the stem (يقول stays the machine's يقل — pre-
+        existing since W56, untouched); it never changes an existing
+        member's root, and a skipped rank-first spelling re-claims its norm
+        key law-consistently (يبدا yields to يبدأ)."""
+        r = self._attempt_core(w, depth, fem)
+        if r is not None or depth != 0:
+            return r
+        if len(w) < 4:
+            return None
+        for pre in ("ي", "ن"):
+            if w[0] == pre:
+                rest = w[1:]
+                if len(rest) < 3 or rest[0] == "ا":
+                    continue
+                if len(rest) == 3 and norm(rest) not in self.keys:
+                    continue
+                r = self.attempt(rest, depth + 1, fem)
+                if r is not None:
+                    return r
+        return None
+
     def derive(self, w):
         if not (3 <= len(w) <= 12) or any(not ("\u0621" <= c <= "\u064A") for c in w):
             return None
@@ -382,6 +421,16 @@ GOLD = [
     ("انتقال", "نقل"), ("اجتماع", "جمع"), ("ابتسام", "بسم"), ("اختصار", "خصر"),
     ("انحلال", "حلل"), ("تعاون", "عون"), ("تحضير", "حضر"), ("انجاح", "نجح"),
     ("اخلال", "خلل"), ("عرفها", "عرف"), ("كتابه", "كتب"), ("المعرفة", "عرف"),
+    # W86ب — صيغ المضارع (الطبقة 10): كل مدخلة موثقة كلاسيكياً ومتحققة قياساً
+    # قبل التثبيت (تجربة خارج المستودع على القاموس ذاته). يجري/يقول/يبدأ
+    # متعمدة الغياب: قرارات الآلة المشحونة سابقة (يقل/يجر/بدي) وليست من نطاق
+    # هذه الطبقة — ونستخدم متعمدة الغياب: الرفض القانوني بعد است len3.
+    ("يكتب", "كتب"), ("نكتب", "كتب"), ("يكتبون", "كتب"), ("ينجح", "نجح"),
+    ("ينجم", "نجم"), ("يورد", "ورد"), ("نأخذ", "اخذ"), ("نتأثر", "اثر"),
+    ("يحمل", "حمل"), ("نصنع", "صنع"), ("يفهم", "فهم"), ("ينظر", "نظر"),
+    ("يسمع", "سمع"), ("يعرف", "عرف"), ("يدعو", "دعو"), ("نسحب", "سحب"),
+    ("يتكلم", "كلم"), ("يتعلم", "علم"), ("يأكل", "اكل"), ("نأكل", "اكل"),
+    ("يسكن", "سكن"), ("نسكن", "سكن"), ("يذهب", "ذهب"), ("نذهب", "ذهب"),
 ]
 
 def build(d=None):

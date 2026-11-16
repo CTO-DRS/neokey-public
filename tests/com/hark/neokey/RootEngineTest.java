@@ -20,7 +20,8 @@ import java.util.zip.CRC32;
  *
  * Covered here:
  *   • the REAL asset loads with its header claims re-counted (3667 roots,
- *     84809 covered) — a FAIL line carries the refusal tag, which is the
+ *     88550 covered — renewed deliberately by the W86ب verb layer) — a FAIL
+ *     line carries the refusal tag, which is the
  *     exact surface ci/w56-negative-proof.sh bites (RIX_CRC / RIX_DUP)
  *   • the lookup spine: norm-key binary search, same root for the attested
  *     family (كاتب/كتاب/مكتوب/المكتوب — all gold-set pairs), unmapped → -1/null
@@ -112,7 +113,7 @@ public class RootEngineTest {
         }
         // the FAIL line carries the refusal tag — the W56 negative proof bites it
         check("root.realasset.load" + (loadErr.isEmpty() ? "" : " (" + loadErr + ")"), e != null);
-        check("root.realasset.header", e != null && e.rootCount() == 3667 && e.coveredWords() == 84809);
+        check("root.realasset.header", e != null && e.rootCount() == 3667 && e.coveredWords() == 88550);
         if (e == null) {
             System.out.println("ROOTTEST_FAILED the committed index refused: " + loadErr);
             return;
@@ -265,12 +266,14 @@ public class RootEngineTest {
         // ---- 9. the W86 recovery (the vision doc's rank 3, الجيل الثاني) ------
         // The golden set is DERIVED — every pair ran against the SHIPPED asset
         // (scripts/verify_recover_golden.py) before it was written here; the
-        // verb class (يكتب/ينجح) is not attested in RIX1 and stays uncovered.
+        // verb class IS attested since the W86ب layer (yielded to the owner
+        // directive: keep working) — يكتب/ينجح join their stems' families.
         RootEngine.attach(e);
         check("root.recover.affix_h", contains(e.recover("الطلابه"), "الطلاب"));
         check("root.recover.affix_alef", contains(e.recover("مساجدا"), "مساجد"));
         check("root.recover.morphemic_wal", contains(e.recover("والعلمه"), "علم"));
         check("root.recover.layered_two", contains(e.recover("المعلمينه"), "تعلم"));
+        check("root.recover.verb_family", contains(e.recover("ينجحه"), "ينجح"));
         check("root.recover.mapped_refused", e.recover("طالب") == null);
         check("root.recover.no_witness", e.recover("سفكغه") == null);
         check("root.recover.short_refused", e.recover("الي") == null);

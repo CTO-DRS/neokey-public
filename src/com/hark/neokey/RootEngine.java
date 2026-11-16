@@ -191,8 +191,12 @@ public final class RootEngine implements Engine, Correction2.RootSignal {
      * forms of the inferred root. DISPLAY ONLY — the silent path never
      * consumes this (the W56 law: the root serves, it never rewrites). No
      * witness → null (لا تخمين — the derivation's discipline at typing time).
-     * The attested VERB conjugations (يكتب/ينجح) are absent from RIX1 —
-     * documented; that class awaits the derivation's next layer.
+     * The attested VERB conjugations joined RIX1 by the W86ب layer (the
+     * derivation's ي/ن strips) — mirrored here in PSINGLE. The derivation's
+     * raw-word plain-alef refusal (يا-vocatives, foreign remnants) cannot
+     * survive the norm() this path applies first; the WITNESS law
+     * (rootOf >= 0) carries the protection instead — a strip remainder that
+     * is not an attested root refuses, exactly as it always has.
      */
     public String[] recover(String typed) {
         if (typed == null || typed.length() < 4) return null;
@@ -223,11 +227,14 @@ public final class RootEngine implements Engine, Correction2.RootSignal {
     }
 
     /** The derivation's own affix inventory (ci/make_root_index.py layers
-     *  7-9), mirrored verbatim — one strip per round, morphemic first. */
+     *  7-9 + the W86ب present-verb layer), mirrored verbatim — one strip per
+     *  round, morphemic first. The ي/ن entries ride the WITNESS law, not the
+     *  derivation's raw-word guard (norm() erases the hamza before any
+     *  strip; an unattested remainder refuses as always). */
     private static final String[] PMORPH = {"ال", "است", "ان"};
     private static final String[] PSUF = {"ات", "ون", "ين", "ية", "ان", "اء", "ء",
             "هم", "كم", "هن", "ها", "نا", "ه", "ة", "ا", "ي", "ت"};
-    private static final String[] PSINGLE = {"إ", "ا", "أ", "و", "ف", "ب", "ل", "ت"};
+    private static final String[] PSINGLE = {"إ", "ا", "أ", "و", "ف", "ب", "ل", "ت", "ي", "ن"};
 
     /**
      * The strip ride (the service calls it right after familyInto): ONE
