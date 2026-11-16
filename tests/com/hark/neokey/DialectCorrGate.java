@@ -319,6 +319,28 @@ public final class DialectCorrGate {
         for (String w : new String[]{"حبيبي", "زين", "الحين", "مجنون"}) need(sm.get(Dialect.normAr(w)) == null, "soft.kind " + w);
         System.out.println("DIALECTCORR soften triggers=" + softN);
 
+        // ---- 3i. «عبارات المناسبات» (W97): each occasion trigger maps to its phrase,
+        // none shared with a proverb or a soften row, pinned samples, common words null.
+        String occText = new String(java.nio.file.Files.readAllBytes(
+                java.nio.file.Paths.get("assets/dialect_occasions.txt")), "UTF-8");
+        java.util.Map<String, String> om = Dialect.pairs(occText);
+        int occN = 0;
+        for (String line : occText.split("\n")) {
+            if (line.isEmpty() || line.charAt(0) == '#') continue;
+            String[] f = line.split("\t");
+            need(f.length == 2 && !f[1].trim().isEmpty(), "occ.shape " + line);
+            for (String w : f[0].split("،")) {
+                String k = Dialect.normAr(w.trim());
+                need(f[1].trim().equals(om.get(k)), "occ.map " + w);
+                need(pm.get(k) == null && sm.get(k) == null, "occ.clash " + w);
+                occN++;
+            }
+        }
+        need("جمعة مباركة".equals(om.get(Dialect.normAr("الجمعة"))), "occ.pin jumaa");
+        need(om.get(Dialect.normAr("تخرجت")).startsWith("مبروك التخرج"), "occ.pin grad");
+        for (String w : new String[]{"وقت", "الحين", "وش", "ابي", "شكرا"}) need(om.get(Dialect.normAr(w)) == null, "occ.common " + w);
+        System.out.println("DIALECTCORR occasions triggers=" + occN);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

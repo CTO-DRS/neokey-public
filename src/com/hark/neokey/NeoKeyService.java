@@ -143,7 +143,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private int convCol;
     private static final String PROV = "❝ ";   // W95: a proverb chip's visible mark
     private static final String SOFT = "🕊 ";   // W96: a gentler-phrase chip's mark
-    private java.util.Map<String, String> prov, soft;   // W95/W96: loaded once
+    private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
+    private java.util.Map<String, String> prov, soft, occ;   // W95/W96/W97: loaded once
     private String softFrom;   // W96: the word the gentle chip replaces   // W94: the dialect the last «محوّل اللهجات» tap produced   // W91: the dialect the open voice session listens for
     private Bitmap photo;
     private long photoStamp = -1;
@@ -875,7 +876,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         }
         // W95: a trigger word earns a proverb chip in the lead slot; the strip keeps
         // one prediction beside it so the chip gets half the width.
-        if (prov == null) { prov = pairsAsset("dialect_proverbs.txt"); soft = pairsAsset("dialect_soften.txt"); }
+        if (prov == null) { prov = pairsAsset("dialect_proverbs.txt"); soft = pairsAsset("dialect_soften.txt"); occ = pairsAsset("dialect_occasions.txt"); }
         // W96: a hurtful word earns a gentler same-dialect phrase first (tap replaces it).
         String sf = soft.get(Dialect.normAr(prev));
         if (sf != null) {
@@ -884,10 +885,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             out.add(0, SOFT + sf);
             return out;
         }
-        String pv = prov.get(Dialect.normAr(prev));
+        // W97: an occasion word earns its customary phrase (✨), else a proverb (❝).
+        String pv = occ.get(Dialect.normAr(prev)), mk = OCC;
+        if (pv == null) { pv = prov.get(Dialect.normAr(prev)); mk = PROV; }
         if (pv != null) {
             while (out.size() > 1) out.remove(out.size() - 1);
-            out.add(0, PROV + pv);
+            out.add(0, mk + pv);
             return out;
         }
         String emo = EmojiHints.forWord(prev);
@@ -1013,8 +1016,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             softFrom = null;
             return;
         }
-        if (word.startsWith(PROV)) {
-            ic.commitText(word.substring(PROV.length()) + " ", 1);   // W95: the proverb itself
+        if (word.startsWith(PROV) || word.startsWith(OCC)) {
+            ic.commitText(word.substring(2) + " ", 1);   // W95/W97: the proverb or phrase itself
             return;
         }
         if (!Character.isLetter(word.charAt(0))) {

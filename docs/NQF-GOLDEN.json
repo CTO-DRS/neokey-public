@@ -37,6 +37,10 @@
       "bytes": 1018,
       "sha256": "f457bd7b6b4d6dd73488b767c3d7ad5bb41599c964a1e913808fa93d0f659a45"
     },
+    "dialect_occasions.txt": {
+      "bytes": 1450,
+      "sha256": "8765f70f264297cb376d60d271abf70a8e93a610cb97d3c496c8dc62cd4c295d"
+    },
     "dialect_proverbs.txt": {
       "bytes": 3637,
       "sha256": "0a8f9975d4e22cd78bd7c357af76324ce5c7c85957682392393e27556a8725e0"
