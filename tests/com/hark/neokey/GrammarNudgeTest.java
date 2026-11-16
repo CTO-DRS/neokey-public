@@ -10,7 +10,7 @@ import java.util.zip.CRC32;
  * W58 grammar-engine battery (ROADMAP-V2 W58) — the NUDGEGATE verdict source,
  * built exactly like the W56/W57 batteries: positives that pin the shape, and
  * the fail-closed negatives that BITE. The real committed asset (assets/
- * grammar_rules.txt — GRX1, CRC32-sealed, 47 rules / 48 pairs / 94 examples)
+ * grammar_rules.txt — GRX1 (الصيغة المختومة), CRC32-sealed, 57 rules / 48 pairs / 114 examples — the second-generation knowledge (W85))
  * is loaded HERE, JVM-tested exactly as shipped.
  *
  * Covered here:
@@ -107,10 +107,10 @@ public class GrammarNudgeTest {
         check("the real GRX1 asset loads", g != null);
         if (g == null) return;
         try { parseAsset(); } catch (Exception e) { check("asset rows parse", false); }
-        check("header claims re-counted (47 rules)", g.ruleCount() == 47);
+        check("header claims re-counted (57 rules)", g.ruleCount() == 57);
         check("header claims re-counted (48 pairs)", g.pairCount() == 48);
-        check("header claims re-counted (94 examples)", g.exampleCount() == 94);
-        check("the battery sees the same rows", rId.length == 47 && eId.length == 94);
+        check("header claims re-counted (114 examples)", g.exampleCount() == 114);
+        check("the battery sees the same rows", rId.length == 57 && eId.length == 114);
 
         System.out.println("== GrammarNudge:every rule, both sides ==");
         // the shipped matcher re-verifies every example, independently of the
@@ -133,7 +133,7 @@ public class GrammarNudgeTest {
                     || rSug[i].equals(rPat[i])) metaOk = false;
         }
         check("every rule carries id + family + explanation, suggestion != pattern", metaOk);
-        check("every rule family is one of the five documented",
+        check("every rule family is one of the six documented",
                 famAll(rFam));
 
         System.out.println("== GrammarNudge:raw matching + modes ==");
@@ -294,7 +294,7 @@ public class GrammarNudgeTest {
     private static boolean famAll(String[] fams) {
         for (String f : fams) {
             boolean ok = f.equals("hamza") || f.equals("taa") || f.equals("maqsura")
-                    || f.equals("nafi") || f.equals("iltibas");
+                    || f.equals("nafi") || f.equals("iltibas") || f.equals("irab");
             if (!ok) return false;
         }
         return true;
