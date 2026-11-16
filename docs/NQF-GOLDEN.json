@@ -10,22 +10,22 @@
       "unique": 150123
     },
     "ar_gulf.txt": {
-      "bytes": 6318,
-      "sha256": "21a6156fd3b8786e5d5ef930587cbc79daf26ebcd34c5385e3b2bf908445d51a",
-      "lines": 628,
-      "unique": 628
+      "bytes": 6582,
+      "sha256": "64d570f3d54ff5a845e57e35484e8a5bc61e8f6585cafdbc63fb5f99429ff908",
+      "lines": 650,
+      "unique": 650
     },
     "ar_hijazi.txt": {
-      "bytes": 6404,
-      "sha256": "7176d70a96e50a74430847aa412ccc4e6b7ec9005cfd500ac2a2fb1b2d69e598",
-      "lines": 636,
-      "unique": 636
+      "bytes": 6579,
+      "sha256": "44cc23880657e50c69c2a27ba0435930ad4e4687aaca4d8ba85261e842699674",
+      "lines": 651,
+      "unique": 651
     },
     "ar_najdi.txt": {
-      "bytes": 5865,
-      "sha256": "3341b4ec9165093c613568f3709736751b57bca3dd3b8f2f6addb60dc0747184",
-      "lines": 577,
-      "unique": 577
+      "bytes": 6192,
+      "sha256": "2e6e149d2991ddae1fe18e74eaad4c09dc50c538fa2b87fc418401fdda9beafa",
+      "lines": 606,
+      "unique": 606
     },
     "bigram_ar_base.txt": {
       "bytes": 1395646,
