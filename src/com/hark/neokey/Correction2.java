@@ -308,6 +308,8 @@ final class Correction2 {
      *       lexicon has no noisy tail (W88). W88 measured dialect-first against
      *       MSA-first: dialect-first cost 9/203 MSA repairs, so MSA leads and
      *       the dialect fills what it leaves (MSA attached == detached, gated).
+     *       W89: when both offer a different word, a dialect cue in the previous
+     *       or next word (dialectCue) gives it to the dialect (قاعدد→قاعد, not قاعدة).
      * Null active + null lexicons = byte-identical to the pre-W87 chain
      * (fix → msa.correction) — the detach law, bitten by DialectCorrGate.
      */
@@ -320,12 +322,25 @@ final class Correction2 {
                 if (x != null && x.isLoaded() && x.knows(typed)) { prot = true; break; }
         String c = fix(typed, prev, next, msa, exceptions);
         if (c == null) c = msa.correction(typed);
-        if (c == null && active != null && active.isLoaded() && !msa.knows(typed)) c = active.correction(typed, 0);
+        if (active != null && active.isLoaded() && !msa.knows(typed)) {
+            String d = active.correction(typed, 0);
+            // W89: the sentence decides a tie — a dialect cue beside the typo hands the
+            // repair to the dialect, unless the MSA candidate is itself a dialect word.
+            if (c == null || (d != null && !d.equals(c) && !active.knows(c)
+                    && (dialectCue(prev, msa, active) || dialectCue(next, msa, active)))) c = d;
+        }
         if (prot && c != null && !(c.length() == typed.length() && isStandardOnlyDirection(typed, c))) {
             lastReason = "dialect-protected";
             return null;
         }
         return c;
+    }
+
+    /** W89: a neighbour that speaks the active dialect — in its lexicon, and either a
+     *  detection marker or unknown to the MSA dictionary (generic shared words are no cue). */
+    static boolean dialectCue(String w, Dictionary msa, Dictionary active) {
+        return w != null && !w.isEmpty() && active.knows(w)
+                && (!msa.knows(w) || Dialect.markers().containsKey(Dialect.normAr(w)));
     }
 
     /** True when the change STRIPS hamza/ة from the typed word (أ→ا، ة→ه…) —

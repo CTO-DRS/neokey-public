@@ -144,6 +144,53 @@ public final class DialectCorrGate {
         System.out.println("DIALECTCORR msa cases=" + msaCases + " attached=" + msaOkAtt + " detached=" + msaOkDet);
         need(msaOkAtt >= msaOkDet, "msa.regression " + msaOkAtt + " < " + msaOkDet);
 
+        // ---- 3c. sentence context (W89). Dialect: every lexicon typo placed after a
+        // word of a same-dialect sentence (assets/testset_dialects.txt, seeded, the
+        // sentence's own next word after it) — with context it must beat no context.
+        // MSA: every reference word's typo inside its own testset_ar.txt sentence with
+        // the widest lexicon (gulf) attached restores at least as often as detached.
+        java.util.Map<String, List<String[]>> sents = new java.util.HashMap<>();
+        for (String line : Files.readAllLines(new File("assets/testset_dialects.txt").toPath(), StandardCharsets.UTF_8)) {
+            if (line.startsWith("#") || line.indexOf('\t') < 0) continue;
+            String[] p = line.split("\t");
+            sents.computeIfAbsent(p[0], k -> new ArrayList<>()).add(p[1].trim().split("\\s+"));
+        }
+        java.util.Random rnd = new java.util.Random(89);
+        int cx = 0, cxOk = 0, cxBare = 0;
+        for (int i = 0; i < IDS.length; i++) {
+            List<String[]> ss = sents.get(IDS[i].substring(3));
+            need(ss != null && !ss.isEmpty(), "context.no_sentences " + IDS[i]);
+            for (String w : lexicon(IDS[i])) {
+                if (w.length() < 4) continue;
+                String typo = w + w.charAt(w.length() - 1);
+                if (msa.knows(typo) || lex[i].knows(typo)) continue;
+                String[] s = ss.get(rnd.nextInt(ss.size()));
+                int j = rnd.nextInt(s.length);
+                cx++;
+                if (w.equals(Correction2.dialectFix(typo, s[j], j + 1 < s.length ? s[j + 1] : "", msa, lex[i], lex, none))) cxOk++;
+                if (w.equals(Correction2.dialectFix(typo, "", "", msa, lex[i], lex, none))) cxBare++;
+            }
+        }
+        int ms = 0, msAtt = 0, msDet = 0;
+        for (String line : Files.readAllLines(new File("assets/testset_ar.txt").toPath(), StandardCharsets.UTF_8)) {
+            if (line.startsWith("#") || line.trim().isEmpty()) continue;
+            String[] s = line.trim().split("\\s+");
+            for (int j = 0; j < s.length; j++) {
+                String w = s[j];
+                if (w.length() < 4 || !msa.knows(w)) continue;
+                String t = w + w.charAt(w.length() - 1);
+                if (msa.knows(t)) continue;
+                String p = j > 0 ? s[j - 1] : "", nx = j + 1 < s.length ? s[j + 1] : "";
+                ms++;
+                if (w.equals(Correction2.dialectFix(t, p, nx, msa, lex[2], lex, none))) msAtt++;
+                if (w.equals(Correction2.dialectFix(t, p, nx, msa, null, null, none))) msDet++;
+            }
+        }
+        System.out.printf("DIALECTCORR context dialect=%d/%d (bare %d) msa_sentences=%d/%d (detached %d)%n",
+                cxOk, cx, cxBare, msAtt, ms, msDet);
+        need(cxOk > cxBare, "context.no_gain " + cxOk + " <= " + cxBare);
+        need(msAtt >= msDet, "context.msa_regression " + msAtt + " < " + msDet);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;
