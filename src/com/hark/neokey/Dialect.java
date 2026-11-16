@@ -244,6 +244,31 @@ public final class Dialect {
         return m;
     }
 
+    /** W98 «العربيزي»: an ASCII token (letters + 2/3/5/6/7/9) → Arabic; the
+     *  dictionary wins, else a rule pass for tokens with an Arabizi digit; English
+     *  texting (4, 8, a leading 2: «b4», «gr8», «2day») and plain words stay null. */
+    static String arabizi(String t, Map<String, String> dict) {
+        t = t.toLowerCase();
+        String d = dict.get(t);
+        int n = t.length(), dg = 0;
+        for (int i = 0; i < n; i++) {
+            int c = t.charAt(i);
+            dg |= c >= 'a' ? 4 : "235679".indexOf(c) >= 0 ? 1 : 2;   // 4: a letter, 1: Arabizi digit, 2: English one
+        }
+        if (d != null || dg != 5 || t.charAt(0) == '2') return d;
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < n; i++) {
+            char c = t.charAt(i), x = i + 1 < n ? t.charAt(i + 1) : ' ';
+            int k = "shkhghthdh".indexOf(c + "" + x);
+            if (k >= 0 && k % 2 == 0) { b.append("شخغثذ".charAt(k / 2)); i++; continue; }
+            if (c == x && "aeiou".indexOf(c) >= 0) { b.append(c == 'a' ? 'ا' : c > 'i' ? 'و' : 'ي'); i++; continue; }
+            if (c == 'a' || c == 'e' || (c == 'o' || c == 'u') && i > 0 && i < n - 1) { if (i == 0 || i == n - 1) b.append(i == 0 || c == 'a' ? 'ا' : 'ه'); continue; }
+            int j = "bdfhjklmnqrstwyzgpvicuo235679".indexOf(c);
+            if (j >= 0) b.append("بدفهجكلمنقرستويزجبفيكووءعخطحص".charAt(j));
+        }
+        return b.toString();
+    }
+
     /** W94 «محوّل اللهجات»: every word of a synonym row becomes that row's column
      *  {@code col} (0 فصحى، 1 حجازي، 2 نجدي، 3 خليجي), first alternative; a leading
      *  «و» rides along; everything else (unknown words, spaces, punctuation) stays. */

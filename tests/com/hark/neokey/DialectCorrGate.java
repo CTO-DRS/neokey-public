@@ -341,6 +341,25 @@ public final class DialectCorrGate {
         for (String w : new String[]{"وقت", "الحين", "وش", "ابي", "شكرا"}) need(om.get(Dialect.normAr(w)) == null, "occ.common " + w);
         System.out.println("DIALECTCORR occasions triggers=" + occN);
 
+        // ---- 3j. «إكمال العبارات» + «العربيزي» (W98): every opener maps to a phrase
+        // that starts with it, none shared with soften; Arabizi dictionary + rule pins,
+        // English texting and plain words stay null.
+        java.util.Map<String, String> cm = Dialect.pairs(new String(java.nio.file.Files.readAllBytes(
+                java.nio.file.Paths.get("assets/dialect_complete.txt")), "UTF-8"));
+        for (java.util.Map.Entry<String, String> e : cm.entrySet()) {
+            need(sm.get(e.getKey()) == null, "cmp.soft " + e.getKey());
+            need(Dialect.normAr(e.getValue()).replace(" ", "").contains(e.getKey()), "cmp.prefix " + e.getKey());
+        }
+        need("يعطيك العافية".equals(cm.get(Dialect.normAr("يعطيك"))), "cmp.pin");
+        java.util.Map<String, String> zd = Dialect.pairs(new String(java.nio.file.Files.readAllBytes(
+                java.nio.file.Paths.get("assets/arabizi.txt")), "UTF-8"));
+        String[][] azPins = {{"3ashan", "عشان"}, {"Wallah", "والله"}, {"5alas", "خلاص"}, {"7abibi", "حبيبي"},
+                {"3omri", "عمري"}, {"ba3d", "بعد"}, {"sha3r", "شعر"}, {"9adeeqi", "صديقي"}, {"la2", "لا"}};
+        for (String[] p : azPins) need(p[1].equals(Dialect.arabizi(p[0], zd)), "az.pin " + p[0]);
+        for (String w : new String[]{"b4", "gr8", "2day", "hello", "ok", "k", "fee", "zen", "12", "a1"})
+            need(Dialect.arabizi(w, zd) == null, "az.english " + w);
+        System.out.println("DIALECTCORR complete openers=" + cm.size() + " arabizi words=" + zd.size());
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

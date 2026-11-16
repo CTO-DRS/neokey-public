@@ -144,7 +144,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String PROV = "❝ ";   // W95: a proverb chip's visible mark
     private static final String SOFT = "🕊 ";   // W96: a gentler-phrase chip's mark
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
-    private java.util.Map<String, String> prov, soft, occ;   // W95/W96/W97: loaded once
+    private static final String CMP = "✍ ", AZ = "⇄ ";   // W98: completion / Arabizi chip marks (both replace)
+    private java.util.Map<String, String> prov, soft, occ, cmp, azd;   // W95–W98: loaded once
     private String softFrom;   // W96: the word the gentle chip replaces   // W94: the dialect the last «محوّل اللهجات» tap produced   // W91: the dialect the open voice session listens for
     private Bitmap photo;
     private long photoStamp = -1;
@@ -826,6 +827,16 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (b == null || b.length() < 2 || b.charAt(b.length() - 1) != ' ') return out;
         int end = b.length() - 1, i = end;
         while (i > 0 && isWordChar(b.charAt(i - 1))) i--;
+        if (prov == null) { prov = pairsAsset("dialect_proverbs.txt"); soft = pairsAsset("dialect_soften.txt"); occ = pairsAsset("dialect_occasions.txt"); cmp = pairsAsset("dialect_complete.txt"); azd = pairsAsset("arabizi.txt"); }
+        // W98: an Arabizi token (3ashan / 7abibi) earns its Arabic spelling (⇄, tap replaces).
+        int k = end;
+        while (k > 0 && b.charAt(k - 1) < 128 && Character.isLetterOrDigit(b.charAt(k - 1))) k--;
+        String az = k < end ? Dialect.arabizi(b.subSequence(k, end).toString(), azd) : null;
+        if (az != null) {
+            softFrom = b.subSequence(k, end).toString();
+            out.add(AZ + az);
+            return out;
+        }
         if (i == end) {
             // "word 😂 " — offer nothing, but after an emoji-suggestion just stop
             return out;
@@ -876,13 +887,14 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         }
         // W95: a trigger word earns a proverb chip in the lead slot; the strip keeps
         // one prediction beside it so the chip gets half the width.
-        if (prov == null) { prov = pairsAsset("dialect_proverbs.txt"); soft = pairsAsset("dialect_soften.txt"); occ = pairsAsset("dialect_occasions.txt"); }
         // W96: a hurtful word earns a gentler same-dialect phrase first (tap replaces it).
-        String sf = soft.get(Dialect.normAr(prev));
+        // W98: a phrase opener (يعطيك / بيض) earns its whole phrase (✍, tap replaces).
+        String sf = soft.get(Dialect.normAr(prev)), sm = SOFT;
+        if (sf == null) { sf = cmp.get(Dialect.normAr(prev)); sm = CMP; }
         if (sf != null) {
             softFrom = prev;
             while (out.size() > 1) out.remove(out.size() - 1);
-            out.add(0, SOFT + sf);
+            out.add(0, sm + sf);
             return out;
         }
         // W97: an occasion word earns its customary phrase (✨), else a proverb (❝).
@@ -1007,11 +1019,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             stripAccept().feed(adaptEngine, word,
                     (int) (System.currentTimeMillis() / 86400000L));
         }
-        if (word.startsWith(SOFT) && softFrom != null) {
+        if ((word.startsWith(SOFT) || word.startsWith(CMP) || word.startsWith(AZ)) && softFrom != null) {
             CharSequence b = ic.getTextBeforeCursor(softFrom.length() + 1, 0);
             ic.beginBatchEdit();
             if (b != null && b.toString().equals(softFrom + " ")) ic.deleteSurroundingText(b.length(), 0);
-            ic.commitText(word.substring(SOFT.length()) + " ", 1);   // W96: the gentler phrase
+            ic.commitText(word.substring(word.indexOf(' ') + 1) + " ", 1);   // W96/W98: the gentler phrase, whole phrase or Arabic spelling
             ic.endBatchEdit();
             softFrom = null;
             return;

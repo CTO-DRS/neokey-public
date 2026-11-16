@@ -27,6 +27,10 @@
       "lines": 610,
       "unique": 610
     },
+    "arabizi.txt": {
+      "bytes": 1145,
+      "sha256": "19a63e2d096a52145682a94889852c4250b1d973319a1dc1d6819c77f635a6ec"
+    },
     "bigram_ar_base.txt": {
       "bytes": 1395646,
       "sha256": "e0146d4b4a47b36eb9e9cfa2f68a5aa998c917f54e3640e9e060bc0ae7292ee7",
@@ -36,6 +40,10 @@
     "community_ar.dpack": {
       "bytes": 1018,
       "sha256": "f457bd7b6b4d6dd73488b767c3d7ad5bb41599c964a1e913808fa93d0f659a45"
+    },
+    "dialect_complete.txt": {
+      "bytes": 1003,
+      "sha256": "cc684ccd51a58fe4e94539a31c9931e150cd72bac0957be14ae9cf68e1182526"
     },
     "dialect_occasions.txt": {
       "bytes": 2333,
