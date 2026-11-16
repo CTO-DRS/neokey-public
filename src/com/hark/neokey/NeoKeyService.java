@@ -144,6 +144,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String PROV = "❝ ";   // W95: a proverb chip's visible mark
     private static final String SOFT = "🕊 ";   // W96: a gentler-phrase chip's mark
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
+    private static final String NUM = "🔢 ";   // W101: number-in-words chip mark (tap replaces the number)
     private static final String DATE = "📅 ";   // W100: today's date chip mark (inserts after the word)
     private static final String CMP = "✍ ", AZ = "⇄ ";   // W98: completion / Arabizi chip marks (both replace)
     private java.util.Map<String, String> prov, soft, occ, cmp, azd, emj;   // W95–W99: loaded once
@@ -838,6 +839,15 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             out.add(AZ + az);
             return out;
         }
+        // W101: a typed number (1500 / ١٥٠٠) earns its Arabic words (🔢, tap replaces).
+        int q = end;
+        while (q > 0 && Character.isDigit(b.charAt(q - 1))) q--;
+        String nw = q < end && (q == 0 || !Character.isLetter(b.charAt(q - 1))) ? Dialect.numWords(b.subSequence(q, end).toString()) : null;
+        if (nw != null) {
+            softFrom = b.subSequence(q, end).toString();
+            out.add(NUM + nw);
+            return out;
+        }
         if (i == end) {
             // "word 😂 " — offer nothing, but after an emoji-suggestion just stop
             return out;
@@ -1033,7 +1043,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             stripAccept().feed(adaptEngine, word,
                     (int) (System.currentTimeMillis() / 86400000L));
         }
-        if ((word.startsWith(SOFT) || word.startsWith(CMP) || word.startsWith(AZ)) && softFrom != null) {
+        if ((word.startsWith(SOFT) || word.startsWith(CMP) || word.startsWith(AZ) || word.startsWith(NUM)) && softFrom != null) {
             CharSequence b = ic.getTextBeforeCursor(softFrom.length() + 1, 0);
             ic.beginBatchEdit();
             if (b != null && b.toString().equals(softFrom + " ")) ic.deleteSurroundingText(b.length(), 0);

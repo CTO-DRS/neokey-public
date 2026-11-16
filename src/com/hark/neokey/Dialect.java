@@ -238,6 +238,44 @@ public final class Dialect {
         return "اليوم".equals(n) || "التاريخ".equals(n) || "تاريخ".equals(n) || "هجري".equals(n) || "الهجري".equals(n);
     }
 
+    private static final String[] N1 = {"", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة",
+            "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"};
+    private static final String[] N10 = {"", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"};
+    private static final String[] N100 = {"", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"};
+
+    private static String under1000(int n) {
+        String h = N100[n / 100], r;
+        n %= 100;
+        r = n < 20 ? N1[n] : (n % 10 == 0 ? N10[n / 10] : N1[n % 10] + " و" + N10[n / 10]);
+        return h.isEmpty() ? r : r.isEmpty() ? h : h + " و" + r;
+    }
+
+    private static String scaled(int n, String one, String two, String few, String many) {
+        if (n == 1) return one;
+        if (n == 2) return two;
+        if (n <= 10) return under1000(n) + " " + few;
+        int t = n % 100;
+        return under1000(n) + " " + (t >= 11 ? many + "ًا" : many);
+    }
+
+    /** W101 «الأرقام كتابةً»: a typed whole number (10 … 999,999,999, Latin or Arabic-Indic
+     *  digits, no leading zero) → its Arabic words (1500 → ألف وخمسمائة); else null. */
+    static String numWords(String t) {
+        if (t == null || t.length() < 2 || t.length() > 9) return null;
+        int v = 0;
+        for (int i = 0; i < t.length(); i++) {
+            int d = Character.digit(t.charAt(i), 10);
+            if (d < 0 || (i == 0 && d == 0)) return null;
+            v = v * 10 + d;
+        }
+        int m = v / 1000000, k = v / 1000 % 1000, u = v % 1000;
+        StringBuilder b = new StringBuilder();
+        if (m > 0) b.append(scaled(m, "مليون", "مليونان", "ملايين", "مليون"));
+        if (k > 0) b.append(b.length() > 0 ? " و" : "").append(scaled(k, "ألف", "ألفان", "آلاف", "ألف"));
+        if (u > 0) b.append(b.length() > 0 ? " و" : "").append(under1000(u));
+        return b.toString();
+    }
+
     static Map<String, String> pairs(String text) {
         Map<String, String> m = new HashMap<>();
         if (text != null)

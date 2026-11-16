@@ -381,6 +381,16 @@ public final class DialectCorrGate {
         for (String w : new String[]{"يوم", "وقت", "الحين", "بكرة"}) need(!Dialect.dateWord(Dialect.normAr(w)), "date.plain " + w);
         System.out.println("DIALECTCORR date words=5");
 
+        // ---- 3m. «الأرقام كتابةً» (W101): pinned spellings, the 3–10 plural and the
+        // 11+ accusative for thousands/millions, Arabic-Indic digits, and the refusals.
+        String[][] nwPins = {{"15", "خمسة عشر"}, {"21", "واحد وعشرون"}, {"100", "مائة"}, {"200", "مئتان"},
+                {"1500", "ألف وخمسمائة"}, {"2000", "ألفان"}, {"3000", "ثلاثة آلاف"}, {"12000", "اثنا عشر ألفًا"},
+                {"250000", "مئتان وخمسون ألفًا"}, {"1000000", "مليون"}, {"2026", "ألفان وستة وعشرون"},
+                {"٣٠٠", "ثلاثمائة"}, {"5000500", "خمسة ملايين وخمسمائة"}, {"100000", "مائة ألف"}};
+        for (String[] p : nwPins) need(p[1].equals(Dialect.numWords(p[0])), "num.pin " + p[0] + " → " + Dialect.numWords(p[0]));
+        for (String w : new String[]{"7", "05", "1234567890", "12a", ""}) need(Dialect.numWords(w) == null, "num.refuse " + w);
+        System.out.println("DIALECTCORR numwords pins=" + nwPins.length);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;
