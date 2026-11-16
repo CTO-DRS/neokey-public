@@ -360,6 +360,21 @@ public final class DialectCorrGate {
             need(Dialect.arabizi(w, zd) == null, "az.english " + w);
         System.out.println("DIALECTCORR complete openers=" + cm.size() + " arabizi words=" + zd.size());
 
+        // ---- 3k. «إيموجي اللهجة» (W99): every row gives one or two emoji tokens (no
+        // letters), no trigger is shadowed by soften / completion / occasions / proverbs, pins hold.
+        java.util.Map<String, String> em = Dialect.pairs(new String(java.nio.file.Files.readAllBytes(
+                java.nio.file.Paths.get("assets/dialect_emoji.txt")), "UTF-8"));
+        for (java.util.Map.Entry<String, String> e : em.entrySet()) {
+            String[] es = e.getValue().split(" ");
+            need(es.length >= 1 && es.length <= 2, "emj.count " + e.getKey());
+            for (String x : es) need(!x.isEmpty() && !Character.isLetter(x.codePointAt(0)), "emj.letter " + e.getKey());
+            need(sm.get(e.getKey()) == null && cm.get(e.getKey()) == null && om.get(e.getKey()) == null && pm.get(e.getKey()) == null, "emj.shadow " + e.getKey());
+        }
+        need("😩 🥱".equals(em.get(Dialect.normAr("طفشان"))), "emj.pin bored");
+        need("😘 ❤️".equals(em.get(Dialect.normAr("فديتك"))), "emj.pin love");
+        for (String w : new String[]{"ميت", "حر", "بر", "سم", "وقت"}) need(em.get(Dialect.normAr(w)) == null, "emj.ambiguous " + w);
+        System.out.println("DIALECTCORR emoji words=" + em.size());
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

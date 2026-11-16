@@ -145,7 +145,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String SOFT = "🕊 ";   // W96: a gentler-phrase chip's mark
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String CMP = "✍ ", AZ = "⇄ ";   // W98: completion / Arabizi chip marks (both replace)
-    private java.util.Map<String, String> prov, soft, occ, cmp, azd;   // W95–W98: loaded once
+    private java.util.Map<String, String> prov, soft, occ, cmp, azd, emj;   // W95–W99: loaded once
     private String softFrom;   // W96: the word the gentle chip replaces   // W94: the dialect the last «محوّل اللهجات» tap produced   // W91: the dialect the open voice session listens for
     private Bitmap photo;
     private long photoStamp = -1;
@@ -827,7 +827,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (b == null || b.length() < 2 || b.charAt(b.length() - 1) != ' ') return out;
         int end = b.length() - 1, i = end;
         while (i > 0 && isWordChar(b.charAt(i - 1))) i--;
-        if (prov == null) { prov = pairsAsset("dialect_proverbs.txt"); soft = pairsAsset("dialect_soften.txt"); occ = pairsAsset("dialect_occasions.txt"); cmp = pairsAsset("dialect_complete.txt"); azd = pairsAsset("arabizi.txt"); }
+        if (prov == null) { prov = pairsAsset("dialect_proverbs.txt"); soft = pairsAsset("dialect_soften.txt"); occ = pairsAsset("dialect_occasions.txt"); cmp = pairsAsset("dialect_complete.txt"); azd = pairsAsset("arabizi.txt"); emj = pairsAsset("dialect_emoji.txt"); }
         // W98: an Arabizi token (3ashan / 7abibi) earns its Arabic spelling (⇄, tap replaces).
         int k = end;
         while (k > 0 && b.charAt(k - 1) < 128 && Character.isLetterOrDigit(b.charAt(k - 1))) k--;
@@ -903,6 +903,13 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (pv != null) {
             while (out.size() > 1) out.remove(out.size() - 1);
             out.add(0, mk + pv);
+            return out;
+        }
+        // W99 «إيموجي اللهجة»: a dialect word (طفشان / فديتك) earns two emoji chips beside one prediction.
+        String de = emj.get(Dialect.normAr(prev));
+        if (de != null) {
+            while (out.size() > 1) out.remove(out.size() - 1);
+            for (String e : de.split(" ")) if (!e.isEmpty() && out.size() < 3) out.add(e);
             return out;
         }
         String emo = EmojiHints.forWord(prev);
