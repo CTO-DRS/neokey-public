@@ -10,22 +10,22 @@
       "unique": 150123
     },
     "ar_gulf.txt": {
-      "bytes": 6177,
-      "sha256": "75ba61944951ce5bc5c53f9e4467aeff2eceee356a2a3252341d945886c03284",
-      "lines": 613,
-      "unique": 613
+      "bytes": 6243,
+      "sha256": "ce49323b88752d1ddc12daecb879afe9e6fc99e12d40d8c269b5c561f653bf28",
+      "lines": 621,
+      "unique": 621
     },
     "ar_hijazi.txt": {
-      "bytes": 6267,
-      "sha256": "f5e99edef1a448c7aafbe4cf8a4f6da4a9c9214bfc28e68a509942a9ad279678",
-      "lines": 623,
-      "unique": 623
+      "bytes": 6345,
+      "sha256": "3dbe8e66e4cb6d083ff6878ac5370e05c00ae138712787081826d326e8840210",
+      "lines": 631,
+      "unique": 631
     },
     "ar_najdi.txt": {
-      "bytes": 5704,
-      "sha256": "f8ae5be1a4aaf76e710fd40dc42ad63ada3f18da1f27493e82bf309093de491a",
-      "lines": 560,
-      "unique": 560
+      "bytes": 5752,
+      "sha256": "cb1e953cc1a95dde118c8f03e8c531f3bb40419a7300005198e3c05c3dabcffa",
+      "lines": 566,
+      "unique": 566
     },
     "bigram_ar_base.txt": {
       "bytes": 1395646,
@@ -36,6 +36,10 @@
     "community_ar.dpack": {
       "bytes": 1018,
       "sha256": "f457bd7b6b4d6dd73488b767c3d7ad5bb41599c964a1e913808fa93d0f659a45"
+    },
+    "dialect_synonyms.txt": {
+      "bytes": 1879,
+      "sha256": "ecf77df0898b91c77bd2100d678ca0f40fd074d7434e093a03b197f450cb80b4"
     },
     "emoji_kw.txt": {
       "bytes": 208850,

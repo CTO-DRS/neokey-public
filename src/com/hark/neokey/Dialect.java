@@ -213,4 +213,37 @@ public final class Dialect {
         String d = ORDER[top];
         return new Result(d, (double) sc[top] / total, hits);
     }
+
+    // ---------------------------------------------- W90: dialect synonyms
+    // assets/dialect_synonyms.txt: فصحى<TAB>حجازي<TAB>نجدي<TAB>خليجي, alternatives
+    // in a cell joined by «،». A long-press on a member reveals the rest of its row.
+    private static Map<String, String[]> syn;
+
+    static boolean synReady() { return syn != null; }
+
+    static void synLoad(String text) {
+        Map<String, String[]> m = new HashMap<>();
+        if (text != null)
+            for (String line : text.split("\n")) {
+                if (line.isEmpty() || line.charAt(0) == '#') continue;
+                String[] row = line.trim().replace('\t', '،').split("،");
+                if (row.length < 2) continue;
+                for (String w : row) if (!m.containsKey(normAr(w.trim()))) m.put(normAr(w.trim()), row);
+            }
+        syn = m;
+    }
+
+    /** The picker chips for a word's row ("✕ …" header first), or null when none. */
+    static List<String> synChips(String word) {
+        String[] row = syn == null ? null : syn.get(normAr(word));
+        if (row == null) return null;
+        List<String> out = new ArrayList<>();
+        out.add("✕ " + word + " • مرادفات اللهجات");
+        String k = normAr(word);
+        for (String w : row) {
+            w = w.trim();
+            if (!w.isEmpty() && !normAr(w).equals(k) && !out.contains(w) && out.size() < 11) out.add(w);
+        }
+        return out.size() > 1 ? out : null;
+    }
 }

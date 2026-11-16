@@ -191,6 +191,36 @@ public final class DialectCorrGate {
         need(cxOk > cxBare, "context.no_gain " + cxOk + " <= " + cxBare);
         need(msAtt >= msDet, "context.msa_regression " + msAtt + " < " + msDet);
 
+        // ---- 3d. dialect synonyms (W90): every row has ≥2 distinct members, every
+        // single-word dialect cell is a word of its dialect lexicon (or MSA), and every
+        // member opens a picker that never repeats itself.
+        String synText = new String(Files.readAllBytes(new File("assets/dialect_synonyms.txt").toPath()), StandardCharsets.UTF_8);
+        Dialect.synLoad(synText);
+        int rows = 0, members = 0;
+        for (String line : synText.split("\n")) {
+            if (line.isEmpty() || line.charAt(0) == '#') continue;
+            String[] cells = line.split("\t");
+            need(cells.length == 4, "syn.columns " + line);
+            rows++;
+            java.util.Set<String> keys = new java.util.HashSet<>();
+            for (int c = 0; c < 4; c++)
+                for (String w : cells[c].split("،")) {
+                    w = w.trim();
+                    need(w.matches("[\\u0621-\\u064A ]{2,20}"), "syn.word " + w);
+                    keys.add(Dialect.normAr(w));
+                    members++;
+                    if (c > 0 && w.indexOf(' ') < 0)
+                        need(lex[c - 1].knows(w) || msa.knows(w), "syn.unknown " + IDS[c - 1] + " " + w);
+                    List<String> ch = Dialect.synChips(w);
+                    need(ch != null && ch.get(0).startsWith("✕"), "syn.no_picker " + w);
+                    for (int q = 1; q < ch.size(); q++)
+                        need(!Dialect.normAr(ch.get(q)).equals(Dialect.normAr(w)), "syn.self " + w);
+                }
+            need(keys.size() >= 2, "syn.trivial_row " + line);
+        }
+        need(Dialect.synChips("بيت") == null, "syn.false_picker");
+        System.out.println("DIALECTCORR synonyms rows=" + rows + " members=" + members);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

@@ -1034,6 +1034,16 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                     .create().show();
             return;
         }
+        // W90: a member of a dialect-synonym row reveals the rest of the row
+        // (وش ← ايش، شنو، ماذا) — tap commits like a family member, ✕ exits.
+        if (word != null && !word.isEmpty()) {
+            if (!Dialect.synReady()) {
+                try { Dialect.synLoad(new String(assetBytes("dialect_synonyms.txt"), "UTF-8")); }
+                catch (Exception x) { Dialect.synLoad(null); }
+            }
+            List<String> sy = Dialect.synChips(word);
+            if (sy != null) { familyTree = true; view.setSuggestions(sy); return; }
+        }
         RootEngine e = RootEngine.attached();
         if (e != null && word != null && !word.isEmpty()) {
             String root = e.rootValue(word);
