@@ -343,6 +343,21 @@ final class Correction2 {
                 && (!msa.knows(w) || Dialect.markers().containsKey(Dialect.normAr(w)));
     }
 
+    /** W91: the voice N-best pick for the active dialect — the alternative with the
+     *  most dialect-cue words wins; a tie keeps the recognizer's own order, so with no
+     *  dialect evidence (or no active dialect) the first result rides unchanged. */
+    static String voicePick(List<String> alts, Dictionary msa, Dictionary active) {
+        String best = alts.get(0);
+        if (active == null || msa == null) return best;
+        int top = -1;
+        for (String a : alts) {
+            int n = 0;
+            for (String w : Dialect.tokenize(a)) if (dialectCue(w, msa, active)) n++;
+            if (n > top) { top = n; best = a; }
+        }
+        return best;
+    }
+
     /** True when the change STRIPS hamza/ة from the typed word (أ→ا، ة→ه…) —
      *  degrading the standard orthography regardless of what the informal corpus
      *  prefers (أرسل→ارسل is never an acceptable auto-correction). */

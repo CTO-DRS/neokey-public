@@ -221,6 +221,31 @@ public final class DialectCorrGate {
         need(Dialect.synChips("بيت") == null, "syn.false_picker");
         System.out.println("DIALECTCORR synonyms rows=" + rows + " members=" + members);
 
+        // ---- 3e. voice N-best (W91): for every synonym row, an MSA first result and
+        // the dialect form as an alternative — the active dialect takes its own form
+        // whenever that form is a dialect cue; no active dialect, or no cue, keeps
+        // the recognizer's first result byte-identical.
+        int vCases = 0, vDialect = 0, vKept = 0;
+        for (String line : synText.split("\n")) {
+            if (line.isEmpty() || line.charAt(0) == '#') continue;
+            String[] cells = line.split("\t");
+            String m0 = "طيب " + cells[0].split("،")[0].trim() + " الحين";
+            for (int c = 1; c < 4; c++) {
+                String dw = cells[c].split("،")[0].trim();
+                String alt = "طيب " + dw + " الحين";
+                List<String> alts = java.util.Arrays.asList(m0, alt);
+                need(Correction2.voicePick(alts, msa, null).equals(m0), "voice.detached " + alt);
+                String got = Correction2.voicePick(alts, msa, lex[c - 1]);
+                boolean cue = Correction2.dialectCue(dw, msa, lex[c - 1]);
+                vCases++;
+                if (cue && !m0.equals(alt)) { need(got.equals(alt), "voice.miss " + IDS[c - 1] + " " + alt); vDialect++; }
+                else { need(got.equals(m0), "voice.flip " + IDS[c - 1] + " " + alt); vKept++; }
+            }
+        }
+        List<String> plain = java.util.Arrays.asList("أريد أن أذهب إلى البيت", "اريد ان اذهب الى البيت");
+        for (Dictionary d : lex) need(Correction2.voicePick(plain, msa, d) == plain.get(0), "voice.msa_flip");
+        System.out.println("DIALECTCORR voice cases=" + vCases + " dialect=" + vDialect + " kept=" + vKept);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

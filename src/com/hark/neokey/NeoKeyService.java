@@ -139,6 +139,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     /** W56: the long-press family tree owns the strip until the next tap or key
      *  (any strip rebuild clears it — the tree is an idle-state view, never a mode). */
     private boolean familyTree;
+    private String voiceDialect;   // W91: the dialect the open voice session listens for
     private Bitmap photo;
     private long photoStamp = -1;
     private Bitmap avatarBmp;
@@ -2152,7 +2153,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             recognizer.setRecognitionListener(voiceListener);
             Intent it = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             it.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            it.putExtra(RecognizerIntent.EXTRA_LANGUAGE, arabic ? "ar-SA" : "en-US");
+            // W91: the recognizer hears the active dialect — Gulf speech asks ar-AE
+            // (ar-SA stays for Hijazi/Najdi/MSA), and the N-best feeds voicePick.
+            voiceDialect = arabic ? activeDialectId() : null;
+            it.putExtra(RecognizerIntent.EXTRA_LANGUAGE, !arabic ? "en-US" : "ar_gulf".equals(voiceDialect) ? "ar-AE" : "ar-SA");
+            it.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
             it.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
             it.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
             recognizer.startListening(it);
@@ -2203,7 +2208,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         }
         @Override public void onResults(Bundle b) {
             List<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-            if (r != null && !r.isEmpty()) commitVoice(r.get(0));
+            if (r != null && !r.isEmpty()) commitVoice(Correction2.voicePick(r, dictAr,
+                    voiceDialect == null ? null : dialectDict(voiceDialect)));
             stopVoice();
         }
         @Override public void onPartialResults(Bundle b) {

@@ -464,3 +464,19 @@
 هني	0,0,1
 شفيك	0,0,1
 شوف	1,0,1
+# W91: regional vocabulary inside Saudi — Qassimi (the kaf→ts affrication) rides the Najdi lexicon
+تسذا	0,1,0
+عليتس	0,1,0
+فيتس	0,1,0
+معتس	0,1,0
+منتس	0,1,0
+لتس	0,1,0
+# W91: Eastern Province (Ahsa/Qatif) rides the Gulf lexicon
+ويش	0,0,1
+شنهو	0,0,1
+# W91: Southern (Asir/Jazan, the «ام» article) has no lexicon of its own — protected in all three
+ذحين	1,1,1
+امبيت	1,1,1
+امرجال	1,1,1
+امسياره	1,1,1
+امسوق	1,1,1
