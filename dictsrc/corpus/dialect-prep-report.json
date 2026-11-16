@@ -12,24 +12,24 @@
    "asset": "assets/ar_hijazi.txt",
    "distinctive_words": 13,
    "core_words_added": 357,
-   "vocab_words_added": 281,
-   "total_words": 651,
+   "vocab_words_added": 282,
+   "total_words": 652,
    "markers_covered": 52
   },
   "najdi": {
    "asset": "assets/ar_najdi.txt",
    "distinctive_words": 1,
    "core_words_added": 360,
-   "vocab_words_added": 245,
-   "total_words": 606,
+   "vocab_words_added": 249,
+   "total_words": 610,
    "markers_covered": 56
   },
   "gulf": {
    "asset": "assets/ar_gulf.txt",
    "distinctive_words": 12,
    "core_words_added": 359,
-   "vocab_words_added": 279,
-   "total_words": 650,
+   "vocab_words_added": 287,
+   "total_words": 658,
    "markers_covered": 67
   }
  }
