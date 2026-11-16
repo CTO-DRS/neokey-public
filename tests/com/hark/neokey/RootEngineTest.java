@@ -261,6 +261,28 @@ public class RootEngineTest {
         RootEngine.detach();
         check("root.static.lookup_dead", RootEngine.rootOfStatic("الكتاب") == -1
                 && RootEngine.attached() == null);
+
+        // ---- 9. the W86 recovery (the vision doc's rank 3, الجيل الثاني) ------
+        // The golden set is DERIVED — every pair ran against the SHIPPED asset
+        // (scripts/verify_recover_golden.py) before it was written here; the
+        // verb class (يكتب/ينجح) is not attested in RIX1 and stays uncovered.
+        RootEngine.attach(e);
+        check("root.recover.affix_h", contains(e.recover("الطلابه"), "الطلاب"));
+        check("root.recover.affix_alef", contains(e.recover("مساجدا"), "مساجد"));
+        check("root.recover.morphemic_wal", contains(e.recover("والعلمه"), "علم"));
+        check("root.recover.layered_two", contains(e.recover("المعلمينه"), "تعلم"));
+        check("root.recover.mapped_refused", e.recover("طالب") == null);
+        check("root.recover.no_witness", e.recover("سفكغه") == null);
+        check("root.recover.short_refused", e.recover("الي") == null);
+        check("root.recover.null_refused", e.recover(null) == null);
+        List<String> rs = new ArrayList<>(Arrays.asList("مرحبا", "بالعالم"));
+        RootEngine.recoverInto(rs, "والعلمه", 3);
+        check("root.recover.ride_fills_tail", rs.size() == 3 && rs.contains("العالم"));
+        RootEngine.detach();
+        List<String> rd = new ArrayList<>(Arrays.asList("مرحبا", "بالعالم"));
+        RootEngine.recoverInto(rd, "والعلمه", 3);
+        check("root.recover.detached_noop", rd.size() == 2);
+
         Engines.set();   // leave the registry exactly as the service ships it
     }
 }

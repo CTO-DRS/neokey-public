@@ -760,6 +760,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // only; an empty registry (corrupt index / detached) answers empty.
         Engine.Cand[] eng = engineRun(new Engine.Ctx(null, null, w), 8);
         RootEngine.familyInto(s, pickSrc(eng, "root"), 3);
+        // W86: the form-error recovery rides the SAME tail slot when the
+        // composing word is unmapped — the witnessed affix strip infers the
+        // root and ONE corpus-rank family form fills the tail; DISPLAY ONLY
+        // (the silent path never consumes it — docs/ROOT.md).
+        RootEngine.recoverInto(s, w, 3);
         TashkeelEngine.tashkeelInto(s, pickSrc(eng, "tashkeel"), 3);
         // W58: the grammar correction rides LAST (an optional tap-to-apply
         // suggestion — the engine explains, it never force-corrects) and NEVER

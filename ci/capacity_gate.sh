@@ -58,4 +58,4 @@ echo "$DIA" | tail -1
 POST=$(awk -F'\t' '$1=="dex" && $2=="post_trim" {print $3}' ci/capacity_ledger.tsv)
 CEIL=$(awk -F'\t' '$1=="ceiling" {c=$3} END {print c}' ci/capacity_ledger.tsv)
 MARGIN=$((CEIL - DEXY))
-echo "CAPACITYGATE_OK checks=$CHECKS dex=$DEXY/$CEIL margin=$MARGIN levers=3/5 r8=reviewed ceiling=W69-RAISE"
+echo "CAPACITYGATE_OK checks=$CHECKS dex=$DEXY/$CEIL margin=$MARGIN levers=3/5 r8=reviewed ceiling=last-raised-row (the auditor validates the raise is documented — F10)"

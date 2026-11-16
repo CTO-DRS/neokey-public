@@ -114,7 +114,9 @@ public class CapacityLedger {
         int eng = 0;
         for (String k : new String[]{"root.engine.shipped", "tashkeel.engine.shipped", "feedback.copy.pulled", "grammar.engine.shipped",
                 "claritymeter.engine.shipped", "panicwipe.engine.shipped", "integritycert.engine.shipped", "otpshield.engine.shipped",
-                "airseal.engine.shipped", "strip.engine.shipped", "personal.engine.shipped", "dialect.engine.shipped", "genthemes.engine.shipped"})
+                "airseal.engine.shipped", "strip.engine.shipped", "personal.engine.shipped", "dialect.engine.shipped", "genthemes.engine.shipped",
+                "aacboard.engine.shipped", "numsmart.engine.shipped", "themechannel.engine.shipped",
+                "root.recover.shipped", "trim.toasts.shipped", "drift.w75_80.shipped"})
             eng += Integer.parseInt(byKey.get(k)[2]);
         check("dex.claim.current", dex <= post);
         check("dex.under.ceiling", dex <= ceiling);
@@ -122,9 +124,13 @@ public class CapacityLedger {
         check("dex.batch2.measured", byKey.get("feedback.copy.pulled")[3].startsWith("measured net"));
 
         // ---- 5. the ceiling decision is documented (no silent raise, ever) -------
+        // F10 repair: the pinned "W69 decision" prefix went stale the moment the
+        // W70/W71/W74 raises landed after it (the map holds the LAST row) — the
+        // law is "a documented raise, submitted for ratification", any week id.
         check("ceiling.decision.ledger", byKey.containsKey("ceiling.raised")
                 && "554000".equals(byKey.get("ceiling.raised")[2])
-                && byKey.get("ceiling.raised")[3].startsWith("W69 decision"));
+                && byKey.get("ceiling.raised")[3].matches("W\\d+ decision.*")
+                && byKey.get("ceiling.raised")[3].contains("submitted for owner ratification in NOTES"));
         String roadmap = new String(Files.readAllBytes(Paths.get("ROADMAP-V2.md")), StandardCharsets.UTF_8);
         check("ceiling.decision.roadmap", roadmap.contains("W54-CEILING-DECISION")
                 && roadmap.contains("W57-CEILING-RAISE")

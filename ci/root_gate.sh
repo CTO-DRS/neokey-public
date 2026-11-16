@@ -76,9 +76,16 @@ echo "$ACC" | grep -q 'accuracy=100.0%' || { echo "ROOTGATE_FAILED gold_below_10
 POST=$(awk -F'\t' '$1=="dex" && $2=="post_trim" {print $3}' ci/capacity_ledger.tsv)
 PREW=$(awk -F'\t' '$1=="dex" && $2=="pre_wire" {print $3}' ci/capacity_ledger.tsv)
 RDELTA=$(awk -F'\t' '$1=="root.engine" {print $3}' ci/capacity_ledger.tsv)
-CEIL=$(awk -F'\t' '$1=="ceiling" {print $3}' ci/capacity_ledger.tsv)
+CEIL=$(awk -F'\t' '$1=="ceiling" {v=$3} END{print v}' ci/capacity_ledger.tsv)
 [ -n "$POST" ] && [ -n "$PREW" ] && [ -n "$RDELTA" ] && [ -n "$CEIL" ] || { echo "ROOTGATE_FAILED ledger_rows"; exit 1; }
-[ $((POST - PREW)) -eq "$RDELTA" ] || { echo "ROOTGATE_FAILED ledger_delta post=$POST pre_wire=$PREW root.engine=$RDELTA"; exit 1; }
+# F10 repair: the W56-era single-engine equality (post-pre == root.engine)
+# broke the moment a second engine row landed and was never re-run. The strict
+# SUM EQUALITY is CapacityLedger's law (post == pre_wire + EVERY shipped row,
+# audited against the FRESH dex); this gate keeps its own law as the COVERING
+# check — the total movement covers the root engine's charge — and the fresh
+# dex decision stays in capacity_gate. The CEIL read also fixes the latent
+# multi-row awk (the LAST ceiling row decides, mirroring capacity_gate).
+[ $((POST - PREW)) -ge "$RDELTA" ] || { echo "ROOTGATE_FAILED ledger_delta post=$POST pre_wire=$PREW root.engine=$RDELTA"; exit 1; }
 [ "$POST" -le "$CEIL" ] || { echo "ROOTGATE_FAILED over_ceiling dex=$POST ceiling=$CEIL"; exit 1; }
 MARGIN=$((CEIL - POST))
 ROOTS=$(awk -F'\t' '$1=="roots" {print $2}' assets/root_index.txt)

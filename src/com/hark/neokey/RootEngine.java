@@ -180,6 +180,74 @@ public final class RootEngine implements Engine, Correction2.RootSignal {
         return out;
     }
 
+    // ------------------------------------------------------------ the W86 recovery
+
+    /**
+     * The W86 form-error recovery (the vision doc's rank 3 — the second
+     * generation of the root-aware correction): the typed word is unmapped,
+     * yet it is a FORM error — the derivation's own affix inventory strips
+     * it, layered (max 2), each remainder len>=3, until a remainder is a
+     * WITNESSED spine key; that key's family (corpus-rank) holds the attested
+     * forms of the inferred root. DISPLAY ONLY — the silent path never
+     * consumes this (the W56 law: the root serves, it never rewrites). No
+     * witness → null (لا تخمين — the derivation's discipline at typing time).
+     * The attested VERB conjugations (يكتب/ينجح) are absent from RIX1 —
+     * documented; that class awaits the derivation's next layer.
+     */
+    public String[] recover(String typed) {
+        if (typed == null || typed.length() < 4) return null;
+        String t = Dictionary.norm(typed);
+        if (rootOf(t) >= 0) return null;      // mapped words ride run(Ctx) already
+        int r = -1;
+        for (int round = 0; round < 2 && r < 0; round++) {
+            String s = null;
+            for (String p : PMORPH)
+                if (t.startsWith(p) && t.length() - p.length() >= 3) { s = t.substring(p.length()); break; }
+            if (s == null)
+                for (String p : PSUF)
+                    if (t.endsWith(p) && t.length() - p.length() >= 3) { s = t.substring(0, t.length() - p.length()); break; }
+            if (s == null)
+                for (String p : PSINGLE)
+                    if (t.startsWith(p) && t.length() - p.length() >= 3) { s = t.substring(p.length()); break; }
+            if (s == null) break;
+            t = s;
+            r = rootOf(t);
+        }
+        if (r < 0) return null;
+        String key = Dictionary.norm(typed);
+        String[] f = families[r];
+        List<String> out = new ArrayList<>(6);
+        for (int i = 0; i < f.length && out.size() < 6; i++)
+            if (!Dictionary.norm(f[i]).equals(key) && !out.contains(f[i])) out.add(f[i]);
+        return out.toArray(new String[0]);
+    }
+
+    /** The derivation's own affix inventory (ci/make_root_index.py layers
+     *  7-9), mirrored verbatim — one strip per round, morphemic first. */
+    private static final String[] PMORPH = {"ال", "است", "ان"};
+    private static final String[] PSUF = {"ات", "ون", "ين", "ية", "ان", "اء", "ء",
+            "هم", "كم", "هن", "ها", "نا", "ه", "ة", "ا", "ي", "ت"};
+    private static final String[] PSINGLE = {"إ", "ا", "أ", "و", "ف", "ب", "ل", "ت"};
+
+    /**
+     * The strip ride (the service calls it right after familyInto): ONE
+     * recovered family member (corpus-rank first, not already shown) fills
+     * the same tail slot — detached → silent no-op (the W55 law). Pure.
+     */
+    public static void recoverInto(List<String> strip, String typed, int cap) {
+        RootEngine e = active;
+        if (strip == null || cap <= 0 || e == null) return;
+        String[] rec = e.recover(typed);
+        if (rec == null || rec.length == 0) return;
+        for (int i = 0; i < rec.length; i++) {
+            String t = rec[i] == null ? "" : rec[i].trim();
+            if (t.isEmpty() || strip.contains(t)) continue;
+            if (strip.size() < cap) strip.add(t);
+            else strip.set(cap - 1, t);
+            return;
+        }
+    }
+
     // --------------------------------------------------- the W55 engine contract
 
     public String id() { return "root"; }
