@@ -139,7 +139,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     /** W56: the long-press family tree owns the strip until the next tap or key
      *  (any strip rebuild clears it — the tree is an idle-state view, never a mode). */
     private boolean familyTree;
-    private String voiceDialect;   // W91: the dialect the open voice session listens for
+    private String voiceDialect;
+    private int convCol;   // W94: the dialect the last «محوّل اللهجات» tap produced   // W91: the dialect the open voice session listens for
     private Bitmap photo;
     private long photoStamp = -1;
     private Bitmap avatarBmp;
@@ -1038,10 +1039,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // W90: a member of a dialect-synonym row reveals the rest of the row
         // (وش ← ايش، شنو، ماذا) — tap commits like a family member, ✕ exits.
         if (word != null && !word.isEmpty()) {
-            if (!Dialect.synReady()) {
-                try { Dialect.synLoad(new String(assetBytes("dialect_synonyms.txt"), "UTF-8")); }
-                catch (Exception x) { Dialect.synLoad(null); }
-            }
+            synEnsure();
             List<String> sy = Dialect.synChips(word);
             if (sy != null) { familyTree = true; view.setSuggestions(sy); return; }
         }
@@ -1700,6 +1698,23 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             return;
         }
         if (id == KeyboardView.TOOL_WRITER) { openWriter(); return; }
+        if (id == KeyboardView.TOOL_DIALECT) {
+            // W94 «محوّل اللهجات»: each tap turns the selection (or the line) into the
+            // next of فصحى → حجازي → نجدي → خليجي; تراجع restores the original.
+            boolean selected = !TextUtils.isEmpty(sel);
+            String src = selected ? sel.toString() : currentLine(ic);
+            if (src == null || src.trim().isEmpty()) {
+                Toast.makeText(this, "اكتب نص أو حدّده أول", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            synEnsure();
+            convCol = (convCol + 1) % 4;
+            String out = Dialect.synConvert(src, convCol);
+            replaceText(ic, src, selected, out);
+            Toast.makeText(this, out.equals(src) ? "ما لقيت كلمات أحولها"
+                    : "حوّلتها لل" + new String[]{"فصحى", "حجازي", "نجدي", "خليجي"}[convCol], Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (id >= KeyboardView.TOOL_BIGKEYS && id <= KeyboardView.TOOL_MOTION) {
             String key = id == KeyboardView.TOOL_BIGKEYS ? "bigkeys" : id == KeyboardView.TOOL_CONTRAST ? "contrast" : "reducemotion";
             boolean on = !Theme.prefs(this).getBoolean(key, false);
@@ -1805,6 +1820,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (b == null) return null;
         String t = b.toString();
         return t.substring(t.lastIndexOf('\n') + 1);
+    }
+
+    private void synEnsure() {
+        if (Dialect.synReady()) return;
+        try { Dialect.synLoad(new String(assetBytes("dialect_synonyms.txt"), "UTF-8")); }
+        catch (Exception x) { Dialect.synLoad(null); }
     }
 
     private void replaceText(InputConnection ic, String src, boolean selected, String out) {

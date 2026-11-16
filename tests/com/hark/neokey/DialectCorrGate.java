@@ -246,6 +246,32 @@ public final class DialectCorrGate {
         for (Dictionary d : lex) need(Correction2.voicePick(plain, msa, d) == plain.get(0), "voice.msa_flip");
         System.out.println("DIALECTCORR voice cases=" + vCases + " dialect=" + vDialect + " kept=" + vKept);
 
+        // ---- 3f. «محوّل اللهجات» (W94): a sentence turns into each column; unknown
+        // words, spaces and punctuation stay byte-identical; the «و» prefix rides along.
+        String[][] conv = {
+                {"وش تبي الحين؟", "ماذا تريد الآن؟", "ايش تبغى دحين؟", "وش تبي ذلحين؟", "شنو تبي الحين؟"},
+                {"فين رايح، ووين اهلك", "أين رايح، وأين اهلك", "فين رايح، وفين اهلك", "وين رايح، ووين اهلك", "وين رايح، ووين اهلك"},
+                {"Hello 123 بيت", "Hello 123 بيت", "Hello 123 بيت", "Hello 123 بيت", "Hello 123 بيت"},
+        };
+        for (String[] t : conv)
+            for (int c = 0; c < 4; c++)
+                need(Dialect.synConvert(t[0], c).equals(t[c + 1]), "conv " + c + " " + t[0] + " -> " + Dialect.synConvert(t[0], c));
+        int convN = 0;
+        for (String line : synText.split("\n")) {
+            if (line.isEmpty() || line.charAt(0) == '#') continue;
+            String[] cells = line.split("\t");
+            for (String w : line.split("[\t،]")) {
+                w = w.trim();
+                if (w.indexOf(' ') >= 0 || !Dialect.synChips(w).get(0).contains(w)) continue;
+                for (int c = 0; c < 4; c++) {
+                    String got = Dialect.synConvert(w, c);
+                    need(!got.isEmpty(), "conv.empty " + w);
+                    convN++;
+                }
+            }
+        }
+        System.out.println("DIALECTCORR convert sentences=" + conv.length + " members=" + convN);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

@@ -139,7 +139,7 @@ public class KeyboardView extends View {
     private final Paint trailP = new Paint(Paint.ANTI_ALIAS_FLAG);
     public static final int TOOL_FIXLANG = 0, TOOL_CALC = 1, TOOL_HIJRI = 2, TOOL_TRANSLATE = 3, TOOL_SPEAK = 4, TOOL_DIGITS = 5,
             TOOL_INCOGNITO = 6, TOOL_CASE = 7, TOOL_UNDO = 8, TOOL_SEARCH = 9, TOOL_SHARE = 10,
-            TOOL_WRITER = 11, TOOL_BIGKEYS = 12, TOOL_CONTRAST = 13, TOOL_MOTION = 14;
+            TOOL_WRITER = 11, TOOL_BIGKEYS = 12, TOOL_CONTRAST = 13, TOOL_MOTION = 14, TOOL_DIALECT = 15;
     private final List<Key> toolbar = new ArrayList<>();
     private final List<Key> suggKeys = new ArrayList<>();
     static final String CLIP_MARK = "\uE000";
@@ -783,11 +783,12 @@ public class KeyboardView extends View {
                 {"case", "حالة الأحرف"}, {"undo", "تراجع"}, {"search", "بحث"}, {"share", "مشاركة"},
                 {"edit_note", "مساعد المراسلات"}, {"text_increase", bigKeys ? "حجم عادي" : "تكبير المفاتيح"},
                 {"contrast", contrastOn ? "إلغاء التباين" : "تباين عالٍ"}, {"motion_off", reduceMotion ? "تشغيل الحركة" : "تقليل الحركة"},
+                {"refresh", "محوّل اللهجات"},
         };
-        for (int r = 0; r < 6; r++) {
+        for (int r = 0; r < 5; r++) {
             List<Key> row = new ArrayList<>();
-            for (int c = 0; c < 4; c++) {
-                int i = r * 4 + c;
+            for (int c = 0; c < 5; c++) {
+                int i = r * 5 + c;
                 Key k = new Key(Key.MORE_ITEM, items[i][1], items[i][0], 1f, null);
                 k.id = i;
                 row.add(k);

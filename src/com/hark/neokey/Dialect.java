@@ -217,26 +217,43 @@ public final class Dialect {
     // ---------------------------------------------- W90: dialect synonyms
     // assets/dialect_synonyms.txt: فصحى<TAB>حجازي<TAB>نجدي<TAB>خليجي, alternatives
     // in a cell joined by «،». A long-press on a member reveals the rest of its row.
-    private static Map<String, String[]> syn;
+    private static Map<String, String> syn;
 
     static boolean synReady() { return syn != null; }
 
     static void synLoad(String text) {
-        Map<String, String[]> m = new HashMap<>();
+        Map<String, String> m = new HashMap<>();
         if (text != null)
             for (String line : text.split("\n")) {
-                if (line.isEmpty() || line.charAt(0) == '#') continue;
-                String[] row = line.trim().replace('\t', '،').split("،");
-                if (row.length < 2) continue;
-                for (String w : row) if (!m.containsKey(normAr(w.trim()))) m.put(normAr(w.trim()), row);
+                if (line.isEmpty() || line.charAt(0) == '#' || line.indexOf('\t') < 0) continue;
+                for (String w : line.split("[\t،]")) if (!m.containsKey(normAr(w.trim()))) m.put(normAr(w.trim()), line);
             }
         syn = m;
     }
 
+    /** W94 «محوّل اللهجات»: every word of a synonym row becomes that row's column
+     *  {@code col} (0 فصحى، 1 حجازي، 2 نجدي، 3 خليجي), first alternative; a leading
+     *  «و» rides along; everything else (unknown words, spaces, punctuation) stays. */
+    static String synConvert(String text, int col) {
+        StringBuilder b = new StringBuilder();
+        int i = 0, n = text.length();
+        while (i < n) {
+            int j = i;
+            while (j < n && Character.isLetter(text.charAt(j))) j++;
+            if (j == i) { b.append(text.charAt(i++)); continue; }
+            String w = text.substring(i, j), p = "", line = syn.get(normAr(w));
+            if (line == null && w.length() > 2 && w.charAt(0) == 'و' && (line = syn.get(normAr(w.substring(1)))) != null) p = "و";
+            b.append(line == null ? w : p + line.split("\t")[col].split("،")[0].trim());
+            i = j;
+        }
+        return b.toString();
+    }
+
     /** The picker chips for a word's row ("✕ …" header first), or null when none. */
     static List<String> synChips(String word) {
-        String[] row = syn == null ? null : syn.get(normAr(word));
-        if (row == null) return null;
+        String line = syn == null ? null : syn.get(normAr(word));
+        if (line == null) return null;
+        String[] row = line.split("[\t،]");
         List<String> out = new ArrayList<>();
         out.add("✕ " + word + " • مرادفات اللهجات");
         String k = normAr(word);
