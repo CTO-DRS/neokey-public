@@ -284,16 +284,27 @@ public final class Dialect {
         return n.length() == 1 && Character.digit(n.charAt(0), 10) > 0 ? N1[Character.digit(n.charAt(0), 10)] : numWords(n);
     }
 
-    /** W103: the halala tail (1 … 99) in the cheque register. */
-    private static String halala(int h) {
-        if (h == 1) return "هللة واحدة";
-        if (h == 2) return "هللتان";
-        if (h <= 10) return F3[h - 3] + " هللات";
-        return under1000(h) + " هللة";
+    /** W103/W104: the fraction tail (1 … 99) in the cheque register; fem picks the 3–10 number form. */
+    private static String sub(int h, String one, String two, String few, String many, boolean fem) {
+        if (h == 1) return one;
+        if (h == 2) return two;
+        if (h <= 10) return (fem ? F3[h - 3] : N1[h]) + " " + few;
+        return under1000(h) + " " + many;
     }
 
+    // W104: currency families {unit-prefix, whole name, 1 sub, 2 subs, 3–10 subs, 11+ sub, fem}
+    private static final String[][] CUR = {
+            {"ريال", "ريال سعودي", "هللة واحدة", "هللتان", "هللات", "هللة", "f"},
+            {"دولار", "دولار أمريكي", "سنت واحد", "سنتان", "سنتات", "سنت", ""},
+            {"درهم", "درهم إماراتي", "فلس واحد", "فلسان", "فلوس", "فلس", ""},
+            {"دراهم", "درهم إماراتي", "فلس واحد", "فلسان", "فلوس", "فلس", ""}};
+
     static String amountWords(String num, String unit) {
-        if (num == null || unit == null || !normAr(unit).replace("ً", "").startsWith("ريال")) return null;
+        if (num == null || unit == null) return null;
+        String u = normAr(unit).replace("ً", "");
+        String[] c = null;
+        for (String[] x : CUR) if (u.startsWith(x[0])) { c = x; break; }
+        if (c == null) return null;
         int dot = Math.max(num.indexOf('.'), num.indexOf('٫'));
         String ip = dot < 0 ? num : num.substring(0, dot), fp = dot < 0 ? "" : num.substring(dot + 1);
         if (dot >= 0 && (fp.isEmpty() || fp.length() > 2 || ip.isEmpty())) return null;
@@ -306,7 +317,9 @@ public final class Dialect {
         if (fp.length() == 1) h *= 10;
         String w = ip.equals("0") || ip.equals("٠") ? "" : intWords(ip);
         if (w == null || (w.isEmpty() && h == 0)) return null;
-        String out = w.isEmpty() ? halala(h) : w + " ريال" + (h > 0 ? " و" + halala(h) : " سعودي");
+        String t = h == 0 ? "" : sub(h, c[2], c[3], c[4], c[5], !c[6].isEmpty());
+        String whole = c[1].substring(0, c[1].indexOf(' '));
+        String out = w.isEmpty() ? t : w + " " + (h > 0 ? whole + " و" + t : c[1]);
         return "فقط " + out + " لا غير";
     }
 

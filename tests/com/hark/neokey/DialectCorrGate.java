@@ -395,7 +395,7 @@ public final class DialectCorrGate {
         String[][] amPins = {{"1500", "ريال", "فقط ألف وخمسمائة ريال سعودي لا غير"}, {"5", "ريالات", "فقط خمسة ريال سعودي لا غير"},
                 {"250", "ريالًا", "فقط مئتان وخمسون ريال سعودي لا غير"}, {"١٠٠٠", "ريال", "فقط ألف ريال سعودي لا غير"}};
         for (String[] p : amPins) need(p[2].equals(Dialect.amountWords(p[0], p[1])), "amt.pin " + p[0] + " → " + Dialect.amountWords(p[0], p[1]));
-        need(Dialect.amountWords("1500", "دولار") == null && Dialect.amountWords("0", "ريال") == null
+        need(Dialect.amountWords("1500", "يورو") == null && Dialect.amountWords("0", "ريال") == null
                 && Dialect.amountWords("0500", "ريال") == null, "amt.refuse");
         System.out.println("DIALECTCORR amount pins=" + amPins.length);
         // ---- 3o. halalas (W103).
@@ -405,6 +405,12 @@ public final class DialectCorrGate {
         for (String[] p : hlPins) need(p[1].equals(Dialect.amountWords(p[0], "ريال")), "hal.pin " + p[0] + " → " + Dialect.amountWords(p[0], "ريال"));
         for (String w : new String[]{"10.", ".5", "10.505", "0.00", "1.2.3"}) need(Dialect.amountWords(w, "ريال") == null, "hal.refuse " + w);
         System.out.println("DIALECTCORR halala pins=" + hlPins.length);
+        // ---- 3p. dollar + dirham (W104).
+        String[][] fxPins = {{"100", "دولار", "فقط مائة دولار أمريكي لا غير"}, {"20.25", "دولار", "فقط عشرون دولار وخمسة وعشرون سنت لا غير"},
+                {"5.03", "دولار", "فقط خمسة دولار وثلاثة سنتات لا غير"}, {"750", "درهم", "فقط سبعمائة وخمسون درهم إماراتي لا غير"},
+                {"12.5", "دراهم", "فقط اثنا عشر درهم وخمسون فلس لا غير"}, {"0.02", "درهم", "فقط فلسان لا غير"}};
+        for (String[] p : fxPins) need(p[2].equals(Dialect.amountWords(p[0], p[1])), "fx.pin " + p[0] + p[1] + " → " + Dialect.amountWords(p[0], p[1]));
+        System.out.println("DIALECTCORR currency pins=" + fxPins.length);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
