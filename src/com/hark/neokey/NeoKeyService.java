@@ -144,6 +144,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String PROV = "❝ ";   // W95: a proverb chip's visible mark
     private static final String SOFT = "🕊 ";   // W96: a gentler-phrase chip's mark
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
+    private static final String DATE = "📅 ";   // W100: today's date chip mark (inserts after the word)
     private static final String CMP = "✍ ", AZ = "⇄ ";   // W98: completion / Arabizi chip marks (both replace)
     private java.util.Map<String, String> prov, soft, occ, cmp, azd, emj;   // W95–W99: loaded once
     private String softFrom;   // W96: the word the gentle chip replaces   // W94: the dialect the last «محوّل اللهجات» tap produced   // W91: the dialect the open voice session listens for
@@ -897,6 +898,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             out.add(0, sm + sf);
             return out;
         }
+        // W100: «اليوم» / «التاريخ» earns today's Hijri + Gregorian date (📅, tap inserts it).
+        if (Dialect.dateWord(Dialect.normAr(prev))) {
+            while (out.size() > 1) out.remove(out.size() - 1);
+            out.add(0, DATE + TextTools.todayArabic(Theme.arabicDigits(this)));
+            return out;
+        }
         // W97: an occasion word earns its customary phrase (✨), else a proverb (❝).
         String pv = occ.get(Dialect.normAr(prev)), mk = OCC;
         if (pv == null) { pv = prov.get(Dialect.normAr(prev)); mk = PROV; }
@@ -1033,6 +1040,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             ic.commitText(word.substring(word.indexOf(' ') + 1) + " ", 1);   // W96/W98: the gentler phrase, whole phrase or Arabic spelling
             ic.endBatchEdit();
             softFrom = null;
+            return;
+        }
+        if (word.startsWith(DATE)) {
+            ic.commitText(word.substring(DATE.length()) + " ", 1);   // W100: the date itself
             return;
         }
         if (word.startsWith(PROV) || word.startsWith(OCC)) {

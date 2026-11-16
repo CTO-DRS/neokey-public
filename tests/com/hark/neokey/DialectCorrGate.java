@@ -375,6 +375,12 @@ public final class DialectCorrGate {
         for (String w : new String[]{"ميت", "حر", "بر", "سم", "وقت"}) need(em.get(Dialect.normAr(w)) == null, "emj.ambiguous " + w);
         System.out.println("DIALECTCORR emoji words=" + em.size());
 
+        // ---- 3l. «التاريخ بضغطة» (W100): the date words fire, ordinary words do not,
+        // (the chip text itself is TextTools.todayArabic, the W-era 🕌 tool's date).
+        for (String w : new String[]{"اليوم", "التاريخ", "تاريخ", "هجري", "الهجري"}) need(Dialect.dateWord(Dialect.normAr(w)), "date.word " + w);
+        for (String w : new String[]{"يوم", "وقت", "الحين", "بكرة"}) need(!Dialect.dateWord(Dialect.normAr(w)), "date.plain " + w);
+        System.out.println("DIALECTCORR date words=5");
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

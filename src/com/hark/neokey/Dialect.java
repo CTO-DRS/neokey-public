@@ -233,6 +233,11 @@ public final class Dialect {
 
     /** W95/W96: «triggers TAB text» rows (assets/dialect_proverbs.txt, dialect_soften.txt)
      *  as a normAr(trigger) → text map; '#' lines and malformed rows are skipped. */
+    /** W100: the typed word that earns today's date chip (📅) — اليوم / التاريخ / هجري. */
+    static boolean dateWord(String n) {
+        return "اليوم".equals(n) || "التاريخ".equals(n) || "تاريخ".equals(n) || "هجري".equals(n) || "الهجري".equals(n);
+    }
+
     static Map<String, String> pairs(String text) {
         Map<String, String> m = new HashMap<>();
         if (text != null)
