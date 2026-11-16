@@ -493,7 +493,10 @@ final class Dictionary {
     }
 
     /** A confident correction for an unknown word, or null. */
-    String correction(String typed) {
+    String correction(String typed) { return correction(typed, 18000); }
+
+    /** W88: the floor is the caller's — a curated dialect lexicon has no noisy tail (every row is a reviewed word). */
+    String correction(String typed, int floor) {
         if (!loaded || typed.length() < 3 || knows(typed)) return null;
         String key = norm(typed);
         String[] w; String[] k; int[] s;
@@ -510,7 +513,7 @@ final class Dictionary {
                 if (sc > bestScore) { bestScore = sc; best = w[i]; }
             }
         }
-        return bestScore > 18000 ? best : null;
+        return bestScore > floor ? best : null;
     }
 
     int learnedCount() { return user.size(); }

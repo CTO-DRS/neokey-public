@@ -303,8 +303,11 @@ final class Correction2 {
      *       standard-orthography class (السالفه→السالفة) — never into another
      *       word (measured live before W87: دحين→دين، مليح→مليء، طاري→طارئ،
      *       وشلون→وشؤون، عيل→على);
-     *   (2) a word unknown to the MSA dictionary is repaired from the ACTIVE
-     *       dialect lexicon first (ذحين→ذلحين، ابغئ→ابغى) — the MSA chain only after.
+     *   (2) a word the MSA chain cannot repair is repaired from the ACTIVE
+     *       dialect lexicon (ذحين→ذلحين) with no frequency floor — a curated
+     *       lexicon has no noisy tail (W88). W88 measured dialect-first against
+     *       MSA-first: dialect-first cost 9/203 MSA repairs, so MSA leads and
+     *       the dialect fills what it leaves (MSA attached == detached, gated).
      * Null active + null lexicons = byte-identical to the pre-W87 chain
      * (fix → msa.correction) — the detach law, bitten by DialectCorrGate.
      */
@@ -315,10 +318,9 @@ final class Correction2 {
         if (lexicons != null)
             for (Dictionary x : lexicons)
                 if (x != null && x.isLoaded() && x.knows(typed)) { prot = true; break; }
-        String c = null;
-        if (active != null && active.isLoaded() && !msa.knows(typed)) c = active.correction(typed);
-        if (c == null) c = fix(typed, prev, next, msa, exceptions);
+        String c = fix(typed, prev, next, msa, exceptions);
         if (c == null) c = msa.correction(typed);
+        if (c == null && active != null && active.isLoaded() && !msa.knows(typed)) c = active.correction(typed, 0);
         if (prot && c != null && !(c.length() == typed.length() && isStandardOnlyDirection(typed, c))) {
             lastReason = "dialect-protected";
             return null;

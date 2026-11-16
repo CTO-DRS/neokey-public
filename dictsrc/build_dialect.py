@@ -67,9 +67,31 @@ def parse_markers(path):
         markers.append((w, (h, n, g)))
     return markers
 
+def parse_vocab(path):
+    """dialect_vocab.tsv (W88): كلمة<TAB>h,n,g بعضوية 0/1 — مفردات القاموس فقط، لا علامات كشف."""
+    out = []
+    if not os.path.isfile(path):
+        return out
+    for ln, line in enumerate(open(path, encoding='utf-8'), 1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        parts = line.split('\t')
+        if len(parts) != 2 or not AR_ONLY.match(parts[0].strip()):
+            sys.exit('BUILD_DIALECT_FAILED: bad vocab line %d: %r' % (ln, line))
+        try:
+            f = tuple(int(x) for x in parts[1].split(','))
+        except ValueError:
+            sys.exit('BUILD_DIALECT_FAILED: bad vocab flags line %d: %r' % (ln, line))
+        if len(f) != 3 or any(x not in (0, 1) for x in f) or sum(f) == 0:
+            sys.exit('BUILD_DIALECT_FAILED: vocab flags must be 0/1, not all zero, line %d' % ln)
+        out.append((parts[0].strip(), f))
+    return out
+
 def main():
     core_raw = parse_gulf_core(os.path.join(DS, 'gulf.txt'))
     markers  = parse_markers(os.path.join(DS, 'dialect_markers.tsv'))
+    vocab    = parse_vocab(os.path.join(DS, 'dialect_vocab.tsv'))
 
     # علامة فريدة لكل مفتاح normAr — التكرار في الجدول نفسه خطأ تحرير
     seen_keys = {}
@@ -99,6 +121,7 @@ def main():
         'tool': 'dictsrc/build_dialect.py',
         'core_source': 'dictsrc/gulf.txt',
         'markers_source': 'dictsrc/dialect_markers.tsv',
+        'vocab_source': 'dictsrc/dialect_vocab.tsv',
         'markers_total': len(markers),
         'core_raw_tokens': len(core_raw),
         'core_unique': len(core),
@@ -124,6 +147,13 @@ def main():
             k = norm_ar(w)
             if k not in out_keys:
                 out_keys.add(k); out.append(w); core_added += 1
+        # W88: مفردات اللهجة بعد النواة — العلامات لا تدخل من هنا أبداً (مصدرها الجدول وحده)
+        vocab_added = 0
+        for w, f in vocab:
+            k = norm_ar(w)
+            if f[col] != 1 or k in seen_keys or k in out_keys:
+                continue
+            out_keys.add(k); out.append(w); vocab_added += 1
         missing = [w for w in must if norm_ar(w) not in out_keys]
         if missing:
             sys.exit('BUILD_DIALECT_FAILED: markers missing from %s dict: %r'
@@ -135,6 +165,7 @@ def main():
             'asset': 'assets/ar_%s.txt' % d,
             'distinctive_words': len(distinct),
             'core_words_added': core_added,
+            'vocab_words_added': vocab_added,
             'total_words': len(out),
             'markers_covered': len(must),
         }

@@ -130,6 +130,20 @@ public final class DialectCorrGate {
         System.out.println("DIALECTCORR detach checked=" + checked + " diffs=" + diffs);
         need(diffs == 0, "detach.diff " + diffs);
 
+        // ---- 3b. MSA no-regression: the reference errors with every lexicon attached
+        // (gulf active — the widest) restore at least as often as detached.
+        int msaOkAtt = 0, msaOkDet = 0, msaCases = 0;
+        for (String w : ref) {
+            if (w.length() < 3) continue;
+            String t = w + w.charAt(w.length() - 1);
+            if (msa.knows(t)) continue;
+            msaCases++;
+            if (w.equals(Correction2.dialectFix(t, "", "", msa, lex[2], lex, none))) msaOkAtt++;
+            if (w.equals(Correction2.dialectFix(t, "", "", msa, null, null, none))) msaOkDet++;
+        }
+        System.out.println("DIALECTCORR msa cases=" + msaCases + " attached=" + msaOkAtt + " detached=" + msaOkDet);
+        need(msaOkAtt >= msaOkDet, "msa.regression " + msaOkAtt + " < " + msaOkDet);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;
