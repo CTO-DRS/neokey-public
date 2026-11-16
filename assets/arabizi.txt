@@ -45,3 +45,40 @@ mabrook،mabruk	مبروك
 salam،slam	سلام
 akeed،akid	أكيد
 ma3leh،ma3lesh	معليش
+# W98b: كلمات محادثة يومية إضافية
+ma32ool،ma3qool	معقول
+3adi،3ady	عادي
+zeen	زين
+7elw،7lw،helw	حلو
+7elwa،7lwa	حلوة
+wayed،wayid	وايد
+mara،marra	مرة
+shway،shwaya،shwi	شوي
+gaa3d،ga3ed	قاعد
+ra7،rayi7	رايح
+ta3al،t3al	تعال
+wenak،wenk	وينك
+fen،feen	فين
+lesh،leish	ليش
+mitha،mta	متى
+kam،kem	كم
+3ala6ool،3al6ool	على طول
+ba3d	بعد
+ma3ak،m3ak	معك
+3endi،3ndi	عندي
+ma3endi،m3ndi	ما عندي
+afham،af'ham	أفهم
+mafhemt،mafhamt	ما فهمت
+masha،mashi	ماشي
+abshir،abshr	أبشر
+tfadal،tfaddal	تفضل
+3afya،3afia	عافية
+ya3teek،ya36eek	يعطيك
+el3afya،al3afia	العافية
+sadeeqi،9adeeqi،sa7bi	صديقي
+ahli،a7li	أهلي
+ommi،umi	أمي
+abooy،ubooy	أبوي
+akhooy،a5ooy	أخوي
+ukhti،o5ti	أختي
+ha7a7a،ha7ha7	ههههه
