@@ -272,6 +272,30 @@ public final class DialectCorrGate {
         }
         System.out.println("DIALECTCORR convert sentences=" + conv.length + " members=" + convN);
 
+        // ---- 3g. «الأمثال الشعبية الذكية» (W95): every trigger resolves to its own
+        // row's proverb (no trigger claimed twice), pinned samples, non-triggers stay null.
+        String provText = new String(java.nio.file.Files.readAllBytes(
+                java.nio.file.Paths.get("assets/dialect_proverbs.txt")), "UTF-8");
+        Dialect.provLoad(provText);
+        int provN = 0, trigN = 0;
+        java.util.Set<String> seenTrig = new java.util.HashSet<>();
+        for (String line : provText.split("\n")) {
+            if (line.isEmpty() || line.charAt(0) == '#') continue;
+            String[] f = line.split("\t");
+            need(f.length == 2 && !f[1].trim().isEmpty(), "prov.shape " + line);
+            provN++;
+            for (String w : f[0].split("،")) {
+                need(seenTrig.add(Dialect.normAr(w.trim())), "prov.dup " + w);
+                need(f[1].trim().equals(Dialect.proverb(w.trim())), "prov.map " + w);
+                trigN++;
+            }
+        }
+        need("الجار قبل الدار".equals(Dialect.proverb("جيراني")), "prov.pin jar");
+        need("الصبر مفتاح الفرج".equals(Dialect.proverb("صبرت")), "prov.pin sabr");
+        for (String w : new String[]{"وقت", "كلام", "مال", "شكرا", "الحين", "وش", "ابي"})
+            need(Dialect.proverb(w) == null, "prov.common " + w);
+        System.out.println("DIALECTCORR proverbs=" + provN + " triggers=" + trigN);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

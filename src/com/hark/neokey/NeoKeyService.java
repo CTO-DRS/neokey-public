@@ -140,7 +140,9 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
      *  (any strip rebuild clears it — the tree is an idle-state view, never a mode). */
     private boolean familyTree;
     private String voiceDialect;
-    private int convCol;   // W94: the dialect the last «محوّل اللهجات» tap produced   // W91: the dialect the open voice session listens for
+    private int convCol;
+    private static final String PROV = "❝ ";   // W95: a proverb chip's visible mark
+    private Boolean prov;   // W95: proverbs asset loaded once   // W94: the dialect the last «محوّل اللهجات» tap produced   // W91: the dialect the open voice session listens for
     private Bitmap photo;
     private long photoStamp = -1;
     private Bitmap avatarBmp;
@@ -869,6 +871,19 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 if (!out.contains(w)) out.add(w);
             }
         }
+        // W95: a trigger word earns a proverb chip in the lead slot; the strip keeps
+        // one prediction beside it so the chip gets half the width.
+        if (prov == null) {
+            try { Dialect.provLoad(new String(assetBytes("dialect_proverbs.txt"), "UTF-8")); }
+            catch (Exception x) { Dialect.provLoad(null); }
+            prov = Boolean.TRUE;
+        }
+        String pv = Dialect.proverb(prev);
+        if (pv != null) {
+            while (out.size() > 1) out.remove(out.size() - 1);
+            out.add(0, PROV + pv);
+            return out;
+        }
         String emo = EmojiHints.forWord(prev);
         if (emo != null && out.size() < 3 && !out.contains(emo)) out.add(emo);
         return out;
@@ -982,6 +997,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             word = word.substring(AdaptEngine.MARK.length());
             stripAccept().feed(adaptEngine, word,
                     (int) (System.currentTimeMillis() / 86400000L));
+        }
+        if (word.startsWith(PROV)) {
+            ic.commitText(word.substring(PROV.length()) + " ", 1);   // W95: the proverb itself
+            return;
         }
         if (!Character.isLetter(word.charAt(0))) {
             // emoji suggestion: keep the word, add the emoji
