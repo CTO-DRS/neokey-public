@@ -121,6 +121,10 @@ else
   echo "SKIP SignedApkTest (tools/apksig.jar absent — see docs/R8.md; the SIGNEDAPK gate requires it)"
 fi
 # audit F6 (2026-11-15): the per-suite RESULT lines include embedded gate
-# checks; the documented tally (tests 2381/0 at W78) counts tests only —
+# checks; the documented tally (tests 2537/0) counts tests only —
 # both measures must show zero failed. Reached only on a full green run.
-echo "BATTERY_END note: RESULT totals include embedded gate checks — the documented tally (2381/0 at W78) counts tests only; zero failed is the bar on both measures."
+# F9 (2026-11-16): this note must NOT carry the literal «RESULT » — EvAudit's
+# log-shape law collects every log line containing it and demands the strict
+# «RESULT N passed, M failed» shape (the drill's inner evaudit refused
+# log.result_line until this reword — the F6 note itself was the poison).
+echo "BATTERY_END note: the sums above include embedded gate checks — the documented tally (tests 2537/0) counts tests only; zero failed is the bar on both measures."
