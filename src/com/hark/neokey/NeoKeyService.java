@@ -391,7 +391,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         super.onStartInputView(info, restarting);
         if (!restarting && info != null && Dialect.bankApp(info.packageName)
                 && Theme.prefs(this).getBoolean("bank_auto", true)) {   // W126: a bank app — step aside on our own
-            main.post(new Runnable() { @Override public void run() { onTool(KeyboardView.TOOL_BANK); } });
+            main.postDelayed(new Runnable() { @Override public void run() { bankNotice(); } }, 250);
         }
         if (!restarting) reloadClips();   // picks up edits / imports made in the app screens
         boolean wasEn = L.en;
@@ -2204,7 +2204,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             return;
         }
         if (id == KeyboardView.TOOL_WRITER) { openWriter(); return; }
-        if (id == KeyboardView.TOOL_BANK) {
+        if (id == KeyboardView.TOOL_BANK) { bankNotice(); return; }
+        if (id == -16) {
             // W125 «وضع البنك»: banking apps refuse a keyboard off their trusted list, so hand the
             // phone to the previous keyboard in one tap; NeoKey comes back from that keyboard's globe key.
             Toast.makeText(this, "🛡 وضع البنك — ارجع من 🌐", Toast.LENGTH_LONG).show();
@@ -2653,6 +2654,28 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 reloadClips();
             }
         });
+    }
+
+    /** W126: in a banking app, say why the bank refuses us and which keyboards it trusts, then step aside. */
+    private void bankNotice() {
+        if (view == null || view.getWindowToken() == null) { onTool(-16); return; }
+        android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(L.t(getString(R.string.nk_bank_title)))
+                .setMessage(L.t(getString(R.string.nk_bank_why)))
+                .setPositiveButton(L.t(getString(R.string.nk_bank_go)), new android.content.DialogInterface.OnClickListener() {
+                    @Override public void onClick(android.content.DialogInterface d, int w) { onTool(-16); }
+                })
+                .setNegativeButton(L.t("إلغاء"), null)
+                .create();
+        android.view.Window win = dlg.getWindow();
+        if (win != null) {
+            android.view.WindowManager.LayoutParams lp = win.getAttributes();
+            lp.token = view.getWindowToken();
+            lp.type = android.view.WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;
+            win.setAttributes(lp);
+            win.addFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        }
+        try { dlg.show(); } catch (Exception e) { onTool(-16); }
     }
 
     /** 101st pin: offer to give up the last pinned item, or cancel. */
