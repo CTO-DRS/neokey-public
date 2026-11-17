@@ -511,6 +511,44 @@ public final class Dialect {
         return b.append(w.length > 4 ? "…" : "").toString();
     }
 
+    // ---- W121 الحافظة الذكية: a glance tag + a relative age on every clip card.
+    /** W121: the card's glance tag — 🔗 link, ✉ mail, 🏦 IBAN, 💳 card, 🪙 wallet, 🔑 one-time code, 📞 phone, 📍 place, # number; else null. */
+    static String clipTag(String v) {
+        if (v == null) return null;
+        String t = v.trim();
+        if (t.isEmpty()) return null;
+        String lo = t.toLowerCase(java.util.Locale.ROOT);
+        if (lo.matches("(?s).*(maps\\.google|goo\\.gl/maps|maps\\.app\\.goo\\.gl|maps\\.apple).*")) return "📍";
+        if (lo.matches("(?s).*\\b(https?://|www\\.)\\S+.*")) return "🔗";
+        if (t.length() <= 80 && t.matches("[^\\s@]+@[^\\s@]+\\.[a-zA-Z]{2,}")) return "✉";
+        String k = clipKind(t);
+        if (k != null) {
+            if (k.equals("iban")) return "🏦";
+            if (k.equals("card")) return "💳";
+            if (k.equals("phone")) return "📞";
+            if (k.equals("eth") || k.equals("btc") || k.equals("trx")) return "🪙";
+        }
+        String c = t.replace(" ", "").replace("-", "");
+        if (c.matches("[0-9]{4,8}")) return "🔑";
+        if (c.matches("\\+?[0-9]{9,15}")) return "📞";
+        if (c.matches("[0-9.,]+")) return "#";
+        return null;
+    }
+
+    /** W121: a short Arabic age for a clip card: الآن، قبل 5 د، قبل 3 س، أمس، قبل 4 أيام، or a week count. */
+    static String ago(long ms) {
+        if (ms < 60_000L) return "الآن";
+        long m = ms / 60_000L;
+        if (m < 60) return "قبل " + m + " د";
+        long h = m / 60;
+        if (h < 24) return "قبل " + h + " س";
+        long d = h / 24;
+        if (d == 1) return "أمس";
+        if (d < 7) return "قبل " + d + (d <= 10 ? " أيام" : " يوم");
+        long w = d / 7;
+        return w == 1 ? "قبل أسبوع" : w == 2 ? "قبل أسبوعين" : w < 5 ? "قبل " + w + " أسابيع" : "قديم";
+    }
+
     // ---- W113 «شاهد اللصق» 🔍: the clipboard changed itself — a money-shaped value replaced by another of the same shape.
     /** W113: iban|eth|btc|trx|card|phone|account for a value worth stealing, else null. */
     static String clipKind(String v) {

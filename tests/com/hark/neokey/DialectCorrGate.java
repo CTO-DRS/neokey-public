@@ -632,6 +632,19 @@ public final class DialectCorrGate {
         need(Motion.fitChips(prov, 2, 420, 60) == 2 && prov[0] == 315f, "strip.long.chip.keeps.neighbour");
                 System.out.println("DIALECTCORR strip6 ok");
 
+        // ---- 3af. W121 smart clipboard tags + ages
+        need("🔗".equals(Dialect.clipTag("شوف https://neokey.app/x")) && "📍".equals(Dialect.clipTag("https://maps.app.goo.gl/abc")),
+                "clip.tag.link");
+        need("✉".equals(Dialect.clipTag("drs@example.com")) && "📞".equals(Dialect.clipTag("0551234567"))
+                && "📞".equals(Dialect.clipTag("+201001234567")), "clip.tag.mail.phone");
+        need("🔑".equals(Dialect.clipTag("4821")) && "🏦".equals(Dialect.clipTag("SA03 8000 0000 6080 1016 7519"))
+                && "🪙".equals(Dialect.clipTag("0x52908400098527886E0F7030069857D2E4169EE7")), "clip.tag.code.iban.wallet");
+        need("#".equals(Dialect.clipTag("1,500.75")) && Dialect.clipTag("السلام عليكم") == null, "clip.tag.none");
+        need("الآن".equals(Dialect.ago(5_000)) && "قبل 5 د".equals(Dialect.ago(5 * 60_000L)) && "قبل 3 س".equals(Dialect.ago(3 * 3_600_000L))
+                && "أمس".equals(Dialect.ago(30 * 3_600_000L)) && "قبل 4 أيام".equals(Dialect.ago(4 * 86_400_000L))
+                && "قبل أسبوعين".equals(Dialect.ago(15 * 86_400_000L)) && "قديم".equals(Dialect.ago(60 * 86_400_000L)), "clip.ago");
+        System.out.println("DIALECTCORR clipsmart ok");
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

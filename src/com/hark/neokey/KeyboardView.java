@@ -560,6 +560,7 @@ public class KeyboardView extends View {
 
     public void showPanel(int p) {
         if (p != panel && anims) { panelT = 0f; lastFrame = 0; }
+        if (p == PANEL_CLIP && p != panel) clipSig = Long.MIN_VALUE;   // W121: opening the clipboard deals the cards in
         panel = p;
         active = null;
         altList = null;
@@ -1003,6 +1004,9 @@ public class KeyboardView extends View {
         phraseRows.add(bottom);
     }
 
+    private long clipSig = Long.MIN_VALUE, clipShownAt;   // W121
+    private boolean clipAnim;
+
     private void layoutClips(float top) {
         clipKeys.clear();
         clipBottom.clear();
@@ -1055,6 +1059,8 @@ public class KeyboardView extends View {
         if (clipPage >= pages) clipPage = 0;
         int start = clipPage * CLIP_PER_PAGE;
         int n = catGrid ? 0 : Math.max(0, Math.min(clips.size() - start, CLIP_PER_PAGE));
+        long sig = ((clipTab * 131L + clipCat) * 131L + clipPage) * 1_000_003L + (n > 0 ? clips.get(start).id : -1) + (clipQuery == null ? 0 : 7);
+        if (sig != clipSig) { clipSig = sig; clipShownAt = SystemClock.uptimeMillis(); }   // W121: a new page of cards deals in
         float cw = w / 2f;
         for (int i = 0; i < n; i++) {
             ClipItem ci = clips.get(start + i);
@@ -1369,7 +1375,9 @@ public class KeyboardView extends View {
                 animating |= drawStrip(c, now);
             }
         } else if (panel == PANEL_CLIP) {
+            clipAnim = false;
             drawClips(c);
+            animating |= clipAnim;
             for (Key k : clipKeys) animating |= step(k, dt);
             for (Key k : clipBottom) { animating |= step(k, dt); drawKey(c, k); }
         }
@@ -1550,7 +1558,7 @@ public class KeyboardView extends View {
 
     /** Ink from the exact point the finger landed, clipped to the key; a hold bar for keys with extra letters. */
     private void drawTouch(Canvas c, Key k) {
-        if (k.tdown == 0 || !motionOn() || panel != PANEL_KEYS && panel != PANEL_EMOJI && panel != PANEL_EDIT) return;
+        if (k.tdown == 0 || !motionOn() || panel != PANEL_KEYS && panel != PANEL_EMOJI && panel != PANEL_EDIT && panel != PANEL_CLIP) return;
         long now = SystemClock.uptimeMillis(), t = now - k.tdown;
         float a = Motion.inkAlpha(k.tup > 0 ? now - k.tup : -1);
         if (a <= 0.004f) return;
@@ -2092,6 +2100,8 @@ public class KeyboardView extends View {
             return;
         }
         float sc = clamp(scale, 0.8f, 1.1f);
+        long now = SystemClock.uptimeMillis();
+        boolean mo = motionOn();
         List<Key> order = new ArrayList<>(clipKeys);
         if (dragKey != null && order.remove(dragKey)) order.add(dragKey);
         for (Key k : order) {
@@ -2107,8 +2117,19 @@ public class KeyboardView extends View {
                 c.translate(dragX - downX, dragY - downY);
                 c.scale(1.05f, 1.05f, k.rect.centerX(), k.rect.centerY());
             }
+            float in = mo && !dragging ? Motion.chipIn(now - clipShownAt, clipKeys.indexOf(k)) : 1f;   // W121 deal-in
+            if (in < 1f) { clipAnim = true; c.save(); c.translate(0, (1f - in) * 14 * dp); c.scale(0.92f + 0.08f * in, 0.92f + 0.08f * in, k.rect.centerX(), k.rect.centerY()); }
             int col = k.press > 0.01f && !theme.neon ? blend(theme.key, theme.keyPressed, k.press) : theme.key;
             drawBody(c, k.rect, col, k.press, false);
+            drawTouch(c, k);
+            {   // W121: a glance tag and the clip's age at the card's start-bottom corner
+                String tag = Dialect.clipTag(ci.preview), age = Dialect.ago(System.currentTimeMillis() - Math.max(ci.used, ci.created));
+                textP.setTextSize(9.5f * dp);
+                textP.setColor(theme.hint);
+                String meta = tag == null ? age : tag + "  " + age;
+                float mw = textP.measureText(meta);
+                c.drawText(meta, rtl ? k.rect.right - 7 * dp - mw / 2 : k.rect.left + 7 * dp + mw / 2, k.rect.bottom - 4 * dp, textP);
+            }
             float pz = 13 * dp, pad = 8 * dp;
             int marks = (ci.pinned ? 1 : 0) + (ci.fav ? 1 : 0);
             float markW = marks * (pz + 4 * dp);
@@ -2167,6 +2188,7 @@ public class KeyboardView extends View {
                 c.drawText(badge, rtl ? k.rect.left + 6 * dp + bw / 2 : k.rect.right - 6 * dp - bw / 2, k.rect.bottom - 4 * dp, textP);
             }
             if (dragging) c.restore();
+            if (in < 1f) c.restore();
         }
     }
 
