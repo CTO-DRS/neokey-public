@@ -126,14 +126,14 @@ public class RebuildDrillTest {
 
         // ---- السجل الداخلي ---------------------------------------------------
         Path logGood = tmp.resolve("inner-good.log");
-        Files.write(logGood, syntheticInnerLog(38, "0", "505636", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
+        Files.write(logGood, syntheticInnerLog(38, "0", "505636", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
         RebuildGate.InnerRun in = RebuildGate.parseInnerLog(logGood.toString());
         ok("pos.inner.parse", in.stageRows == 38 && "1479".equals(in.testsPassed)
                 && "0".equals(in.testsFailed) && "505636".equals(in.dex),
                 "the synthetic inner run parses: 38 stages, 1479/0, dex 505636");
 
         Path logFail = tmp.resolve("inner-fail.log");
-        Files.write(logFail, syntheticInnerLog(38, "0", "505636", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)
+        Files.write(logFail, syntheticInnerLog(38, "0", "505636", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)
                 .replaceFirst("  phase7\\s+PASS", "  phase7   FAIL (rc=1)").getBytes(StandardCharsets.UTF_8));
         ok("neg.inner.stage_fail", "inner.stage_fail".equals(expectTag(() -> RebuildGate.parseInnerLog(logFail.toString()))),
                 "a FAIL row refuses inner.stage_fail");
@@ -141,52 +141,52 @@ public class RebuildDrillTest {
         // شكل المحيط لحظة الحفرية: 37 صف PASS (المراحل قبلها فقط — evaudit
         // لم يحِن بعد) + صف الحفريات نفسه (يُسقط عند المقارنة مع ما بعدها)
         Path outerShape = tmp.resolve("outer-shape.log");
-        Files.write(outerShape, ("[rebuild] PASS (9s)\n" + syntheticInnerLog(37, "0", "505636", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)).getBytes(StandardCharsets.UTF_8));
+        Files.write(outerShape, ("[rebuild] PASS (9s)\n" + syntheticInnerLog(37, "0", "505636", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)).getBytes(StandardCharsets.UTF_8));
         ok("pos.summary.profile", expectTag(() -> RebuildGate.crossCheckSummary(logGood.toString(), outerShape.toString(), "rebuild")) == null,
                 "the inner rows equal the outer rows minus the drill's own row");
 
         Path outerSkip = tmp.resolve("outer-skip.log");
-        Files.write(outerSkip, syntheticInnerLog(37, "0", "505636", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)
+        Files.write(outerSkip, syntheticInnerLog(37, "0", "505636", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)
                 .replaceFirst("\\[build\\] PASS \\(1s\\)", "[build] SKIP (no Android SDK in this environment)").getBytes(StandardCharsets.UTF_8));
         Path innerSkip2 = tmp.resolve("inner-skip2.log");
-        Files.write(innerSkip2, syntheticInnerLog(38, "0", "505636", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)
+        Files.write(innerSkip2, syntheticInnerLog(38, "0", "505636", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)
                 .replaceFirst("\\[build\\] PASS \\(1s\\)", "[build] SKIP (no Android SDK in this environment)").getBytes(StandardCharsets.UTF_8));
         ok("pos.summary.skip_profile", expectTag(() -> RebuildGate.crossCheckSummary(innerSkip2.toString(), outerSkip.toString(), "rebuild")) == null,
                 "the documented build SKIP reproduces on both sides — profile equality holds");
 
         Path innerSkip3 = tmp.resolve("inner-skip3.log");
-        Files.write(innerSkip3, syntheticInnerLog(38, "0", "505636", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)
+        Files.write(innerSkip3, syntheticInnerLog(38, "0", "505636", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN)
                 .replaceFirst("\\[probe\\] PASS \\(1s\\)", "[probe] SKIP (tampered)").getBytes(StandardCharsets.UTF_8));
         ok("neg.summary.profile_drift", "xref.summary".equals(expectTag(() -> RebuildGate.crossCheckSummary(innerSkip3.toString(), outerShape.toString(), "rebuild"))),
                 "a SKIP the outer never had refuses xref.summary");
 
         Path logCount = tmp.resolve("inner-count.log");
-        Files.write(logCount, syntheticInnerLog(36, "0", "505636", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
+        Files.write(logCount, syntheticInnerLog(36, "0", "505636", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
         ok("neg.inner.count", "inner.count".equals(expectTag(() -> RebuildGate.parseInnerLog(logCount.toString()))),
                 "36 stage rows refuse inner.count");
 
         Path logNoOk = tmp.resolve("inner-nook.log");
-        Files.write(logNoOk, syntheticInnerLog(38, "0", "505636", "10/10", false, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
+        Files.write(logNoOk, syntheticInnerLog(38, "0", "505636", "11/11", false, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
         ok("neg.inner.pipeline_ok_missing", "inner.pipeline_ok_missing".equals(expectTag(() -> RebuildGate.parseInnerLog(logNoOk.toString()))),
                 "no closing verdict refuses inner.pipeline_ok_missing");
 
         Path logBad = tmp.resolve("inner-bad.log");
-        Files.write(logBad, syntheticInnerLog(38, "0", "505636", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).replace("PIPELINE_OK", "PIPELINE_FAILED").getBytes(StandardCharsets.UTF_8));
+        Files.write(logBad, syntheticInnerLog(38, "0", "505636", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).replace("PIPELINE_OK", "PIPELINE_FAILED").getBytes(StandardCharsets.UTF_8));
         ok("neg.inner.pipeline_failed", "inner.pipeline_failed".equals(expectTag(() -> RebuildGate.parseInnerLog(logBad.toString()))),
                 "PIPELINE_FAILED refuses inner.pipeline_failed");
 
         Path logTests = tmp.resolve("inner-tests.log");
-        Files.write(logTests, syntheticInnerLog(38, "1", "505636", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
+        Files.write(logTests, syntheticInnerLog(38, "1", "505636", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
         ok("neg.inner.tests_failed", "inner.tests_failed".equals(expectTag(() -> RebuildGate.parseInnerLog(logTests.toString()))),
                 "one forged test failure refuses inner.tests_failed");
 
         Path logCeil = tmp.resolve("inner-ceil.log");
-        Files.write(logCeil, syntheticInnerLog(38, "0", "999999", "10/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
+        Files.write(logCeil, syntheticInnerLog(38, "0", "999999", "11/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
         ok("neg.inner.ceiling", "inner.ceiling".equals(expectTag(() -> RebuildGate.parseInnerLog(logCeil.toString()))),
                 "dex over the lowered ceiling refuses inner.ceiling");
 
         Path logComp = tmp.resolve("inner-comp.log");
-        Files.write(logComp, syntheticInnerLog(38, "0", "505636", "9/10", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
+        Files.write(logComp, syntheticInnerLog(38, "0", "505636", "10/11", true, "vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN).getBytes(StandardCharsets.UTF_8));
         ok("neg.inner.components", "inner.components".equals(expectTag(() -> RebuildGate.parseInnerLog(logComp.toString()))),
                 "a dropped manifest component refuses inner.components");
 

@@ -5,7 +5,7 @@
 //   java -> src/   res -> res/   assets -> assets/   manifest -> AndroidManifest.xml
 buildscript {
     repositories { google(); mavenCentral() }
-    dependencies { classpath 'com.android.tools.build:gradle:8.7.3' }
+    dependencies { classpath 'com.android.tools.build:gradle:9.5.1' }  // W130 — أحدث مستقر (يتطلب Gradle 9.6.0+)
 }
 apply plugin: 'com.android.application'
 
@@ -15,12 +15,12 @@ def vn = (manifest =~ /versionName="([^"]+)"/)[0][1]
 
 android {
     namespace 'com.hark.neokey'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId 'com.hark.neokey'
         minSdk 21
-        targetSdk 35
+        targetSdk 36      // W130 — إلزام Play للتحديثات منذ 2026-08-31
         versionCode vc          // single source of truth stays AndroidManifest.xml
         versionName vn
     }

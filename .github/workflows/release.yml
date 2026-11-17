@@ -29,8 +29,8 @@ jobs:
       - name: Fetch JVM test dependencies
         run: |
           mkdir -p tools
-          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
-          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
+          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar
+          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.20/slf4j-api-2.0.20.jar
       - name: Install ripgrep (audit + probe require it — week 31 fix)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
       - run: SKIP_BUILD=1 ci/pipeline.sh   # week 31 fix: JVM-only mode — this job has no SDK pieces (the hosted ANDROID_SDK_ROOT made stage_build fail red since week 29)
@@ -56,16 +56,15 @@ jobs:
         run: |
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
-          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-36" "build-tools;36.0.0" > /dev/null
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
-          ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
-          curl -fsSLo "$SDK/bundletool.jar" https://github.com/google/bundletool/releases/download/1.17.0/bundletool-all-1.17.0.jar
-          curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar
-          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
-          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
-          curl -fsSLo tools/apksig.jar     https://dl.google.com/dl/android/maven2/com/android/tools/build/apksig/8.5.0/apksig-8.5.0.jar
-          ln -sfn "$SDK/platforms/android-30/android.jar" tools/android.jar
+          ln -sfn "$SDK/platforms/android-36" "$SDK/android-36"
+          curl -fsSLo "$SDK/bundletool.jar" https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar
+          curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/9.5.33/r8-9.5.33.jar
+          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar
+          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.20/slf4j-api-2.0.20.jar
+          curl -fsSLo tools/apksig.jar     https://dl.google.com/dl/android/maven2/com/android/tools/build/apksig/9.5.1/apksig-9.5.1.jar
+          ln -sfn "$SDK/platforms/android-36/android.jar" tools/android.jar
 
       - name: Install ripgrep (probe + secrets audit require it — week 32 fix — the release job was red weekly on the missing JVM provisions while ci.yml was fixed in week 31)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
@@ -143,15 +142,14 @@ jobs:
         run: |
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
-          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-36" "build-tools;36.0.0" > /dev/null
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
-          ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
-          curl -fsSLo "$SDK/bundletool.jar" https://github.com/google/bundletool/releases/download/1.17.0/bundletool-all-1.17.0.jar
-          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
-          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
-          curl -fsSLo tools/apksig.jar     https://dl.google.com/dl/android/maven2/com/android/tools/build/apksig/8.5.0/apksig-8.5.0.jar
-          ln -sfn "$SDK/platforms/android-30/android.jar" tools/android.jar
+          ln -sfn "$SDK/platforms/android-36" "$SDK/android-36"
+          curl -fsSLo "$SDK/bundletool.jar" https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar
+          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar
+          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.20/slf4j-api-2.0.20.jar
+          curl -fsSLo tools/apksig.jar     https://dl.google.com/dl/android/maven2/com/android/tools/build/apksig/9.5.1/apksig-9.5.1.jar
+          ln -sfn "$SDK/platforms/android-36/android.jar" tools/android.jar
 
       - name: Restore signing secrets
         env:
@@ -175,7 +173,7 @@ jobs:
 
       - name: Rebuild the same-tag AAB on the R8 line (same versionCode — Play matches and raises the fraction)
         run: |
-          curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar
+          curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/9.5.33/r8-9.5.33.jar
           bash ci/build_r8.sh
           bash build_aab.sh
 

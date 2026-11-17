@@ -3,7 +3,7 @@
 # D8 step is replaced by R8 (shrink + obfuscate + optimize + dex in one), and the
 # mapping is archived for crash symbolication (Play Console "deobfuscation file").
 #   tools: aapt2/d8/zipalign/apksigner from ANDROID_SDK (final packaging), plus
-#          tools/r8.jar (downloadable: dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar)
+#          tools/r8.jar (downloadable: dl.google.com/dl/android/maven2/com/android/tools/r8/9.5.33/r8-9.5.33.jar)
 #   rules: proguard-rules.pro (keep = manifest components + line numbers only)
 # Without ANDROID_SDK this script still proves the shrink step (dex + mapping)
 # against tools/android.jar — the final APK assembly stays on the build machine.
@@ -15,9 +15,8 @@ R8JAR="${R8_JAR:-tools/r8.jar}"
 AJAR="${R8_ANDROID_JAR:-}"
 if [ -z "$AJAR" ]; then
   SDK="${ANDROID_SDK:-${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/workspace/work/sdk}}}"
-  AJAR=$SDK/android-35/android.jar
-  [ -f "$AJAR" ] || AJAR=$SDK/platforms/android-35/android.jar
-  [ -f "$AJAR" ] || AJAR=$SDK/android-30/android.jar
+  AJAR=$SDK/android-36/android.jar
+  [ -f "$AJAR" ] || AJAR=$SDK/platforms/android-36/android.jar
   [ -f "$AJAR" ] || { echo "ERROR: no android.jar (set R8_ANDROID_JAR or ANDROID_SDK)" >&2; exit 1; }
 fi
 
@@ -42,7 +41,7 @@ if [ -n "$AAPT2" ]; then
   "$AAPT2" compile --dir res -o build/r8-res.zip
   "$AAPT2" link -I "$AJAR" --manifest AndroidManifest.xml -o build/r8-base.apk -A assets \
     --java build/r8-gen build/r8-res.zip \
-    --min-sdk-version 21 --target-sdk-version 35 --version-code "$RVC" --version-name "$RVN"
+    --min-sdk-version 21 --target-sdk-version 36 --version-code "$RVC" --version-name "$RVN"
   SRCS="$(find src build/r8-gen -name '*.java')"
   echo "R8_R_SOURCE=aapt2 (real resource IDs — the artifact dex)"
 elif [ -f build/gen/com/hark/neokey/R.java ]; then
@@ -144,13 +143,13 @@ if [ -n "${ANDROID_SDK:-}" ] || [ -d /workspace/work/sdk ]; then
   SDK="${ANDROID_SDK:-/workspace/work/sdk}"
   BT=$(ls -d "$SDK"/build-tools/* 2>/dev/null | sort -V | tail -1)
   PATH="$BT:$PATH"; export PATH
-  AL=$SDK/android-30/android.jar
+  AL=$SDK/android-36/android.jar
   VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
   VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
   rm -rf build/res build/base.apk build/unsigned.apk build/aligned.apk && mkdir -p build/res
   aapt2 compile --dir res -o build/res/res.zip
   aapt2 link -I "$AL" --manifest AndroidManifest.xml -o build/base.apk -A assets --java build/gen \
-    build/res/res.zip --min-sdk-version 21 --target-sdk-version 35 --version-code "$VC" --version-name "$VN"
+    build/res/res.zip --min-sdk-version 21 --target-sdk-version 36 --version-code "$VC" --version-name "$VN"
   cp build/base.apk build/unsigned.apk
   (cd build/dex && zip -q -u ../unsigned.apk classes.dex)
   zipalign -f -p 4 build/unsigned.apk build/aligned.apk

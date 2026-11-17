@@ -21,8 +21,8 @@ SDK="${ANDROID_SDK:-/workspace/work/sdk}"
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 rm -rf build/aab && mkdir -p build/aab/base
-aapt2 link --proto-format -I $SDK/android-30/android.jar --manifest AndroidManifest.xml \
-  -o build/aab/proto.apk -A assets build/res/res.zip --min-sdk-version 21 --target-sdk-version 35 \
+aapt2 link --proto-format -I $SDK/android-36/android.jar --manifest AndroidManifest.xml \
+  -o build/aab/proto.apk -A assets build/res/res.zip --min-sdk-version 21 --target-sdk-version 36 \
   --version-code $VC --version-name $VN
 cd build/aab/base
 unzip -q ../proto.apk

@@ -3,7 +3,7 @@
 # Runs the same chain as build.sh: aapt2 -> javac/ECJ -> d8 -> zipalign, then stops.
 # CI (GitHub Actions / any machine) uses this to prove a clean merge compiles,
 # while the signed release stays on the release workflow with real secrets.
-# Requires: ANDROID_SDK (or ANDROID_SDK_ROOT/ANDROID_HOME) with platforms 35+30 and build-tools.
+# Requires: ANDROID_SDK (or ANDROID_SDK_ROOT/ANDROID_HOME) with platform android-36 and build-tools.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -14,9 +14,9 @@ SDK="${ANDROID_SDK:-${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/workspace/work/sdk}}}"
 BT=$(ls -d "$SDK"/build-tools/* 2>/dev/null | sort -V | tail -1 || true)
 [ -n "$BT" ] || { echo "ERROR: no build-tools under $SDK" >&2; exit 1; }
 PATH="$BT:$PATH"; export PATH
-AJ=$( [ -f "$SDK/android-35/android.jar" ] && echo "$SDK/android-35/android.jar" || echo "$SDK/platforms/android-35/android.jar" )
-AL=$( [ -f "$SDK/android-30/android.jar" ] && echo "$SDK/android-30/android.jar" || echo "$SDK/platforms/android-30/android.jar" )
-[ -f "$AJ" ] && [ -f "$AL" ] || { echo "ERROR: platforms android-35 + android-30 required (got $AJ / $AL)" >&2; exit 1; }
+AJ=$( [ -f "$SDK/android-36/android.jar" ] && echo "$SDK/android-36/android.jar" || echo "$SDK/platforms/android-36/android.jar" )
+[ -f "$AJ" ] || { echo "ERROR: platform android-36 required (got $AJ)" >&2; exit 1; }
+AL="$AJ"   # W130: one platform level everywhere (the old 35/30 split is gone)
 
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
@@ -26,7 +26,7 @@ rm -rf build/res build/gen build/classes build/dex build/base.apk build/unsigned
 mkdir -p build/res build/gen build/classes build/dex
 aapt2 compile --dir res -o build/res/res.zip
 aapt2 link -I "$AL" --manifest AndroidManifest.xml -o build/base.apk -A assets --java build/gen \
-  build/res/res.zip --min-sdk-version 21 --target-sdk-version 35 --version-code "$VC" --version-name "$VN"
+  build/res/res.zip --min-sdk-version 21 --target-sdk-version 36 --version-code "$VC" --version-name "$VN"
 
 if command -v javac >/dev/null 2>&1; then
   javac -nowarn -Xlint:-options --release 8 -encoding UTF-8 -classpath "$AJ" -d build/classes $(find src build/gen -name '*.java')

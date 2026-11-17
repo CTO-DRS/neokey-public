@@ -165,7 +165,7 @@ LT=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOGF" | awk '{p+=$2; f+=$4}
 # week-25 consistency check, inherited) and the ceiling stays lowered
 [ "$(field "$LOG_R8" dex)" = "${R8_DEX_BYTES:-x}" ] || fail "R8_DEX_BYTES ${R8_DEX_BYTES:-?} != log $(field "$LOG_R8" dex)"
 [ "${TRIM_DEX_BYTES:-0}" = "${R8_DEX_BYTES:--1}" ] || fail "trim dex ${TRIM_DEX_BYTES:-0} != r8 dex ${R8_DEX_BYTES:-?} (artifact disagreement)"
-[ "${R8_COMPONENTS_KEPT:-0/0}" = "10/10" ] || fail "components kept ${R8_COMPONENTS_KEPT:-0/0} != 10/10"
+[ "${R8_COMPONENTS_KEPT:-0/0}" = "11/11" ] || fail "components kept ${R8_COMPONENTS_KEPT:-0/0} != 11/11"   # W130: 11 components since W128 (BankWatch)
 [ "${R8_DEX_BYTES:-999999}" -le "$DEX_CEILING" ] || fail "dex $R8_DEX_BYTES > ceiling $DEX_CEILING"
 
 # ---- 4: whole-pipeline no-regression ------------------------------------------
@@ -183,7 +183,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PHASE6_GATE BILLING_GATE DEPLOYSRV_GATE PREFLIGHT_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
-[ "${NQFPORT_ASSETS:-0}" = 25 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 25 (golden pins drifted)"
+[ "${NQFPORT_ASSETS:-0}" = 33 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 33 (golden pins drifted)"   # W130: live golden has 33 (nqfport green)
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 # the phase-6 close itself must still be zero-regression in THIS run
 echo "${PHASE6_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE6_REGRESSIONS ${PHASE6_REGRESSIONS:-?} is not 0/n (the phase-6 close regressed)"

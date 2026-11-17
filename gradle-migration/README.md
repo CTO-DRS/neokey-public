@@ -7,13 +7,13 @@
 - `versionCode/versionName` يُقرآن من `AndroidManifest.xml` (مصدر الحقيقة الوحيد، كما في الخط اليدوي بعد إصلاح الأسبوع 3).
 - توقيع الإصدار من خزنة `.secrets/` بنفس التخطيط الذي يقرؤه `build.sh` — لا أسرار في الملفات.
 
-## خطوات التفعيل (على جهاز به JDK 17 + Android SDK 35)
+## خطوات التفعيل (على جهاز به JDK 17+ + Android SDK 36)
 1. **توليد الـ wrapper** (يحتاج ثنائية gradle مرة واحدة):
    ```bash
    cd gradle-migration
-   gradle wrapper --gradle-version 8.10.2
+   gradle wrapper --gradle-version 9.6.0   # الحد الأدنى لـ AGP 9.5.1
    ```
-2. **إزالة `package="com.hark.neokey"` من `AndroidManifest.xml`** — AGP 8 يرفضها (الـ namespace معرّف في `build.gradle`). خطوة واحدة في المانيفست، وبعدها يبقى `build.sh` يعمل لأن aapt2 يستنتج الحزمة من `--manifest` مع `--custom-package` إن لزم — اختبر `bash build.sh` مرة بعد التعديل.
+2. **إزالة `package="com.hark.neokey"` من `AndroidManifest.xml`** — AGP 8/9 يرفضها (الـ namespace معرّف في `build.gradle`). خطوة واحدة في المانيفست، وبعدها يبقى `build.sh` يعمل لأن aapt2 يستنتج الحزمة من `--manifest` مع `--custom-package` إن لزم — اختبر `bash build.sh` مرة بعد التعديل.
 3. **التوازي لمدة إصدار واحد**: أبقِ المسارين، وقارن `build/NeoKey-2036.apk` مع `gradle-migration/build/outputs/apk/release/` (بصمة SHA-256 للشهادة واحدة، المحتوى قد يختلف ترتيبيًا). ثم اجعل CI يستخدم `gradle assembleRelease` وارفع الخط اليدوي كخيار طوارئ.
 
 ## لماذا لم نُفعّله في CI فورًا؟

@@ -1,6 +1,6 @@
 import re,subprocess,glob,sys,xml.etree.ElementTree as ET
 MIN=int(sys.argv[1])
-root=ET.parse('/tmp/api/android-35/data/api-versions.xml').getroot()
+root=ET.parse('/tmp/api/android-36/data/api-versions.xml').getroot()
 cls={}
 for c in root.findall('class'):
     cs=int(c.get('since','1')); m={}

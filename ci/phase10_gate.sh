@@ -105,12 +105,12 @@ done
 [ "${AUDIT:-}" = "OK" ] || fail "secrets audit not OK"
 [ "${TESTS_TOTAL:-0}" -ge "$TESTS_MIN" ] || fail "tests $TESTS_TOTAL < $TESTS_MIN"
 [ "${TESTS_FAILED:-1}" = "0" ] || fail "tests_failed $TESTS_FAILED != 0"
-[ "${NQFPORT_ASSETS:-0}" = 25 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 25 (golden pins drifted)"
+[ "${NQFPORT_ASSETS:-0}" = 33 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 33 (golden pins drifted)"   # W130: live golden has 33 (nqfport green)
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 echo "${PHASE7_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE7_REGRESSIONS ${PHASE7_REGRESSIONS:-?} is not 0/n (the phase-7 close regressed)"
 echo "${PHASE8_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE8_REGRESSIONS ${PHASE8_REGRESSIONS:-?} is not 0/n (the phase-8 close regressed)"
 [ "${R8_DEX_BYTES:-999999}" -le "$DEX_CEILING" ] || fail "dex ${R8_DEX_BYTES:-?} > ceiling $DEX_CEILING"
-[ "${R8_COMPONENTS_KEPT:-0/0}" = "10/10" ] || fail "components kept ${R8_COMPONENTS_KEPT:-0/0} != 10/10"
+[ "${R8_COMPONENTS_KEPT:-0/0}" = "11/11" ] || fail "components kept ${R8_COMPONENTS_KEPT:-0/0} != 11/11"   # W130: 11 components since W128 (BankWatch)
 
 # ---- 4: identity floors (the v0.1.0 re-based floor) ------------------------------
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')

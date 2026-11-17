@@ -46,13 +46,13 @@ LOGF=build/pipeline.log
 # source: this file; the drill and RebuildGate.java receive them from here)
 PUB_VC=3
 PUB_VN=0.3.0
-PINS="r8.jar 4733945987ee0a840fafc34080b135259e01678412e07212b23f706334290294
-android.jar 96ccfdc84d15fad4e22d76cbb8ef38b150a4b56327957067875ca7e18113a424
-apksig.jar c4f6fdf2148490296f422a7eb37647ea11d1c3b02f1f2349c33ce257f3c29b1f
-sqlite-jdbc.jar 6dc7464e3803648d3ff18a7359bab6adf079fcd8495b18991f6f5edcb8ac6e3b
-slf4j-api.jar d3ef575e3e4979678dc01bf1dcce51021493b4d11fb7f1be8ad982877c16a1c0
-ecj.jar f7686c4960cf70c2ebc5c500a73a8cfc04541b730c18f1c5c21329889b137f45
-aapt2 da28a8bdafafb91cf917f7635cce6e146db9df74da92fd5420ea293a1ea1de5b"
+PINS="r8.jar 9743e95de295fb6f5490e21da26536e4d0921809511423122ff20328a572e7f5
+android.jar d9eb9da824d9e247a352f570f01e1169e725b2954bca9e283a71786c59b59f9a
+apksig.jar 7ae2e5980c77d853e3513074ee7c822bbdcdcde1668889d17faa7fe8bc8aa821
+sqlite-jdbc.jar f8dce420a6016278497f4f0560f65602b9db858de141b541cf91a4644ebe4639
+slf4j-api.jar 7e1446499b359675d8aabe6af2de86b85e72ae8a2a932c0b40d0e5ba57097439
+ecj.jar 74c93172475fee0cd4e6eefb44233516dd40525642da35d009146d97ea598229
+aapt2 d0c30c343c61bfdc837abd02e195741dba7407bcb61ca34e037bcc1dc26ea06c"
 
 VC=$(grep -o 'versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
 VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)

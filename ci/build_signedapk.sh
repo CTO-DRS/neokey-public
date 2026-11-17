@@ -29,7 +29,7 @@ rm -rf build/sapk && mkdir -p build/sapk/gen
 "$AAPT2" compile --dir res -o build/sapk/res.zip
 "$AAPT2" link -I "$AJ" --manifest AndroidManifest.xml -o build/sapk/base.apk -A assets \
   --java build/sapk/gen build/sapk/res.zip \
-  --min-sdk-version 21 --target-sdk-version 35 --version-code "$VC" --version-name "$VN"
+  --min-sdk-version 21 --target-sdk-version 36 --version-code "$VC" --version-name "$VN"
 echo "AAPT2_LINK_OK base=build/sapk/base.apk vc=$VC vn=$VN (the full resource link — the step that was silently broken since week 22's trim dropped the identity strings)"
 
 python3 ci/align_apk.py build/sapk/base.apk build/dex/classes.dex build/sapk/aligned.apk

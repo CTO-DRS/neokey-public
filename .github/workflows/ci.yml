@@ -20,8 +20,8 @@ jobs:
       - name: Fetch JVM test dependencies
         run: |
           mkdir -p tools
-          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar
-          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
+          curl -fsSLo tools/sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar
+          curl -fsSLo tools/slf4j-api.jar  https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.20/slf4j-api-2.0.20.jar
 
       - name: Install ripgrep (the secrets audit and the probe require it — week 31 fix — the audit was silently green without it)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
@@ -47,19 +47,18 @@ jobs:
         run: |
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
-          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-35" "platforms;android-30" "build-tools;35.0.0" > /dev/null
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-36" "build-tools;36.0.0" > /dev/null
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          ln -sfn "$SDK/platforms/android-35" "$SDK/android-35"
-          ln -sfn "$SDK/platforms/android-30" "$SDK/android-30"
+          ln -sfn "$SDK/platforms/android-36" "$SDK/android-36"
 
       - name: Unsigned compile gate (week 31 — green again, the W22 trim had dropped the identity strings, every aapt2 link since failed)
         run: ci/build_unsigned.sh
 
       - name: R8 Full Mode shrink gate (roadmap item C — real-R via aapt2 on this machine)
         run: |
-          curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar
+          curl -fsSLo tools/r8.jar https://dl.google.com/dl/android/maven2/com/android/tools/r8/9.5.33/r8-9.5.33.jar
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          R8_ANDROID_JAR="$SDK/platforms/android-35/android.jar" ci/build_r8.sh
+          R8_ANDROID_JAR="$SDK/platforms/android-36/android.jar" ci/build_r8.sh
 
       - name: Upload unsigned APK
         uses: actions/upload-artifact@v4

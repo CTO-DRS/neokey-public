@@ -25,7 +25,7 @@ NEOKEY_KEY_ALIAS="${NEOKEY_KEY_ALIAS:-neokey}"
 
 # ---- toolchain -------------------------------------------------------------
 SDK="${ANDROID_SDK:-/workspace/work/sdk}"
-AJAR=$SDK/android-35/android.jar
+AJAR=$SDK/android-36/android.jar
 
 # versionCode/versionName come from AndroidManifest.xml (single source of truth —
 # the old hardcoded 56/1.0 here was a release-engineering drift hazard)
@@ -37,8 +37,8 @@ VN=$(grep -o 'versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)
 rm -rf build/res build/gen build/classes build/dex build/aab build/base.apk build/unsigned.apk build/aligned.apk
 mkdir -p build/res build/gen build/classes build/dex
 aapt2 compile --dir res -o build/res/res.zip
-aapt2 link -I $SDK/android-30/android.jar --manifest AndroidManifest.xml -o build/base.apk \
-  -A assets --java build/gen build/res/res.zip --min-sdk-version 21 --target-sdk-version 35 \
+aapt2 link -I $SDK/android-36/android.jar --manifest AndroidManifest.xml -o build/base.apk \
+  -A assets --java build/gen build/res/res.zip --min-sdk-version 21 --target-sdk-version 36 \
   --version-code $VC --version-name $VN
 javac -nowarn -Xlint:-options --release 8 -encoding UTF-8 -classpath $AJAR \
   -d build/classes $(find src build/gen -name '*.java')

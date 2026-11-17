@@ -4,7 +4,9 @@
     android:versionCode="3"
     android:versionName="0.3.0">
 
-    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35" />
+    <!-- W130: targetSdk 36 (Android 16) — Google Play requires API 36+ for app
+         updates since 2026-08-31; minSdk 21 unchanged (device-reach policy). -->
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36" />
     <!-- week 32 (phase 6 W3): the duplicate VIBRATE declaration (lines 8+11, a
          latent defect since week 1) is REMOVED — the upload-bundle data-safety
          derivation refuses duplicates (safety.duplicate): one permission, one

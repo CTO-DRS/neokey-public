@@ -48,17 +48,17 @@ if [ "${1:-}" = "provision" ]; then
     if [ -n "$3" ] && curl -fsSL --retry 3 --retry-all-errors -o "$d" "$3" 2>/dev/null; then echo "provisioned $1 (mirror)"; return 0; fi
     echo "PROVISION_FAILED $1"; return 1
   }
-  fetch r8.jar          https://dl.google.com/android/maven2/com/android/tools/r8/8.5.35/r8-8.5.35.jar "" || exit 1
-  fetch apksig.jar      https://dl.google.com/android/maven2/com/android/tools/build/apksig/8.5.0/apksig-8.5.0.jar "" || exit 1
-  fetch sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar https://maven.aliyun.com/repository/central/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar || exit 1
-  fetch slf4j-api.jar   https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar https://maven.aliyun.com/repository/central/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar || exit 1
-  fetch ecj.jar         https://repo1.maven.org/maven2/org/eclipse/jdt/ecj/3.33.0/ecj-3.33.0.jar https://maven.aliyun.com/repository/central/org/eclipse/jdt/ecj/3.33.0/ecj-3.33.0.jar || exit 1
-  fetch aapt2-pkg.jar   https://dl.google.com/android/maven2/com/android/tools/build/aapt2/8.5.0-11315950/aapt2-8.5.0-11315950-linux.jar "" || exit 1
+  fetch r8.jar          https://dl.google.com/android/maven2/com/android/tools/r8/9.5.33/r8-9.5.33.jar "" || exit 1
+  fetch apksig.jar      https://dl.google.com/android/maven2/com/android/tools/build/apksig/9.5.1/apksig-9.5.1.jar "" || exit 1
+  fetch sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar https://maven.aliyun.com/repository/central/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar || exit 1
+  fetch slf4j-api.jar   https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.20/slf4j-api-2.0.20.jar https://maven.aliyun.com/repository/central/org/slf4j/slf4j-api/2.0.20/slf4j-api-2.0.20.jar || exit 1
+  fetch ecj.jar         https://repo1.maven.org/maven2/org/eclipse/jdt/ecj/3.46.100/ecj-3.46.100.jar https://maven.aliyun.com/repository/central/org/eclipse/jdt/ecj/3.46.100/ecj-3.46.100.jar || exit 1
+  fetch aapt2-pkg.jar   https://dl.google.com/android/maven2/com/android/tools/build/aapt2/9.5.1-16666295/aapt2-9.5.1-16666295-linux.jar "" || exit 1
   [ -f tools/aapt2 ] || { echo "aapt2-pkg.jar fetched — extract and chmod +x as tools/aapt2 (docs/R8.md)"; }
   if [ ! -f tools/android.jar ]; then
-    curl -fsSL --retry 3 --retry-all-errors -o /tmp/platform-30.zip https://dl.google.com/android/repository/platform-30_r03.zip \
-      && unzip -o -q /tmp/platform-30.zip "android-11/*" -d /tmp/p30x \
-      && cp /tmp/p30x/android-11/android.jar tools/android.jar && echo "provisioned android.jar"
+    curl -fsSL --retry 3 --retry-all-errors -o /tmp/platform-36.zip https://dl.google.com/android/repository/platform-36_r02.zip \
+      && unzip -o -q /tmp/platform-36.zip "android-36/android.jar" -d /tmp/p36x \
+      && cp /tmp/p36x/android-36/android.jar tools/android.jar && echo "provisioned android.jar"
   fi
   echo "PROVISION_DONE — verify with: ci/rebuild_gate.sh (pins re-computed there)"
   exit 0

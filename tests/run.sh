@@ -4,8 +4,8 @@
 # via CoreTests) — roadmap Phase 0 goal: 89 -> 200+ tests.
 # Week 1: portable jar discovery + ECJ fallback (no JDK needed).
 #
-#   deps:  sqlite-jdbc-3.46.1.0.jar + slf4j-api-1.7.36.jar
-#          (curl -sSfL -o sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.46.1.0/sqlite-jdbc-3.46.1.0.jar)
+#   deps:  sqlite-jdbc-3.54.1.0.jar + slf4j-api-2.0.20.jar
+#          (curl -sSfL -o sqlite-jdbc.jar https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar)
 #   usage: tests/run.sh          (auto-finds jars in $NEOKEY_TOOLS, ./tools, /workspace/work)
 set -euo pipefail
 cd "$(dirname "$0")/.."

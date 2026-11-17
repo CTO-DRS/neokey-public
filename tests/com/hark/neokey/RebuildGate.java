@@ -213,7 +213,7 @@ public class RebuildGate {
         in.dex = dm.group(1);
         if (Long.parseLong(in.dex) > Long.parseLong(DEX_CEILING)) refuse("inner.ceiling");
         Matcher cm = Pattern.compile("components kept=(\\d+)/(\\d+)").matcher(in.r8Line);
-        if (!cm.find() || !"10".equals(cm.group(1)) || !"10".equals(cm.group(2))) refuse("inner.components");
+        if (!cm.find() || !"11".equals(cm.group(1)) || !"11".equals(cm.group(2))) refuse("inner.components");
         return in;
     }
 
@@ -323,7 +323,7 @@ public class RebuildGate {
             ck("inner.pipeline_ok", "PIPELINE_OK".equals(fin.pipelineOk), "the inner run closed green");
             ck("inner.tests_zero_failed", "0".equals(fin.testsFailed), "the inner test mass carries zero failures");
             ck("inner.ceiling", Long.parseLong(fin.dex) <= Long.parseLong(DEX_CEILING), "inner dex " + fin.dex + " <= " + DEX_CEILING);
-            ck("inner.components", fin.r8Line.contains("kept=10/10"), "all ten manifest components kept");
+            ck("inner.components", fin.r8Line.contains("kept=11/11"), "all eleven manifest components kept (W128 BankWatch)");
             String vcLine = innerLogField(innerLog, "BILLINGGATE_OK .*vc=(\\d+) vn=([0-9.]+)");
             ck("inner.identity_present", grp(vcLine, 1) != null && grp(vcLine, 2) != null,
                     "the inner run declares its own artifact identity (the drill proves the clone's week, not this week's)");

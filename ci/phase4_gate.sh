@@ -63,12 +63,13 @@ echo "[phase4] $RS"
 echo "[phase4] $PY"
 
 # ---- 2: pinned baselines on the FRESH values — shipped numbers may not sink --
-# real dex trim (W1/week 22): 126 entries (W74 +3: ThemeChannel joins with its curated-channel glue; W71 +2 was NumSmart), nothing regrown, purity holds
+# real dex trim (W1/week 22): 144 entries (W74 +3 made it 126; the W103–W129
+# dialect/bank-watch/setup string weeks brought it to 144), nothing regrown, purity holds
 TR_ENT=$(field "$TR" entries);   TR_SAVED=$(field "$TR" saved)
 TR_DEX=$(field "$TR" dex | cut -d/ -f1); TR_CEIL=$(field "$TR" dex | cut -d/ -f2)
 TR_REG=$(field "$TR" regrown);   TR_PUR=$(field "$TR" purity)
 TR_UIEN=$(field "$TR" ui_en_coupled)
-[ "${TR_ENT:-0}"   = 126 ]      || fail "trim entries ${TR_ENT:-0} != 126 (the trim inventory moved silently)"
+[ "${TR_ENT:-0}"   = 144 ]      || fail "trim entries ${TR_ENT:-0} != 144 (the trim inventory moved silently)"   # W130: measured live on the artifact path
 [ "${TR_REG:-1}"   = 0 ]        || fail "trim regrown ${TR_REG:-?} != 0 (a shell-class literal regrew)"
 [ "${TR_PUR:-0}"   -ge 36 ]     || fail "trim purity $TR_PUR < 36 (android imports lost their stubs)"
 [ "${TR_UIEN:-0}"  -ge 80 ]     || fail "trim ui_en_coupled ${TR_UIEN:-0} < 80 (translation coupling broke)"
@@ -188,7 +189,7 @@ LT=$(grep -o 'RESULT [0-9]* passed, [0-9]* failed' "$LOGF" | awk '{p+=$2; f+=$4}
 # dex: the trim gate and the R8 gate must agree on the SAME artifact
 [ "$(field "$LOG_R8" dex)" = "${R8_DEX_BYTES:-x}" ] || fail "R8_DEX_BYTES ${R8_DEX_BYTES:-?} != log $(field "$LOG_R8" dex)"
 [ "${TR_DEX:-0}" = "${R8_DEX_BYTES:--1}" ] || fail "trim dex $TR_DEX != r8 dex ${R8_DEX_BYTES:-?} (artifact disagreement)"
-[ "${R8_COMPONENTS_KEPT:-0/0}" = "10/10" ] || fail "components kept ${R8_COMPONENTS_KEPT:-0/0} != 10/10"
+[ "${R8_COMPONENTS_KEPT:-0/0}" = "11/11" ] || fail "components kept ${R8_COMPONENTS_KEPT:-0/0} != 11/11"   # W130: 11 components since W128 (BankWatch)
 [ "${R8_DEX_BYTES:-999999}" -le "$DEX_CEILING" ] || fail "dex $R8_DEX_BYTES > ceiling $DEX_CEILING"
 
 # ---- 4: whole-pipeline no-regression ------------------------------------------
@@ -203,7 +204,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PHASE3_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
-[ "${NQFPORT_ASSETS:-0}" = 25 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 25 (golden pins drifted)"
+[ "${NQFPORT_ASSETS:-0}" = 33 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 33 (golden pins drifted)"   # W130: live golden has 33 (nqfport green)
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 
 # versionCode bumped this week
