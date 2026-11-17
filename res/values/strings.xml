@@ -286,10 +286,10 @@
     <string name="nk_setupactivity_signature">لمسة NeoKey ♛ (موجة دخول، نابض، نبض الإرسال، خط الإيقاع)</string>
     <!-- origin: SetupActivity.java:2427 -->
     <string name="nk_setupactivity_suggrow">شريط الاقتراحات فوق الأزرار (والأدوات ثابتة في الأعلى)</string>
-    <!-- origin: NeoKeyService.java:2663 -->
+    <!-- origin: NeoKeyService.java:2683 -->
     <string name="nk_bank_title">🛡 تطبيق بنكي</string>
-    <!-- origin: NeoKeyService.java:2664 -->
+    <!-- origin: NeoKeyService.java:2684 -->
     <string name="nk_bank_why">ليش يرفض البنك NeoKey؟\nتطبيقات البنوك (مثل الراجحي) تسمح فقط بلوحات مفاتيح من قائمة موثوقة، لحماية كلمات المرور ورموز التحقق من لوحات قد تسجّل ما تكتبه.\n\nاللوحات الموثوقة غالبًا:\n• Gboard من Google\n• لوحة سامسونج\n• SwiftKey من مايكروسوفت\n• لوحة الشركة المصنّعة لجوالك\n\nليش NeoKey مو في القائمة؟\n• كل بنك يحدد قائمته بنفسه، وتضم عادة لوحات الشركات الكبرى بعد مراجعات أمنية.\n• NeoKey نسخة تجريبية مثبّتة من خارج متجر Google Play، فالبنك ما يعرفها بعد.\n• السبب ليس أنها تجمع بياناتك: NeoKey ما تحفظ ولا تقترح شيء في خانات كلمات المرور.\n\nبدّل الحين للوحة موثوقة، وارجع لـNeoKey بعدها من زر 🌐.</string>
-    <!-- origin: NeoKeyService.java:2665 -->
+    <!-- origin: NeoKeyService.java:2685 -->
     <string name="nk_bank_go">بدّل للوحة موثوقة</string>
 </resources>

@@ -386,13 +386,29 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         if (view != null) view.playOpen();   // W116: entrance wave once per appearance, not per field
     }
 
+    /** W126b: the bank app we last warned about; cleared once the user leaves it. */
+    private String bankSeen;
+
+    @Override
+    public void onStartInput(EditorInfo info, boolean restarting) {
+        super.onStartInput(info, restarting);
+        String pkg = info == null ? null : info.packageName;
+        if (pkg != null && !Dialect.bankApp(pkg) && !pkg.equals(getPackageName())) bankSeen = null;
+    }
+
+    /** W126b: once per visit to a bank app, as soon as the keyboard opens in it. */
+    private void bankCheck(EditorInfo info) {
+        String pkg = info == null ? null : info.packageName;
+        if (pkg == null || !Dialect.bankApp(pkg) || pkg.equals(bankSeen)) return;
+        if (!Theme.prefs(this).getBoolean("bank_auto", true)) return;
+        bankSeen = pkg;
+        bankNotice(0);
+    }
+
     @Override
     public void onStartInputView(EditorInfo info, boolean restarting) {
         super.onStartInputView(info, restarting);
-        if (!restarting && info != null && Dialect.bankApp(info.packageName)
-                && Theme.prefs(this).getBoolean("bank_auto", true)) {   // W126: a bank app — step aside on our own
-            main.postDelayed(new Runnable() { @Override public void run() { bankNotice(); } }, 250);
-        }
+        bankCheck(info);
         if (!restarting) reloadClips();   // picks up edits / imports made in the app screens
         boolean wasEn = L.en;
         L.init(this);
@@ -2204,7 +2220,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             return;
         }
         if (id == KeyboardView.TOOL_WRITER) { openWriter(); return; }
-        if (id == KeyboardView.TOOL_BANK) { bankNotice(); return; }
+        if (id == KeyboardView.TOOL_BANK) { bankNotice(0); return; }
         if (id == -16) {
             // W125 «وضع البنك»: banking apps refuse a keyboard off their trusted list, so hand the
             // phone to the previous keyboard in one tap; NeoKey comes back from that keyboard's globe key.
@@ -2657,8 +2673,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     }
 
     /** W126: in a banking app, say why the bank refuses us and which keyboards it trusts, then step aside. */
-    private void bankNotice() {
-        if (view == null || view.getWindowToken() == null) { onTool(-16); return; }
+    private void bankNotice(final int tries) {
+        if (view == null || view.getWindowToken() == null || !view.isShown()) {   // W126b: wait for our window, never switch silently
+            if (tries < 12) main.postDelayed(new Runnable() { @Override public void run() { bankNotice(tries + 1); } }, 200);
+            else toastL(getString(R.string.nk_bank_title));
+            return;
+        }
         android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle(L.t(getString(R.string.nk_bank_title)))
                 .setMessage(L.t(getString(R.string.nk_bank_why)))
@@ -2675,7 +2695,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             win.setAttributes(lp);
             win.addFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         }
-        try { dlg.show(); } catch (Exception e) { onTool(-16); }
+        try { dlg.show(); } catch (Exception e) { toastL(getString(R.string.nk_bank_title)); }
     }
 
     /** 101st pin: offer to give up the last pinned item, or cancel. */
