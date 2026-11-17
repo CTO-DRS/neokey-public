@@ -463,6 +463,30 @@ public final class DialectCorrGate {
         need("ok، الله يعطيك العافية 🌹".equals(Dialect.warmer("ok")), "tone.cold");
         need(Dialect.tone(Dialect.warmer("لازم ترسله فورا")) == null, "tone.fixed");
         System.out.println("DIALECTCORR tone pins=" + tPins.length);
+        // ---- 3v. «بصمة الكتابة» (W110): an owner's rhythm stays owner, a much faster or much more erratic
+        // run turns guest, the owner's own run brings it back, a stranger never teaches the profile.
+        java.util.Random rr = new java.util.Random(7);
+        Dialect.Rhythm rh = new Dialect.Rhythm();
+        for (int k = 0; k < 400; k++) rh.add(Math.round(Math.exp(Math.log(220) + 0.25 * rr.nextGaussian())));
+        need(rh.n >= Dialect.Rhythm.MIN_PROFILE && !rh.guest, "rhythm.owner n=" + rh.n);
+        boolean flip = false;
+        for (int k = 0; k < 200; k++) flip |= rh.add(Math.round(Math.exp(Math.log(220) + 0.25 * rr.nextGaussian())));
+        need(!flip, "rhythm.owner.stable");
+        double before = rh.n;
+        for (int k = 0; k < 40; k++) rh.add(Math.round(Math.exp(Math.log(90) + 0.25 * rr.nextGaussian())));
+        need(rh.guest, "rhythm.fast.guest");
+        need(rh.n - before < 40, "rhythm.stranger.notlearned");
+        for (int k = 0; k < 40; k++) rh.add(Math.round(Math.exp(Math.log(220) + 0.25 * rr.nextGaussian())));
+        need(!rh.guest, "rhythm.owner.back");
+        Dialect.Rhythm er = Dialect.Rhythm.load(rh.save());
+        need(Math.abs(er.mean - rh.mean) < 1e-9 && er.n == rh.n, "rhythm.save");
+        for (int k = 0; k < 40; k++) er.add(Math.round(Math.exp(Math.log(220) + 1.0 * rr.nextGaussian())) % 1400 + 41);
+        need(er.guest, "rhythm.erratic.guest");
+        Dialect.Rhythm young = new Dialect.Rhythm();
+        for (int k = 0; k < 100; k++) young.add(90);
+        need(!young.guest, "rhythm.young.never");
+        need(Dialect.Rhythm.load("garbage").n == 0, "rhythm.load.bad");
+        System.out.println("DIALECTCORR rhythm n=" + (int) rh.n);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];

@@ -350,6 +350,57 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    // ---- W110 «بصمة الكتابة» ✋: the owner's typing rhythm (log key-to-key intervals, never the keys
+    // themselves). A run of 24 intervals far from it = someone else → guest mode hides the personal layer.
+    static final class Rhythm {
+        static final int MIN_PROFILE = 300, WIN = 24;
+        double n, mean, m2;
+        private final double[] win = new double[WIN];
+        private int wn, wi;
+        boolean guest;
+
+        /** One key-to-key gap in ms; pauses (> 1.5 s) and bounces (< 40 ms) break or skip the run. */
+        boolean add(long dt) {
+            if (dt > 1500) { wn = 0; wi = 0; return guest; }
+            if (dt < 40) return guest;
+            double v = Math.log(dt);
+            win[wi] = v; wi = (wi + 1) % WIN; if (wn < WIN) wn++;
+            if (wn < WIN || n < MIN_PROFILE) { if (n < MIN_PROFILE) learn(v); return guest = false; }
+            double mw = 0, vw = 0;
+            for (double x : win) mw += x;
+            mw /= WIN;
+            for (double x : win) vw += (x - mw) * (x - mw);
+            double sw = Math.sqrt(vw / (WIN - 1)), sp = Math.sqrt(m2 / (n - 1));
+            if (sp < 1e-6) sp = 1e-6;
+            double d = Math.abs(mw - mean) / sp, r = sw / sp;
+            if (guest) guest = !(d < 1.0 && r > 0.6 && r < 1.7);   // hysteresis: back only on a clearly-owner run
+            else guest = d > 1.5 || r > 2.2 || r < 0.45;
+            if (!guest) learn(v);   // a stranger never teaches the profile
+            return guest;
+        }
+
+        private void learn(double v) {
+            n++;
+            double dl = v - mean;
+            mean += dl / n;
+            m2 += dl * (v - mean);
+        }
+
+        String save() { return n + "," + mean + "," + m2; }
+
+        static Rhythm load(String s) {
+            Rhythm r = new Rhythm();
+            try {
+                String[] a = s.split(",");
+                r.n = Double.parseDouble(a[0]); r.mean = Double.parseDouble(a[1]); r.m2 = Double.parseDouble(a[2]);
+                if (!(r.n >= 0) || Double.isNaN(r.mean) || !(r.m2 >= 0)) return new Rhythm();
+            } catch (RuntimeException e) {
+                return new Rhythm();
+            }
+            return r;
+        }
+    }
+
     // ---- W109 «مرآة النبرة» 🪞: how a chat message will land (حادّة / باردة) and a one-tap warmer version.
     private static final String[] HARSH = {"لازم", "المفروض", "مفروض", "فورا", "حالا", "بسرعه", "ليش", "ليه", "مو", "مب", "مش",
             "ابي", "ابغى", "ابغي", "بدي", "ترا", "تراك", "غلطان", "غلطك", "سخيف", "تافه", "اسكت", "خلاص", "يكفي", "كفايه",

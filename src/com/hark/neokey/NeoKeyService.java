@@ -146,6 +146,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
     private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
+    private static final String GUEST = "✋ ";   // W110: «بصمة الكتابة» guest-mode chip
+    private Dialect.Rhythm rhythm;
+    private long lastKeyAt;
+    private int rhythmDirty;
     private static final String TONE = "🪞 ";   // W109: «مرآة النبرة» chip mark (tap swaps in the warmer message)
     private String toneTo;
     private static final String PROMISE = "🤝 ";   // W108: «ذاكرة الوعد» chip mark (tap opens a prefilled calendar event)
@@ -730,6 +734,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         startActivity(i);
     }
 
+    /** W110: true while the current typing rhythm is not the owner's. */
+    private boolean guest() {
+        return rhythm != null && rhythm.guest && Theme.prefs(this).getBoolean("rhythm_guard", true);
+    }
+
     private void updateSuggestions0() {
         if (view == null) return;
         if (clipSearch) {
@@ -780,7 +789,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         String w = currentWord();
         if (w.isEmpty()) {
             List<String> p = predictions();
-            if (freshClip != null && SystemClock.elapsedRealtime() - freshTime < 120000) {
+            if (guest()) {   // W110: someone else's rhythm — no clipboard, a quiet ✋ marker instead
+                p.add(0, GUEST + "وضع الضيف");
+                while (p.size() > 3) p.remove(p.size() - 1);
+            } else if (freshClip != null && SystemClock.elapsedRealtime() - freshTime < 120000) {
                 String one = freshClip.replace('\n', ' ').trim();
                 clipChip = KeyboardView.CLIP_MARK + (one.length() > 22 ? one.substring(0, 22) + "…" : one);
                 p.add(0, clipChip);
@@ -816,15 +828,15 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // never displaces the dict lead or the root family tail; every chip
         // carries the ★ badge — the user SEES why the keyboard suggested it)
         // and NEVER in incognito (وقف تام — the law).
-        AdaptEngine.personalInto(s, pickSrc(eng, "personal"), 3);
+        if (!guest()) AdaptEngine.personalInto(s, pickSrc(eng, "personal"), 3);   // W110: hidden in guest mode
         String fx = ArabicFixes.fix(w);
         if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > 3) s.remove(s.size() - 1); }
-        String sc = Theme.shortcuts(this).get(w.toLowerCase());
+        String sc = guest() ? null : Theme.shortcuts(this).get(w.toLowerCase());   // W110
         if (sc != null) { s.remove(sc); s.add(0, sc); while (s.size() > 3) s.remove(s.size() - 1); }
         else {
             // W48 clip shortcut: the typed token expands to its clip — the suggestion carries
             // the mark + token; the tap dispatches in onSuggestion
-            Long cid = clipSc.get(w.toLowerCase());
+            Long cid = guest() ? null : clipSc.get(w.toLowerCase());   // W110
             if (cid != null) {
                 String cs2 = KeyboardView.CLIP_SC_MARK + w.toLowerCase();
                 if (!s.contains(cs2)) { s.add(0, cs2); while (s.size() > 3) s.remove(s.size() - 1); }
@@ -1174,6 +1186,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             softFrom = null;
             return;
         }
+        if (word.startsWith(GUEST)) {   // W110: what guest mode is, and how it ends
+            Toast.makeText(this, "أسلوب كتابة غير مألوف: كلماتك المحفوظة والحافظة مخفية حتى يرجع أسلوبك", Toast.LENGTH_LONG).show();
+            return;
+        }
         if (word.startsWith(TONE)) {   // W109: the message itself, warmer
             if (softFrom != null && toneTo != null) {
                 CharSequence tb = ic.getTextBeforeCursor(softFrom.length() + 1, 0);
@@ -1466,6 +1482,20 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         }
         if (mode == Layouts.EN && shift != KeyboardView.SHIFT_OFF
                 && view.getPanel() == KeyboardView.PANEL_KEYS) text = text.toUpperCase();
+        // W110 «بصمة الكتابة»: only the gap between keys is measured — never which key, never in a sensitive field.
+        if (!sensitive && text.length() == 1) {
+            long now = SystemClock.elapsedRealtime();
+            if (rhythm == null) rhythm = Dialect.Rhythm.load(Theme.prefs(this).getString("rhythm", ""));
+            if (lastKeyAt != 0 && Theme.prefs(this).getBoolean("rhythm_guard", true)) {
+                boolean was = rhythm.guest;
+                rhythm.add(now - lastKeyAt);
+                if (++rhythmDirty >= 50 || was != rhythm.guest) {
+                    rhythmDirty = 0;
+                    Theme.prefs(this).edit().putString("rhythm", rhythm.save()).apply();
+                }
+            }
+            lastKeyAt = now;
+        }
 
         // item B week 2: الفاصلة المنقوطة والأرقام العربية — the layout/script
         // mismatch classes. NEVER in sensitive fields: what you type is what is sent.
