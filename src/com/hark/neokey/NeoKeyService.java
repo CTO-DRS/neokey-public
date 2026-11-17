@@ -1205,12 +1205,15 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // W99 «إيموجي اللهجة»: a dialect word (طفشان / فديتك) earns two emoji chips beside one prediction.
         String de = emj.get(Dialect.normAr(prev));
         if (de != null) {
-            while (out.size() > 1) out.remove(out.size() - 1);
-            for (String e : de.split(" ")) if (!e.isEmpty() && out.size() < cap) out.add(e);
+            // W120: the emoji chips ride BESIDE the words — on the six-chip strip the words keep their seats
+            String[] es = de.trim().split(" +");
+            int keep = Math.max(1, cap - es.length);
+            while (out.size() > keep) out.remove(out.size() - 1);
+            for (String e : es) if (!e.isEmpty() && out.size() < cap && !out.contains(e)) out.add(e);
             return out;
         }
         String emo = EmojiHints.forWord(prev);
-        if (emo != null && out.size() < cap && !out.contains(emo)) out.add(emo);
+        if (emo != null && !out.contains(emo)) { if (out.size() >= cap) out.set(cap - 1, emo); else out.add(emo); }   // W120: a full strip still keeps its emoji seat
         return out;
     }
 
