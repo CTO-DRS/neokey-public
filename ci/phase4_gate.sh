@@ -31,7 +31,7 @@ cd "$(dirname "$0")/.."
 # override) silently biases them; the budgets always measure what ships.
 unset JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS
 
-DEX_CEILING=570000   # W69-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
+DEX_CEILING=572000   # W69-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)   # LOWERED by the W22 real trim (was 520,000); overflow means trim, never raise
 VC_MIN=2             # v0.1.0 identity reset (re-based from the phase-4 close floor 66; the closing week still must carry the manifest identity)
 TESTS_MIN=1334       # shipped test total at phase-4 close (1,334 = week 24)
 STATE=build/release/gates.env

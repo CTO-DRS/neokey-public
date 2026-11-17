@@ -442,6 +442,17 @@ public final class DialectCorrGate {
         for (String w : new String[]{"السلام عليكم كيف حالك اليوم يا اخي", "ابشر بكره ارسل لك الملف ان شاء الله", "وقل لي كيف حالك يا صديقي اليوم", "مرحبا", ""})
             need(Dialect.meterOf(w) < 0, "meter.refuse " + w);
         System.out.println("DIALECTCORR meter pins=" + mPins.length);
+        // ---- 3t. «ذاكرة الوعد» (W108): a promise with a time earns the reminder; a time alone or a promise alone does not.
+        String[][] pPins = {{"أبشر بكرة أرسله لك", "d", "1"}, {"ان شاء الله بعد بكره نخلصه", "d", "2"}, {"تم بعد ساعة أكلمك", "m", "60"},
+                {"اوعدك الخميس أمرك", "w", "5"}, {"سأرسل التقرير الأسبوع الجاي", "d", "7"}, {"أكيد الليلة أتصل", "n", "20"}, {"بكلمك بعد شوي", "m", "30"}};
+        for (String[] p : pPins) {
+            String[] w = Dialect.promise(p[0]);
+            need(w != null && p[1].equals(w[0]) && p[2].equals(w[1]), "promise.pin " + p[0] + " → " + (w == null ? null : w[0] + w[1]));
+        }
+        for (String w : new String[]{"بكرة الجو حار", "أبشر يا غالي", "الخميس عطلة", "مرحبا", ""})
+            need(Dialect.promise(w) == null, "promise.refuse " + w);
+        need(Dialect.promiseMarker("بكرة") && Dialect.promiseMarker("أبشر") && !Dialect.promiseMarker("التقرير"), "promise.marker");
+        System.out.println("DIALECTCORR promise pins=" + pPins.length);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];

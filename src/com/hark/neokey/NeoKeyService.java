@@ -146,6 +146,9 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
     private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
+    private static final String PROMISE = "🤝 ";   // W108: «ذاكرة الوعد» chip mark (tap opens a prefilled calendar event)
+    private String[] promiseWhen;
+    private String promiseText;
     private static final String METER = "🎼 ";   // W107: «ميزان الشعر» chip mark (tap dismisses)
     private static final String SAR = "💰 ";   // W102: amount-in-words chip mark (tap replaces «1500 ريال»)
     private static final String NUM = "🔢 ";   // W101: number-in-words chip mark (tap replaces the number)
@@ -840,6 +843,34 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     }
 
     /** Next-word predictions after "word ". */
+    /** W108: the promise's time → a calendar event the user confirms in their own calendar app (no permission). */
+    private void openReminder(String[] w, String text) {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        int v = Integer.parseInt(w[1]);
+        if ("m".equals(w[0])) c.add(java.util.Calendar.MINUTE, v);
+        else {
+            if ("d".equals(w[0])) c.add(java.util.Calendar.DAY_OF_YEAR, v);
+            else if ("w".equals(w[0])) {
+                int ahead = (v - c.get(java.util.Calendar.DAY_OF_WEEK) + 7) % 7;
+                c.add(java.util.Calendar.DAY_OF_YEAR, ahead == 0 ? 7 : ahead);
+            }
+            c.set(java.util.Calendar.HOUR_OF_DAY, "n".equals(w[0]) ? 20 : 9);
+            c.set(java.util.Calendar.MINUTE, 0);
+            if ("n".equals(w[0]) && c.getTimeInMillis() < System.currentTimeMillis()) c.add(java.util.Calendar.HOUR_OF_DAY, 1);
+        }
+        long at = c.getTimeInMillis();
+        Intent it = new Intent(Intent.ACTION_INSERT).setData(android.provider.CalendarContract.Events.CONTENT_URI)
+                .putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, at)
+                .putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, at + 15 * 60000L)
+                .putExtra(android.provider.CalendarContract.Events.TITLE, "🤝 " + text)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            startActivity(it);
+        } catch (Exception e) {
+            toast("لا يوجد تطبيق تقويم");
+        }
+    }
+
     private List<String> predictions() {
         InputConnection ic = getCurrentInputConnection();
         List<String> out = new ArrayList<>();
@@ -869,6 +900,19 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                     out.add(METER + (Dialect.onMeter(ajuz, mi) ? "البيت على " + name + " ✓" : "العجز خارج وزن " + name + "؟"));
                     return out;
                 }
+            }
+        }
+        // W108 «ذاكرة الوعد»: the sentence just typed holds a promise and a time («أبشر بكرة أرسله»)
+        // and its last word is one of the two → 🤝 «ذكّرني بكرة ٩ص»; the tap opens the calendar, prefilled.
+        if (i < end && Dialect.promiseMarker(b.subSequence(i, end).toString())) {
+            int sb = Math.max(line.lastIndexOf('.'), Math.max(line.lastIndexOf('؟'), Math.max(line.lastIndexOf('!'), line.lastIndexOf('?')))) + 1;
+            String sent = line.substring(Math.min(sb, line.length())).trim();
+            String[] pw = Dialect.promise(sent);
+            if (pw != null) {
+                promiseWhen = pw;
+                promiseText = sent.length() > 80 ? sent.substring(0, 80) + "…" : sent;
+                out.add(PROMISE + "ذكّرني " + pw[2]);
+                return out;
             }
         }
         // W98: an Arabizi token (3ashan / 7abibi) earns its Arabic spelling (⇄, tap replaces).
@@ -1113,6 +1157,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             ic.commitText(word.substring(word.indexOf(' ') + 1) + " ", 1);   // W96/W98: the gentler phrase, whole phrase or Arabic spelling
             ic.endBatchEdit();
             softFrom = null;
+            return;
+        }
+        if (word.startsWith(PROMISE)) {   // W108: the promise lands in the calendar, the user saves it there
+            if (promiseWhen != null) openReminder(promiseWhen, promiseText);
             return;
         }
         if (word.startsWith(METER)) return;   // W107: the meter chip only informs

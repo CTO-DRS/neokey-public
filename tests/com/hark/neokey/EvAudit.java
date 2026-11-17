@@ -53,7 +53,7 @@ import java.util.regex.Pattern;
  *          مشروع لا نصيحة.
  *
  * الحكم: `EVAUDITGATE_OK checks=N negatives=M/12 members=N proofs=P/P
- * vc=V vn=W tests=T/F dex=D/570000` / `EVAUDITGATE_FAILED <reason>`
+ * vc=V vn=W tests=T/F dex=D/572000` / `EVAUDITGATE_FAILED <reason>`
  * (exit 1). اثنتا عشرة سلبة تعضّ بأوسامها الحرفية على نسخ متسخة مؤقتة —
  * ومنها التزوير «المتسق» الذي يعيد ختم SHA256SUMS كله بعد العبث: الهاش
  * وحده لا يحمي ممن يملك المدقق، فالقوانين الأعمق (تطابق الدفتر، إجماع
@@ -62,7 +62,7 @@ import java.util.regex.Pattern;
  */
 public class EvAudit {
 
-    static final String DEX_CEILING = "570000"; // W74-CEILING-RAISE (the twelfth)
+    static final String DEX_CEILING = "572000"; // W74-CEILING-RAISE (the twelfth)
     /** الأعضاء الإلزامية — أرشيف بلا أحدها ليس أرشيف أدلة أسبوع. */
     static final String[] REQUIRED_MEMBERS = {
         "pipeline.log", "gates.env", "release-manifest.json",

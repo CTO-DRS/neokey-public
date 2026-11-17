@@ -350,6 +350,64 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    // ---- W108 «ذاكرة الوعد» 🤝: a promise with a time in it («أبشر بكرة أرسله») earns a reminder.
+    private static final String[] PROMISE = {"ابشر", "ابشري", "ابشروا", "وعد", "اوعدك", "اوعدكم", "وعدتك", "اكيد", "تم", "سوف", "راح", "رح",
+            "حاضر", "طيب", "اوكي", "ok", "اكيدا"};
+    private static final String[] WEEK = {"الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس", "الجمعه", "السبت"};
+
+    private static String[] words(String t) {
+        return normAr(t.toLowerCase(java.util.Locale.ROOT)).replaceAll("[^\\p{L}\\p{N} ]", " ").trim().split("\\s+");
+    }
+
+    /** W108: is this word one half of a promise (a promise word or a time word)? The strip only looks then. */
+    static boolean promiseMarker(String w) {
+        String[] x = words(w);
+        if (x.length != 1) return false;
+        String v = x[0];
+        return isPromise(v) || timeOf(new String[]{v}, 0) != null || "الله".equals(v) || "الجاي".equals(v) || "القادم".equals(v);
+    }
+
+    private static boolean isPromise(String v) {
+        for (String p : PROMISE) if (p.equals(v)) return true;
+        // سأرسل / بأرسل (future), بكلمك / برسلك (dialect «بـ» + verb to you); never بالـ / باذن / باكر
+        return v.length() >= 4 && !v.startsWith("بال") && !v.startsWith("باذن") && !v.equals("باكر")
+                && (v.startsWith("سا") || v.startsWith("با") || v.startsWith("ب") && v.length() <= 6 && v.endsWith("ك"));
+    }
+
+    /** {kind, value, label}: kind d = days ahead at 9:00, m = minutes ahead, w = next weekday (1=Sunday…7) at 9:00,
+     *  n = tonight at 20:00. Null when the words at i are no time. */
+    private static String[] timeOf(String[] x, int i) {
+        String v = x[i], nx = i + 1 < x.length ? x[i + 1] : "";
+        if (v.equals("بعد")) {
+            if (nx.equals("بكره") || nx.equals("بكرا") || nx.equals("غد")) return new String[]{"d", "2", "بعد بكرة"};
+            if (nx.equals("ساعه")) return new String[]{"m", "60", "بعد ساعة"};
+            if (nx.equals("ساعتين")) return new String[]{"m", "120", "بعد ساعتين"};
+            if (nx.equals("شوي") || nx.equals("شويه") || nx.equals("قليل")) return new String[]{"m", "30", "بعد نص ساعة"};
+            return null;
+        }
+        if (v.equals("بكره") || v.equals("بكرا") || v.equals("غدا") || v.equals("باكر")) return new String[]{"d", "1", "بكرة ٩ص"};
+        if (v.equals("الليله") || v.equals("المسا") || v.equals("المساء") || v.equals("الليل")) return new String[]{"n", "20", "الليلة ٨م"};
+        if ((v.equals("الاسبوع") || v.equals("الاسبوع")) && (nx.equals("الجاي") || nx.equals("القادم") || nx.equals("الياي")))
+            return new String[]{"d", "7", "الأسبوع الجاي"};
+        for (int k = 0; k < WEEK.length; k++) if (WEEK[k].equals(v)) return new String[]{"w", String.valueOf(k + 1), v.equals("الجمعه") ? "الجمعة" : WEEK[k]};
+        return null;
+    }
+
+    /** W108: the sentence holds a promise and a time → the time ({kind, value, label}); else null.
+     *  «ان شاء الله» counts as a promise. */
+    static String[] promise(String sentence) {
+        if (sentence == null) return null;
+        String[] x = words(sentence);
+        boolean pr = false;
+        String[] when = null;
+        for (int i = 0; i < x.length; i++) {
+            if (isPromise(x[i]) || x[i].equals("انشالله") || x[i].equals("الله") && i > 0 && (x[i - 1].equals("شاء") || x[i - 1].equals("انشاء")))
+                pr = true;
+            if (when == null) when = timeOf(x, i);
+        }
+        return pr ? when : null;
+    }
+
     // ---- W107 «ميزان الشعر» 🎼: the meter (البحر) of a typed hemistich, by the classical feet.
     // 1 = متحرك, 0 = ساكن. Each meter is its feet, each foot its common variants (زحافات وعلل).
     static final String[] METER_NAMES = {"الطويل", "البسيط", "الوافر", "الكامل", "الرجز", "الرمل", "الخفيف",
