@@ -59,7 +59,7 @@ public class RebuildDrillTest {
         sb.append("R8_OK dex=").append(dex).append(" bytes, mapping=210 program classes, manifest components kept=").append(comps).append("\n");
         sb.append("RESULT 1479 passed, ").append(testsF).append(" failed\n");
         sb.append("BILLINGGATE_OK checks=24 negatives=12/12 pins=7/7 stages=38/38 tests=1479/").append(testsF)
-          .append(" dex=").append(dex).append("/577000 ").append(vcLine).append("\n");
+          .append(" dex=").append(dex).append("/579000 ").append(vcLine).append("\n");
         sb.append("════════════════ PIPELINE SUMMARY ════════════════\n");
         String[] names = {"probe","audit","tests","perf","playstore","correction","nnet","dialect","assistant",
                 "sync","syncclient","rest","tls","deploy","ksdrill","provision","paygate","themestore","nqfport",

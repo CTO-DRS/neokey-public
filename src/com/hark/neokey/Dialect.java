@@ -350,6 +350,47 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    // ---- W111 «حارس الآيبان» 🏦: an IBAN at the cursor is checked (length + ISO 7064 mod-97) before money moves.
+    private static final String IBAN_LEN = "SA24AE23KW30BH22QA29OM23EG29JO30GB22DE22FR27TR26LB28PS29IQ23";
+    private static final String[][] SA_BANKS = {{"10", "الأهلي"}, {"15", "البلاد"}, {"20", "الرياض"}, {"30", "العربي الوطني"},
+            {"45", "ساب"}, {"55", "الفرنسي"}, {"60", "الجزيرة"}, {"65", "الاستثمار"}, {"80", "الراجحي"}, {"05", "الإنماء"}};
+    private static final java.util.regex.Pattern IBAN_AT_END =
+            java.util.regex.Pattern.compile("(?<![A-Za-z0-9])[A-Za-z]{2}[0-9]{2}(?: ?[A-Za-z0-9]){10,30} ?$");
+
+    /** W111: {verdict ok|bad|len, the exact span before the cursor, the IBAN in groups of four, the Saudi bank or ""}, or null. */
+    static String[] iban(String before) {
+        if (before == null) return null;
+        StringBuilder t = new StringBuilder(before.length());
+        for (int i = 0; i < before.length(); i++) {
+            char c = before.charAt(i);
+            if (c >= '٠' && c <= '٩') c = (char) ('0' + (c - '٠'));
+            else if (c >= '۰' && c <= '۹') c = (char) ('0' + (c - '۰'));
+            t.append(c);
+        }
+        java.util.regex.Matcher m = IBAN_AT_END.matcher(t);
+        if (!m.find()) return null;
+        String span = before.substring(m.start());
+        String cc = m.group().replace(" ", "").toUpperCase(java.util.Locale.ROOT);
+        int at = -1;
+        for (int i = 0; i + 4 <= IBAN_LEN.length(); i += 4) if (IBAN_LEN.startsWith(cc.substring(0, 2), i)) at = i;
+        if (at < 0) return null;
+        int want = Integer.parseInt(IBAN_LEN.substring(at + 2, at + 4));
+        if (cc.length() < want) return null;   // still typing
+        StringBuilder g = new StringBuilder();
+        for (int i = 0; i < cc.length(); i++) { if (i > 0 && i % 4 == 0) g.append(' '); g.append(cc.charAt(i)); }
+        if (cc.length() > want) return new String[]{"len", span, g.toString(), ""};
+        String r = cc.substring(4) + cc.substring(0, 4);
+        int mod = 0;
+        for (int i = 0; i < r.length(); i++) {
+            int v = Character.digit(r.charAt(i), 36);
+            if (v < 0) return null;
+            mod = v > 9 ? (mod * 100 + v) % 97 : (mod * 10 + v) % 97;
+        }
+        String bank = "";
+        if (cc.startsWith("SA")) for (String[] b : SA_BANKS) if (cc.startsWith(b[0], 4)) bank = b[1];
+        return new String[]{mod == 1 ? "ok" : "bad", span, g.toString(), bank};
+    }
+
     // ---- W110 «بصمة الكتابة» ✋: the owner's typing rhythm (log key-to-key intervals, never the keys
     // themselves). A run of 24 intervals far from it = someone else → guest mode hides the personal layer.
     static final class Rhythm {

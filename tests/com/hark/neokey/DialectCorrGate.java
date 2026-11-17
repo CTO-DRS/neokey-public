@@ -487,6 +487,20 @@ public final class DialectCorrGate {
         need(!young.guest, "rhythm.young.never");
         need(Dialect.Rhythm.load("garbage").n == 0, "rhythm.load.bad");
         System.out.println("DIALECTCORR rhythm n=" + (int) rh.n);
+        // ---- 3w. «حارس الآيبان» (W111): length + mod-97, spaces and Arabic digits, the Saudi bank, no false alarm mid-typing.
+        String[] ib = Dialect.iban("حوّل على SA0380000000608010167519");
+        need(ib != null && "ok".equals(ib[0]) && "الراجحي".equals(ib[3]) && "SA03 8000 0000 6080 1016 7519".equals(ib[2]), "iban.ok");
+        need("SA0380000000608010167519".equals(ib[1]), "iban.span");
+        need("ok".equals(Dialect.iban("SA03 8000 0000 6080 1016 7519 ")[0]), "iban.spaced");
+        need("ok".equals(Dialect.iban("SA٠٣٨٠٠٠٠٠٠٠٦٠٨٠١٠١٦٧٥١٩")[0]), "iban.arabicdigits");
+        need("bad".equals(Dialect.iban("SA0380000000608010167518")[0]), "iban.bad");
+        need("bad".equals(Dialect.iban("SA0380000000608010167591")[0]), "iban.swap");
+        need("len".equals(Dialect.iban("SA03800000006080101675199")[0]), "iban.long");
+        need("ok".equals(Dialect.iban("GB82WEST12345698765432")[0]) && "".equals(Dialect.iban("GB82WEST12345698765432")[3]), "iban.gb");
+        need("ok".equals(Dialect.iban("AE070331234567890123456")[0]), "iban.ae");
+        for (String w : new String[]{"SA038000000060801", "VISA0380000000608010167519", "XX0380000000608010167519", "مرحبا", ""})
+            need(Dialect.iban(w) == null, "iban.refuse " + w);
+        System.out.println("DIALECTCORR iban ok");
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];

@@ -146,6 +146,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
     private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
+    private static final String IBANM = "🏦 ";   // W111: «حارس الآيبان» chip mark
+    private String[] ibanHit;
     private static final String GUEST = "✋ ";   // W110: «بصمة الكتابة» guest-mode chip
     private Dialect.Rhythm rhythm;
     private long lastKeyAt;
@@ -763,6 +765,21 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             view.setSuggestions(new ArrayList<>(fieldKind == 1 ? EMAIL_CHIPS.subList(0, 4) : URL_CHIPS.subList(0, 4)));
             return;
         }
+        // W111 «حارس الآيبان»: an IBAN at the cursor, any app, checked before the money moves.
+        ibanHit = null;
+        if (!sensitive) {
+            InputConnection iic = getCurrentInputConnection();
+            CharSequence ib = iic == null ? null : iic.getTextBeforeCursor(48, 0);
+            String[] h = ib == null ? null : Dialect.iban(ib.toString());
+            if (h != null) {
+                ibanHit = h;
+                List<String> il = new ArrayList<>();
+                il.add(IBANM + ("ok".equals(h[0]) ? "آيبان سليم ✓" + (h[3].isEmpty() ? "" : " · بنك " + h[3]) + " · رتّبه"
+                        : "len".equals(h[0]) ? "الآيبان أطول من اللازم! راجعه" : "آيبان خطأ! رقم ناقص أو مقلوب"));
+                view.setSuggestions(il);
+                return;
+            }
+        }
         // W106 «حارس الاحتيال»: a bare OTP or a card number typed into a chat app — warned before
         // it is sent, whatever the layout (the number pad included); the tap deletes it.
         guardSpan = null;
@@ -1184,6 +1201,22 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             ic.commitText(word.substring(word.indexOf(' ') + 1) + " ", 1);   // W96/W98: the gentler phrase, whole phrase or Arabic spelling
             ic.endBatchEdit();
             softFrom = null;
+            return;
+        }
+        if (word.startsWith(IBANM)) {   // W111: a sound IBAN is laid out in fours; a broken one is only warned
+            String[] h = ibanHit;
+            ibanHit = null;
+            if (h != null && "ok".equals(h[0])) {
+                CharSequence ib = ic.getTextBeforeCursor(h[1].length(), 0);
+                if (ib != null && ib.toString().equals(h[1])) {
+                    ic.beginBatchEdit();
+                    ic.deleteSurroundingText(ib.length(), 0);
+                    ic.commitText(h[2] + " ", 1);
+                    ic.endBatchEdit();
+                }
+            } else {
+                Toast.makeText(this, "تأكّد من رقم الآيبان قبل التحويل — فيه خانة غلط", Toast.LENGTH_LONG).show();
+            }
             return;
         }
         if (word.startsWith(GUEST)) {   // W110: what guest mode is, and how it ends
