@@ -535,6 +535,45 @@ public final class Dialect {
         return null;
     }
 
+    /** W122: the clip's smart target — https link, geo/maps link, tel: or mailto: — else null. */
+    static String clipUri(String v) {
+        String tag = clipTag(v);
+        if (tag == null) return null;
+        String t = v.trim();
+        if (tag.equals("🔗") || tag.equals("📍")) {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?i)(https?://|www\\.)[^\\s<>\"']+").matcher(t);
+            if (!m.find()) return null;
+            String u = m.group().replaceAll("[.,;:!?)\\]،؛]+$", "");
+            return u.toLowerCase(java.util.Locale.ROOT).startsWith("www.") ? "https://" + u : u;
+        }
+        if (tag.equals("✉")) return "mailto:" + t;
+        if (tag.equals("📞")) {
+            String c = t.replace(" ", "").replace("-", "");
+            if (c.matches("05[0-9]{8}")) c = "+966" + c.substring(1);
+            else if (c.matches("9665[0-9]{8}")) c = "+" + c;
+            return "tel:" + c;
+        }
+        return null;
+    }
+
+    /** W122: the menu label for clipUri's target, or null. */
+    static String clipAct(String v) {
+        String tag = clipTag(v), u = clipUri(v);
+        if (u == null) return null;
+        return tag.equals("📍") ? "فتح الخريطة" : tag.equals("✉") ? "مراسلة" : tag.equals("📞") ? "اتصال" : "فتح الرابط";
+    }
+
+    /** W122: what a card shows for a money-shaped clip: card and IBAN keep the last four, a wallet its two ends; else the text. */
+    static String clipMask(String v) {
+        String tag = clipTag(v);
+        if (tag == null) return v;
+        String c = v.trim().replace(" ", "").replace("-", "");
+        if (tag.equals("💳")) return "•••• " + c.substring(c.length() - 4);
+        if (tag.equals("🏦")) return c.substring(0, 4).toUpperCase(java.util.Locale.ROOT) + " •••• " + c.substring(c.length() - 4);
+        if (tag.equals("🪙")) return c.substring(0, 6) + "…" + c.substring(c.length() - 4);
+        return v;
+    }
+
     /** W121: a short Arabic age for a clip card: الآن، قبل 5 د، قبل 3 س، أمس، قبل 4 أيام، or a week count. */
     static String ago(long ms) {
         if (ms < 60_000L) return "الآن";

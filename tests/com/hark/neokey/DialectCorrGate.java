@@ -645,6 +645,16 @@ public final class DialectCorrGate {
                 && "قبل أسبوعين".equals(Dialect.ago(15 * 86_400_000L)) && "قديم".equals(Dialect.ago(60 * 86_400_000L)), "clip.ago");
         System.out.println("DIALECTCORR clipsmart ok");
 
+        // ---- 3ag. W122 clip smart action + privacy mask
+        need("https://neokey.app/x".equals(Dialect.clipUri("شوف https://neokey.app/x.")) && "https://www.x.com".equals(Dialect.clipUri("www.x.com"))
+                && "فتح الرابط".equals(Dialect.clipAct("www.x.com")), "clip.uri.link");
+        need("فتح الخريطة".equals(Dialect.clipAct("https://maps.app.goo.gl/abc")) && "tel:+966551234567".equals(Dialect.clipUri("055 123 4567"))
+                && "اتصال".equals(Dialect.clipAct("0551234567")) && "mailto:drs@example.com".equals(Dialect.clipUri("drs@example.com")), "clip.uri.map.tel.mail");
+        need(Dialect.clipUri("4821") == null && Dialect.clipAct("السلام عليكم") == null && Dialect.clipUri(null) == null, "clip.uri.none");
+        need("SA03 •••• 7519".equals(Dialect.clipMask("SA03 8000 0000 6080 1016 7519")) && "0x5290…9EE7".equals(Dialect.clipMask("0x52908400098527886E0F7030069857D2E4169EE7"))
+                && "•••• 1111".equals(Dialect.clipMask("4111 1111 1111 1111")) && "مرحبا".equals(Dialect.clipMask("مرحبا")), "clip.mask");
+        System.out.println("DIALECTCORR clipact ok");
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

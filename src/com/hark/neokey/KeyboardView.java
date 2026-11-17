@@ -153,7 +153,7 @@ public class KeyboardView extends View {
     private ClipItem clipMenu;          // item whose action menu is open
     private boolean clipDelArm;         // delete needs a second tap
     static final int CA_INSERT = 1, CA_COPY = 2, CA_PIN = 4, CA_FAV = 5, CA_ARCHIVE = 6, CA_SHARE = 8,
-            CA_DELETE = 9, CA_BACK = 12, CA_EDIT = 3, CA_TEMPLATE = 13, CA_EXPORT = 14;
+            CA_DELETE = 9, CA_BACK = 12, CA_EDIT = 3, CA_TEMPLATE = 13, CA_EXPORT = 14, CA_OPEN = 15;
     // W48: the pin-reorder action keys are gone from the action sheet — pins reorder by
     // drag on the pinned tab (the W48 «بالسحب بدل ▲▼» law; ci/cliplib_gate.sh guards it).
     private List<ClipRepo.Cat> clipCats = new ArrayList<>();
@@ -1122,7 +1122,14 @@ public class KeyboardView extends View {
                 {CA_EXPORT, "تصدير", "upload"},
                 {CA_DELETE, clipDelArm ? "اضغط للتأكيد" : "حذف", "delete"},
         };
-        int cols = acts.length > 8 ? 5 : 4;
+        String smart = m.kind == 1 || m.isLong() ? null : Dialect.clipAct(m.preview);   // W122: the clip's own action
+        if (smart != null) {
+            Object[][] b = new Object[acts.length + 1][];
+            b[0] = acts[0]; b[1] = new Object[]{CA_OPEN, smart, "open"};
+            System.arraycopy(acts, 1, b, 2, acts.length - 1);
+            acts = b;
+        }
+        int cols = acts.length > 8 ? (acts.length > 10 ? 6 : 5) : 4;
         float gy = top + rh * 0.9f, gh = rh * 3.1f / 2f, cw = w / cols;
         for (int i = 0; i < acts.length; i++) {
             Key k = new Key(Key.CLIP_ACT, (String) acts[i][1], (String) acts[i][2], 1f, null);
@@ -2135,7 +2142,7 @@ public class KeyboardView extends View {
             float markW = marks * (pz + 4 * dp);
             float textW = k.rect.width() - 2 * pad - markW - 18 * dp;
             boolean twoLine = k.rect.height() > 40 * dp;
-            String body = ci.preview.replace('\n', ' ').replace('\t', ' ');
+            String body = Dialect.clipMask(ci.preview).replace('\n', ' ').replace('\t', ' ');   // W122: money-shaped clips stay masked
             textP.setColor(theme.text);
             if (ci.title != null) {
                 textP.setFakeBoldText(true);
@@ -2155,7 +2162,7 @@ public class KeyboardView extends View {
                 CharSequence e = TextUtils.ellipsize(body, textP, textW, TextUtils.TruncateAt.END);
                 String shown = e.toString();
                 float by = baseline(k.rect, textP);
-                if (ci.matchStart >= 0 && ci.matchEnd <= shown.length() && ci.matchEnd > ci.matchStart) {
+                if (Dialect.clipMask(ci.preview) == ci.preview && ci.matchStart >= 0 && ci.matchEnd <= shown.length() && ci.matchEnd > ci.matchStart) {
                     // underline the search hit (text is drawn centred; measure from its left edge)
                     float tw = textP.measureText(shown), left = k.rect.centerX() - tw / 2;
                     android.text.TextPaint tp = new android.text.TextPaint(textP);

@@ -2483,6 +2483,20 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         switch (action) {
             case KeyboardView.CA_INSERT: onClipInsert(id); return;
             case KeyboardView.CA_PIN: onPinClip(id); return;
+            case KeyboardView.CA_OPEN: {   // W122: open the link / map, dial the number, write the mail
+                clipStore.run(new ClipStore.Job<String>() {
+                    @Override public String run(ClipRepo r) { return r.getText(id); }
+                }, new ClipStore.Done<String>() {
+                    @Override public void done(String t) {
+                        String u = Dialect.clipUri(t);
+                        if (u == null) return;
+                        Intent i = new Intent(u.startsWith("tel:") ? Intent.ACTION_DIAL : u.startsWith("mailto:") ? Intent.ACTION_SENDTO : Intent.ACTION_VIEW, android.net.Uri.parse(u));
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        try { requestHideSelf(0); startActivity(i); } catch (Exception e) { Toast.makeText(NeoKeyService.this, L.t("ما فيه تطبيق يفتحه"), Toast.LENGTH_SHORT).show(); }
+                    }
+                });
+                return;
+            }
             case KeyboardView.CA_EXPORT: {
                 Intent i = new Intent(this, ClipIOActivity.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
