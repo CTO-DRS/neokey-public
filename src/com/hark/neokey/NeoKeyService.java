@@ -146,6 +146,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
     private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
+    private static final String DRAFTM = "📝 ";   // W114: «المسودة الخالدة» chip mark
+    private String draftText, draftPkg;
+    private long draftAt;
+    private boolean draftLoaded, draftDirty, draftLive, draftArmed;
     private static final String SWAPM = "🔍 ";   // W113: «شاهد اللصق» chip mark
     private String prevClipVal, swapOrig, swapNew;
     private long prevClipAt, swapAt;
@@ -415,6 +419,15 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             new File(getFilesDir(), "app_profiles.txt").delete();
             sp.edit().remove("reset_learn").apply();
         }
+        // W114: a fresh field — arm the offer of a draft this app lost (never one written in this same field).
+        if (!draftLoaded) {
+            draftLoaded = true;
+            draftText = sp.getString("draft_text", null);
+            draftPkg = sp.getString("draft_pkg", null);
+            draftAt = sp.getLong("draft_at", 0);
+        }
+        draftLive = false;
+        draftArmed = !restarting && draftText != null;
         captureClip();
         int cls = info.inputType & InputType.TYPE_MASK_CLASS;
         int var = info.inputType & InputType.TYPE_MASK_VARIATION;
@@ -453,6 +466,13 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         flushStats();
         Perf.sampleMemory(this);
         Perf.flush();
+        if (draftDirty) {   // W114: one write per field visit
+            draftDirty = false;
+            SharedPreferences.Editor de = Theme.prefs(this).edit();
+            if (draftText == null) de.remove("draft_text").remove("draft_pkg").remove("draft_at");
+            else de.putString("draft_text", draftText).putString("draft_pkg", draftPkg).putLong("draft_at", draftAt);
+            de.apply();
+        }
         dictAr.save();
         dictEn.save();
         saveDialectProfiles();
@@ -798,6 +818,34 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 sl.add(SWAPM + (pasted ? "الملصوق غير اللي نسخته! · رجّع الأصل" : "الحافظة تغيّرت لوحدها! تأكّد قبل اللصق"));
                 view.setSuggestions(sl);
                 return;
+            }
+        }
+        // W114 «المسودة الخالدة»: keep a long text while it lives; an empty field in the same visit means it was sent.
+        if (!sensitive && !incognito && draftLoaded) {
+            InputConnection dic = getCurrentInputConnection();
+            CharSequence db = dic == null ? null : dic.getTextBeforeCursor(20000, 0);
+            CharSequence da = dic == null ? null : dic.getTextAfterCursor(20000, 0);
+            if (db != null && da != null) {
+                String full = db.toString() + da;
+                if (Dialect.draftWorth(full)) {
+                    draftText = full.trim();
+                    draftPkg = currentApp;
+                    draftAt = System.currentTimeMillis();
+                    draftLive = draftDirty = true;
+                    draftArmed = false;
+                } else if (!full.trim().isEmpty()) {
+                    draftArmed = false;
+                } else if (draftLive) {
+                    draftText = null;
+                    draftLive = false;
+                    draftDirty = true;
+                } else if (draftArmed && !guest() && Dialect.draftOffer(draftPkg, draftAt, draftText, currentApp,
+                        System.currentTimeMillis(), full)) {
+                    List<String> dl = new ArrayList<>();
+                    dl.add(DRAFTM + "رجّع مسودتك: «" + Dialect.draftLabel(draftText) + "»");
+                    view.setSuggestions(dl);
+                    return;
+                }
             }
         }
         // W112 «حارس الروابط»: a link at the cursor that imitates a bank, a service or a brand.
@@ -1234,6 +1282,13 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             ic.commitText(word.substring(word.indexOf(' ') + 1) + " ", 1);   // W96/W98: the gentler phrase, whole phrase or Arabic spelling
             ic.endBatchEdit();
             softFrom = null;
+            return;
+        }
+        if (word.startsWith(DRAFTM)) {   // W114: the lost text, whole, back where it was
+            if (draftText != null) {
+                ic.commitText(draftText, 1);
+                draftArmed = false;
+            }
             return;
         }
         if (word.startsWith(SWAPM)) {   // W113: put back exactly what the user copied

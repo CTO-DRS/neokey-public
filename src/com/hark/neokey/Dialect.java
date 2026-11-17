@@ -350,6 +350,30 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    // ---- W114 «المسودة الخالدة» 📝: a long text that vanished with its app comes back on the next visit.
+    static final long DRAFT_TTL = 86400000L;
+
+    /** W114: worth keeping = 40+ letters of real writing, never a money-shaped value. */
+    static boolean draftWorth(String t) {
+        if (t == null) return false;
+        String x = t.trim();
+        return x.length() >= 40 && x.length() <= 20000 && clipKind(x) == null;
+    }
+
+    /** W114: offer the kept draft when the same app opens an empty field within a day. */
+    static boolean draftOffer(String dPkg, long dAt, String dText, String pkg, long now, String field) {
+        return dText != null && dPkg != null && !dPkg.isEmpty() && dPkg.equals(pkg)
+                && now >= dAt && now - dAt <= DRAFT_TTL && (field == null || field.trim().isEmpty());
+    }
+
+    /** W114: the chip's glimpse — the first four words. */
+    static String draftLabel(String t) {
+        String[] w = t.trim().split("\\s+");
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < Math.min(4, w.length); i++) b.append(i == 0 ? "" : " ").append(w[i]);
+        return b.append(w.length > 4 ? "…" : "").toString();
+    }
+
     // ---- W113 «شاهد اللصق» 🔍: the clipboard changed itself — a money-shaped value replaced by another of the same shape.
     /** W113: iban|eth|btc|trx|card|phone|account for a value worth stealing, else null. */
     static String clipKind(String v) {

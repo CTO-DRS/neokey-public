@@ -528,6 +528,18 @@ public final class DialectCorrGate {
         need(!Dialect.clipSwap(E1, 500, "SA0380000000608010167519"), "swap.kinds");
         need(!Dialect.clipSwap("مرحبا", 100, "اهلا"), "swap.text");
         System.out.println("DIALECTCORR swap ok");
+        // ---- 3z. «المسودة الخالدة» (W114): what is kept, when it is offered, and the glimpse.
+        String D = "السلام عليكم ورحمة الله، أبغى أوضح لك موضوع الاجتماع بكرة بالتفصيل";
+        need(Dialect.draftWorth(D) && !Dialect.draftWorth("هلا") && !Dialect.draftWorth("SA0380000000608010167519")
+                && !Dialect.draftWorth(null), "draft.worth");
+        need(Dialect.draftOffer("com.whatsapp", 1000, D, "com.whatsapp", 5000, ""), "draft.offer");
+        need(Dialect.draftOffer("com.whatsapp", 1000, D, "com.whatsapp", 5000, "  "), "draft.offer.blank");
+        need(!Dialect.draftOffer("com.whatsapp", 1000, D, "com.twitter", 5000, ""), "draft.other.app");
+        need(!Dialect.draftOffer("com.whatsapp", 1000, D, "com.whatsapp", 1000 + Dialect.DRAFT_TTL + 1, ""), "draft.stale");
+        need(!Dialect.draftOffer("com.whatsapp", 1000, D, "com.whatsapp", 5000, "هلا"), "draft.field.busy");
+        need(!Dialect.draftOffer("", 1000, D, "", 5000, "") && !Dialect.draftOffer("a", 1000, null, "a", 5000, ""), "draft.refuse");
+        need("السلام عليكم ورحمة الله،…".equals(Dialect.draftLabel(D)) && "هلا والله".equals(Dialect.draftLabel(" هلا  والله ")), "draft.label");
+        System.out.println("DIALECTCORR draft ok");
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
