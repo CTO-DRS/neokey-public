@@ -146,6 +146,9 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
     private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
+    private static final String SWAPM = "🔍 ";   // W113: «شاهد اللصق» chip mark
+    private String prevClipVal, swapOrig, swapNew;
+    private long prevClipAt, swapAt;
     private static final String LINKM = "🔗 ";   // W112: «حارس الروابط» chip mark
     private static final String IBANM = "🏦 ";   // W111: «حارس الآيبان» chip mark
     private String[] ibanHit;
@@ -781,6 +784,22 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 return;
             }
         }
+        // W113 «شاهد اللصق»: the clipboard was swapped — warn before the paste, offer the original after it.
+        if (swapNew != null) {
+            long age = SystemClock.elapsedRealtime() - swapAt;
+            InputConnection sic = getCurrentInputConnection();
+            CharSequence sb = sic == null ? null : sic.getTextBeforeCursor(swapNew.length() + 2, 0);
+            boolean pasted = sb != null && sb.toString().trim().endsWith(swapNew);
+            if (age > 600000 || (!pasted && age > 60000)) {
+                swapNew = null;
+                swapOrig = null;
+            } else {
+                List<String> sl = new ArrayList<>();
+                sl.add(SWAPM + (pasted ? "الملصوق غير اللي نسخته! · رجّع الأصل" : "الحافظة تغيّرت لوحدها! تأكّد قبل اللصق"));
+                view.setSuggestions(sl);
+                return;
+            }
+        }
         // W112 «حارس الروابط»: a link at the cursor that imitates a bank, a service or a brand.
         if (!sensitive) {
             InputConnection lic = getCurrentInputConnection();
@@ -1217,6 +1236,25 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             softFrom = null;
             return;
         }
+        if (word.startsWith(SWAPM)) {   // W113: put back exactly what the user copied
+            String nw = swapNew, og = swapOrig;
+            CharSequence sb = nw == null ? null : ic.getTextBeforeCursor(nw.length() + 2, 0);
+            if (sb != null && og != null) {
+                String b = sb.toString();
+                int cut = b.lastIndexOf(nw);
+                if (cut >= 0 && b.substring(cut + nw.length()).trim().isEmpty()) {
+                    ic.beginBatchEdit();
+                    ic.deleteSurroundingText(b.length() - cut, 0);
+                    ic.commitText(og, 1);
+                    ic.endBatchEdit();
+                    swapNew = null;
+                    swapOrig = null;
+                    return;
+                }
+            }
+            Toast.makeText(this, "تغيّر المنسوخ بعد نسخك له — ممكن برنامج خبيث. الأصل: " + og, Toast.LENGTH_LONG).show();
+            return;
+        }
         if (word.startsWith(LINKM)) {   // W112: a warning only — the text stays as typed
             Toast.makeText(this, "الرابط لا يطابق الموقع الرسمي — افتح التطبيق الرسمي أو اكتب العنوان بنفسك", Toast.LENGTH_LONG).show();
             return;
@@ -1369,6 +1407,15 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             final String s = t.toString();
             if (s.equals(lastCaptured)) return;
             lastCaptured = s;
+            // W113 «شاهد اللصق»: a money-shaped value replaced by another of the same shape, too fast or too alike.
+            long clipNow = SystemClock.elapsedRealtime();
+            if (prevClipVal != null && Dialect.clipSwap(prevClipVal, clipNow - prevClipAt, s)) {
+                swapOrig = prevClipVal.trim();
+                swapNew = s.trim();
+                swapAt = clipNow;
+            }
+            prevClipVal = s;
+            prevClipAt = clipNow;
             boolean secret = sensitive || isSensitiveClip(d);
             if (secret && !Theme.prefs(this).getBoolean("clip_sensitive", false)) return;
             freshClip = s;

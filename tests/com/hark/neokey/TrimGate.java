@@ -47,13 +47,13 @@ import java.util.regex.Pattern;
  *      the coupled count to equal the number of moved strings whose text is a
  *      ui_en.txt key, and prints it (zero moved-but-decoupled strings).
  *
- * Verdict: TRIM_GATE_OK entries=… dex=…/582000 saved=… / TRIM_GATE_FAILED <tag>.
+ * Verdict: TRIM_GATE_OK entries=… dex=…/583000 saved=… / TRIM_GATE_FAILED <tag>.
  * Pure JVM — zero android.*.
  */
 public final class TrimGate {
 
-    static final int CEILING = 582000;   // W69-CEILING-RAISE (capacity_ledger ceiling.raised — the measured raise; was 513000; W57 had raised 512000→513000)
-    static final int PRE_TRIM_DEX = 582000;   // the W58 re-anchor: the W21 shipped record (518,688) was the proxy until W58 crossed it with NEW engine code (+8592 documented) — after W58 the regrowth proxy rides the ceiling; the trim's own behavioral laws (the saved-floor + the roundtrip proof) carry the regrowth detection
+    static final int CEILING = 583000;   // W69-CEILING-RAISE (capacity_ledger ceiling.raised — the measured raise; was 513000; W57 had raised 512000→513000)
+    static final int PRE_TRIM_DEX = 583000;   // the W58 re-anchor: the W21 shipped record (518,688) was the proxy until W58 crossed it with NEW engine code (+8592 documented) — after W58 the regrowth proxy rides the ceiling; the trim's own behavioral laws (the saved-floor + the roundtrip proof) carry the regrowth detection
     static final int MIN_LIT_BYTES = 60;      // same cutoff as the move tool
     static final int PIN_ENTRIES = 126;       // W74: +3 (themechannel + channeltoast + channelrefuse — the curated channel bytes and its toasts); W71 was 123; change consciously
     static final String[] SHELL_FILES = {

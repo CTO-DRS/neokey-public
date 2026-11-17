@@ -515,6 +515,19 @@ public final class DialectCorrGate {
                 "github.com/CTO-DRS", "مرحبا كيف الحال", "الساعة 5.30", "e.g", "1.5", "www.my-shop.com", ""})
             need(Dialect.linkGuard(w) == null, "link.refuse " + w);
         System.out.println("DIALECTCORR link pins=" + lPins.length);
+        // ---- 3y. «شاهد اللصق» (W113): money-shaped kinds, the fast swap, the poisoning shape, and honest re-copies.
+        String E1 = "0x52908400098527886E0F7030069857D2E4169EE7", E2 = "0x8617E340B3D01FA5F11F306F4090FD50E238070D";
+        need("eth".equals(Dialect.clipKind(E1)) && "iban".equals(Dialect.clipKind("SA03 8000 0000 6080 1016 7519")), "swap.kind");
+        need("btc".equals(Dialect.clipKind("bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq")) && "phone".equals(Dialect.clipKind("0551234567")), "swap.kind2");
+        need(Dialect.clipKind("مرحبا") == null && Dialect.clipKind("https://x.com") == null && Dialect.clipKind("123") == null, "swap.kind.refuse");
+        need(Dialect.clipSwap(E1, 800, E2), "swap.fast");
+        need(!Dialect.clipSwap(E1, 20000, E2), "swap.slow.honest");
+        need(Dialect.clipSwap(E1, 120000, "0x5290FFFF098527886E0F7030069857D2E4169EE7"), "swap.poison");
+        need(Dialect.clipSwap("SA0380000000608010167519", 500, "SA4420000001234567891234"), "swap.iban");
+        need(!Dialect.clipSwap(E1, 500, E1.toLowerCase()), "swap.same");
+        need(!Dialect.clipSwap(E1, 500, "SA0380000000608010167519"), "swap.kinds");
+        need(!Dialect.clipSwap("مرحبا", 100, "اهلا"), "swap.text");
+        System.out.println("DIALECTCORR swap ok");
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];

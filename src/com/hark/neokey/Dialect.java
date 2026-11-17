@@ -350,6 +350,37 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    // ---- W113 «شاهد اللصق» 🔍: the clipboard changed itself — a money-shaped value replaced by another of the same shape.
+    /** W113: iban|eth|btc|trx|card|phone|account for a value worth stealing, else null. */
+    static String clipKind(String v) {
+        if (v == null) return null;
+        String t = v.trim();
+        if (t.length() > 70 || t.isEmpty()) return null;
+        String c = t.replace(" ", "").replace("-", "");
+        if (c.matches("0x[0-9a-fA-F]{40}")) return "eth";
+        if (c.matches("(bc1[02-9ac-hj-np-z]{25,62})|([13][1-9A-HJ-NP-Za-km-z]{25,34})")) return "btc";
+        if (c.matches("T[1-9A-HJ-NP-Za-km-z]{33}")) return "trx";
+        String[] ib = iban(c);
+        if (ib != null && ib[1].length() == c.length() && !"len".equals(ib[0])) return "iban";
+        if (c.matches("(\\+?966|0)5[0-9]{8}")) return "phone";
+        if (c.matches("[0-9]{13,19}") && scamSpan(c) != null) return "card";
+        if (c.matches("[0-9]{10,24}")) return "account";
+        return null;
+    }
+
+    /** W113: prev → now looks like a hijack: same kind, different value, and either within 3 s of the copy or the
+     *  address-poisoning shape (same first four and last four, different middle) within 10 min. */
+    static boolean clipSwap(String prev, long dtMs, String now) {
+        String k = clipKind(prev);
+        if (k == null || !k.equals(clipKind(now)) || dtMs < 0) return false;
+        String a = prev.trim().replace(" ", "").replace("-", ""), b = now.trim().replace(" ", "").replace("-", "");
+        if (a.equalsIgnoreCase(b)) return false;
+        if (dtMs <= 3000) return true;
+        return dtMs <= 600000 && a.length() > 12 && b.length() == a.length()
+                && a.substring(0, 4).equalsIgnoreCase(b.substring(0, 4))
+                && a.substring(a.length() - 4).equalsIgnoreCase(b.substring(b.length() - 4));
+    }
+
     // ---- W112 «حارس الروابط» 🔗: a link at the cursor that imitates a bank, a government service or a big brand.
     private static final String[] BRANDS = {"alrajhibank", "alrajhi", "alahli", "riyadbank", "alinma", "albilad", "absher",
             "tawakkalna", "paypal", "apple", "google", "microsoft", "amazon", "netflix", "whatsapp", "instagram", "facebook",
