@@ -623,6 +623,15 @@ public final class DialectCorrGate {
         need(Motion.heat(0) == 0f && Motion.heat(15) == 0.5f && Motion.heat(99) == 1f, "hold.delete.heat");
         System.out.println("DIALECTCORR hold ok pop=" + popPeak);
 
+        // ---- 3ae. W119 six suggestions on the strip
+        float[] six = {60, 70, 50, 80, 65, 55};
+        need(Motion.fitChips(six, 6, 420, 60) == 6 && six[2] == 60, "strip.six.fit");
+        float[] crowd = {200, 200, 200, 200, 200, 200};
+        need(Motion.fitChips(crowd, 6, 420, 60) == 2, "strip.crowd.drops");
+        float[] prov = {900, 70};
+        need(Motion.fitChips(prov, 2, 420, 60) == 2 && prov[0] == 315f, "strip.long.chip.keeps.neighbour");
+                System.out.println("DIALECTCORR strip6 ok");
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

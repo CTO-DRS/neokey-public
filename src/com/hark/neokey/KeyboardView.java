@@ -767,6 +767,11 @@ public class KeyboardView extends View {
         sideKeys.add(sw);
     }
 
+    static final int STRIP_MAX = 6;
+
+    /** W119: how many suggestions the service should send (six on the strip row, three in the toolbar). */
+    public int suggCap() { return stripKey != null ? STRIP_MAX : 3; }
+
     private void layoutSuggestions() {
         List<Key> prev = new ArrayList<>(suggKeys);
         suggKeys.clear();
@@ -787,6 +792,29 @@ public class KeyboardView extends View {
                     if (rtl) { r = R - off; l = r - cell; } else { l = L + off; r = l + cell; }
                 }
                 k.rect.set(l, T, r, B);
+                k.born = bornOf(prev, k, now);
+                suggKeys.add(k);
+            }
+            return;
+        }
+        if (strip) {   // W119: up to six chips, widths follow the words, best first in reading order
+            int n = Math.min(STRIP_MAX, suggestions.size());
+            float sz = 17 * dp * clamp(scale, 0.85f, 1.1f), pad = 22 * dp, minW = (R - L) / 7f;
+            textP.setTextSize(sz);
+            float[] w = new float[n];
+            float tot = 0;
+            for (int i = 0; i < n; i++) {
+                String lab = suggestions.get(i);
+                w[i] = lab.startsWith(CLIP_MARK) ? 120 * dp : textP.measureText(lab) + pad;
+            }
+            n = Motion.fitChips(w, n, R - L, minW);   // too crowded: the weakest tail drops
+            for (int i = 0; i < n; i++) tot += w[i];
+            float k0 = (R - L) / tot, x = rtl ? R : L;
+            for (int i = 0; i < n; i++) {
+                float cw = w[i] * k0;
+                Key k = new Key(Key.SUGG, suggestions.get(i), suggestions.get(i), 1f, null);
+                k.id = i;
+                if (rtl) { k.rect.set(x - cw, T, x, B); x -= cw; } else { k.rect.set(x, T, x + cw, B); x += cw; }
                 k.born = bornOf(prev, k, now);
                 suggKeys.add(k);
             }

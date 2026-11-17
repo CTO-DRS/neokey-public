@@ -144,4 +144,18 @@ final class Motion {
 
     /** Delete-key heat 0..1 with the repeat count. */
     static float heat(int n) { return n <= 0 ? 0f : Math.min(1f, n / 30f); }
+
+    // ---------------------------------------------------------------- W119 six-chip strip
+
+    /**
+     * Clamps each chip width to [minW, 0.75·avail] in place and returns how many
+     * chips fit: the weakest tail drops while the row would squeeze past 1.35×.
+     */
+    static int fitChips(float[] w, int n, float avail, float minW) {
+        for (int i = 0; i < n; i++) w[i] = Math.max(minW, Math.min(avail * 0.75f, w[i]));
+        float tot = 0;
+        for (int i = 0; i < n; i++) tot += w[i];
+        while (n > 1 && tot > avail * 1.35f) tot -= w[--n];
+        return n;
+    }
 }

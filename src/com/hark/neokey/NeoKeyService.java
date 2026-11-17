@@ -947,7 +947,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             view.setSuggestions(p);
             return;
         }
-        List<String> s = mergedSuggest(w, activeDialectId(), 3);
+        final int cap = view == null ? 3 : view.suggCap();   // W119: six on the suggestion strip, three in the toolbar
+        List<String> s = mergedSuggest(w, activeDialectId(), cap);
         // W57: both engines ride the strip through the W55 contract (Engines.run
         // — the ONE call site): dict completions keep their lead slots, the root
         // family keeps the W56 tail slot, the tashkeel reading appends ONLY when
@@ -955,40 +956,40 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // familyInto rides "root" cands only, tashkeelInto rides "tashkeel"
         // only; an empty registry (corrupt index / detached) answers empty.
         Engine.Cand[] eng = engineRun(new Engine.Ctx(null, null, w), 8);
-        RootEngine.familyInto(s, pickSrc(eng, "root"), 3);
+        RootEngine.familyInto(s, pickSrc(eng, "root"), cap);
         // W86: the form-error recovery rides the SAME tail slot when the
         // composing word is unmapped — the witnessed affix strip infers the
         // root and ONE corpus-rank family form fills the tail; DISPLAY ONLY
         // (the silent path never consumes it — docs/ROOT.md).
-        RootEngine.recoverInto(s, w, 3);
-        TashkeelEngine.tashkeelInto(s, pickSrc(eng, "tashkeel"), 3);
+        RootEngine.recoverInto(s, w, cap);
+        TashkeelEngine.tashkeelInto(s, pickSrc(eng, "tashkeel"), cap);
         // W58: the grammar correction rides LAST (an optional tap-to-apply
         // suggestion — the engine explains, it never force-corrects) and NEVER
         // in incognito (وضع التخفي: لا تحليل — the scan surface refuses too).
         // W61: no scattered incognito checks — the ONE gate (engineRun)
         // already returned empty cands, so these rides are natural no-ops.
-        GrammarNudge.nudgeInto(s, pickSrc(eng, "grammar"), 3);
+        GrammarNudge.nudgeInto(s, pickSrc(eng, "grammar"), cap);
         // W60: the personal repetition layer rides LAST (append-only — it
         // never displaces the dict lead or the root family tail; every chip
         // carries the ★ badge — the user SEES why the keyboard suggested it)
         // and NEVER in incognito (وقف تام — the law).
-        if (!guest()) AdaptEngine.personalInto(s, pickSrc(eng, "personal"), 3);   // W110: hidden in guest mode
+        if (!guest()) AdaptEngine.personalInto(s, pickSrc(eng, "personal"), cap);   // W110: hidden in guest mode
         String fx = ArabicFixes.fix(w);
-        if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > 3) s.remove(s.size() - 1); }
+        if (fx != null) { s.remove(fx); s.add(0, fx); while (s.size() > cap) s.remove(s.size() - 1); }
         String sc = guest() ? null : Theme.shortcuts(this).get(w.toLowerCase());   // W110
-        if (sc != null) { s.remove(sc); s.add(0, sc); while (s.size() > 3) s.remove(s.size() - 1); }
+        if (sc != null) { s.remove(sc); s.add(0, sc); while (s.size() > cap) s.remove(s.size() - 1); }
         else {
             // W48 clip shortcut: the typed token expands to its clip — the suggestion carries
             // the mark + token; the tap dispatches in onSuggestion
             Long cid = guest() ? null : clipSc.get(w.toLowerCase());   // W110
             if (cid != null) {
                 String cs2 = KeyboardView.CLIP_SC_MARK + w.toLowerCase();
-                if (!s.contains(cs2)) { s.add(0, cs2); while (s.size() > 3) s.remove(s.size() - 1); }
+                if (!s.contains(cs2)) { s.add(0, cs2); while (s.size() > cap) s.remove(s.size() - 1); }
             }
         }
         String emo = EmojiHints.forWord(w);
         if (emo != null) {
-            if (s.size() >= 3) s.set(2, emo); else s.add(emo);
+            if (s.size() >= cap) s.set(cap - 1, emo); else s.add(emo);
         }
         boolean upperFirst = Character.isUpperCase(w.charAt(0));
         if (upperFirst) {
@@ -1032,6 +1033,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private List<String> predictions() {
         InputConnection ic = getCurrentInputConnection();
         List<String> out = new ArrayList<>();
+        final int cap = view == null ? 3 : view.suggCap();   // W119
         if (ic == null) return out;
         CharSequence b = ic.getTextBeforeCursor(40, 0);
         if (b == null || b.length() < 2 || b.charAt(b.length() - 1) != ' ') return out;
@@ -1131,7 +1133,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             return out;
         }
         String prev = b.subSequence(i, end).toString();
-        out.addAll(dictFor(prev).predict(prev, 3));
+        out.addAll(dictFor(prev).predict(prev, cap));
         // C2: التبديل الذكي — تنبؤات قاموس اللهجة النشط تُدمج في المسار المعجمي
         // (قبل السدادة العصبية — النموذج يكمل ما تركه المعجم لا ما تركته اللهجة)
         String did = activeDialectId();
@@ -1141,8 +1143,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 // W59: البذرة بنصف الوزن أيضاً في التنبؤ (floor(3/2)=1) — الكشف
                 // الحي يتصدر بحد الثلاثة كما كان، والثقة الأنقض وزنها أنقض.
                 int quota = dialectSeeded ? 1 : 3;
-                for (String x : dd.predict(prev, 3)) {
-                    if (out.size() >= quota || out.size() >= 3) break;
+                for (String x : dd.predict(prev, cap)) {
+                    if (out.size() >= quota || out.size() >= cap) break;
                     if (!out.contains(x)) out.add(x);
                 }
             }
@@ -1155,14 +1157,14 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // gate (engineRun) — no scattered checks anywhere (W61).
         Engine.Cand[] pe = engineRun(new Engine.Ctx(null, prev, ""), 8);
         for (Engine.Cand c : pickSrc(pe, "personal")) {
-            if (out.size() >= 3) break;
+            if (out.size() >= cap) break;
             if (!out.contains(c.text)) { out.add(c.text); break; }   // المقعد الواحد
         }
         // A2: neural top-3 completes the strip — it never displaces the
         // dictionary path, it only fills what the bigram table left empty
         // (the model's measured top-3 is the NNETGATE2 section of the gate).
         Predictor np = predictor;
-        if (np != null && out.size() < 3) {
+        if (np != null && out.size() < cap) {
             String before = null;
             if (i > 0) {
                 int j = i;
@@ -1170,7 +1172,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 if (j < i) before = b.subSequence(j, i).toString();
             }
             for (String w : np.top3(before, prev)) {
-                if (out.size() >= 3) break;
+                if (out.size() >= cap) break;
                 if (!out.contains(w)) out.add(w);
             }
         }
@@ -1204,11 +1206,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         String de = emj.get(Dialect.normAr(prev));
         if (de != null) {
             while (out.size() > 1) out.remove(out.size() - 1);
-            for (String e : de.split(" ")) if (!e.isEmpty() && out.size() < 3) out.add(e);
+            for (String e : de.split(" ")) if (!e.isEmpty() && out.size() < cap) out.add(e);
             return out;
         }
         String emo = EmojiHints.forWord(prev);
-        if (emo != null && out.size() < 3 && !out.contains(emo)) out.add(emo);
+        if (emo != null && out.size() < cap && !out.contains(emo)) out.add(emo);
         return out;
     }
 
