@@ -665,6 +665,12 @@ public final class DialectCorrGate {
                 && Dialect.swapDigits("بدون") == null && Dialect.clipFixLabel("بدون") == null && "١٢٣ ← 123".equals(Dialect.clipFixLabel("٤٥")), "clip.fix.digits");
         System.out.println("DIALECTCORR clipfix ok");
 
+        // ---- 3ai. W124 spent codes + multi-paste
+        need(Dialect.otpSpent("4821", 11 * 60_000L, false) && !Dialect.otpSpent("4821", 9 * 60_000L, false)
+                && !Dialect.otpSpent("4821", 60 * 60_000L, true) && !Dialect.otpSpent("مرحبا", 60 * 60_000L, false), "clip.otp.spent");
+        need("أ\nب\nج".equals(Dialect.joinClips(java.util.Arrays.asList(" أ ", "", "ب", null, "ج"))) && "".equals(Dialect.joinClips(null)), "clip.join");
+        System.out.println("DIALECTCORR clipmulti ok");
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

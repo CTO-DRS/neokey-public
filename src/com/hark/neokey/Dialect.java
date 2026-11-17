@@ -629,6 +629,23 @@ public final class Dialect {
         return b.toString();
     }
 
+    // ---- W124: one-time codes leave on their own; many clips paste as one.
+    /** W124: a loose 🔑 code (not pinned, starred or titled) older than ten minutes is spent. */
+    static boolean otpSpent(String preview, long ageMs, boolean kept) {
+        return !kept && ageMs > 10 * 60_000L && "🔑".equals(clipTag(preview));
+    }
+
+    /** W124: the picked clips joined in pick order — one per line, blanks skipped. */
+    static String joinClips(java.util.List<String> parts) {
+        StringBuilder b = new StringBuilder();
+        if (parts != null) for (String p : parts) {
+            if (p == null || p.trim().isEmpty()) continue;
+            if (b.length() > 0) b.append('\n');
+            b.append(p.trim());
+        }
+        return b.toString();
+    }
+
     /** W121: a short Arabic age for a clip card: الآن، قبل 5 د، قبل 3 س، أمس، قبل 4 أيام، or a week count. */
     static String ago(long ms) {
         if (ms < 60_000L) return "الآن";

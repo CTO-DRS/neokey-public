@@ -1667,6 +1667,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             @Override public List<ClipItem> run(ClipRepo r) {
                 List<ClipItem> l = tab == ClipRepo.TAB_CATS && cat == 0 ? new ArrayList<ClipItem>()
                         : q == null ? r.list(tab, cat, limit) : r.search(tab, cat, q, limit);
+                long now = System.currentTimeMillis();   // W124: spent one-time codes leave the history
+                for (java.util.Iterator<ClipItem> it = l.iterator(); it.hasNext(); ) {
+                    ClipItem ci = it.next();
+                    if (ci.kind == 0 && Dialect.otpSpent(ci.preview, now - ci.created, ci.pinned || ci.fav || ci.title != null)) { r.delete(ci.id); it.remove(); }
+                }
                 pins[0] = r.pinCount();
                 cats.add(tab == ClipRepo.TAB_CATS ? r.categories() : new ArrayList<ClipRepo.Cat>());
                 scs.add(r.shortcutMap());   // W48: the suggestion strip rides every panel reload
@@ -2021,6 +2026,26 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         }, new ClipStore.Done<Integer>() {
             @Override public void done(Integer n) {
                 Toast.makeText(NeoKeyService.this, L.t(getString(R.string.nk_neokeyservice_onclearclips_1)), Toast.LENGTH_SHORT).show();
+                reloadClips();
+            }
+        });
+    }
+
+    @Override
+    public void onClipInsertMany(final long[] ids) {   // W124: the picks paste as one, one per line, in pick order
+        clipStore.run(new ClipStore.Job<String>() {
+            @Override public String run(ClipRepo r) {
+                List<String> parts = new ArrayList<>();
+                long now = System.currentTimeMillis();
+                for (long id : ids) { String t = r.getText(id); if (t != null) { parts.add(t); r.markUsed(id, now); } }
+                return Dialect.joinClips(parts);
+            }
+        }, new ClipStore.Done<String>() {
+            @Override public void done(String t) {
+                InputConnection ic = getCurrentInputConnection();
+                if (t == null || t.isEmpty() || ic == null) return;
+                ic.finishComposingText();
+                ic.commitText(t, 1);
                 reloadClips();
             }
         });

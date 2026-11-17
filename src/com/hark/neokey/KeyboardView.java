@@ -58,6 +58,7 @@ public class KeyboardView extends View {
         void onVoice();
         void onPinClip(long id);
         void onClipInsert(long id);
+        void onClipInsertMany(long[] ids);   // W124
         void onClipTab(int tab);
         void onClipSearch();
         void onClipClearSearch();
@@ -153,7 +154,7 @@ public class KeyboardView extends View {
     private ClipItem clipMenu;          // item whose action menu is open
     private boolean clipDelArm;         // delete needs a second tap
     static final int CA_INSERT = 1, CA_COPY = 2, CA_PIN = 4, CA_FAV = 5, CA_ARCHIVE = 6, CA_SHARE = 8,
-            CA_DELETE = 9, CA_BACK = 12, CA_EDIT = 3, CA_TEMPLATE = 13, CA_EXPORT = 14, CA_OPEN = 15, CA_FIX = 16;
+            CA_DELETE = 9, CA_BACK = 12, CA_EDIT = 3, CA_TEMPLATE = 13, CA_EXPORT = 14, CA_OPEN = 15, CA_FIX = 16, CA_MULTI = 17;
     // W48: the pin-reorder action keys are gone from the action sheet — pins reorder by
     // drag on the pinned tab (the W48 «بالسحب بدل ▲▼» law; ci/cliplib_gate.sh guards it).
     private List<ClipRepo.Cat> clipCats = new ArrayList<>();
@@ -560,7 +561,8 @@ public class KeyboardView extends View {
 
     public void showPanel(int p) {
         if (p != panel && anims) { panelT = 0f; lastFrame = 0; }
-        if (p == PANEL_CLIP && p != panel) clipSig = Long.MIN_VALUE;   // W121: opening the clipboard deals the cards in
+        if (p == PANEL_CLIP && p != panel) clipSig = Long.MIN_VALUE;
+        if (p != PANEL_CLIP) { clipPicking = false; clipSel.clear(); }   // W121: opening the clipboard deals the cards in
         panel = p;
         active = null;
         altList = null;
@@ -1005,6 +1007,8 @@ public class KeyboardView extends View {
     }
 
     private long clipSig = Long.MIN_VALUE, clipShownAt;   // W121
+    private final List<Long> clipSel = new ArrayList<>();   // W124: multi-pick in tap order
+    private boolean clipPicking;
     private boolean clipAnim;
 
     private void layoutClips(float top) {
@@ -1076,7 +1080,8 @@ public class KeyboardView extends View {
         float y = top + 4 * rh;
         Key abc = Key.fn(Key.TO_ALPHA, "ABC", 1f);
         Key clear = Key.fn(Key.CLIP_CLEAR, "مسح السجل", 1f);
-        if (clipTab == ClipRepo.TAB_CATS && clipCat != 0) { clear = Key.fn(Key.CLIP_TAB, "‹ التصنيفات", 1f); clear.id = 60; }
+        if (clipPicking) { clear = Key.fn(Key.CLIP_TAB, clipSel.isEmpty() ? "إلغاء التحديد" : "لصق (" + clipSel.size() + ")", 1f); clear.id = 61; }
+        else if (clipTab == ClipRepo.TAB_CATS && clipCat != 0) { clear = Key.fn(Key.CLIP_TAB, "‹ التصنيفات", 1f); clear.id = 60; }
         else if (clipTab != ClipRepo.TAB_ALL) { clear = Key.fn(Key.LABEL, "", 1f); }
         Key del = Key.fn(Key.DEL, "", 1f);
         if (pages > 1 || (clipHasMore && !catGrid)) {
@@ -1118,6 +1123,7 @@ public class KeyboardView extends View {
                 {CA_FAV, m.fav ? "إلغاء المفضلة" : "مفضلة", "star"},
                 {CA_ARCHIVE, m.archived ? "استعادة" : "أرشفة", "download"},
                 {CA_TEMPLATE, "حفظ كقالب", "book"},
+                {CA_MULTI, "تحديد متعدد", "check"},
                 {CA_SHARE, "مشاركة", "share"},
                 {CA_EXPORT, "تصدير", "upload"},
                 {CA_DELETE, clipDelArm ? "اضغط للتأكيد" : "حذف", "delete"},
@@ -1138,8 +1144,8 @@ public class KeyboardView extends View {
             System.arraycopy(acts, at, b, at + 1, acts.length - at);
             acts = b;
         }
-        int cols = acts.length > 8 ? (acts.length + 1) / 2 : 4;
-        float gy = top + rh * 0.9f, gh = rh * 3.1f / 2f, cw = w / cols;
+        int mrows = acts.length > 12 ? 3 : 2, cols = acts.length > 8 ? (acts.length + mrows - 1) / mrows : 4;   // W124: a third row when crowded
+        float gy = top + rh * 0.9f, gh = rh * 3.1f / mrows, cw = w / cols;
         for (int i = 0; i < acts.length; i++) {
             Key k = new Key(Key.CLIP_ACT, (String) acts[i][1], (String) acts[i][2], 1f, null);
             k.id = (Integer) acts[i][0];
@@ -2138,6 +2144,15 @@ public class KeyboardView extends View {
             int col = k.press > 0.01f && !theme.neon ? blend(theme.key, theme.keyPressed, k.press) : theme.key;
             drawBody(c, k.rect, col, k.press, false);
             drawTouch(c, k);
+            int pick = clipPicking ? clipSel.indexOf(ci.id) : -1;
+            if (pick >= 0) {   // W124: the pick's order number in an accent ring
+                dragP.setColor(theme.enter); dragP.setStrokeWidth(2 * dp);
+                c.drawRoundRect(k.rect, radius, radius, dragP);
+                float bx = rtl ? k.rect.left + 13 * dp : k.rect.right - 13 * dp, by = k.rect.bottom - 13 * dp;
+                fillP.setColor(theme.enter); c.drawCircle(bx, by, 9 * dp, fillP);
+                textP.setTextSize(11 * dp); textP.setColor(0xFFFFFFFF); textP.setFakeBoldText(true);
+                c.drawText(String.valueOf(pick + 1), bx, by + 4 * dp, textP); textP.setFakeBoldText(false);
+            }
             {   // W121: a glance tag and the clip's age at the card's start-bottom corner
                 String tag = Dialect.clipTag(ci.preview), age = Dialect.ago(System.currentTimeMillis() - Math.max(ci.used, ci.created));
                 textP.setTextSize(9.5f * dp);
@@ -2708,7 +2723,10 @@ public class KeyboardView extends View {
                         break;
                     case Key.CLIP:
                         if (k.clip == null) break;
-                        if (inMenuZone(k, downX)) openClipMenu(k.clip);
+                        if (clipPicking) {   // W124: taps pick, in order
+                            if (!clipSel.remove(Long.valueOf(k.clip.id))) clipSel.add(k.clip.id);
+                            layoutAll();
+                        } else if (inMenuZone(k, downX)) openClipMenu(k.clip);
                         else listener.onClipInsert(k.clip.id);
                         break;
                     case Key.PHRASE: if (!k.text.isEmpty()) listener.onText(k.text); break;
@@ -2727,6 +2745,13 @@ public class KeyboardView extends View {
                         emojiTab = k.id; emojiPage = 0; buildEmojiRows(); layoutAll(); break;
                     case Key.CLIP_CLEAR: listener.onClearClips(); break;
                     case Key.CLIP_TAB:
+                        if (k.id == 61) {   // W124: paste the picks as one, or leave pick mode
+                            long[] ids = new long[clipSel.size()];
+                            for (int q = 0; q < ids.length; q++) ids[q] = clipSel.get(q);
+                            clipPicking = false; clipSel.clear(); layoutAll();
+                            if (ids.length > 0) listener.onClipInsertMany(ids);
+                            break;
+                        }
                         if (k.id == 50) { showPanel(PANEL_KEYS); listener.onClipSearch(); }
                         else if (k.id == 51) listener.onClipClearSearch();
                         else if (k.id == 60) { clipPage = 0; listener.onClipCategory(0); }
@@ -2964,6 +2989,7 @@ public class KeyboardView extends View {
         ClipItem m = clipMenu;
         if (m == null) return;
         if (id == CA_BACK) { clipMenu = null; layoutAll(); a11yChanged(); return; }
+        if (id == CA_MULTI) { clipPicking = true; clipSel.clear(); clipSel.add(clipMenu.id); clipMenu = null; layoutAll(); a11yChanged(); return; }
         if (id == CA_DELETE && !clipDelArm) { clipDelArm = true; layoutAll(); return; }
         clipMenu = null;
         clipDelArm = false;
