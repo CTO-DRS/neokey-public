@@ -3311,6 +3311,10 @@ public class SetupActivity extends Activity {
                 "السماح بالمايك", v -> askMic()));
         content.addView(step("٤", "تنبيه البنوك الفوري (اختياري)", getString(R.string.nk_setupactivity_bankwatch), BankWatch.on(this),
                 "إمكانية الوصول", v -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))));
+        if (Build.VERSION.SDK_INT >= 33 && !BankWatch.on(this))
+            content.addView(step("!", "ظهر «تم منع التطبيق»؟", getString(R.string.nk_setupactivity_restricted), false,
+                    "صفحة التطبيق", v -> startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts("package", getPackageName(), null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))));
         if (enabled && selected) {
             TextView ok = text("كل شي جاهز، جرّب الكتابة تحت.", 15, Typeface.BOLD, 0xFF4ADE80);
             ok.setGravity(Gravity.CENTER);
