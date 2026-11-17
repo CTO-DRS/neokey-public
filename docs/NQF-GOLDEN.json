@@ -27,6 +27,10 @@
       "lines": 610,
       "unique": 610
     },
+    "quran.txt": {
+      "bytes": 794910,
+      "sha256": "1862ee63c70fbfc6285e0bb0b9587b89beb5b7891109a4d543d9d2cf8283e8c8"
+    },
     "dialect_emoji.txt": {
       "bytes": 1855,
       "sha256": "52e6ede7d4f45ae3e2d5f523e2565fc00b65788532c7b543ee40017df381b2e2"

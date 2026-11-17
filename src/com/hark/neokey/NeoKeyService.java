@@ -146,6 +146,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
     private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
+    private static final String QURANM = "📖 ";   // W115: «مدقق الآيات» chip mark
+    private volatile Dialect.Quran quran;
+    private boolean quranLoading;
+    private String[] quranHit;   // {exact, fixed, label, chars}
     private static final String DRAFTM = "📝 ";   // W114: «المسودة الخالدة» chip mark
     private String draftText, draftPkg;
     private long draftAt;
@@ -820,6 +824,36 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 return;
             }
         }
+        // W115 «مدقق الآيات»: a quoted verse is checked against the mushaf text before it goes out.
+        quranHit = null;
+        if (!sensitive) {
+            InputConnection qic = getCurrentInputConnection();
+            CharSequence qb = qic == null ? null : qic.getTextBeforeCursor(1200, 0);
+            String[] qq = qb == null ? null : Dialect.quranQuote(qb.toString());
+            if (qq != null) {
+                if (quran == null) {
+                    if (!quranLoading) {
+                        quranLoading = true;
+                        new Thread(new Runnable() {
+                            @Override public void run() {
+                                try { quran = new Dialect.Quran(new String(assetBytes("quran.txt"), "UTF-8")); } catch (Exception ignored) { }
+                                main.post(new Runnable() { @Override public void run() { updateSuggestions(); } });
+                            }
+                        }).start();
+                    }
+                } else {
+                    String[] h = quran.check(qq[0]);
+                    List<String> ql = new ArrayList<>();
+                    if (h == null) {
+                        if (qq[0].trim().split("\\s+").length >= 4) ql.add(QURANM + "ما لقيت هذا النص في المصحف! تأكّد منه");
+                    } else {
+                        quranHit = new String[]{h[0], h[1], h[2], qq[1]};
+                        ql.add(QURANM + ("1".equals(h[0]) ? "✓ " + h[2] + " · أضف المرجع" : "فيها خطأ! صحّحها (" + h[2] + ")"));
+                    }
+                    if (!ql.isEmpty()) { view.setSuggestions(ql); return; }
+                }
+            }
+        }
         // W114 «المسودة الخالدة»: keep a long text while it lives; an empty field in the same visit means it was sent.
         if (!sensitive && !incognito && draftLoaded) {
             InputConnection dic = getCurrentInputConnection();
@@ -1282,6 +1316,23 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             ic.commitText(word.substring(word.indexOf(' ') + 1) + " ", 1);   // W96/W98: the gentler phrase, whole phrase or Arabic spelling
             ic.endBatchEdit();
             softFrom = null;
+            return;
+        }
+        if (word.startsWith(QURANM)) {   // W115: the true wording between ﴿ ﴾ with its reference
+            String[] h = quranHit;
+            quranHit = null;
+            if (h == null) {
+                Toast.makeText(this, "النص غير موجود في المصحف بهذا اللفظ — راجعه قبل نسبته للقرآن", Toast.LENGTH_LONG).show();
+                return;
+            }
+            int cut = Integer.parseInt(h[3]);
+            CharSequence qb = ic.getTextBeforeCursor(cut, 0);
+            if (qb != null && qb.length() == cut) {
+                ic.beginBatchEdit();
+                ic.deleteSurroundingText(cut, 0);
+                ic.commitText(h[1], 1);
+                ic.endBatchEdit();
+            }
             return;
         }
         if (word.startsWith(DRAFTM)) {   // W114: the lost text, whole, back where it was

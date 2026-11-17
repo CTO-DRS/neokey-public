@@ -116,7 +116,7 @@ public class CapacityLedger {
                 "claritymeter.engine.shipped", "panicwipe.engine.shipped", "integritycert.engine.shipped", "otpshield.engine.shipped",
                 "airseal.engine.shipped", "strip.engine.shipped", "personal.engine.shipped", "dialect.engine.shipped", "genthemes.engine.shipped",
                 "aacboard.engine.shipped", "numsmart.engine.shipped", "themechannel.engine.shipped",
-                "root.recover.shipped", "root.recover.verbs.shipped", "trim.toasts.shipped", "drift.w75_80.shipped", "dialect.correction.shipped", "dialect.vocab.shipped", "dialect.context.shipped", "dialect.synonyms.shipped", "dialect.voice.shipped", "dialect.convert.shipped", "dialect.proverbs.shipped", "dialect.soften.shipped", "dialect.occasions.shipped", "dialect.complete.shipped", "dialect.emoji.shipped", "dialect.date.shipped", "dialect.numwords.shipped", "dialect.amount.shipped", "dialect.halala.shipped", "dialect.currency.shipped", "dialect.dateconv.shipped", "dialect.scamguard.shipped", "dialect.meter.shipped", "dialect.promise.shipped", "dialect.tone.shipped", "dialect.rhythm.shipped", "dialect.iban.shipped", "dialect.link.shipped", "dialect.swap.shipped", "dialect.draft.shipped"})
+                "root.recover.shipped", "root.recover.verbs.shipped", "trim.toasts.shipped", "drift.w75_80.shipped", "dialect.correction.shipped", "dialect.vocab.shipped", "dialect.context.shipped", "dialect.synonyms.shipped", "dialect.voice.shipped", "dialect.convert.shipped", "dialect.proverbs.shipped", "dialect.soften.shipped", "dialect.occasions.shipped", "dialect.complete.shipped", "dialect.emoji.shipped", "dialect.date.shipped", "dialect.numwords.shipped", "dialect.amount.shipped", "dialect.halala.shipped", "dialect.currency.shipped", "dialect.dateconv.shipped", "dialect.scamguard.shipped", "dialect.meter.shipped", "dialect.promise.shipped", "dialect.tone.shipped", "dialect.rhythm.shipped", "dialect.iban.shipped", "dialect.link.shipped", "dialect.swap.shipped", "dialect.draft.shipped", "dialect.quran.shipped"})
             eng += Integer.parseInt(byKey.get(k)[2]);
         check("dex.claim.current", dex <= post);
         check("dex.under.ceiling", dex <= ceiling);
@@ -128,7 +128,7 @@ public class CapacityLedger {
         // W70/W71/W74 raises landed after it (the map holds the LAST row) — the
         // law is "a documented raise, submitted for ratification", any week id.
         check("ceiling.decision.ledger", byKey.containsKey("ceiling.raised")
-                && "584000".equals(byKey.get("ceiling.raised")[2])
+                && "590000".equals(byKey.get("ceiling.raised")[2])
                 && byKey.get("ceiling.raised")[3].matches("W\\d+ decision.*")
                 && byKey.get("ceiling.raised")[3].contains("submitted for owner ratification in NOTES"));
         String roadmap = new String(Files.readAllBytes(Paths.get("ROADMAP-V2.md")), StandardCharsets.UTF_8);

@@ -350,6 +350,143 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    // ---- W115 «مدقق الآيات» 📖: a quoted verse checked word by word against the Tanzil text (assets/quran.txt,
+    // Simple Clean, verbatim, CC BY 3.0 — tanzil.net). Exact → the reference; one word off → the true wording.
+    static final String[] SURA = ("الفاتحة البقرة آل_عمران النساء المائدة الأنعام الأعراف الأنفال التوبة يونس هود يوسف الرعد إبراهيم الحجر"
+            + " النحل الإسراء الكهف مريم طه الأنبياء الحج المؤمنون النور الفرقان الشعراء النمل القصص العنكبوت الروم لقمان السجدة"
+            + " الأحزاب سبأ فاطر يس الصافات ص الزمر غافر فصلت الشورى الزخرف الدخان الجاثية الأحقاف محمد الفتح الحجرات ق الذاريات"
+            + " الطور النجم القمر الرحمن الواقعة الحديد المجادلة الحشر الممتحنة الصف الجمعة المنافقون التغابن الطلاق التحريم الملك"
+            + " القلم الحاقة المعارج نوح الجن المزمل المدثر القيامة الإنسان المرسلات النبأ النازعات عبس التكوير الانفطار المطففين"
+            + " الانشقاق البروج الطارق الأعلى الغاشية الفجر البلد الشمس الليل الضحى الشرح التين العلق القدر البينة الزلزلة العاديات"
+            + " القارعة التكاثر العصر الهمزة الفيل قريش الماعون الكوثر الكافرون النصر المسد الإخلاص الفلق الناس").split(" ");
+
+    /** W115: the comparison form of one word — marks, tatweel and hamza seats folded, ى→ي, ة→ه; "" when no letter. */
+    static String qNorm(String w) {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < w.length(); i++) {
+            char c = w.charAt(i);
+            if ((c >= '\u064B' && c <= '\u065F') || c == '\u0670' || (c >= '\u06D6' && c <= '\u06ED') || c == '\u0640' || c == 'ء') continue;
+            if (c == 'أ' || c == 'إ' || c == 'آ' || c == 'ٱ') c = 'ا';
+            else if (c == 'ى' || c == 'ئ') c = 'ي';
+            else if (c == 'ة') c = 'ه';
+            else if (c == 'ؤ') c = 'و';
+            if (c >= '\u0621' && c <= '\u064A') b.append(c);
+        }
+        return b.toString();
+    }
+
+    static final class Quran {
+        final String[] w, raw;   // comparison words / the text's own words, the whole mushaf in order
+        final int[] ref;         // sura * 1000 + aya, per word
+        final java.util.HashMap<String, int[]> at = new java.util.HashMap<>();
+
+        Quran(String text) {
+            java.util.ArrayList<String> nw = new java.util.ArrayList<>(), rw = new java.util.ArrayList<>();
+            java.util.ArrayList<Integer> rf = new java.util.ArrayList<>();
+            for (String line : text.split("\n")) {
+                String[] f = line.split("\\|", 3);
+                if (f.length < 3 || line.startsWith("#")) continue;
+                int r = Integer.parseInt(f[0].trim()) * 1000 + Integer.parseInt(f[1].trim());
+                for (String t : f[2].trim().split(" ")) {
+                    String n = qNorm(t);
+                    if (n.isEmpty()) continue;
+                    nw.add(n); rw.add(t); rf.add(r);
+                }
+            }
+            w = nw.toArray(new String[0]);
+            raw = rw.toArray(new String[0]);
+            ref = new int[rf.size()];
+            java.util.HashMap<String, Integer> cnt = new java.util.HashMap<>();
+            for (int i = 0; i < w.length; i++) { ref[i] = rf.get(i); Integer c = cnt.get(w[i]); cnt.put(w[i], c == null ? 1 : c + 1); }
+            for (java.util.Map.Entry<String, Integer> e : cnt.entrySet()) at.put(e.getKey(), new int[e.getValue() + 1]);
+            for (int i = 0; i < w.length; i++) { int[] a = at.get(w[i]); a[++a[0]] = i; }
+        }
+
+        /** W115: {exact "1"/"0", fixed text "﴿…﴾ [سورة: آية]", reference label} for the best place, or null. */
+        String[] check(String phrase) {
+            java.util.ArrayList<String> t = new java.util.ArrayList<>();
+            for (String x : phrase.trim().split("\\s+")) { String n = qNorm(x); if (!n.isEmpty()) t.add(n); }
+            int n = t.size();
+            if (n < 3) return null;
+            int bestS = -1, bestL = 0, bestD = 2, more = 0;
+            int[][] anchors = {at.get(t.get(0)), at.get(t.get(1)), at.get(t.get(n - 1))};
+            int[] off = {0, -1, -(n - 1)};
+            java.util.HashSet<Integer> seen = new java.util.HashSet<>();
+            for (int k = 0; k < 3; k++) {
+                int[] a = anchors[k];
+                if (a == null) continue;
+                for (int j = 1; j <= a[0]; j++) {
+                    for (int sh = -1; sh <= 1; sh++) {
+                        int st = a[j] + off[k] + (k == 2 ? sh : 0);
+                        if (st < 0 || (k != 2 && sh != 0) || !seen.add(st)) continue;
+                        for (int L = n - 1; L <= n + 1; L++) {
+                            if (st + L > w.length || L < 3) continue;
+                            int d = wordDist(t, st, L);
+                            if (d == 0 && bestD == 0) more++;
+                            boolean better = d < bestD || (d == bestD && d < 2 && (st < bestS
+                                    || (st == bestS && Math.abs(L - n) < Math.abs(bestL - n))));
+                            if (better) { if (d < bestD) more = 0; bestD = d; bestS = st; bestL = L; }
+                        }
+                    }
+                }
+            }
+            if (bestS < 0 || (bestD == 1 && n < 4)) return null;
+            StringBuilder b = new StringBuilder("﴿");
+            for (int i = bestS; i < bestS + bestL; i++) b.append(i == bestS ? "" : " ").append(raw[i]);
+            int r0 = ref[bestS], r1 = ref[bestS + bestL - 1];
+            String sura = SURA[r0 / 1000 - 1].replace('_', ' ');
+            String ay = (r0 % 1000) + (r1 != r0 ? "-" + (r1 % 1000) : "");
+            String lbl = sura + " " + ay + (more > 0 ? " وغيرها" : "");
+            return new String[]{bestD == 0 ? "1" : "0", b.append("﴾ [").append(sura).append(": ").append(ay).append("] ").toString(), lbl};
+        }
+
+        /** word Levenshtein of the typed words against w[st..st+L), capped at 2 */
+        private int wordDist(java.util.List<String> t, int st, int L) {
+            int n = t.size();
+            if (Math.abs(n - L) > 1) return 2;
+            int[] prev = new int[L + 1], cur = new int[L + 1];
+            for (int j = 0; j <= L; j++) prev[j] = j;
+            for (int i = 1; i <= n; i++) {
+                cur[0] = i;
+                int rowMin = cur[0];
+                for (int j = 1; j <= L; j++) {
+                    int c = t.get(i - 1).equals(w[st + j - 1]) ? 0 : 1;
+                    cur[j] = Math.min(Math.min(prev[j] + 1, cur[j - 1] + 1), prev[j - 1] + c);
+                    rowMin = Math.min(rowMin, cur[j]);
+                }
+                if (rowMin >= 2) return 2;
+                int[] x = prev; prev = cur; cur = x;
+            }
+            return Math.min(prev[L], 2);
+        }
+    }
+
+    private static final String[] Q_LEADS = {"قال الله تعالى", "قال تعالى", "قوله تعالى", "قال الله عز وجل", "يقول الله تعالى"};
+
+    /** W115: the quoted words at the cursor — after an open ﴿, inside a just-closed ﴿…﴾, or after «قال تعالى» —
+     *  as {phrase, chars to replace}; only at a word boundary, so the last word is whole. */
+    static String[] quranQuote(String before) {
+        if (before == null || before.isEmpty()) return null;
+        char last = before.charAt(before.length() - 1);
+        if (last != ' ' && last != '﴾') return null;
+        int o = before.lastIndexOf('﴿');
+        if (o >= 0) {
+            int c = before.indexOf('﴾', o);
+            if (c < 0 || before.substring(c + 1).trim().isEmpty()) {
+                String ph = before.substring(o + 1, c < 0 ? before.length() : c);
+                return ph.trim().split("\\s+").length >= 3 ? new String[]{ph, String.valueOf(before.length() - o)} : null;
+            }
+        }
+        int best = -1, bl = 0;
+        for (String l : Q_LEADS) { int i = before.lastIndexOf(l); if (i > best) { best = i; bl = l.length(); } }
+        if (best < 0) return null;
+        int st = best + bl;
+        while (st < before.length() && (before.charAt(st) == ':' || before.charAt(st) == ' ' || before.charAt(st) == '«')) st++;
+        String ph = before.substring(st);
+        if (ph.indexOf('.') >= 0 || ph.indexOf('»') >= 0 || ph.indexOf('﴿') >= 0 || ph.indexOf('﴾') >= 0 || ph.trim().split("\\s+").length < 3) return null;
+        return new String[]{ph, String.valueOf(before.length() - st)};
+    }
+
     // ---- W114 «المسودة الخالدة» 📝: a long text that vanished with its app comes back on the next visit.
     static final long DRAFT_TTL = 86400000L;
 

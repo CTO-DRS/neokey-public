@@ -54,3 +54,7 @@ ci/pipeline.sh      # خط الإثبات الكامل — 44+ مرحلة، ال
 1. الهوية من مكان واحد (`AndroidManifest.xml`) وكل النقاط تتحرك معها في كوميت واحد.
 2. لا إنجاز بدون حكم آلي أخضر — لا انتحال، لا «نظريًا يعمل».
 3. القياسات التاريخية لا تُعاد كتابة أبدًا؛ الجديد يُوثق فوقها.
+
+## Quran text
+
+`assets/quran.txt` is the Tanzil Quran Text (Simple Clean, v1.1), Copyright (C) 2007-2026 Tanzil Project, used verbatim under Creative Commons Attribution 3.0. Source: https://tanzil.net — check updates at http://tanzil.net/updates/

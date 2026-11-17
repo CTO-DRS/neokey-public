@@ -540,6 +540,34 @@ public final class DialectCorrGate {
         need(!Dialect.draftOffer("", 1000, D, "", 5000, "") && !Dialect.draftOffer("a", 1000, null, "a", 5000, ""), "draft.refuse");
         need("السلام عليكم ورحمة الله،…".equals(Dialect.draftLabel(D)) && "هلا والله".equals(Dialect.draftLabel(" هلا  والله ")), "draft.label");
         System.out.println("DIALECTCORR draft ok");
+        // ---- 3aa. «مدقق الآيات» (W115): the verbatim Tanzil text, exact references, one-word repairs, refusals.
+        String qt = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("assets/quran.txt")), "UTF-8");
+        need(qt.contains("Tanzil Quran Text (Simple Clean") && qt.contains("CHANGING IT IS NOT ALLOWED"), "quran.license");
+        need(Dialect.SURA.length == 114 && "الناس".equals(Dialect.SURA[113]), "quran.suras");
+        Dialect.Quran Q = new Dialect.Quran(qt);
+        int verses = 0;
+        for (String ln : qt.split("\n")) if (!ln.isEmpty() && Character.isDigit(ln.charAt(0))) verses++;
+        need(verses == 6236 && Q.w.length > 77000, "quran.size " + verses + " " + Q.w.length);
+        String[] q1 = Q.check("الحمد لله رب العالمين");
+        need(q1 != null && "1".equals(q1[0]) && q1[1].equals("﴿الحمد لله رب العالمين﴾ [الفاتحة: 2] "), "quran.fatiha " + (q1 == null ? null : q1[1]));
+        String[] q2 = Q.check("الله لا اله الا هو الحي القيوم");
+        need(q2 != null && "1".equals(q2[0]) && q2[2].startsWith("البقرة 255") && q2[1].contains("لا إله إلا"), "quran.kursi " + (q2 == null ? null : q2[2]));
+        String[] q3 = Q.check("الله لا إله إلا هو الحي القيم");
+        need(q3 != null && "0".equals(q3[0]) && q3[1].contains("الحي القيوم"), "quran.sub " + (q3 == null ? null : q3[1]));
+        String[] q4 = Q.check("قل هو أحد الله الصمد");
+        need(q4 != null && "0".equals(q4[0]) && q4[1].contains("قل هو الله أحد الله الصمد") && q4[2].startsWith("الإخلاص 1-2"), "quran.missing " + (q4 == null ? null : q4[1]));
+        String[] q5 = Q.check("إن مع العسر يسرا");
+        need(q5 != null && "1".equals(q5[0]) && q5[2].startsWith("الشرح 6"), "quran.dup " + (q5 == null ? null : q5[2]));
+        need(Q.check("العلم نور والجهل ظلام دامس") == null, "quran.not");
+        need(Q.check("الحمد لله") == null, "quran.short");
+        String[] z1 = Dialect.quranQuote("قال تعالى: الحمد لله رب العالمين ");
+        need(z1 != null && z1[0].trim().equals("الحمد لله رب العالمين") && Integer.parseInt(z1[1]) == z1[0].length(), "quran.quote.lead");
+        String[] z2 = Dialect.quranQuote("كما في ﴿الحمد لله رب العالمين﴾");
+        need(z2 != null && Integer.parseInt(z2[1]) == "﴿الحمد لله رب العالمين﴾".length(), "quran.quote.closed");
+        need(Dialect.quranQuote("﴿الحمد لله رب العالمين") == null, "quran.quote.midword");
+        need(Dialect.quranQuote("قال تعالى ﴿الحمد لله رب العالمين﴾ [الفاتحة: 2] ") == null, "quran.quote.done");
+        need(Dialect.quranQuote("اهلا وسهلا بك ") == null, "quran.quote.plain");
+        System.out.println("DIALECTCORR quran words=" + Q.w.length);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
