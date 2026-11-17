@@ -399,7 +399,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     /** W126b: once per visit to a bank app, as soon as the keyboard opens in it. */
     private void bankCheck(EditorInfo info) {
         String pkg = info == null ? null : info.packageName;
-        if (pkg == null || !Dialect.bankApp(pkg) || pkg.equals(bankSeen)) return;
+        if (pkg == null || !Dialect.bankApp(pkg) || pkg.equals(bankSeen) || BankNotice.recent(pkg)) return;
         if (!Theme.prefs(this).getBoolean("bank_auto", true)) return;
         bankSeen = pkg;
         bankNotice(0);
@@ -2672,74 +2672,18 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         });
     }
 
-    /** W126: in a banking app, say why the bank refuses us and which keyboards it trusts, then step aside. */
+    /** W126/W128: in a banking app, say why the bank refuses us and which keyboards it trusts. */
     private void bankNotice(final int tries) {
         if (view == null || view.getWindowToken() == null || !view.isShown()) {   // W126b: wait for our window, never switch silently
             if (tries < 12) main.postDelayed(new Runnable() { @Override public void run() { bankNotice(tries + 1); } }, 200);
             else toastL(getString(R.string.nk_bank_title));
             return;
         }
-        android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                .setTitle(L.t(getString(R.string.nk_bank_title)))
-                .setMessage(bankBody())
-                .setPositiveButton(L.t(getString(R.string.nk_bank_go)), new android.content.DialogInterface.OnClickListener() {
-                    @Override public void onClick(android.content.DialogInterface d, int w) { onTool(-16); }
-                })
-                .setNegativeButton(L.t("إلغاء"), null)
-                .create();
-        android.view.Window win = dlg.getWindow();
-        if (win != null) {
-            android.view.WindowManager.LayoutParams lp = win.getAttributes();
-            lp.token = view.getWindowToken();
-            lp.type = android.view.WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;
-            win.setAttributes(lp);
-            win.addFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
-        }
-        bankDlg = dlg;
-        try {
-            dlg.show();
-            android.widget.TextView tv = (android.widget.TextView) dlg.findViewById(android.R.id.message);
-            if (tv != null) {   // W127: right-to-left lines and tappable store links
-                tv.setTextDirection(android.view.View.TEXT_DIRECTION_RTL);
-                tv.setTextAlignment(android.view.View.TEXT_ALIGNMENT_VIEW_START);
-                tv.setLineSpacing(0f, 1.15f);
-                tv.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
-            }
-        } catch (Exception e) { toastL(getString(R.string.nk_bank_title)); }
-    }
-
-    private android.app.AlertDialog bankDlg;
-    /** W127: the trusted keyboards, each a direct store link. */
-    private static final String[][] TRUSTED = {
-            {"⬇ Gboard من Google", "com.google.android.inputmethod.latin", ""},
-            {"⬇ SwiftKey من مايكروسوفت", "com.touchtype.swiftkey", ""},
-            {"⬇ لوحة سامسونج (Galaxy Store)", "com.samsung.android.honeyboard", "https://galaxystore.samsung.com/detail/"}};
-
-    private CharSequence bankBody() {
-        android.text.SpannableStringBuilder b = new android.text.SpannableStringBuilder(L.t(getString(R.string.nk_bank_why)));
-        for (final String[] t : TRUSTED) {
-            b.append("\n");
-            int at = b.length();
-            b.append(t[0]);
-            b.setSpan(new android.text.style.ClickableSpan() {
-                @Override public void onClick(android.view.View v) { openStore(t[1], t[2]); }
-            }, at, b.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        return b;
-    }
-
-    private void openStore(String pkg, String web) {
-        if (bankDlg != null) try { bankDlg.dismiss(); } catch (Exception ignored) { }
-        String[] uris = web.isEmpty()
-                ? new String[] {"market://details?id=" + pkg, "https://play.google.com/store/apps/details?id=" + pkg}
-                : new String[] {"samsungapps://ProductDetail/" + pkg, web + pkg};
-        for (String u : uris) {
-            try {
-                startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(u))
-                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
-                return;
-            } catch (Exception ignored) { }
-        }
+        String pkg = getCurrentInputEditorInfo() == null ? null : getCurrentInputEditorInfo().packageName;
+        if (!BankNotice.show(this, pkg, view.getWindowToken(),
+                android.view.WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG,
+                getString(R.string.nk_bank_go), new Runnable() { @Override public void run() { onTool(-16); } }))
+            toastL(getString(R.string.nk_bank_title));
     }
 
     /** 101st pin: offer to give up the last pinned item, or cancel. */

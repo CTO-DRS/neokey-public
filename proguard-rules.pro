@@ -16,6 +16,7 @@
 -keep public class com.hark.neokey.PerfActivity { public <init>(); }
 -keep public class com.hark.neokey.StoreActivity { public <init>(); }
 -keep public class com.hark.neokey.NeoKeyService { public <init>(); }
+-keep public class com.hark.neokey.BankWatch { public <init>(); }
 # Lifecycle callbacks (onCreate/onStartInputView/...) override library virtuals —
 # R8 keeps those automatically; only the reflected <init> needed the explicit rule.
 

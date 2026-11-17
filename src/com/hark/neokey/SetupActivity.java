@@ -3309,6 +3309,8 @@ public class SetupActivity extends Activity {
                 "اختيار الكيبورد", v -> imm().showInputMethodPicker()));
         content.addView(step("٣", "الكتابة بالصوت (اختياري)", getString(R.string.nk_setupactivity_section_27), micGranted(),
                 "السماح بالمايك", v -> askMic()));
+        content.addView(step("٤", "تنبيه البنوك الفوري (اختياري)", getString(R.string.nk_setupactivity_bankwatch), BankWatch.on(this),
+                "إمكانية الوصول", v -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))));
         if (enabled && selected) {
             TextView ok = text("كل شي جاهز، جرّب الكتابة تحت.", 15, Typeface.BOLD, 0xFF4ADE80);
             ok.setGravity(Gravity.CENTER);

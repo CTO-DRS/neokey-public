@@ -80,5 +80,16 @@
             </intent-filter>
             <meta-data android:name="android.view.im" android:resource="@xml/method" />
         </service>
+        <!-- W128: optional bank alert — off until the user allows it in Accessibility settings;
+             reads only which app came to the front, never window content. -->
+        <service android:name=".BankWatch"
+            android:label="تنبيه البنوك من NeoKey"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/bank_watch" />
+        </service>
     </application>
 </manifest>
