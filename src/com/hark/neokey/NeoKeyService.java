@@ -389,6 +389,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     @Override
     public void onStartInputView(EditorInfo info, boolean restarting) {
         super.onStartInputView(info, restarting);
+        if (!restarting && info != null && Dialect.bankApp(info.packageName)
+                && Theme.prefs(this).getBoolean("bank_auto", true)) {   // W126: a bank app — step aside on our own
+            main.post(new Runnable() { @Override public void run() { onTool(KeyboardView.TOOL_BANK); } });
+        }
         if (!restarting) reloadClips();   // picks up edits / imports made in the app screens
         boolean wasEn = L.en;
         L.init(this);
@@ -2200,6 +2204,17 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             return;
         }
         if (id == KeyboardView.TOOL_WRITER) { openWriter(); return; }
+        if (id == KeyboardView.TOOL_BANK) {
+            // W125 «وضع البنك»: banking apps refuse a keyboard off their trusted list, so hand the
+            // phone to the previous keyboard in one tap; NeoKey comes back from that keyboard's globe key.
+            Toast.makeText(this, "🛡 وضع البنك — ارجع من 🌐", Toast.LENGTH_LONG).show();
+            boolean ok = false;
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                try { ok = switchToPreviousInputMethod(); } catch (RuntimeException e) { ok = false; }
+            }
+            if (!ok) onPicker();
+            return;
+        }
         if (id == KeyboardView.TOOL_DIALECT) {
             // W94 «محوّل اللهجات»: each tap turns the selection (or the line) into the
             // next of فصحى → حجازي → نجدي → خليجي; تراجع restores the original.

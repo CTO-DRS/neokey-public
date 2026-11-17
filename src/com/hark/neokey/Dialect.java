@@ -629,6 +629,21 @@ public final class Dialect {
         return b.toString();
     }
 
+    /** W126: banking apps that refuse untrusted keyboards — known ids, or any id that names a bank. */
+    static final String[] BANKS = {"com.alrajhiretailapp", "com.neraapp.ksa", "com.snb.alahlimobile", "com.snb.neo",
+            "com.alahli.quickpay", "com.anb.mobile.prod", "com.bankalbilad.NewRMB", "sa.com.stcbank", "com.baj.retailapp",
+            "com.riyadbank.digitalmobile", "silicon.android.app", "com.alinma", "com.sabb", "com.alfransi", "com.urpay", "com.stcpay"};
+
+    static boolean bankApp(String pkg) {
+        if (pkg == null || pkg.isEmpty()) return false;
+        for (String b : BANKS) if (pkg.equals(b) || pkg.startsWith(b + ".")) return true;
+        String l = pkg.toLowerCase(java.util.Locale.ROOT);
+        return l.contains("bank") || l.contains("alrajhi");
+    }
+
+    /** W125: rows a grid of n items needs at c per row. */
+    static int gridRows(int n, int c) { return n <= 0 || c <= 0 ? 0 : (n + c - 1) / c; }
+
     // ---- W124: one-time codes leave on their own; many clips paste as one.
     /** W124: a loose 🔑 code (not pinned, starred or titled) older than ten minutes is spent. */
     static boolean otpSpent(String preview, long ageMs, boolean kept) {

@@ -671,6 +671,12 @@ public final class DialectCorrGate {
         need("أ\nب\nج".equals(Dialect.joinClips(java.util.Arrays.asList(" أ ", "", "ب", null, "ج"))) && "".equals(Dialect.joinClips(null)), "clip.join");
         System.out.println("DIALECTCORR clipmulti ok");
 
+        // ---- 3aj. W125 bank mode seat: the tools grid grows a row
+        need(Dialect.gridRows(25, 5) == 5 && Dialect.gridRows(26, 5) == 6 && Dialect.gridRows(0, 5) == 0, "more.grid");
+        need(Dialect.bankApp("com.alrajhiretailapp") && Dialect.bankApp("sa.com.stcbank") && Dialect.bankApp("com.example.mybank")
+                && !Dialect.bankApp("com.whatsapp") && !Dialect.bankApp(null), "bank.auto");
+        System.out.println("DIALECTCORR bankmode ok");
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

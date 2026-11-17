@@ -44,7 +44,7 @@ public class EvAuditTest {
         sb.append("CoreTests: RESULT 10 passed, 0 failed\n");
         sb.append("ClipRepoTest: RESULT 12 passed, 0 failed\n");
         sb.append("BILLINGGATE_OK checks=24 negatives=10/10 vc=" + SyncServerPack.VC + " vn=" + SyncServerPack.VN + " providers=2\n");
-        sb.append("REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=38/38 tests=22/0 dex=505636/605000 vc=")
+        sb.append("REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=38/38 tests=22/0 dex=505636/606000 vc=")
           .append(SyncServerPack.VC).append(" vn=").append(SyncServerPack.VN).append("\n");
         if (complete) {
             sb.append("════════════════ PIPELINE SUMMARY ════════════════\n");
@@ -62,7 +62,7 @@ public class EvAuditTest {
                 + "R8_DEX_BYTES=505636\nR8_COMPONENTS_KEPT=10/10\n"
                 + "BILLING_CHECKS=24\nBILLING_NEGATIVES=10/10\nBILLING_VC=" + SyncServerPack.VC + "\nBILLING_VN=" + SyncServerPack.VN + "\n"
                 + "REBUILD_CHECKS=24\nREBUILD_NEGATIVES=12/12\nREBUILD_PINS=7/7\nREBUILD_STAGES=38/38\n"
-                + "REBUILD_TESTS=22/0\nREBUILD_DEX=505636\nREBUILD_CEILING=605000\n"
+                + "REBUILD_TESTS=22/0\nREBUILD_DEX=505636\nREBUILD_CEILING=606000\n"
                 + "REBUILD_VC=" + SyncServerPack.VC + "\nREBUILD_VN=" + SyncServerPack.VN + "\n";
     }
 

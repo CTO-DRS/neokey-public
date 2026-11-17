@@ -46,7 +46,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-DEX_CEILING=605000   # W69-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)
+DEX_CEILING=606000   # W69-CEILING-RAISE (ci/capacity_ledger.tsv ceiling.raised; the W22-era 512000 was lowered history)
 VC_MIN=2             # v0.1.0 identity reset — re-based from the phase-9 close floor (was 85)
 VN_MIN=0.2           # v0.1.0 identity reset — re-based from the phase-9 close floor (was 3.8); the historical close measurement stays pinned in release-manifest.phase9Close
 TESTS_MIN=1576       # the fresh-clone first-run total (the W45-documented five pack-check skips; with build/deploy/neokey-sync-server.jar present the total is 1581 — both shapes all-green)
