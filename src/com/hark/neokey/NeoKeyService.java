@@ -840,6 +840,16 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             out.add(AZ + az);
             return out;
         }
+        // W105: a typed date (25/12/2026 or ١٤٤٨/٧/٥) earns its other calendar (📅, tap inserts after it).
+        int dq = end;
+        while (dq > 0 && (Character.isDigit(b.charAt(dq - 1)) || b.charAt(dq - 1) == '/' || b.charAt(dq - 1) == '-')) dq--;
+        if (dq < end && (dq == 0 || !Character.isLetter(b.charAt(dq - 1)))) {
+            String cv = TextTools.convertDate(Dialect.parseDate(b.subSequence(dq, end).toString()), Theme.arabicDigits(this));
+            if (cv != null) {
+                out.add(DATE + cv);
+                return out;
+            }
+        }
         // W102: «1500 ريال» earns the cheque form «فقط … ريال سعودي لا غير» (💰, tap replaces both).
         if (i < end && i > 1 && b.charAt(i - 1) == ' ') {
             int r = i - 1;

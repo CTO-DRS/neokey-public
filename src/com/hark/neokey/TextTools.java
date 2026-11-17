@@ -204,4 +204,32 @@ final class TextTools {
         String s = day + " " + (hijri != null ? hijri + " الموافق " : "") + greg;
         return arabicDigits ? toArabicDigits(s) : s;
     }
+
+    /** W105: the other calendar for a typed date (Umm al-Qura, Android 7+), as «الموافق …»; null when unavailable. */
+    static String convertDate(int[] ymdh, boolean arabicDigits) {
+        if (ymdh == null || android.os.Build.VERSION.SDK_INT < 24) return null;
+        try {
+            android.icu.util.IslamicCalendar h = new android.icu.util.IslamicCalendar();
+            h.setCalculationType(android.icu.util.IslamicCalendar.CalculationType.ISLAMIC_UMALQURA);
+            String s;
+            if (ymdh[3] == 1) {
+                h.clear();
+                h.set(ymdh[0], ymdh[1] - 1, ymdh[2]);
+                java.util.Calendar g = java.util.Calendar.getInstance();
+                g.setTimeInMillis(h.getTimeInMillis());
+                s = "الموافق " + DAYS[g.get(java.util.Calendar.DAY_OF_WEEK) - 1] + " " + g.get(java.util.Calendar.DAY_OF_MONTH) + " "
+                        + G_MONTHS[g.get(java.util.Calendar.MONTH)] + " " + g.get(java.util.Calendar.YEAR) + "م";
+            } else {
+                java.util.Calendar g = java.util.Calendar.getInstance();
+                g.clear();
+                g.set(ymdh[0], ymdh[1] - 1, ymdh[2], 12, 0);
+                h.setTimeInMillis(g.getTimeInMillis());
+                s = "الموافق " + DAYS[g.get(java.util.Calendar.DAY_OF_WEEK) - 1] + " " + h.get(android.icu.util.Calendar.DAY_OF_MONTH) + " "
+                        + HIJRI_MONTHS[h.get(android.icu.util.Calendar.MONTH)] + " " + h.get(android.icu.util.Calendar.YEAR) + "هـ";
+            }
+            return arabicDigits ? toArabicDigits(s) : s;
+        } catch (Throwable e) {
+            return null;
+        }
+    }
 }

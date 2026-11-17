@@ -323,6 +323,33 @@ public final class Dialect {
         return "فقط " + out + " لا غير";
     }
 
+    /** W105 «المحوّل الهجري»: a typed date (25/12/2026, 2026-12-25, ١٤٤٨/٧/٥) → {y, m, d, hijri?1:0};
+     *  years 1900–2100 are Gregorian (day checked against the month, leap years kept), 1300–1500
+     *  Hijri (day ≤ 30); anything else null. */
+    static int[] parseDate(String t) {
+        if (t == null) return null;
+        String[] p = t.split("[/\\-]", -1);
+        if (p.length != 3) return null;
+        int[] v = new int[3];
+        for (int i = 0; i < 3; i++) {
+            if (p[i].isEmpty() || p[i].length() > 4) return null;
+            for (int j = 0; j < p[i].length(); j++) {
+                int d = Character.digit(p[i].charAt(j), 10);
+                if (d < 0) return null;
+                v[i] = v[i] * 10 + d;
+            }
+        }
+        int y, m, d;
+        if (p[0].length() == 4 && p[2].length() <= 2) { y = v[0]; m = v[1]; d = v[2]; }
+        else if (p[2].length() == 4 && p[0].length() <= 2) { y = v[2]; m = v[1]; d = v[0]; }
+        else return null;
+        if (m < 1 || m > 12 || d < 1) return null;
+        if (y >= 1300 && y <= 1500) return d <= 30 ? new int[]{y, m, d, 1} : null;
+        if (y < 1900 || y > 2100) return null;
+        int[] ml = {31, (y % 4 == 0 && y % 100 != 0) || y % 400 == 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+        return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
+    }
+
     static Map<String, String> pairs(String text) {
         Map<String, String> m = new HashMap<>();
         if (text != null)

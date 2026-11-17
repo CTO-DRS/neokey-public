@@ -411,6 +411,14 @@ public final class DialectCorrGate {
                 {"12.5", "دراهم", "فقط اثنا عشر درهم وخمسون فلس لا غير"}, {"0.02", "درهم", "فقط فلسان لا غير"}};
         for (String[] p : fxPins) need(p[2].equals(Dialect.amountWords(p[0], p[1])), "fx.pin " + p[0] + p[1] + " → " + Dialect.amountWords(p[0], p[1]));
         System.out.println("DIALECTCORR currency pins=" + fxPins.length);
+        // ---- 3q. «المحوّل الهجري» (W105): the date parser (the conversion itself is ICU, device-side).
+        need(java.util.Arrays.equals(Dialect.parseDate("25/12/2026"), new int[]{2026, 12, 25, 0}), "date.dmy");
+        need(java.util.Arrays.equals(Dialect.parseDate("2026-12-25"), new int[]{2026, 12, 25, 0}), "date.ymd");
+        need(java.util.Arrays.equals(Dialect.parseDate("١٤٤٨/٧/٥"), new int[]{1448, 7, 5, 1}), "date.hijri");
+        need(java.util.Arrays.equals(Dialect.parseDate("29/2/2028"), new int[]{2028, 2, 29, 0}), "date.leap");
+        for (String w : new String[]{"29/2/2027", "31/4/2026", "13/13/2026", "1/1/1700", "31/1/1448", "12/25", "1/2/3", "2026/12", "a/1/2026"})
+            need(Dialect.parseDate(w) == null, "date.refuse " + w);
+        System.out.println("DIALECTCORR dateparse ok");
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
