@@ -146,6 +146,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
     private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
+    private static final String LINKM = "🔗 ";   // W112: «حارس الروابط» chip mark
     private static final String IBANM = "🏦 ";   // W111: «حارس الآيبان» chip mark
     private String[] ibanHit;
     private static final String GUEST = "✋ ";   // W110: «بصمة الكتابة» guest-mode chip
@@ -780,6 +781,19 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 return;
             }
         }
+        // W112 «حارس الروابط»: a link at the cursor that imitates a bank, a service or a brand.
+        if (!sensitive) {
+            InputConnection lic = getCurrentInputConnection();
+            CharSequence lb = lic == null ? null : lic.getTextBeforeCursor(120, 0);
+            String[] lg = lb == null ? null : Dialect.linkGuard(lb.toString());
+            if (lg != null) {
+                List<String> ll = new ArrayList<>();
+                ll.add(LINKM + ("homograph".equals(lg[0]) ? "رابط بحروف مموّهة! لا تفتحه"
+                        : "رابط مقلَّد يشبه " + lg[1] + "! لا تفتحه"));
+                view.setSuggestions(ll);
+                return;
+            }
+        }
         // W106 «حارس الاحتيال»: a bare OTP or a card number typed into a chat app — warned before
         // it is sent, whatever the layout (the number pad included); the tap deletes it.
         guardSpan = null;
@@ -1201,6 +1215,10 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             ic.commitText(word.substring(word.indexOf(' ') + 1) + " ", 1);   // W96/W98: the gentler phrase, whole phrase or Arabic spelling
             ic.endBatchEdit();
             softFrom = null;
+            return;
+        }
+        if (word.startsWith(LINKM)) {   // W112: a warning only — the text stays as typed
+            Toast.makeText(this, "الرابط لا يطابق الموقع الرسمي — افتح التطبيق الرسمي أو اكتب العنوان بنفسك", Toast.LENGTH_LONG).show();
             return;
         }
         if (word.startsWith(IBANM)) {   // W111: a sound IBAN is laid out in fours; a broken one is only warned

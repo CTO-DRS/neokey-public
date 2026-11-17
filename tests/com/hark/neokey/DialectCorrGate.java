@@ -501,6 +501,20 @@ public final class DialectCorrGate {
         for (String w : new String[]{"SA038000000060801", "VISA0380000000608010167519", "XX0380000000608010167519", "مرحبا", ""})
             need(Dialect.iban(w) == null, "iban.refuse " + w);
         System.out.println("DIALECTCORR iban ok");
+        // ---- 3x. «حارس الروابط» (W112): lookalikes, brand-in-the-wrong-place, homographs; real sites and plain text pass.
+        String[][] lPins = {{"ادخل هنا alrajhl.com", "lookalike"}, {"https://paypa1.com/login", "lookalike"},
+                {"https://www.arnazon.com/x", "lookalike"}, {"absher-sa.com", "disguise"},
+                {"http://alrajhibank.com.sa.verify-login.xyz/a", "disguise"}, {"https://аpple.com", "homograph"},
+                {"xn--pple-43d.com", "homograph"}, {"http://google.com@evil-absher.net", "disguise"}};
+        for (String[] p : lPins) {
+            String[] g = Dialect.linkGuard(p[0]);
+            need(g != null && p[1].equals(g[0]), "link.pin " + p[0] + " → " + (g == null ? "null" : g[0]));
+        }
+        need("alrajhi".equals(Dialect.linkGuard("alrajhl.com")[1]) || "alrajhibank".equals(Dialect.linkGuard("alrajhl.com")[1]), "link.brand");
+        for (String w : new String[]{"https://www.alrajhibank.com.sa/ar", "absher.sa", "https://google.com/search?q=1", "apple.com ",
+                "github.com/CTO-DRS", "مرحبا كيف الحال", "الساعة 5.30", "e.g", "1.5", "www.my-shop.com", ""})
+            need(Dialect.linkGuard(w) == null, "link.refuse " + w);
+        System.out.println("DIALECTCORR link pins=" + lPins.length);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];

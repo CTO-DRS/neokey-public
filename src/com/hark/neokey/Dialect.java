@@ -350,6 +350,67 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    // ---- W112 «حارس الروابط» 🔗: a link at the cursor that imitates a bank, a government service or a big brand.
+    private static final String[] BRANDS = {"alrajhibank", "alrajhi", "alahli", "riyadbank", "alinma", "albilad", "absher",
+            "tawakkalna", "paypal", "apple", "google", "microsoft", "amazon", "netflix", "whatsapp", "instagram", "facebook",
+            "aramex", "smsaexpress", "splonline", "tabby", "tamara", "stcpay", "binance", "icloud", "outlook", "snapchat", "tiktok"};
+    private static final String[] PRIZED = {"alrajhi", "alahli", "riyadbank", "alinma", "albilad", "absher", "tawakkalna",
+            "paypal", "stcpay", "tabby", "tamara", "splonline", "aramex", "smsaexpress", "binance", "icloud"};
+
+    private static String unleet(String l) {
+        return l.replace("rn", "m").replace("vv", "w").replace('1', 'l').replace('0', 'o').replace('3', 'e')
+                .replace('5', 's').replace('4', 'a').replace('7', 't').replace('-', ' ').replace(" ", "");
+    }
+
+    private static int lev(String a, String b) {
+        int[] d = new int[b.length() + 1];
+        for (int j = 0; j <= b.length(); j++) d[j] = j;
+        for (int i = 1; i <= a.length(); i++) {
+            int prev = d[0];
+            d[0] = i;
+            for (int j = 1; j <= b.length(); j++) {
+                int t = d[j];
+                d[j] = Math.min(Math.min(d[j] + 1, d[j - 1] + 1), prev + (a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1));
+                prev = t;
+            }
+        }
+        return d[b.length()];
+    }
+
+    /** W112: {kind homograph|lookalike|disguise, the brand or ""} for the link at the end of before, or null. */
+    static String[] linkGuard(String before) {
+        if (before == null) return null;
+        String t = before.trim();
+        int sp = Math.max(t.lastIndexOf(' '), t.lastIndexOf('\n'));
+        String tok = t.substring(sp + 1).toLowerCase(java.util.Locale.ROOT);
+        tok = tok.replaceFirst("^[a-z]+://", "").replaceFirst("^www\\.", "");
+        int sl = tok.indexOf('/');
+        String host = (sl < 0 ? tok : tok.substring(0, sl)).replaceAll("[.,;:!?]+$", "");
+        int at = host.lastIndexOf('@');
+        if (at >= 0) host = host.substring(at + 1);   // user@host disguises: the real host is after @
+        String[] lb = host.split("\\.");
+        if (lb.length < 2 || lb[lb.length - 1].length() < 2) return null;
+        for (String x : lb) if (x.isEmpty()) return null;
+        String tld = lb[lb.length - 1];
+        if (!tld.matches("[a-z]{2,}|xn--[a-z0-9-]+|[\\p{L}]{2,}")) return null;
+        if (!host.matches(".*[a-z\\p{L}].*")) return null;
+        if (host.contains("xn--") || !host.matches("[a-z0-9.-]+")) return new String[]{"homograph", ""};
+        int k = lb.length - 2;
+        if (k > 0 && lb[k].matches("com|gov|net|org|edu|co") && tld.length() == 2) k--;
+        String reg = lb[k];
+        for (String b : BRANDS) if (b.equals(reg)) return null;
+        String u = unleet(reg);
+        for (String b : BRANDS) {
+            if (b.length() >= 4 && (u.equals(b) || (b.length() >= 5 && reg.length() >= 5 && lev(reg, b) == 1)))
+                return new String[]{"lookalike", b};
+        }
+        for (String b : PRIZED) {
+            if (reg.contains(b) || u.contains(b)) return new String[]{"disguise", b};
+            for (int i = 0; i < k; i++) if (lb[i].contains(b)) return new String[]{"disguise", b};
+        }
+        return null;
+    }
+
     // ---- W111 «حارس الآيبان» 🏦: an IBAN at the cursor is checked (length + ISO 7064 mod-97) before money moves.
     private static final String IBAN_LEN = "SA24AE23KW30BH22QA29OM23EG29JO30GB22DE22FR27TR26LB28PS29IQ23";
     private static final String[][] SA_BANKS = {{"10", "الأهلي"}, {"15", "البلاد"}, {"20", "الرياض"}, {"30", "العربي الوطني"},
