@@ -350,6 +350,55 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    // ---- W109 «مرآة النبرة» 🪞: how a chat message will land (حادّة / باردة) and a one-tap warmer version.
+    private static final String[] HARSH = {"لازم", "المفروض", "مفروض", "فورا", "حالا", "بسرعه", "ليش", "ليه", "مو", "مب", "مش",
+            "ابي", "ابغى", "ابغي", "بدي", "ترا", "تراك", "غلطان", "غلطك", "سخيف", "تافه", "اسكت", "خلاص", "يكفي", "كفايه",
+            "مافي", "ماعندك", "ابدا", "مره", "عشرين", "حرام"};
+    private static final String[] WARM = {"حبيبي", "حبيبتي", "غالي", "الغالي", "يعافيك", "يعطيك", "العافيه", "سمحت", "فضلك",
+            "شكرا", "مشكور", "تكرم", "تكرمين", "ياليت", "ممكن", "يسعدك", "عساك", "الله", "حياك", "فديتك"};
+    private static final String[] COLD = {"ok", "okay", "k", "اوك", "اوكي", "اوكيه", "طيب", "تمام", "ك", "اها", "ماشي", "اوه", "مم", "طيب."};
+    private static final String[][] WARMER = {{"ابي", "ممكن"}, {"ابغى", "ممكن"}, {"ابغي", "ممكن"}, {"بدي", "ممكن"}, {"لازم", "ياليت"},
+            {"المفروض", "ياليت"}, {"مفروض", "ياليت"}, {"فورا", "لما تقدر"}, {"حالا", "لما تقدر"}, {"بسرعه", "لما تقدر"},
+            {"اسكت", "خلنا نهدا"}, {"غلطان", "يمكن صار لبس"}, {"غلطك", "يمكن صار لبس"}, {"ترا", ""}, {"تراك", ""}};
+
+    private static boolean in(String[] set, String v) {
+        for (String x : set) if (x.equals(v)) return true;
+        return false;
+    }
+
+    /** W109: «harsh» (two or more sharp words or doubled !!/؟؟, no warm word), «cold» (a lone ok/طيب/تمام), else null. */
+    static String tone(String sentence) {
+        if (sentence == null || sentence.trim().isEmpty()) return null;
+        String[] x = words(sentence);
+        if (x.length == 1 && in(COLD, x[0])) return "cold";
+        int h = 0;
+        for (String w : x) {
+            if (in(WARM, w) || w.contains("🌹") || w.contains("❤")) return null;
+            if (in(HARSH, w)) h++;
+        }
+        if (sentence.contains("🌹") || sentence.contains("❤") || sentence.contains("😊") || sentence.contains("🙏")) return null;
+        if (sentence.contains("!!") || sentence.contains("؟؟") || sentence.contains("??")) h++;
+        return h >= 2 ? "harsh" : null;
+    }
+
+    /** W109: the same message, warmer — sharp words swapped, doubled marks single, «لو سمحت» and «الله يعافيك 🌹» around it. */
+    static String warmer(String sentence) {
+        String t = sentence.trim();
+        if ("cold".equals(tone(t))) return t + "، الله يعطيك العافية 🌹";
+        StringBuilder b = new StringBuilder();
+        for (String tok : t.split("\\s+")) {
+            String core = normAr(tok.replaceAll("[!?؟.،,]+$", ""));
+            String tail = tok.substring(tok.replaceAll("[!?؟.،,]+$", "").length());
+            String rep = null;
+            for (String[] r : WARMER) if (r[0].equals(core)) rep = r[1];
+            String w = rep == null ? tok : rep + tail;
+            if (!w.isEmpty()) b.append(b.length() == 0 ? "" : " ").append(w);
+        }
+        String r = b.toString().replaceAll("!{2,}", "!").replaceAll("[؟?]{2,}", "؟");
+        if (!r.contains("سمحت")) r = "لو سمحت، " + r;
+        return r + " الله يعافيك 🌹";
+    }
+
     // ---- W108 «ذاكرة الوعد» 🤝: a promise with a time in it («أبشر بكرة أرسله») earns a reminder.
     private static final String[] PROMISE = {"ابشر", "ابشري", "ابشروا", "وعد", "اوعدك", "اوعدكم", "وعدتك", "اكيد", "تم", "سوف", "راح", "رح",
             "حاضر", "طيب", "اوكي", "ok", "اكيدا"};

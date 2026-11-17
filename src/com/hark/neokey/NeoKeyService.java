@@ -146,6 +146,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
     private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
+    private static final String TONE = "🪞 ";   // W109: «مرآة النبرة» chip mark (tap swaps in the warmer message)
+    private String toneTo;
     private static final String PROMISE = "🤝 ";   // W108: «ذاكرة الوعد» chip mark (tap opens a prefilled calendar event)
     private String[] promiseWhen;
     private String promiseText;
@@ -915,6 +917,19 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 return out;
             }
         }
+        // W109 «مرآة النبرة»: in a chat app, a message that will land sharp or cold earns 🪞 and a warmer version.
+        if (i < end && Dialect.chatApp(currentApp)) {
+            String core = line.replaceAll("[\\s!?؟.]+$", "");
+            int tb = Math.max(core.lastIndexOf('.'), Math.max(core.lastIndexOf('؟'), Math.max(core.lastIndexOf('!'), core.lastIndexOf('?')))) + 1;
+            String sent = line.substring(Math.min(tb, line.length())).trim();
+            String tn = Dialect.tone(sent);
+            if (tn != null && line.endsWith(sent + " ")) {
+                softFrom = sent;
+                toneTo = Dialect.warmer(sent);
+                out.add(TONE + ("cold".equals(tn) ? "تنقرأ باردة · دفّيها" : "تنقرأ حادّة · ليّنها"));
+                return out;
+            }
+        }
         // W98: an Arabizi token (3ashan / 7abibi) earns its Arabic spelling (⇄, tap replaces).
         int k = end;
         while (k > 0 && b.charAt(k - 1) < 128 && Character.isLetterOrDigit(b.charAt(k - 1))) k--;
@@ -1157,6 +1172,20 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             ic.commitText(word.substring(word.indexOf(' ') + 1) + " ", 1);   // W96/W98: the gentler phrase, whole phrase or Arabic spelling
             ic.endBatchEdit();
             softFrom = null;
+            return;
+        }
+        if (word.startsWith(TONE)) {   // W109: the message itself, warmer
+            if (softFrom != null && toneTo != null) {
+                CharSequence tb = ic.getTextBeforeCursor(softFrom.length() + 1, 0);
+                ic.beginBatchEdit();
+                if (tb != null && tb.toString().equals(softFrom + " ")) {
+                    ic.deleteSurroundingText(tb.length(), 0);
+                    ic.commitText(toneTo + " ", 1);
+                }
+                ic.endBatchEdit();
+            }
+            softFrom = null;
+            toneTo = null;
             return;
         }
         if (word.startsWith(PROMISE)) {   // W108: the promise lands in the calendar, the user saves it there

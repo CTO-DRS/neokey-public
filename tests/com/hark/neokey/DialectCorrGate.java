@@ -453,6 +453,16 @@ public final class DialectCorrGate {
             need(Dialect.promise(w) == null, "promise.refuse " + w);
         need(Dialect.promiseMarker("بكرة") && Dialect.promiseMarker("أبشر") && !Dialect.promiseMarker("التقرير"), "promise.marker");
         System.out.println("DIALECTCORR promise pins=" + pPins.length);
+        // ---- 3u. «مرآة النبرة» (W109): sharp and cold messages are named, warm and plain ones are not; the rewrite is warmer.
+        String[][] tPins = {{"ليش ما رديت علي!!", "harsh"}, {"لازم ترسله فورا", "harsh"}, {"ابي الملف حالا", "harsh"}, {"ok", "cold"}, {"طيب", "cold"}};
+        for (String[] p : tPins) need(p[1].equals(Dialect.tone(p[0])), "tone.pin " + p[0] + " → " + Dialect.tone(p[0]));
+        for (String w : new String[]{"لازم ترسله فورا الله يعافيك", "كيف حالك اليوم", "ليش؟", "حبيبي ليش ما رديت!!", "طيب بكلمك بعدين", ""})
+            need(Dialect.tone(w) == null, "tone.refuse " + w);
+        need("لو سمحت، ممكن الملف لما تقدر الله يعافيك 🌹".equals(Dialect.warmer("ابي الملف حالا")), "tone.warmer " + Dialect.warmer("ابي الملف حالا"));
+        need("لو سمحت، ليش ما رديت علي! الله يعافيك 🌹".equals(Dialect.warmer("ليش ما رديت علي!!")), "tone.marks " + Dialect.warmer("ليش ما رديت علي!!"));
+        need("ok، الله يعطيك العافية 🌹".equals(Dialect.warmer("ok")), "tone.cold");
+        need(Dialect.tone(Dialect.warmer("لازم ترسله فورا")) == null, "tone.fixed");
+        System.out.println("DIALECTCORR tone pins=" + tPins.length);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
