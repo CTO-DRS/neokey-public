@@ -655,6 +655,16 @@ public final class DialectCorrGate {
                 && "•••• 1111".equals(Dialect.clipMask("4111 1111 1111 1111")) && "مرحبا".equals(Dialect.clipMask("مرحبا")), "clip.mask");
         System.out.println("DIALECTCORR clipact ok");
 
+        // ---- 3ah. W123 clip fix: clean link, tidy, digits
+        need("https://x.com/a?id=5".equals(Dialect.cleanUrl("https://x.com/a?utm_source=tw&id=5&fbclid=AbC"))
+                && "https://youtu.be/xyz".equals(Dialect.cleanUrl("https://youtu.be/xyz?si=Q1w2"))
+                && Dialect.cleanUrl("https://x.com/a?id=5") == null && "رابط نظيف".equals(Dialect.clipFixLabel("شوف https://youtu.be/xyz?si=Q1w2")), "clip.fix.url");
+        need("مرحبا، كيفك؟\n\nتمام".equals(Dialect.tidy("مرحبا  ،  كيفك ؟\n\n\n\nتمام  ")) && Dialect.tidy("مرحبا كيفك") == null
+                && "ترتيب النص".equals(Dialect.clipFixLabel("هلا   والله")), "clip.fix.tidy");
+        need("رقمي 0551234567".equals(Dialect.swapDigits("رقمي ٠٥٥١٢٣٤٥٦٧")) && "١٥٠٠".equals(Dialect.swapDigits("1500"))
+                && Dialect.swapDigits("بدون") == null && Dialect.clipFixLabel("بدون") == null && "١٢٣ ← 123".equals(Dialect.clipFixLabel("٤٥")), "clip.fix.digits");
+        System.out.println("DIALECTCORR clipfix ok");
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

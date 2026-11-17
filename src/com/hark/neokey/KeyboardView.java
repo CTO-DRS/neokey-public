@@ -153,7 +153,7 @@ public class KeyboardView extends View {
     private ClipItem clipMenu;          // item whose action menu is open
     private boolean clipDelArm;         // delete needs a second tap
     static final int CA_INSERT = 1, CA_COPY = 2, CA_PIN = 4, CA_FAV = 5, CA_ARCHIVE = 6, CA_SHARE = 8,
-            CA_DELETE = 9, CA_BACK = 12, CA_EDIT = 3, CA_TEMPLATE = 13, CA_EXPORT = 14, CA_OPEN = 15;
+            CA_DELETE = 9, CA_BACK = 12, CA_EDIT = 3, CA_TEMPLATE = 13, CA_EXPORT = 14, CA_OPEN = 15, CA_FIX = 16;
     // W48: the pin-reorder action keys are gone from the action sheet — pins reorder by
     // drag on the pinned tab (the W48 «بالسحب بدل ▲▼» law; ci/cliplib_gate.sh guards it).
     private List<ClipRepo.Cat> clipCats = new ArrayList<>();
@@ -1129,7 +1129,16 @@ public class KeyboardView extends View {
             System.arraycopy(acts, 1, b, 2, acts.length - 1);
             acts = b;
         }
-        int cols = acts.length > 8 ? (acts.length > 10 ? 6 : 5) : 4;
+        String fix = m.kind == 1 || m.isLong() ? null : Dialect.clipFixLabel(m.preview);   // W123: one fix per clip
+        if (fix != null) {
+            Object[][] b = new Object[acts.length + 1][];
+            int at = smart != null ? 2 : 1;
+            System.arraycopy(acts, 0, b, 0, at);
+            b[at] = new Object[]{CA_FIX, fix, "sparkle"};
+            System.arraycopy(acts, at, b, at + 1, acts.length - at);
+            acts = b;
+        }
+        int cols = acts.length > 8 ? (acts.length + 1) / 2 : 4;
         float gy = top + rh * 0.9f, gh = rh * 3.1f / 2f, cw = w / cols;
         for (int i = 0; i < acts.length; i++) {
             Key k = new Key(Key.CLIP_ACT, (String) acts[i][1], (String) acts[i][2], 1f, null);

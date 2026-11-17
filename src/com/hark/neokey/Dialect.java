@@ -574,6 +574,61 @@ public final class Dialect {
         return v;
     }
 
+    // ---- W123 «تصليح» 🧹: one fix per clip — strip link trackers, tidy the spacing, or swap the digits.
+    private static final java.util.regex.Pattern TRACK = java.util.regex.Pattern.compile(
+            "(?i)([?&])(utm_[a-z]+|fbclid|gclid|igshid|igsh|si|mc_cid|mc_eid|ref_src|feature)=[^&#\\s]*");
+
+    /** W123: the label of the fix this clip takes, or null: رابط نظيف > ترتيب النص > ١٢٣ ⇄ 123. */
+    static String clipFixLabel(String v) {
+        if (v == null) return null;
+        if (cleanUrl(v) != null) return "رابط نظيف";
+        if (tidy(v) != null) return "ترتيب النص";
+        if (swapDigits(v) != null) return v.matches("(?s).*[٠-٩].*") ? "١٢٣ ← 123" : "123 ← ١٢٣";
+        return null;
+    }
+
+    /** W123: the fixed text for clipFixLabel's fix, or null. */
+    static String clipFix(String v) {
+        if (v == null) return null;
+        String r = cleanUrl(v);
+        if (r == null) r = tidy(v);
+        if (r == null) r = swapDigits(v);
+        return r;
+    }
+
+    /** W123: every link with its tracking parameters dropped, or null when none had any. */
+    static String cleanUrl(String v) {
+        if (v == null || !v.matches("(?s).*https?://\\S+\\?.*")) return null;
+        String r = v, prev;
+        do { prev = r; r = TRACK.matcher(r).replaceFirst("$1"); } while (!r.equals(prev));
+        r = r.replaceAll("\\?&+", "?").replaceAll("&{2,}", "&").replaceAll("[?&]+(?=[#\\s]|$)", "");
+        return r.equals(v) ? null : r;
+    }
+
+    /** W123: doubled spaces, spaces before line ends, and runs of blank lines tidied, or null when already tidy. */
+    static String tidy(String v) {
+        if (v == null) return null;
+        String r = v.replaceAll("[ \\t\\u00A0]{2,}", " ").replaceAll("[ \\t]+\\n", "\n").replaceAll("\\n{3,}", "\n\n").trim();
+        r = r.replaceAll(" ([،.,!?؟:؛])", "$1");
+        return r.equals(v.trim()) || r.equals(v) ? null : r;
+    }
+
+    /** W123: Arabic-Indic digits to Latin when any are present, else Latin to Arabic-Indic; null with no digits. */
+    static String swapDigits(String v) {
+        if (v == null) return null;
+        boolean ar = false, la = false;
+        for (int i = 0; i < v.length(); i++) { char ch = v.charAt(i); ar |= ch >= '٠' && ch <= '٩'; la |= ch >= '0' && ch <= '9'; }
+        if (!ar && !la) return null;
+        StringBuilder b = new StringBuilder(v.length());
+        for (int i = 0; i < v.length(); i++) {
+            char ch = v.charAt(i);
+            if (ar && ch >= '٠' && ch <= '٩') ch = (char) ('0' + (ch - '٠'));
+            else if (!ar && ch >= '0' && ch <= '9') ch = (char) ('٠' + (ch - '0'));
+            b.append(ch);
+        }
+        return b.toString();
+    }
+
     /** W121: a short Arabic age for a clip card: الآن، قبل 5 د، قبل 3 س، أمس، قبل 4 أيام، or a week count. */
     static String ago(long ms) {
         if (ms < 60_000L) return "الآن";

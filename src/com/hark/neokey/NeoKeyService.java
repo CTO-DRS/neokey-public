@@ -2483,6 +2483,25 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         switch (action) {
             case KeyboardView.CA_INSERT: onClipInsert(id); return;
             case KeyboardView.CA_PIN: onPinClip(id); return;
+            case KeyboardView.CA_FIX: {   // W123: insert the fixed text (clean link / tidy / swapped digits)
+                clipStore.run(new ClipStore.Job<String>() {
+                    @Override public String run(ClipRepo r) {
+                        String t = r.getText(id);
+                        if (t != null) r.markUsed(id, System.currentTimeMillis());
+                        return t;
+                    }
+                }, new ClipStore.Done<String>() {
+                    @Override public void done(String t) {
+                        String f = Dialect.clipFix(t);
+                        InputConnection ic = getCurrentInputConnection();
+                        if (f == null || ic == null) return;
+                        ic.finishComposingText();
+                        ic.commitText(f, 1);
+                        reloadClips();
+                    }
+                });
+                return;
+            }
             case KeyboardView.CA_OPEN: {   // W122: open the link / map, dial the number, write the mail
                 clipStore.run(new ClipStore.Job<String>() {
                     @Override public String run(ClipRepo r) { return r.getText(id); }
