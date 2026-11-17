@@ -297,4 +297,10 @@
     <string name="nk_setupactivity_bankwatch">يطلع إشعار البنك فور فتح أي تطبيق بنكي، قبل الضغط على أي حقل. يقرأ اسم التطبيق المفتوح فقط. تنبيه: بعض البنوك مثل الراجحي ترفض العمل إذا فيه تطبيق مفعّل في إمكانية الوصول، فإذا رفض البنك أطفئه من نفس المكان.</string>
     <!-- origin: SetupActivity.java:3315 -->
     <string name="nk_setupactivity_restricted">الخطوات:\n١- اضغط «صفحة التطبيق» تحت (أو: الإعدادات ← إدارة التطبيق ← قائمة التطبيقات ← نيو كيبورد).\n٢- اضغط النقاط الثلاث فوق واختر «السماح بالإعدادات المحظورة» (أو «المقيدة»).\n٣- ارجع لخطوة ٤ واضغط «إمكانية الوصول» ← «تنبيه البنوك من NeoKey» ← فعّل الزر ← «سماح».\nأندرويد يطلب هذا لأي تطبيق مثبت من ملف خارج المتجر، ويقول «تحكم كامل» لكن NeoKey يقرأ اسم التطبيق المفتوح فقط.</string>
+    <!-- origin: SetupActivity.java:3319 -->
+    <string name="nk_setupactivity_guide">نفس الخطوات بصور من الإعدادات، المربع الأخضر هو مكان الضغط.</string>
+    <!-- origin: SetupActivity.java:3350 -->
+    <string name="nk_setupactivity_guide4">٤- النقاط الثلاث ← السماح بالإعدادات المحظورة</string>
+    <!-- origin: SetupActivity.java:3350 -->
+    <string name="nk_setupactivity_guide5">٥- إمكانية الوصول ← تنبيه البنوك من NeoKey</string>
 </resources>

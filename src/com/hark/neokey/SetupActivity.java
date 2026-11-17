@@ -3315,6 +3315,9 @@ public class SetupActivity extends Activity {
             content.addView(step("!", "ظهر «تم منع التطبيق»؟", getString(R.string.nk_setupactivity_restricted), false,
                     "صفحة التطبيق", v -> startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                             Uri.fromParts("package", getPackageName(), null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))));
+        if (Build.VERSION.SDK_INT >= 33 && !BankWatch.on(this))
+            content.addView(step("📷", "الشرح بالصور", getString(R.string.nk_setupactivity_guide), false,
+                    "عرض الصور", v -> restrictGuide()));
         if (enabled && selected) {
             TextView ok = text("كل شي جاهز، جرّب الكتابة تحت.", 15, Typeface.BOLD, 0xFF4ADE80);
             ok.setGravity(Gravity.CENTER);
@@ -3339,6 +3342,33 @@ public class SetupActivity extends Activity {
                     Toast.LENGTH_SHORT).show();
             showTab();
         }
+    }
+
+    /** W129c: the restricted-settings walkthrough as cropped screenshots (res/drawable-nodpi/nk_rs_1..7). */
+    private void restrictGuide() {
+        String[] cap = {"١- الإعدادات ← إدارة التطبيق", "٢- قائمة التطبيقات", "٣- نيو كيبورد",
+                getString(R.string.nk_setupactivity_guide4), getString(R.string.nk_setupactivity_guide5),
+                "٦- فعّل الزر", "٧- اضغط «سماح»"};
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (16 * dp);
+        box.setPadding(pad, pad, pad, pad);
+        for (int i = 0; i < cap.length; i++) {
+            TextView t = text(cap[i], 15, Typeface.BOLD, 0xFFFFFFFF);
+            t.setPadding(0, i == 0 ? 0 : pad, 0, (int) (6 * dp));
+            box.addView(t);
+            android.widget.ImageView im = new android.widget.ImageView(this);
+            im.setImageResource(getResources().getIdentifier("nk_rs_" + (i + 1), "drawable", getPackageName()));
+            im.setAdjustViewBounds(true);
+            box.addView(im, new LinearLayout.LayoutParams(-1, -2));
+        }
+        ScrollView sv = new ScrollView(this);
+        sv.addView(box);
+        new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle("تفعيل تنبيه البنوك").setView(sv)
+                .setPositiveButton("صفحة التطبيق", (d, w) -> startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", getPackageName(), null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)))
+                .setNegativeButton("إغلاق", null).show();
     }
 
     private View step(String n, String title, String sub, boolean done, String btn, View.OnClickListener l) {
