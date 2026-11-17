@@ -350,6 +350,174 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    // ---- W107 «ميزان الشعر» 🎼: the meter (البحر) of a typed hemistich, by the classical feet.
+    // 1 = متحرك, 0 = ساكن. Each meter is its feet, each foot its common variants (زحافات وعلل).
+    static final String[] METER_NAMES = {"الطويل", "البسيط", "الوافر", "الكامل", "الرجز", "الرمل", "الخفيف",
+            "المتقارب", "المتدارك", "السريع", "الهزج", "المجتث", "المنسرح"};
+    static final String[] METER_FEET = {"فعولن مفاعيلن فعولن مفاعلن", "مستفعلن فاعلن مستفعلن فاعلن", "مفاعلتن مفاعلتن فعولن",
+            "متفاعلن متفاعلن متفاعلن", "مستفعلن مستفعلن مستفعلن", "فاعلاتن فاعلاتن فاعلن", "فاعلاتن مستفع لن فاعلاتن",
+            "فعولن فعولن فعولن فعولن", "فاعلن فاعلن فاعلن فاعلن", "مستفعلن مستفعلن فاعلن", "مفاعيلن مفاعيلن",
+            "مستفع لن فاعلاتن", "مستفعلن مفعولات مستفعلن"};
+    private static final String FAU = "11010|1101", MAF = "1101010|110110|110101", FAE = "10110|1110",
+            MUS = "1010110|110110|+101110|++11110", FAT = "1011010|111010|+101101|+11101", MUT = "1110110|1010110",
+            MFL = "1101110|1101010", MSL = "1010110|110110";
+    private static final String[][] METERS = {
+            {FAU, MAF, FAU, "110110|1101010"}, {MUS, FAE, MUS, "1110|1010|10110"}, {MFL, MFL, "11010"},
+            {MUT, MUT, MUT + "|111010|101010"}, {MUS, MUS, MUS}, {FAT, FAT, "10110|1110"},
+            {FAT, MSL, "1011010|111010|101010|10110"}, {FAU, FAU, FAU, "11010|1101|110"},
+            {FAE + "|1010", FAE + "|1010", FAE + "|1010", FAE + "|1010"}, {MUS, MUS, "10110|1010"}, {MAF, MAF},
+            {MSL, FAT + "|1010"}, {MUS, "1010101|+110101|+101101", "1010110|++11110"}};
+    // a rarer meter needs a clearer reading to win a near tie (المتدارك، الهزج، المجتث، المنسرح)
+    private static final String RARE = "\u0008\n\u000b\u000c";
+    private static List<int[]> meterPen;
+    private static List<List<String>> meterPats;
+
+    private static final String SUN = "تثدذرزسشصضطظلن";
+    // unit kinds: 1 forced متحرك, 0 forced ساكن, M madd (0), W و/ي (either), P plain, F plain word-first,
+    // S shadda (01), T tanween (10). A lower-case p marks a plain word-final letter (tanween possible).
+    static String arudUnits(String line) {
+        StringBuilder u = new StringBuilder();
+        String[] ws = line.trim().split("\\s+");
+        for (int wi = 0; wi < ws.length; wi++) {
+            String w = ws[wi].replace("ـ", "");
+            StringBuilder ch = new StringBuilder(), di = new StringBuilder();
+            for (int i = 0; i < w.length(); i++) {
+                char c = w.charAt(i);
+                if (c >= '\u064B' && c <= '\u0652') {
+                    if (di.length() == 0) continue;
+                    char k = c == '\u0651' ? 'S' : c == '\u0652' ? '0' : c <= '\u064D' ? 'T' : '1';
+                    if (di.charAt(di.length() - 1) != 'S') di.setCharAt(di.length() - 1, k);
+                } else if (c >= '\u0621' && c <= '\u064A' || c == 'ى') {
+                    ch.append(c);
+                    di.append('.');
+                }
+            }
+            int n = ch.length(), i = 0;
+            if (n == 0) continue;
+            StringBuilder wu = new StringBuilder();
+            int pre = n > 3 && "وفبك".indexOf(ch.charAt(0)) >= 0 && ch.charAt(1) == 'ا' && ch.charAt(2) == 'ل' ? 1 : 0;
+            if (n > 2 + pre && ch.charAt(pre) == 'ا' && ch.charAt(pre + 1) == 'ل') {
+                if (pre == 1) wu.append('1');
+                else if (wi == 0) wu.append('1');
+                i = pre + 2;
+                wu.append('0');   // لامٌ قمرية ساكنة، أو أول الحرف الشمسي المشدّد
+            } else if (ch.charAt(0) == 'ا' && wi > 0 && n > 2) {
+                wu.append('0');   // همزة وصل تسقط درجًا والتالي ساكن
+                i = 2;
+            } else {
+                wu.append(di.charAt(0) == '.' ? (ch.charAt(0) == 'آ' ? "1M" : "1") : String.valueOf(di.charAt(0)));
+                i = 1;
+            }
+            for (; i < n; i++) wu.append(kind(ch, di, i, false, n));
+            u.append(wu);
+        }
+        return u.toString();
+    }
+
+    private static String kind(CharSequence ch, CharSequence di, int i, boolean first, int n) {
+        char d = di.charAt(i), c = ch.charAt(i);
+        if (d != '.') return String.valueOf(d);
+        if (c == 'آ') return "1M";
+        if (c == 'ا' || c == 'ى') return "M";
+        if (c == 'و' || c == 'ي') return "W";
+        return i == n - 1 ? "p" : "P";
+    }
+
+    /** Minimal cost of reading the units as the concrete pattern pat (-1 = impossible). */
+    static int arudCost(String u, String pat) {
+        int n = u.length(), m = pat.length(), INF = 1 << 20;
+        int[][] dp = new int[n + 1][m + 1];
+        for (int[] r : dp) java.util.Arrays.fill(r, INF);
+        dp[0][0] = 0;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j <= m; j++) {
+                int c0 = dp[i][j];
+                if (c0 >= INF) continue;
+                char k = u.charAt(i);
+                boolean last = i == n - 1;
+                String[] opt;
+                int[] cost;
+                switch (k) {
+                    case '1': opt = new String[]{"1"}; cost = new int[]{0}; break;
+                    case '0': case 'M': opt = new String[]{"0"}; cost = new int[]{0}; break;
+                    case 'W': opt = new String[]{"0", "1"}; cost = new int[]{0, 0}; break;
+                    case 'S': opt = new String[]{"01"}; cost = new int[]{0}; break;
+                    case 'T': opt = new String[]{"10"}; cost = new int[]{0}; break;
+                    case 'p': opt = new String[]{"1", "0", "10", "01"}; cost = new int[]{0, last ? 0 : 1, 1, 2}; break;
+                    default: opt = new String[]{"1", "0", "01"}; cost = new int[]{0, last ? 0 : 1, 2};
+                }
+                for (int o = 0; o < opt.length; o++)
+                    if (pat.startsWith(opt[o], j) && c0 + cost[o] < dp[i + 1][j + opt[o].length()])
+                        dp[i + 1][j + opt[o].length()] = c0 + cost[o];
+            }
+        int best = dp[n][m];
+        if (m > 0 && pat.charAt(m - 1) == '0') best = Math.min(best, dp[n][m - 1]);   // إشباع القافية
+        return best >= INF ? -1 : best;
+    }
+
+    private static synchronized List<List<String>> pats() {
+        if (meterPats == null) {
+            meterPats = new ArrayList<>();
+            meterPen = new ArrayList<>();
+            for (int mi = 0; mi < METERS.length; mi++) {
+                List<String> acc = new ArrayList<>();
+                List<Integer> pen = new ArrayList<>();
+                acc.add("");
+                pen.add(RARE.indexOf((char) mi) >= 0 ? 1 : 0);
+                for (String f : METERS[mi]) {
+                    List<String> nx = new ArrayList<>();
+                    List<Integer> np = new ArrayList<>();
+                    for (int a = 0; a < acc.size(); a++)
+                        for (String v : f.split("\\|")) {
+                            int plus = 0;
+                            while (v.charAt(plus) == '+') plus++;
+                            nx.add(acc.get(a) + v.substring(plus));
+                            np.add(pen.get(a) + plus);
+                        }
+                    acc = nx;
+                    pen = np;
+                }
+                meterPats.add(acc);
+                int[] pa = new int[pen.size()];
+                for (int a = 0; a < pa.length; a++) pa[a] = pen.get(a);
+                meterPen.add(pa);
+            }
+        }
+        return meterPats;
+    }
+
+    /** Cost of the hemistich on meter mi (-1 = no reading fits). */
+    static int meterCost(String hem, int mi) {
+        String u = arudUnits(hem);
+        int best = -1;
+        List<String> ps = pats().get(mi);
+        int[] pen = meterPen.get(mi);
+        for (int x = 0; x < ps.size(); x++) {
+            int c = arudCost(u, ps.get(x));
+            if (c >= 0) c += pen[x];
+            if (c >= 0 && (best < 0 || c < best)) best = c;
+        }
+        return best;
+    }
+
+    /** W107: the meter of a hemistich → its index, or -1 when none fits closely enough (or it is too short). */
+    static int meterOf(String hem) {
+        String u = arudUnits(hem);
+        if (u.length() < 8) return -1;
+        int bi = -1, bc = Integer.MAX_VALUE;
+        for (int mi = 0; mi < METERS.length; mi++) {
+            int c = meterCost(hem, mi);
+            if (c >= 0 && c < bc) { bc = c; bi = mi; }
+        }
+        return bc <= Math.max(2, u.length() / 4) ? bi : -1;
+    }
+
+    /** W107: does the hemistich sit on meter mi within the same tolerance? */
+    static boolean onMeter(String hem, int mi) {
+        int c = meterCost(hem, mi);
+        return c >= 0 && c <= Math.max(2, arudUnits(hem).length() / 4);
+    }
+
     private static final String[] CHAT_APPS = {"com.whatsapp", "com.whatsapp.w4b", "org.telegram.messenger",
             "org.telegram.plus", "com.google.android.apps.messaging", "com.samsung.android.messaging", "com.android.mms",
             "com.facebook.orca", "com.instagram.android", "com.snapchat.android", "com.imo.android.imoim",

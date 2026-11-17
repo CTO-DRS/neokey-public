@@ -146,6 +146,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
     private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
     private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
+    private static final String METER = "🎼 ";   // W107: «ميزان الشعر» chip mark (tap dismisses)
     private static final String SAR = "💰 ";   // W102: amount-in-words chip mark (tap replaces «1500 ريال»)
     private static final String NUM = "🔢 ";   // W101: number-in-words chip mark (tap replaces the number)
     private static final String DATE = "📅 ";   // W100: today's date chip mark (inserts after the word)
@@ -848,6 +849,28 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         int end = b.length() - 1, i = end;
         while (i > 0 && isWordChar(b.charAt(i - 1))) i--;
         if (prov == null) { prov = pairsAsset("dialect_proverbs.txt"); soft = pairsAsset("dialect_soften.txt"); occ = pairsAsset("dialect_occasions.txt"); cmp = pairsAsset("dialect_complete.txt"); azd = pairsAsset("arabizi.txt"); emj = pairsAsset("dialect_emoji.txt"); }
+        // W107 «ميزان الشعر»: «صدر *» earns its meter (البحر وتفعيلاته); with the عجز typed after the
+        // star, the strip says whether the عجز sits on the same meter. Only a line holding «*» is read.
+        CharSequence lb = ic.getTextBeforeCursor(240, 0);
+        String line = lb == null ? "" : lb.toString();
+        line = line.substring(line.lastIndexOf('\n') + 1);
+        int star = line.lastIndexOf('*');
+        if (star > 0) {
+            int s0 = line.lastIndexOf('*', star - 1) + 1;
+            String sadr = line.substring(s0, star), ajuz = line.substring(star + 1).trim();
+            int mi = Dialect.meterOf(sadr);
+            if (mi >= 0) {
+                String name = Dialect.METER_NAMES[mi];
+                if (ajuz.isEmpty()) {
+                    out.add(METER + "البحر " + name + " · " + Dialect.METER_FEET[mi]);
+                    return out;
+                }
+                if (Dialect.arudUnits(ajuz).length() >= Dialect.arudUnits(sadr).length() - 1) {
+                    out.add(METER + (Dialect.onMeter(ajuz, mi) ? "البيت على " + name + " ✓" : "العجز خارج وزن " + name + "؟"));
+                    return out;
+                }
+            }
+        }
         // W98: an Arabizi token (3ashan / 7abibi) earns its Arabic spelling (⇄, tap replaces).
         int k = end;
         while (k > 0 && b.charAt(k - 1) < 128 && Character.isLetterOrDigit(b.charAt(k - 1))) k--;
@@ -1092,6 +1115,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             softFrom = null;
             return;
         }
+        if (word.startsWith(METER)) return;   // W107: the meter chip only informs
         if (word.startsWith(GUARD)) {   // W106: delete the code / card number before it is sent
             if (guardSpan != null) {
                 CharSequence gb = ic.getTextBeforeCursor(guardSpan.length(), 0);

@@ -430,6 +430,18 @@ public final class DialectCorrGate {
         for (String w : new String[]{"2026", "123", "عندي 5000 ريال", "4111 1111 1111 1112", "اتصل 0551234567", "abc12345", "123456789", ""})
             need(Dialect.scamSpan(w) == null, "guard.refuse " + w);
         System.out.println("DIALECTCORR guard pins=" + gPins.length);
+        // ---- 3s. «ميزان الشعر» (W107): famous unvocalized hemistichs land on their meters; prose lands on none.
+        String[][] mPins = {{"قفا نبك من ذكرى حبيب ومنزل", "الطويل"}, {"الخيل والليل والبيداء تعرفني", "البسيط"},
+                {"والسيف والرمح والقرطاس والقلم", "البسيط"}, {"إذا لم تستطع شيئا فدعه", "الوافر"}, {"وجاوزه إلى ما تستطيع", "الوافر"},
+                {"أخي جاوز الظالمون المدى", "المتقارب"}, {"لا يسلم الشرف الرفيع من الأذى", "الكامل"}};
+        for (String[] p : mPins) {
+            int mi = Dialect.meterOf(p[0]);
+            need(mi >= 0 && p[1].equals(Dialect.METER_NAMES[mi]), "meter.pin " + p[0] + " → " + (mi < 0 ? "-" : Dialect.METER_NAMES[mi]));
+        }
+        need(Dialect.onMeter("وجاوزه إلى ما تستطيع", 2) && !Dialect.onMeter("ابشر بكره ارسل لك الملف ان شاء الله", 2), "meter.ajuz");
+        for (String w : new String[]{"السلام عليكم كيف حالك اليوم يا اخي", "ابشر بكره ارسل لك الملف ان شاء الله", "وقل لي كيف حالك يا صديقي اليوم", "مرحبا", ""})
+            need(Dialect.meterOf(w) < 0, "meter.refuse " + w);
+        System.out.println("DIALECTCORR meter pins=" + mPins.length);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
