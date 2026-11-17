@@ -611,6 +611,18 @@ public final class DialectCorrGate {
                 "touch.chip.stagger");
         System.out.println("DIALECTCORR touch ok");
 
+        // ---- 3ad. W118 long-press motion
+        need(Motion.popIn(0) == 0f && Motion.popIn(Motion.POP_MS) == 1f, "hold.pop.ends");
+        float popPeak = 0;
+        for (long t = 0; t <= Motion.POP_MS; t += 5) popPeak = Math.max(popPeak, Motion.popIn(t));
+        need(popPeak > 1.05f && popPeak < 1.15f, "hold.pop.overshoot " + popPeak);
+        need(Motion.approach(0f, 1f, 0) == 0f && Motion.approach(0f, 1f, 60) > 0.6f && Motion.approach(0f, 1f, 60) < 0.65f
+                && Motion.approach(0.999f, 1f, 16) == 1f, "hold.pill.glide");
+        need(Motion.repeatGap(0) == 55 && Motion.repeatGap(7) == 55 && Motion.repeatGap(12) < 55
+                && Motion.repeatGap(100) == 22, "hold.delete.accel");
+        need(Motion.heat(0) == 0f && Motion.heat(15) == 0.5f && Motion.heat(99) == 1f, "hold.delete.heat");
+        System.out.println("DIALECTCORR hold ok pop=" + popPeak);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

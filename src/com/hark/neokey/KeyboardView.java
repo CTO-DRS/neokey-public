@@ -205,6 +205,10 @@ public class KeyboardView extends View {
     private String[] altList;
     private int altSel;
     private final RectF altRect = new RectF();
+    private long altAt;               // W118: when the alternates popup opened
+    private float altPill = -1f;      // W118: sliding selection pill (cell index, animated)
+    private float fingerX;            // W118: live finger x (cursor glide / erase trail)
+    private int repN;                 // W118: delete repeats in this hold
     private long lastFrame;
 
     private final Runnable longPress = new Runnable() {
@@ -217,7 +221,9 @@ public class KeyboardView extends View {
             else if (active.type == Key.EDIT) listener.onEdit(active.id);
             else return;
             buzz();
-            handler.postDelayed(this, active.type == Key.DEL ? 55 : 70);
+            repN++;
+            invalidate();
+            handler.postDelayed(this, active.type == Key.DEL ? Motion.repeatGap(repN) : 70);
         }
     };
 
@@ -1342,8 +1348,9 @@ public class KeyboardView extends View {
         for (Key k : sideKeys) { animating |= step(k, dt); drawKey(c, k); }
         if (layer >= 0) c.restoreToCount(layer);
 
-        if (active != null && altList != null) drawAlts(c);
-        else if (popups && !gliding && active != null && active.type == Key.CHAR && panel == PANEL_KEYS) drawPreview(c, active);
+        if (active != null && altList != null) animating |= drawAlts(c, now, dt);
+        else if (popups && !gliding && active != null && active.type == Key.CHAR && panel == PANEL_KEYS) animating |= drawPreview(c, active, now);
+        if (active != null && swiped && motionOn() && ((active.type == Key.SPACE && swipeCursor) || active.type == Key.DEL)) drawDrag(c, active);
         if (gliding) {
             trailP.setStyle(Paint.Style.STROKE);
             trailP.setStrokeCap(Paint.Cap.ROUND);
@@ -1525,6 +1532,10 @@ public class KeyboardView extends View {
         inkPath.reset();
         inkPath.addRoundRect(r, radius, radius, Path.Direction.CW);
         c.clipPath(inkPath);
+        if (k.type == Key.DEL && k == active && repN > 0) {   // W118: held delete warms up as it speeds up
+            fillP.setColor(Theme.withAlpha(0xFFEF4444, (int) (0x70 * Motion.heat(repN))));
+            c.drawRect(r, fillP);
+        }
         int ink = k.type == Key.ENTER ? 0xFFFFFFFF : theme.enter;
         fillP.setColor(Theme.withAlpha(ink, (int) (0x3A * a)));
         c.drawCircle(clamp(k.tx, r.left, r.right), clamp(k.ty, r.top, r.bottom), maxR * Motion.inkRadius(t), fillP);
@@ -2265,35 +2276,85 @@ public class KeyboardView extends View {
         return s.length() == 1 && s.charAt(0) >= 0x064B && s.charAt(0) <= 0x0652;
     }
 
-    private void drawPreview(Canvas c, Key k) {
+    private boolean drawPreview(Canvas c, Key k, long now) {
         float bw = Math.max(k.rect.width() * 1.2f, 40 * dp);
         float bh = k.rect.height() * 1.15f;
         float left = clamp(k.rect.centerX() - bw / 2, fullL, fullR - bw);
         float top = Math.max(2 * dp, k.rect.top - bh - 6 * dp);
         RectF b = new RectF(left, top, left + bw, top + bh);
+        float p = motionOn() && k.tdown > 0 ? Motion.popIn(now - k.tdown) : 1f;   // W118: the bubble rises out of the key
+        if (p <= 0.001f) return true;
+        c.save();
+        c.translate(0, (1f - Math.min(p, 1f)) * bh * 0.35f);
+        c.scale(0.6f + 0.4f * p, 0.6f + 0.4f * p, k.rect.centerX(), b.bottom);
         drawBubble(c, b);
         textP.setColor(theme.popupText);
         textP.setTextSize(30 * dp * clamp(scale, 0.75f, 1.1f));
         c.drawText(labelFor(k), b.centerX(), baseline(b, textP), textP);
+        c.restore();
+        return p != 1f;
     }
 
-    private void drawAlts(Canvas c) {
+    /** W118: the space bar's cursor glide (a thumb under the finger) and the delete swipe's erase trail. */
+    private void drawDrag(Canvas c, Key k) {
+        RectF r = k.rect;
+        if (k.type == Key.SPACE) {
+            float x = clamp(fingerX, r.left + r.height() * 0.4f, r.right - r.height() * 0.4f), cy = r.centerY();
+            tmp.set(r.left + 8 * dp, cy - 2 * dp, r.right - 8 * dp, cy + 2 * dp);
+            fillP.setColor(Theme.withAlpha(theme.enter, 0x40));
+            c.drawRoundRect(tmp, 2 * dp, 2 * dp, fillP);
+            fillP.setColor(Theme.withAlpha(theme.enter, 0x38));
+            c.drawCircle(x, cy, r.height() * 0.36f, fillP);
+            fillP.setColor(theme.enter);
+            c.drawCircle(x, cy, r.height() * 0.16f, fillP);
+            iconP.setColor(Theme.withAlpha(theme.enter, 0xB0));
+            iconP.setStrokeWidth(2 * dp);
+            float a = 5 * dp, gx = r.height() * 0.62f;
+            c.drawLine(x - gx, cy, x - gx + a, cy - a, iconP); c.drawLine(x - gx, cy, x - gx + a, cy + a, iconP);
+            c.drawLine(x + gx, cy, x + gx - a, cy - a, iconP); c.drawLine(x + gx, cy, x + gx - a, cy + a, iconP);
+        } else {
+            float y = r.centerY(), l = Math.min(r.centerX(), fingerX), rr = Math.max(r.centerX(), fingerX);
+            fillP.setShader(new LinearGradient(r.centerX(), 0, fingerX, 0, Theme.withAlpha(0xFFEF4444, 0x20),
+                    Theme.withAlpha(0xFFEF4444, 0xB0), Shader.TileMode.CLAMP));
+            tmp.set(l, y - 3 * dp, rr, y + 3 * dp);
+            c.drawRoundRect(tmp, 3 * dp, 3 * dp, fillP);
+            fillP.setShader(null);
+            fillP.setColor(0xFFEF4444);
+            c.drawCircle(fingerX, y, 6 * dp, fillP);
+        }
+    }
+
+    private boolean drawAlts(Canvas c, long now, float dt) {
+        boolean mo = motionOn();
+        long t = now - altAt;
+        float p = mo ? Motion.popIn(t) : 1f;   // W118: the popup springs out of the held key
+        if (altPill < 0 || !mo) altPill = altSel;
+        else altPill = Motion.approach(altPill, altSel, dt);
+        float ax = active != null ? clamp(active.rect.centerX(), altRect.left, altRect.right) : altRect.centerX();
+        c.save();
+        c.scale(0.5f + 0.5f * p, 0.5f + 0.5f * p, ax, altRect.bottom);
         drawBubble(c, altRect);
         float cw = altRect.width() / altList.length;
+        tmp.set(altRect.left + altPill * cw + 3 * dp, altRect.top + 4 * dp,
+                altRect.left + (altPill + 1) * cw - 3 * dp, altRect.bottom - 4 * dp);
+        fillP.setColor(theme.enter);
+        c.drawRoundRect(tmp, radius, radius, fillP);
+        boolean anim = p != 1f || altPill != altSel;
         for (int i = 0; i < altList.length; i++) {
             RectF cell = new RectF(altRect.left + i * cw + 3 * dp, altRect.top + 4 * dp,
                     altRect.left + (i + 1) * cw - 3 * dp, altRect.bottom - 4 * dp);
-            if (i == altSel) {
-                fillP.setColor(theme.enter);
-                c.drawRoundRect(cell, radius, radius, fillP);
-            }
+            float e = mo ? Motion.chipIn(t, Math.abs(i - altSel)) : 1f;
+            anim |= e < 1f;
             String s = altList[i];
             if (shiftState != SHIFT_OFF) s = s.toUpperCase();
             if (isMark(s)) s = "ـ" + s;
-            textP.setColor(i == altSel ? theme.enterText : theme.popupText);
-            textP.setTextSize(22 * dp * clamp(scale, 0.75f, 1.1f));
-            c.drawText(s, cell.centerX(), baseline(cell, textP), textP);
+            float on = Math.max(0f, 1f - Math.abs(altPill - i));
+            textP.setColor(fade(blend(theme.popupText, theme.enterText, on), e));
+            textP.setTextSize(22 * dp * clamp(scale, 0.75f, 1.1f) * (1f + 0.16f * on));
+            c.drawText(s, cell.centerX(), baseline(cell, textP) + (1f - e) * 10 * dp, textP);
         }
+        c.restore();
+        return anim;
     }
 
     private void drawBubble(Canvas c, RectF b) {
@@ -2363,6 +2424,7 @@ public class KeyboardView extends View {
                 k.target = 1f;
                 k.rel = 0;
                 k.tx = x; k.ty = y; k.tdown = SystemClock.uptimeMillis(); k.tup = 0;   // W117 ink
+                fingerX = x; repN = 0;
                 if (k.type == Key.CHAR || k.type == Key.SPACE || k.type == Key.DEL) noteType();
                 if (k.type == Key.ENTER) lastType = 0;
                 buzz();
@@ -2401,6 +2463,7 @@ public class KeyboardView extends View {
                 int pi = e.findPointerIndex(activePointer);
                 if (pi < 0) return true;
                 float x = e.getX(pi);
+                fingerX = x;
                 if (glideCand && altList == null) {
                     float y = e.getY(pi);
                     if (!gliding) {
@@ -2528,6 +2591,8 @@ public class KeyboardView extends View {
         if (active.alts != null) {
             altList = active.alts;
             altSel = 0;
+            altAt = SystemClock.uptimeMillis();
+            altPill = -1f;
             float cw = Math.max(active.rect.width(), 38 * dp);
             float bw = cw * altList.length;
             float left = clamp(active.rect.centerX() - cw / 2, fullL, fullR - bw);

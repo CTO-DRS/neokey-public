@@ -115,4 +115,33 @@ final class Motion {
         float x = d / (float) CHIP_MS;
         return 1f - (1f - x) * (1f - x) * (1f - x);
     }
+
+    // ---------------------------------------------------------------- W118 long-press motion
+
+    static final long POP_MS = 300;
+
+    /** Back-ease pop: 0 → ~1.1 → 1 over POP_MS (popups grow out of the key). */
+    static float popIn(long t) {
+        if (t <= 0) return 0f;
+        if (t >= POP_MS) return 1f;
+        float x = t / (float) POP_MS - 1f, c1 = 1.70158f, c3 = c1 + 1f;
+        return 1f + c3 * x * x * x + c1 * x * x;
+    }
+
+    /** Frame-rate independent glide of a value toward its target (~60 ms time constant). */
+    static float approach(float cur, float target, float dtMs) {
+        if (dtMs <= 0) return cur;
+        float k = 1f - (float) Math.exp(-dtMs / 60f);
+        float v = cur + (target - cur) * k;
+        return Math.abs(target - v) < 0.002f ? target : v;
+    }
+
+    /** Held delete accelerates: 55 ms for the first 8 repeats, then down to 22 ms. */
+    static long repeatGap(int n) {
+        if (n < 8) return 55;
+        return Math.max(22, 55 - (n - 8) * 3);
+    }
+
+    /** Delete-key heat 0..1 with the repeat count. */
+    static float heat(int n) { return n <= 0 ? 0f : Math.min(1f, n / 30f); }
 }
