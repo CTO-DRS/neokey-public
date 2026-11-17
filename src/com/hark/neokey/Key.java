@@ -24,6 +24,7 @@ final class Key {
 
     final RectF rect = new RectF();
     float press, target;
+    long rel;               // W116: uptime the key came back to rest (spring bounce)
 
     Key(int type, String label, String text, float units, String[] alts) {
         this.type = type;

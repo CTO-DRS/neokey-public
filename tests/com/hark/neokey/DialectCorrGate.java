@@ -569,6 +569,36 @@ public final class DialectCorrGate {
         need(Dialect.quranQuote("اهلا وسهلا بك ") == null, "quran.quote.plain");
         System.out.println("DIALECTCORR quran words=" + Q.w.length);
 
+        // ---- 3ab. «لمسة NeoKey» (W116): the signature motion curves land, settle, and stay quiet when they should.
+        need(Motion.spring(0) == 0f && Motion.spring(1) == 1f, "motion.spring.ends");
+        float peak = 0;
+        for (int i = 0; i <= 100; i++) peak = Math.max(peak, Motion.spring(i / 100f));
+        need(peak > 1.03f && peak < 1.12f, "motion.spring.overshoot " + peak);
+        need(Math.abs(Motion.spring(0.95f) - 1f) < 0.01f, "motion.spring.settles");
+        need(Motion.waveDelay(500, 400, 1000, 400) == 0f, "motion.wave.origin");
+        float far = Motion.waveDelay(0, 0, 1000, 400);
+        need(far > Motion.WAVE_MS - 1 && far <= Motion.WAVE_MS, "motion.wave.corner " + far);
+        need(Motion.waveDelay(500, 0, 1000, 400) < far, "motion.wave.order");
+        need(Motion.entrance(0, 50) == 0f, "motion.entrance.waits");
+        need(Motion.entrance(Motion.ENTER_MS + 10, Motion.WAVE_MS) == 1f, "motion.entrance.lands");
+        need(Motion.bounce(0) == 0f && Motion.bounce(Motion.BOUNCE_MS) == 0f, "motion.bounce.ends");
+        need(Motion.bounce(55) > 0.015f && Motion.bounce(55) < 0.05f, "motion.bounce.peak");
+        need(Motion.breath(5000, false) == 0f, "motion.breath.empty");
+        need(Motion.breath(500, true) == 0f, "motion.breath.tooSoon");
+        need(Motion.breath(Motion.BREATH_AFTER + Motion.BREATH_FOR + 1, true) == 0f, "motion.breath.sleeps");
+        need(Motion.breath(Motion.BREATH_AFTER + 1300 + 600, true) > 0.5f, "motion.breath.pulse");
+        float fl = 0;
+        for (int i = 0; i < 20; i++) fl = Motion.flowHit(fl, 110);
+        need(fl > 0.85f && fl <= 1f, "motion.flow.fast " + fl);
+        float slow = 0;
+        for (int i = 0; i < 20; i++) slow = Motion.flowHit(slow, 600);
+        need(slow < fl && slow > 0.1f, "motion.flow.slow " + slow);
+        need(Motion.flowDecay(1f, 100) == 1f && Motion.flowDecay(1f, 2500) < 0.01f, "motion.flow.decay");
+        need(Motion.shimmer(0) == -1f && Motion.shimmer(Motion.SHIMMER_AT) == 0f
+                && Motion.shimmer(Motion.SHIMMER_AT + Motion.SHIMMER_MS) == 1f, "motion.shimmer");
+        need(Motion.brand(10) == 1f && Motion.brand(Motion.BRAND_MS) == 0f && Motion.brand(-1) == 0f, "motion.brand");
+        System.out.println("DIALECTCORR motion ok peak=" + peak);
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

@@ -1,0 +1,82 @@
+package com.hark.neokey;
+
+/**
+ * W116 «لمسة NeoKey»: the keyboard's signature motion curves. Pure math (no android.*)
+ * so DialectCorrGate 3ab can pin every curve on a plain JVM.
+ *
+ *  - entrance: keys rise in a wave from the space bar outward with a spring overshoot
+ *  - bounce:   a key springs past rest once after it is released
+ *  - breath:   the Enter key breathes softly while a message waits to be sent
+ *  - flow:     a light line on the top edge that grows with typing rhythm
+ *  - shimmer:  one light sweep across the space bar as the keyboard opens
+ */
+final class Motion {
+    private Motion() { }
+
+    static final int ENTER_MS = 430, WAVE_MS = 170, BOUNCE_MS = 300, BREATH_MS = 2600,
+            BREATH_AFTER = 1400, BREATH_FOR = 14000, SHIMMER_AT = 260, SHIMMER_MS = 650, BRAND_MS = 1300;
+
+    /** Under-damped spring from 0 to 1: peaks ~1.08 near 35%, settles at 1. */
+    static float spring(float x) {
+        if (x <= 0) return 0;
+        if (x >= 1) return 1;
+        return (float) (1 - Math.exp(-7 * x) * Math.cos(9 * x));
+    }
+
+    /** Wave delay for a key centred at (cx, cy) in a w×h board: 0 at the bottom centre, WAVE_MS at a top corner. */
+    static float waveDelay(float cx, float cy, float w, float h) {
+        if (w <= 0 || h <= 0) return 0;
+        double dx = (cx - w / 2f) / w, dy = (h - cy) / h;
+        double d = Math.sqrt(dx * dx + dy * dy) / Math.sqrt(1.25);
+        return (float) (WAVE_MS * Math.max(0, Math.min(1, d)));
+    }
+
+    /** Entrance progress (spring) for a key, ms since the keyboard opened; 1 once it has landed. */
+    static float entrance(float sinceShow, float delay) {
+        float x = (sinceShow - delay) / (ENTER_MS - WAVE_MS);
+        return spring(x);
+    }
+
+    /** Release overshoot as a scale delta: up to ~+4%, back to 0 within BOUNCE_MS. */
+    static float bounce(float sinceRelease) {
+        if (sinceRelease <= 0 || sinceRelease >= BOUNCE_MS) return 0;
+        return (float) (0.045 * Math.exp(-sinceRelease / 75.0) * Math.sin(sinceRelease * Math.PI / 110.0));
+    }
+
+    /** Enter breathing level 0..1, or 0 when it should be still (too soon, too long idle, nothing typed). */
+    static float breath(float sinceType, boolean hasText) {
+        if (!hasText || sinceType < BREATH_AFTER || sinceType > BREATH_AFTER + BREATH_FOR) return 0;
+        float t = sinceType - BREATH_AFTER;
+        float in = Math.min(1f, t / 600f);
+        return in * (float) (0.5 - 0.5 * Math.cos(2 * Math.PI * t / BREATH_MS));
+    }
+
+    /** Flow level after a keystroke that came `gapMs` after the previous one (0..1, ~9 keys/s fills it). */
+    static float flowHit(float level, float gapMs) {
+        if (gapMs <= 0) gapMs = 1;
+        float inst = Math.min(1f, (1000f / gapMs) / 9f);
+        if (gapMs > 1500) inst = 0.12f;
+        return Math.max(0, Math.min(1, level * 0.72f + inst * 0.28f + 0.04f));
+    }
+
+    /** Flow level fading out while idle. */
+    static float flowDecay(float level, float idleMs) {
+        if (idleMs <= 250) return level;
+        return (float) (level * Math.exp(-(idleMs - 250) / 450.0));
+    }
+
+    /** Space-bar light sweep position 0..1, or -1 outside the sweep. */
+    static float shimmer(float sinceShow) {
+        float t = sinceShow - SHIMMER_AT;
+        if (t < 0 || t > SHIMMER_MS) return -1;
+        float x = t / SHIMMER_MS;
+        return x * x * (3 - 2 * x);
+    }
+
+    /** Brand wordmark alpha on the space bar (1 → 0) as the keyboard opens; the language label takes over. */
+    static float brand(float sinceShow) {
+        if (sinceShow < 0 || sinceShow >= BRAND_MS) return 0;
+        if (sinceShow < BRAND_MS - 450) return 1;
+        return (BRAND_MS - sinceShow) / 450f;
+    }
+}

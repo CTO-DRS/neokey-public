@@ -294,6 +294,79 @@ public class KeyboardView extends View {
     /** Marks the moment the keyboard was asked to show; the next frame records the show time. */
     public void markShow() { showMark = SystemClock.uptimeMillis(); invalidate(); }
 
+    // ---- W116 «لمسة NeoKey»: entrance wave, spring release, breathing Enter, flow line, space shimmer, key sheen.
+    private boolean sig = true, hasText;
+    private long openAt, lastType;
+    private float flow;
+    private LinearGradient sheen;
+
+    public void setSignature(boolean on) { if (on != sig) { sig = on; invalidate(); } }
+
+    private boolean motionOn() { return sig && anims && !reduceMotion; }
+
+    /** The keyboard window just appeared: play the entrance wave and the space-bar sweep. */
+    public void playOpen() {
+        flow = 0;
+        if (!motionOn()) { openAt = 0; return; }
+        openAt = SystemClock.uptimeMillis();
+        invalidate();
+    }
+
+    /** Whether the field holds text before the cursor (drives the breathing Enter). */
+    public void setHasText(boolean t) {
+        if (t == hasText) return;
+        hasText = t;
+        if (t && sig) invalidate();
+    }
+
+    private void noteType() {
+        long now = SystemClock.uptimeMillis();
+        if (motionOn()) flow = Motion.flowHit(Motion.flowDecay(flow, lastType == 0 ? 9999 : now - lastType),
+                lastType == 0 ? 9999 : now - lastType);
+        lastType = now;
+    }
+
+    private void drawFlow(Canvas c, long now) {
+        float lv = Motion.flowDecay(flow, now - lastType);
+        if (lv < 0.02f) return;
+        float w = getWidth(), half = w * 0.46f * lv, cx = w / 2f, y = toolH - 1.2f * dp;
+        int a = theme.enter, b = theme.neon ? theme.glow : blend(theme.enter, 0xFFFFFFFF, 0.35f);
+        fillP.setShader(new LinearGradient(cx - half, 0, cx + half, 0,
+                new int[]{0, Theme.withAlpha(a, (int) (0xE0 * lv)), Theme.withAlpha(b, 0xFF), Theme.withAlpha(a, (int) (0xE0 * lv)), 0},
+                new float[]{0f, 0.25f, 0.5f, 0.75f, 1f}, Shader.TileMode.CLAMP));
+        tmp.set(cx - half, y - 1f * dp, cx + half, y + 1f * dp);
+        c.drawRoundRect(tmp, dp, dp, fillP);
+        fillP.setAlpha((int) (0x55 * lv));
+        tmp.inset(0, -2.5f * dp);
+        c.drawRoundRect(tmp, 3 * dp, 3 * dp, fillP);
+        fillP.setAlpha(255);
+        fillP.setShader(null);
+    }
+
+    private void drawBreath(Canvas c, Key k, float lv) {
+        RectF r = k.rect;
+        float grow = (1.5f + 3.5f * lv) * dp;
+        tmp.set(r.left - grow, r.top - grow, r.right + grow, r.bottom + grow);
+        strokeP.setStrokeWidth((1.2f + 1.6f * lv) * dp);
+        strokeP.setColor(Theme.withAlpha(theme.neon ? theme.glow : theme.enter, (int) (0x90 * (1 - 0.55f * lv))));
+        c.drawRoundRect(tmp, radius + grow, radius + grow, strokeP);
+    }
+
+    private void drawShimmer(Canvas c, RectF r, float x) {
+        float band = r.height() * 1.4f, left = r.left - band + x * (r.width() + band);
+        c.save();
+        tmp.set(r);
+        sigPath.reset();
+        sigPath.addRoundRect(tmp, radius, radius, android.graphics.Path.Direction.CW);
+        c.clipPath(sigPath);
+        fillP.setShader(new LinearGradient(left, r.top, left + band, r.bottom,
+                new int[]{0, 0x66FFFFFF, 0}, null, Shader.TileMode.CLAMP));
+        c.drawRect(r, fillP);
+        fillP.setShader(null);
+        c.restore();
+    }
+    private final android.graphics.Path sigPath = new android.graphics.Path();
+
     /** Visual extras: press light, transitions, key spacing (0-3), corner radius (0 = by shape), width %. */
     public void setLook(boolean pressGlow, boolean anims, int gapLevel, int radiusDp, int widthPct) {
         this.pressGlow = pressGlow;
@@ -1257,19 +1330,42 @@ public class KeyboardView extends View {
         }
 
         if (pfx.busy()) animating |= pfx.draw(c, now, dp);
+        long breathWait = -1;
+        if (motionOn()) {
+            if (lastType > 0 && panel == PANEL_KEYS && voiceState == 0) {
+                drawFlow(c, now);
+                animating |= Motion.flowDecay(flow, now - lastType) >= 0.02f;
+                if (hasText) {
+                    long since = now - lastType;
+                    if (since < Motion.BREATH_AFTER) breathWait = Motion.BREATH_AFTER - since;
+                    else if (since < Motion.BREATH_AFTER + Motion.BREATH_FOR) breathWait = 40;
+                }
+            }
+            if (openAt > 0) {
+                if (now - openAt < Motion.BRAND_MS) animating = true;
+                else openAt = 0;
+            }
+        } else openAt = 0;
         if (animating) postInvalidateOnAnimation();
         else {
             lastFrame = 0;
             if (animBgOn) postInvalidateDelayed(33); // ~30 fps for moving backgrounds
+            else if (breathWait > 0) postInvalidateDelayed(breathWait);   // W116 breathing Enter, ~25 fps
         }
     }
 
     private boolean step(Key k, float dt) {
-        if (k.press == k.target) return false;
+        if (k.press == k.target) {
+            if (k.rel == 0) return false;
+            if (!motionOn() || SystemClock.uptimeMillis() - k.rel >= Motion.BOUNCE_MS) { k.rel = 0; return false; }
+            return true;   // W116: the release spring is still settling
+        }
         float speed = k.target > k.press ? 0.04f : 0.01f;
         float d = k.target - k.press;
         float s = Math.signum(d) * speed * dt;
         k.press = Math.abs(s) >= Math.abs(d) ? k.target : k.press + s;
+        if (k.press == 0f && k.target == 0f && motionOn() && k.type != Key.LABEL && k.type != Key.SUGG)
+            k.rel = SystemClock.uptimeMillis();
         return true;
     }
 
@@ -1567,6 +1663,17 @@ public class KeyboardView extends View {
             }
             fillP.setColor(color);
             c.drawRoundRect(r, radius, radius, fillP);
+            if (sig && opaque) {   // W116: soft pillow sheen — light on the top, a breath of shade at the foot
+                if (sheen == null) sheen = new LinearGradient(0, 0, 0, 1,
+                        new int[]{0x2EFFFFFF, 0x00FFFFFF, 0x00000000, 0x10000000},
+                        new float[]{0f, 0.48f, 0.7f, 1f}, Shader.TileMode.CLAMP);
+                shaderM.setScale(1, r.height());
+                shaderM.postTranslate(0, r.top);
+                sheen.setLocalMatrix(shaderM);
+                fillP.setShader(sheen);
+                c.drawRoundRect(r, radius, radius, fillP);
+                fillP.setShader(null);
+            }
             if (!opaque && theme.border == 0) {
                 strokeP.setStrokeWidth(0.8f * dp);
                 strokeP.setColor(0x26FFFFFF);
@@ -1598,14 +1705,31 @@ public class KeyboardView extends View {
     }
 
     private void drawKey(Canvas c, Key k) {
-        boolean anim = k.press > 0.01f && k.type != Key.LABEL && k.type != Key.SUGG
-                && !(k.type == Key.CHAR && k.id == 1);
-        if (!anim || !anims) { drawKeyInner(c, k); return; }
-        float s = 1f - 0.06f * k.press;
-        c.save();
-        c.scale(s, s, k.rect.centerX(), k.rect.centerY());
-        drawKeyInner(c, k);
-        c.restore();
+        boolean body = k.type != Key.LABEL && k.type != Key.SUGG && !(k.type == Key.CHAR && k.id == 1);
+        float s = 1f, ty = 0f;
+        if (body && anims && k.press > 0.01f) s = 1f - 0.06f * k.press;
+        if (body && motionOn()) {
+            long now = SystemClock.uptimeMillis();
+            if (openAt > 0 && panel == PANEL_KEYS) {
+                float e = Motion.entrance(now - openAt, Motion.waveDelay(k.rect.centerX(), k.rect.centerY() - toolH,
+                        getWidth(), getHeight() - toolH));
+                if (e <= 0.001f) return;          // not risen yet
+                if (e != 1f) { s *= 0.5f + 0.5f * e; ty = (1f - e) * 18 * dp; }
+            }
+            if (k.rel > 0 && k.press == 0f) s *= 1f + Motion.bounce(now - k.rel);
+        }
+        if (s == 1f && ty == 0f) drawKeyInner(c, k);
+        else {
+            c.save();
+            c.translate(0, ty);
+            c.scale(s, s, k.rect.centerX(), k.rect.centerY());
+            drawKeyInner(c, k);
+            c.restore();
+        }
+        if (k.type == Key.ENTER && sig && !reduceMotion && anims && hasText && k.press == 0f) {
+            float lv = Motion.breath(SystemClock.uptimeMillis() - lastType, true);
+            if (lv > 0.01f && lastType > 0) drawBreath(c, k, lv);
+        }
     }
 
     private void drawKeyInner(Canvas c, Key k) {
@@ -1669,7 +1793,21 @@ public class KeyboardView extends View {
             case Key.OH_SWITCH: drawSwitch(c, cx, cy, is, fg); return;
             case Key.SPACE: {
                 if (k.label.isEmpty()) return;
-                textP.setColor(theme.hint);
+                float since = openAt > 0 && motionOn() ? SystemClock.uptimeMillis() - openAt : -1;
+                if (since >= 0) {
+                    float sx = Motion.shimmer(since);
+                    if (sx >= 0) drawShimmer(c, r, sx);
+                    float ba = decorName == null ? Motion.brand(since) : 0f;
+                    if (ba > 0.01f) {   // W116: the wordmark greets you, then hands over to the language
+                        textP.setColor(Theme.withAlpha(theme.neon ? theme.glow : theme.enter, (int) (255 * ba)));
+                        textP.setTextSize(13 * dp * clamp(scale, 0.8f, 1.1f));
+                        textP.setLetterSpacing(0.28f);
+                        c.drawText("♛ NEOKEY", cx, baseline(r, textP), textP);
+                        textP.setLetterSpacing(0f);
+                        if (ba > 0.99f) return;
+                    }
+                }
+                textP.setColor(Theme.withAlpha(theme.hint, (int) ((theme.hint >>> 24) * (since >= 0 ? 1 - Motion.brand(decorName == null ? since : -1) : 1f))));
                 textP.setTextSize(14 * dp * clamp(scale, 0.8f, 1.1f));
                 String l = decorName != null ? decorName : (swipeCursor ? k.label : "‹  " + k.label + "  ›");
                 if (decorName != null) textP.setColor(theme.enter);
@@ -2076,6 +2214,9 @@ public class KeyboardView extends View {
                 swiped = longPressed = false;
                 altList = null;
                 k.target = 1f;
+                k.rel = 0;
+                if (k.type == Key.CHAR || k.type == Key.SPACE || k.type == Key.DEL) noteType();
+                if (k.type == Key.ENTER) lastType = 0;
                 buzz();
                 click(k);
                 if (fxType >= 0 && !reduceMotion && panel == PANEL_KEYS) {

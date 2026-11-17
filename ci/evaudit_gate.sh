@@ -99,7 +99,7 @@ sed -i '/^EVAUDIT_/d' "$STATE"
   echo "EVAUDIT_PROOFS=$PRF"
   echo "EVAUDIT_TESTS=$TPF"
   echo "EVAUDIT_DEX=$DEX"
-  echo "EVAUDIT_CEILING=590000"   # W69-CEILING-RAISE
+  echo "EVAUDIT_CEILING=594000"   # W69-CEILING-RAISE
   echo "EVAUDIT_VC=$PUB_VC"
   echo "EVAUDIT_VN=$PUB_VN"
   echo "EVAUDIT_ARCHIVE=build/evaudit/archive"

@@ -2422,6 +2422,8 @@ public class SetupActivity extends Activity {
         card3.addView(toggle("تأثير إضاءة عند الضغط", "pressglow", true));
         card3.addView(divider());
         card3.addView(toggle("حركات انتقال سلسة", "anims", true));
+        card3.addView(divider());
+        card3.addView(toggle("لمسة NeoKey ♛ (موجة دخول، نابض، نبض الإرسال، خط الإيقاع)", "signature", true));
         content.addView(card3);
 
         section("تخطيط الكيبورد");

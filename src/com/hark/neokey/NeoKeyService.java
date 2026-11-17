@@ -380,6 +380,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     }
 
     @Override
+    public void onWindowShown() {
+        super.onWindowShown();
+        if (view != null) view.playOpen();   // W116: entrance wave once per appearance, not per field
+    }
+
+    @Override
     public void onStartInputView(EditorInfo info, boolean restarting) {
         super.onStartInputView(info, restarting);
         if (!restarting) reloadClips();   // picks up edits / imports made in the app screens
@@ -535,6 +541,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         view.setKeyShape(lp.getInt("keyshape", 0));
         view.setLook(lp.getBoolean("pressglow", true), lp.getBoolean("anims", true),
                 lp.getInt("keygap", 1), lp.getInt("radius", 0), lp.getInt("wpct", 100));
+        view.setSignature(lp.getBoolean("signature", true));   // W116 «لمسة NeoKey»
         int ks = Theme.prefs(this).getInt("keysize", 1);
         boolean big = lp.getBoolean("bigkeys", false), reduce = Theme.reduceMotion(this);
         view.setKeyScale(big ? 1.3f : ks == 0 ? 0.88f : ks == 2 ? 1.14f : ks == 3 ? 1.3f : 1f);
@@ -771,6 +778,9 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
 
     private void updateSuggestions0() {
         if (view == null) return;
+        InputConnection hic = getCurrentInputConnection();   // W116: breathing Enter only when there is text to send
+        CharSequence hb = hic == null ? null : hic.getTextBeforeCursor(1, 0);
+        view.setHasText(hb != null && hb.length() > 0);
         if (clipSearch) {
             String q = clipBuf.toString();
             List<String> chips = new ArrayList<>();
