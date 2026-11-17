@@ -2423,7 +2423,8 @@ public class SetupActivity extends Activity {
         card3.addView(divider());
         card3.addView(toggle("حركات انتقال سلسة", "anims", true));
         card3.addView(divider());
-        card3.addView(toggle("لمسة NeoKey ♛ (موجة دخول، نابض، نبض الإرسال، خط الإيقاع)", "signature", true));
+        card3.addView(toggle(getString(R.string.nk_setupactivity_signature), "signature", true));
+        card3.addView(toggle(getString(R.string.nk_setupactivity_suggrow), "sugg_row", true));
         content.addView(card3);
 
         section("تخطيط الكيبورد");

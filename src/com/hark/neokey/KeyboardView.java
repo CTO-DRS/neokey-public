@@ -253,6 +253,8 @@ public class KeyboardView extends View {
             computeGeometry(getWidth() > 0 ? getWidth() : getResources().getDisplayMetrics().widthPixels);
         }
         keyRows = rows;
+        stripKey = null;   // W117: the suggestion strip, when the layout carries one
+        for (List<Key> r : rows) for (Key k : r) if (k.type == Key.LABEL && k.id == Key.STRIP) stripKey = k;
         post(this::a11yChanged);
         hasNumberRow = numberRow;
         this.rtl = rtl;
@@ -266,6 +268,8 @@ public class KeyboardView extends View {
     private Typeface face(int style) { return Theme.face(theme == null ? 0 : theme.font, style); }
 
     private boolean pressGlow = true, anims = true, extraRow;
+    private Key stripKey;                       // W117 suggestion strip row (null = suggestions in the toolbar)
+    private final Path inkPath = new Path();
     private int gapLevel = 1, radiusDp = 0, widthPct = 100;
     private float panelT = 1f;
     private final android.graphics.Matrix shaderM = new android.graphics.Matrix();
@@ -689,7 +693,6 @@ public class KeyboardView extends View {
             k.rect.set(x, tt, x + tw, toolH);
         }
         layoutFeatures();
-        layoutSuggestions();
         float top = toolH;
         if (keyRows != null) {
             float[] weights = new float[keyRows.size()];
@@ -701,6 +704,8 @@ public class KeyboardView extends View {
             }
             layoutRows(keyRows, weights, sum, top);
         }
+        if (stripKey != null) stripKey.rect.set(contentL + gap / 2, stripKey.rect.top, contentR - gap / 2, stripKey.rect.bottom);
+        layoutSuggestions();
         layoutRows(emojiRows, equal(emojiRows.size()), emojiRows.size(), top);
         layoutRows(moreRows, equal(moreRows.size()), moreRows.size(), top);
         layoutRows(editRows, equal(editRows.size()), editRows.size(), top);
@@ -757,36 +762,49 @@ public class KeyboardView extends View {
     }
 
     private void layoutSuggestions() {
+        List<Key> prev = new ArrayList<>(suggKeys);
         suggKeys.clear();
         if (suggestions == null || suggestions.isEmpty()) return;
+        boolean strip = stripKey != null;
+        float L = strip ? stripKey.rect.left : midL, R = strip ? stripKey.rect.right : midR;
+        float T = strip ? stripKey.rect.top : cornerR * 0.15f, B = strip ? stripKey.rect.bottom : toolH;
+        long now = SystemClock.uptimeMillis();
         if (emojiStrip) {
-            float w = midR - midL, chipW = w * 0.34f, cell = (w - chipW) / 6f;
+            float w = R - L, chipW = w * 0.34f, cell = (w - chipW) / 6f;
             for (int i = 0; i < Math.min(7, suggestions.size()); i++) {
                 Key k = new Key(Key.SUGG, suggestions.get(i), suggestions.get(i), 1f, null);
                 k.id = i == 0 ? 0 : 10 + i;
                 float l, r;
-                if (i == 0) { l = rtl ? midR - chipW : midL; r = l + chipW; }
+                if (i == 0) { l = rtl ? R - chipW : L; r = l + chipW; }
                 else {
                     float off = chipW + (i - 1) * cell;
-                    if (rtl) { r = midR - off; l = r - cell; } else { l = midL + off; r = l + cell; }
+                    if (rtl) { r = R - off; l = r - cell; } else { l = L + off; r = l + cell; }
                 }
-                k.rect.set(l, cornerR * 0.15f, r, toolH);
+                k.rect.set(l, T, r, B);
+                k.born = bornOf(prev, k, now);
                 suggKeys.add(k);
             }
             return;
         }
         int n = Math.min(3, suggestions.size());
-        float w = midR - midL, sw = w / 3f;
+        float sw = (R - L) / 3f;
         // center slot = best, then the reading-direction side
         int[] slotOrder = rtl ? new int[]{1, 2, 0} : new int[]{1, 0, 2};
         for (int i = 0; i < n; i++) {
             Key k = new Key(Key.SUGG, suggestions.get(i), suggestions.get(i), 1f, null);
             k.id = i;
             int slot = n == 1 ? 1 : slotOrder[i];
-            float x = midL + slot * sw;
-            k.rect.set(x, cornerR * 0.15f, x + sw, toolH);
+            float x = L + slot * sw;
+            k.rect.set(x, T, x + sw, B);
+            k.born = bornOf(prev, k, now);
             suggKeys.add(k);
         }
+    }
+
+    /** W117: a chip keeps its birth time when the same word stays in the same place (no flicker while typing). */
+    private static long bornOf(List<Key> prev, Key k, long now) {
+        for (Key o : prev) if (o.id == k.id && o.label != null && o.label.equals(k.label)) return o.born;
+        return now;
     }
 
     private final java.util.Map<Integer, List<String>> drawableCache = new java.util.HashMap<>();
@@ -1093,7 +1111,9 @@ public class KeyboardView extends View {
         }
     }
 
-    private boolean showSugg() { return panel == PANEL_KEYS && !suggKeys.isEmpty() && voiceState == 0 && expanded == 0; }
+    private boolean showSugg() { return panel == PANEL_KEYS && stripKey == null && !suggKeys.isEmpty() && voiceState == 0 && expanded == 0; }
+    /** W117: suggestions live in the strip row; the toolbar keeps the tools. */
+    private boolean inStrip() { return stripKey != null && panel == PANEL_KEYS && voiceState == 0; }
 
     // ------------------------------------------------------------------ arrows + quick features
 
@@ -1294,7 +1314,7 @@ public class KeyboardView extends View {
                 drawSuggestions(c);
                 for (Key k : suggKeys) animating |= step(k, dt);
             } else {
-                for (Key k : toolbar) if (k.id != Key.T_AVATAR) { animating |= step(k, dt); drawTool(c, k); }
+                for (Key k : toolbar) if (k.id != Key.T_AVATAR) { animating |= step(k, dt); drawToolFx(c, k, now); }
             }
         }
 
@@ -1310,6 +1330,10 @@ public class KeyboardView extends View {
         List<List<Key>> rows = panelRows();
         if (rows != null) {
             for (List<Key> r : rows) for (Key k : r) { animating |= step(k, dt); drawKey(c, k); }
+            if (inStrip()) {
+                for (Key k : suggKeys) animating |= step(k, dt);
+                animating |= drawStrip(c, now);
+            }
         } else if (panel == PANEL_CLIP) {
             drawClips(c);
             for (Key k : clipKeys) animating |= step(k, dt);
@@ -1355,6 +1379,17 @@ public class KeyboardView extends View {
     }
 
     private boolean step(Key k, float dt) {
+        boolean ink = false;
+        if (k.tdown > 0) {   // W117 ink ripple + hold bar
+            long now = SystemClock.uptimeMillis();
+            if (k.target == 0f && k.tup == 0) k.tup = now;
+            if (!motionOn() || (k.tup > 0 && now - k.tup >= Motion.INK_FADE)) { k.tdown = 0; k.tup = 0; }
+            else ink = k.tup > 0 || now - k.tdown < Math.max(Motion.INK_GROW, k.alts != null ? lpDelay : 0) + 40;
+        }
+        return stepPress(k, dt) | ink;
+    }
+
+    private boolean stepPress(Key k, float dt) {
         if (k.press == k.target) {
             if (k.rel == 0) return false;
             if (!motionOn() || SystemClock.uptimeMillis() - k.rel >= Motion.BOUNCE_MS) { k.rel = 0; return false; }
@@ -1408,6 +1443,117 @@ public class KeyboardView extends View {
             c.drawText(e.toString(), k.rect.centerX(), baseline(k.rect, textP), textP);
         }
         textP.setTypeface(face(Typeface.NORMAL));
+    }
+
+    // ------------------------------------------------------------------ W117 strip, ink, tool press
+
+    /** The suggestion strip row: soft pills, the best word lit, chips rising in one after another. */
+    private boolean drawStrip(Canvas c, long now) {
+        RectF sr = stripKey.rect;
+        if (suggKeys.isEmpty()) {   // quiet slot: three faint dots
+            fillP.setColor(Theme.withAlpha(theme.icon, 0x30));
+            for (int i = -1; i <= 1; i++) c.drawCircle(sr.centerX() + i * 8 * dp, sr.centerY(), 2.2f * dp, fillP);
+            return false;
+        }
+        boolean anim = false;
+        float sz = clamp(scale, 0.85f, 1.1f);
+        for (Key k : suggKeys) {
+            float e = 1f;
+            if (motionOn() && k.born > 0) {
+                e = Motion.chipIn(now - k.born, k.id >= 10 ? k.id - 9 : k.id);
+                anim |= e < 1f;
+            }
+            if (e <= 0.001f) continue;
+            boolean emojiCell = emojiStrip && k.id >= 10, best = k.id == 0;
+            float ins = 3 * dp;
+            tmp.set(k.rect.left + ins, k.rect.top + ins, k.rect.right - ins, k.rect.bottom - ins);
+            float sc = (1f - 0.05f * k.press) * (0.86f + 0.14f * e);
+            c.save();
+            c.translate(0, (1f - e) * 8 * dp);
+            c.scale(sc, sc, tmp.centerX(), tmp.centerY());
+            float rr = tmp.height() / 2;
+            if (!emojiCell) {
+                int base = best ? Theme.withAlpha(theme.enter, 0x2C + (int) (0x34 * k.press))
+                        : Theme.withAlpha(theme.text, 0x0E + (int) (0x22 * k.press));
+                fillP.setColor(fade(base, e));
+                c.drawRoundRect(tmp, rr, rr, fillP);
+                if (best) {
+                    strokeP.setStrokeWidth(1.2f * dp);
+                    strokeP.setColor(fade(Theme.withAlpha(theme.enter, 0x8C), e));
+                    c.drawRoundRect(tmp, rr, rr, strokeP);
+                }
+            } else if (k.press > 0.01f) {
+                fillP.setColor(Theme.withAlpha(theme.text, (int) (0x1C * k.press)));
+                c.drawRoundRect(tmp, rr, rr, fillP);
+            }
+            textP.setColor(fade(best ? theme.text : Theme.withAlpha(theme.text, 0xD0), e));
+            textP.setTypeface(face(best ? Typeface.BOLD : Typeface.NORMAL));
+            textP.setTextSize((emojiCell ? 23 : 17) * dp * sz);
+            if (k.label.startsWith(CLIP_MARK)) {
+                String body = k.label.substring(CLIP_MARK.length());
+                float iz = 17 * dp, g = 6 * dp;
+                CharSequence t = TextUtils.ellipsize(body, textP, tmp.width() - 16 * dp - iz - g, TextUtils.TruncateAt.END);
+                float tw = textP.measureText(t.toString()), total = tw + iz + g, left = tmp.centerX() - total / 2;
+                float icx = rtl ? left + tw + g + iz / 2 : left + iz / 2;
+                float tcx = rtl ? left + tw / 2 : left + iz + g + tw / 2;
+                Icons.draw(c, getContext(), "paste", icx, tmp.centerY(), iz, fade(theme.enter, e));
+                c.drawText(t.toString(), tcx, baseline(k.rect, textP), textP);
+            } else {
+                CharSequence t = TextUtils.ellipsize(k.label, textP, tmp.width() - 14 * dp, TextUtils.TruncateAt.END);
+                c.drawText(t.toString(), tmp.centerX(), baseline(k.rect, textP), textP);
+            }
+            c.restore();
+        }
+        textP.setTypeface(face(Typeface.NORMAL));
+        return anim;
+    }
+
+    private static int fade(int col, float e) {
+        int a = (int) (((col >>> 24) & 0xFF) * Math.max(0f, Math.min(1f, e)));
+        return (a << 24) | (col & 0xFFFFFF);
+    }
+
+    /** Ink from the exact point the finger landed, clipped to the key; a hold bar for keys with extra letters. */
+    private void drawTouch(Canvas c, Key k) {
+        if (k.tdown == 0 || !motionOn() || panel != PANEL_KEYS && panel != PANEL_EMOJI && panel != PANEL_EDIT) return;
+        long now = SystemClock.uptimeMillis(), t = now - k.tdown;
+        float a = Motion.inkAlpha(k.tup > 0 ? now - k.tup : -1);
+        if (a <= 0.004f) return;
+        RectF r = k.rect;
+        float maxR = (float) Math.hypot(Math.max(k.tx - r.left, r.right - k.tx), Math.max(k.ty - r.top, r.bottom - k.ty));
+        c.save();
+        inkPath.reset();
+        inkPath.addRoundRect(r, radius, radius, Path.Direction.CW);
+        c.clipPath(inkPath);
+        int ink = k.type == Key.ENTER ? 0xFFFFFFFF : theme.enter;
+        fillP.setColor(Theme.withAlpha(ink, (int) (0x3A * a)));
+        c.drawCircle(clamp(k.tx, r.left, r.right), clamp(k.ty, r.top, r.bottom), maxR * Motion.inkRadius(t), fillP);
+        if (k.alts != null && k.tup == 0 && !longPressed) {
+            float hp = Motion.hold(t, lpDelay);
+            if (hp > 0f) {
+                float bw = r.width() * 0.56f * hp, by = r.bottom - 3.2f * dp;
+                fillP.setColor(Theme.withAlpha(theme.enter, 0xD0));
+                tmp.set(r.centerX() - bw / 2, by - 1.4f * dp, r.centerX() + bw / 2, by + 1.4f * dp);
+                c.drawRoundRect(tmp, 1.4f * dp, 1.4f * dp, fillP);
+            }
+        }
+        c.restore();
+    }
+
+    /** Toolbar icons dip under the finger, spring back, and glow softly while held. */
+    private void drawToolFx(Canvas c, Key k, long now) {
+        if (!motionOn()) { drawTool(c, k); return; }
+        float s = 1f - 0.14f * k.press;
+        if (k.rel > 0 && k.press == 0f) s *= 1f + 2.2f * Motion.bounce(now - k.rel);
+        if (k.press > 0.01f) {
+            fillP.setColor(Theme.withAlpha(theme.enter, (int) (0x24 * k.press)));
+            c.drawCircle(k.rect.centerX(), k.rect.centerY(), Math.min(k.rect.width(), k.rect.height()) * 0.40f, fillP);
+        }
+        if (s == 1f) { drawTool(c, k); return; }
+        c.save();
+        c.scale(s, s, k.rect.centerX(), k.rect.centerY());
+        drawTool(c, k);
+        c.restore();
     }
 
     private void drawVoice(Canvas c, long now) {
@@ -1718,12 +1864,13 @@ public class KeyboardView extends View {
             }
             if (k.rel > 0 && k.press == 0f) s *= 1f + Motion.bounce(now - k.rel);
         }
-        if (s == 1f && ty == 0f) drawKeyInner(c, k);
+        if (s == 1f && ty == 0f) { drawKeyInner(c, k); if (body) drawTouch(c, k); }
         else {
             c.save();
             c.translate(0, ty);
             c.scale(s, s, k.rect.centerX(), k.rect.centerY());
             drawKeyInner(c, k);
+            if (body) drawTouch(c, k);
             c.restore();
         }
         if (k.type == Key.ENTER && sig && !reduceMotion && anims && hasText && k.press == 0f) {
@@ -2215,6 +2362,7 @@ public class KeyboardView extends View {
                 altList = null;
                 k.target = 1f;
                 k.rel = 0;
+                k.tx = x; k.ty = y; k.tdown = SystemClock.uptimeMillis(); k.tup = 0;   // W117 ink
                 if (k.type == Key.CHAR || k.type == Key.SPACE || k.type == Key.DEL) noteType();
                 if (k.type == Key.ENTER) lastType = 0;
                 buzz();
@@ -2565,6 +2713,10 @@ public class KeyboardView extends View {
             if (k.rect.contains(x, y)) return k;
         }
         if (oneHand != 0 && (x < contentL - gap || x > contentR + gap)) return null;
+        if (inStrip() && y >= stripKey.rect.top - gap / 2 && y < stripKey.rect.bottom + gap / 2) {
+            for (Key k : suggKeys) if (x >= k.rect.left && x < k.rect.right) return k;
+            return null;
+        }
         List<Key> all = new ArrayList<>();
         List<List<Key>> rows = panelRows();
         if (rows != null) for (List<Key> r : rows) all.addAll(r);
@@ -2654,6 +2806,7 @@ public class KeyboardView extends View {
         if (arrowsOn) l.add(arrowKeyL);
         List<List<Key>> rows = panelRows();
         if (rows != null) { for (List<Key> r : rows) for (Key k : r) if (k.type != Key.LABEL && !((k.type == Key.CHAR || k.type == Key.PHRASE) && k.label.isEmpty())) l.add(k); }
+        if (inStrip()) for (Key k : suggKeys) if (k.label != null && !k.label.isEmpty()) l.add(k);
         else if (panel == PANEL_CLIP) { l.addAll(clipKeys); l.addAll(clipBottom); }
         l.addAll(sideKeys);
         return l;

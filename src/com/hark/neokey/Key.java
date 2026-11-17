@@ -25,6 +25,9 @@ final class Key {
     final RectF rect = new RectF();
     float press, target;
     long rel;               // W116: uptime the key came back to rest (spring bounce)
+    float tx, ty;           // W117: where the finger landed (ink ripple)
+    long tdown, tup, born;  // W117: touch down / lift uptimes; chip birth for the staggered entrance
+    static final int STRIP = -7;   // W117: id of the suggestion-strip row placeholder
 
     Key(int type, String label, String text, float units, String[] alts) {
         this.type = type;

@@ -266,4 +266,24 @@
     <string name="nk_setupactivity_channeltoast" formatted="false">استوردت %1$d ثيمات موقّعة</string>
     <!-- origin: SetupActivity.java:1560 -->
     <string name="nk_setupactivity_channelrefuse">القناة مرفوضة — التوقيع لا يطابق</string>
+    <!-- origin: NeoKeyService.java:834 -->
+    <string name="nk_service_swap_pasted">الملصوق غير اللي نسخته! · رجّع الأصل</string>
+    <!-- origin: NeoKeyService.java:834 -->
+    <string name="nk_service_swap_changed">الحافظة تغيّرت لوحدها! تأكّد قبل اللصق</string>
+    <!-- origin: NeoKeyService.java:860 -->
+    <string name="nk_service_quran_chip">ما لقيت هذا النص في المصحف! تأكّد منه</string>
+    <!-- origin: NeoKeyService.java:1337 -->
+    <string name="nk_service_quran_toast">النص غير موجود في المصحف بهذا اللفظ — راجعه قبل نسبته للقرآن</string>
+    <!-- origin: NeoKeyService.java:1373 -->
+    <string name="nk_service_swap_toast">تغيّر المنسوخ بعد نسخك له — ممكن برنامج خبيث. الأصل:</string>
+    <!-- origin: NeoKeyService.java:1377 -->
+    <string name="nk_service_link_toast">الرابط لا يطابق الموقع الرسمي — افتح التطبيق الرسمي أو اكتب العنوان بنفسك</string>
+    <!-- origin: NeoKeyService.java:1392 -->
+    <string name="nk_service_iban_toast">تأكّد من رقم الآيبان قبل التحويل — فيه خانة غلط</string>
+    <!-- origin: NeoKeyService.java:1397 -->
+    <string name="nk_service_rhythm_toast">أسلوب كتابة غير مألوف: كلماتك المحفوظة والحافظة مخفية حتى يرجع أسلوبك</string>
+    <!-- origin: SetupActivity.java:2426 -->
+    <string name="nk_setupactivity_signature">لمسة NeoKey ♛ (موجة دخول، نابض، نبض الإرسال، خط الإيقاع)</string>
+    <!-- origin: SetupActivity.java:2427 -->
+    <string name="nk_setupactivity_suggrow">شريط الاقتراحات فوق الأزرار (والأدوات ثابتة في الأعلى)</string>
 </resources>

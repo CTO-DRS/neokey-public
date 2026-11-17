@@ -79,4 +79,40 @@ final class Motion {
         if (sinceShow < BRAND_MS - 450) return 1;
         return (BRAND_MS - sinceShow) / 450f;
     }
+
+    // ---------------------------------------------------------------- W117 touch & chips
+
+    /** Ink ripple: grows from the finger over INK_GROW, then fades over INK_FADE after lift. */
+    static final long INK_GROW = 260, INK_FADE = 240, HOLD_FROM = 120, CHIP_MS = 260, CHIP_STAGGER = 45;
+
+    static float inkRadius(long t) {
+        if (t <= 0) return 0.15f;
+        if (t >= INK_GROW) return 1f;
+        float x = t / (float) INK_GROW;
+        return 0.15f + 0.85f * (1f - (1f - x) * (1f - x) * (1f - x));
+    }
+
+    /** sinceUp < 0 while the finger is still down. */
+    static float inkAlpha(long sinceUp) {
+        if (sinceUp < 0) return 1f;
+        if (sinceUp >= INK_FADE) return 0f;
+        float x = sinceUp / (float) INK_FADE;
+        return (1f - x) * (1f - x);
+    }
+
+    /** Long-press progress bar: 0 until HOLD_FROM, 1 at the long-press delay. */
+    static float hold(long held, long delay) {
+        if (held <= HOLD_FROM || delay <= HOLD_FROM) return 0f;
+        if (held >= delay) return 1f;
+        return (held - HOLD_FROM) / (float) (delay - HOLD_FROM);
+    }
+
+    /** Suggestion chip entrance, staggered by slot. */
+    static float chipIn(long t, int slot) {
+        long d = t - slot * CHIP_STAGGER;
+        if (d <= 0) return 0f;
+        if (d >= CHIP_MS) return 1f;
+        float x = d / (float) CHIP_MS;
+        return 1f - (1f - x) * (1f - x) * (1f - x);
+    }
 }

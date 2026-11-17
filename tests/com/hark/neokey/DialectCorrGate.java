@@ -599,6 +599,18 @@ public final class DialectCorrGate {
         need(Motion.brand(10) == 1f && Motion.brand(Motion.BRAND_MS) == 0f && Motion.brand(-1) == 0f, "motion.brand");
         System.out.println("DIALECTCORR motion ok peak=" + peak);
 
+        // ---- 3ac. W117 touch ink, hold bar, chip entrance, strip row
+        need(Motion.inkRadius(0) > 0.1f && Motion.inkRadius(Motion.INK_GROW) == 1f
+                && Motion.inkRadius(Motion.INK_GROW / 2) > 0.7f, "touch.ink.grow");
+        need(Motion.inkAlpha(-1) == 1f && Motion.inkAlpha(0) == 1f && Motion.inkAlpha(Motion.INK_FADE) == 0f
+                && Motion.inkAlpha(Motion.INK_FADE / 2) < 0.5f, "touch.ink.fade");
+        need(Motion.hold(50, 350) == 0f && Motion.hold(350, 350) == 1f && Motion.hold(235, 350) > 0.4f
+                && Motion.hold(235, 350) < 0.6f, "touch.hold");
+        need(Motion.chipIn(0, 0) == 0f && Motion.chipIn(Motion.CHIP_MS, 0) == 1f
+                && Motion.chipIn(Motion.CHIP_STAGGER, 1) == 0f && Motion.chipIn(Motion.CHIP_MS + 2 * Motion.CHIP_STAGGER, 2) == 1f,
+                "touch.chip.stagger");
+        System.out.println("DIALECTCORR touch ok");
+
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];
         int n = 0;

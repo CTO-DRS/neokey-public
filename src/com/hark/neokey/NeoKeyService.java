@@ -188,6 +188,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     /** Corrections applied in the current field — the «ماذا كتبت فعلاً مقابل ما سيُرسل» feed (item B, week 2). */
     private final java.util.ArrayList<SendPreview.Edit> sentEdits = new java.util.ArrayList<>();
     private int kbLayout;
+    private boolean suggRow = true;
     private int decor = Decor.OFF;
     private String lastWord, corrOriginal, corrApplied;
     private SpeechRecognizer recognizer;
@@ -542,6 +543,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         view.setLook(lp.getBoolean("pressglow", true), lp.getBoolean("anims", true),
                 lp.getInt("keygap", 1), lp.getInt("radius", 0), lp.getInt("wpct", 100));
         view.setSignature(lp.getBoolean("signature", true));   // W116 «لمسة NeoKey»
+        suggRow = lp.getBoolean("sugg_row", true) && suggest;   // W117 suggestion strip; tools stay on top
         int ks = Theme.prefs(this).getInt("keysize", 1);
         boolean big = lp.getBoolean("bigkeys", false), reduce = Theme.reduceMotion(this);
         view.setKeyScale(big ? 1.3f : ks == 0 ? 0.88f : ks == 2 ? 1.14f : ks == 3 ? 1.3f : 1f);
@@ -555,7 +557,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
 
     private void applyLayout() {
         boolean num = Theme.numberRow(this);
-        view.setKeys(Layouts.build(mode, arabic, num, Theme.arabicDigits(this), kbLayout), num, mode != Layouts.EN && mode != Layouts.NUM);
+        view.setKeys(Layouts.build(mode, arabic, num, Theme.arabicDigits(this), kbLayout, suggRow), num, mode != Layouts.EN && mode != Layouts.NUM);
         view.setShiftState(mode == Layouts.EN ? shift : KeyboardView.SHIFT_OFF);
     }
 
@@ -829,7 +831,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                 swapOrig = null;
             } else {
                 List<String> sl = new ArrayList<>();
-                sl.add(SWAPM + (pasted ? "الملصوق غير اللي نسخته! · رجّع الأصل" : "الحافظة تغيّرت لوحدها! تأكّد قبل اللصق"));
+                sl.add(SWAPM + (pasted ? getString(R.string.nk_service_swap_pasted) : getString(R.string.nk_service_swap_changed)));
                 view.setSuggestions(sl);
                 return;
             }
@@ -855,7 +857,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                     String[] h = quran.check(qq[0]);
                     List<String> ql = new ArrayList<>();
                     if (h == null) {
-                        if (qq[0].trim().split("\\s+").length >= 4) ql.add(QURANM + "ما لقيت هذا النص في المصحف! تأكّد منه");
+                        if (qq[0].trim().split("\\s+").length >= 4) ql.add(QURANM + getString(R.string.nk_service_quran_chip));
                     } else {
                         quranHit = new String[]{h[0], h[1], h[2], qq[1]};
                         ql.add(QURANM + ("1".equals(h[0]) ? "✓ " + h[2] + " · أضف المرجع" : "فيها خطأ! صحّحها (" + h[2] + ")"));
@@ -1332,7 +1334,7 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             String[] h = quranHit;
             quranHit = null;
             if (h == null) {
-                Toast.makeText(this, "النص غير موجود في المصحف بهذا اللفظ — راجعه قبل نسبته للقرآن", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.nk_service_quran_toast), Toast.LENGTH_LONG).show();
                 return;
             }
             int cut = Integer.parseInt(h[3]);
@@ -1368,11 +1370,11 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                     return;
                 }
             }
-            Toast.makeText(this, "تغيّر المنسوخ بعد نسخك له — ممكن برنامج خبيث. الأصل: " + og, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.nk_service_swap_toast) + " " + og, Toast.LENGTH_LONG).show();
             return;
         }
         if (word.startsWith(LINKM)) {   // W112: a warning only — the text stays as typed
-            Toast.makeText(this, "الرابط لا يطابق الموقع الرسمي — افتح التطبيق الرسمي أو اكتب العنوان بنفسك", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.nk_service_link_toast), Toast.LENGTH_LONG).show();
             return;
         }
         if (word.startsWith(IBANM)) {   // W111: a sound IBAN is laid out in fours; a broken one is only warned
@@ -1387,12 +1389,12 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
                     ic.endBatchEdit();
                 }
             } else {
-                Toast.makeText(this, "تأكّد من رقم الآيبان قبل التحويل — فيه خانة غلط", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.nk_service_iban_toast), Toast.LENGTH_LONG).show();
             }
             return;
         }
         if (word.startsWith(GUEST)) {   // W110: what guest mode is, and how it ends
-            Toast.makeText(this, "أسلوب كتابة غير مألوف: كلماتك المحفوظة والحافظة مخفية حتى يرجع أسلوبك", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.nk_service_rhythm_toast), Toast.LENGTH_LONG).show();
             return;
         }
         if (word.startsWith(TONE)) {   // W109: the message itself, warmer

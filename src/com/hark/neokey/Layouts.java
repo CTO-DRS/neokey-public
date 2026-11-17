@@ -52,10 +52,25 @@ final class Layouts {
         return r;
     }
 
+    /** W117: the strip row the word suggestions live in (replaces the fixed emoji row). */
+    static List<Key> stripRow() {
+        List<Key> r = new ArrayList<>();
+        Key k = new Key(Key.LABEL, "", null, 10f, null);
+        k.id = Key.STRIP;
+        k.rowW = EXTRA_W;
+        r.add(k);
+        return r;
+    }
+
     static List<List<Key>> build(int mode, boolean arabic, boolean numberRow, boolean indic, int kind) {
+        return build(mode, arabic, numberRow, indic, kind, false);
+    }
+
+    static List<List<Key>> build(int mode, boolean arabic, boolean numberRow, boolean indic, int kind, boolean strip) {
         List<List<Key>> rows = new ArrayList<>();
         boolean letters = mode == AR || mode == EN;
-        if (letters && kind != L_STD) {
+        if (letters && strip && (kind == L_STD || kind == L_CHAT)) rows.add(stripRow());
+        else if (letters && kind != L_STD) {
             List<Key> ex = extraRow(kind);
             if (ex != null) rows.add(ex);
         }
