@@ -419,6 +419,17 @@ public final class DialectCorrGate {
         for (String w : new String[]{"29/2/2027", "31/4/2026", "13/13/2026", "1/1/1700", "31/1/1448", "12/25", "1/2/3", "2026/12", "a/1/2026"})
             need(Dialect.parseDate(w) == null, "date.refuse " + w);
         System.out.println("DIALECTCORR dateparse ok");
+        // ---- 3r. «حارس الاحتيال» (W106): what trips the guard, the exact span it deletes, and what never does.
+        need(Dialect.chatApp("com.whatsapp") && Dialect.chatApp("org.telegram.messenger") && !Dialect.chatApp("com.alrajhibank.android") && !Dialect.chatApp(null), "guard.apps");
+        String[][] gPins = {{"482193", "otp", "482193"}, {"٤٨٢١", "otp", "٤٨٢١"}, {"الرمز 7731 ", "otp", "7731 "}, {"code: 55012", "otp", "55012"},
+                {"4111 1111 1111 1111", "card", "4111 1111 1111 1111"}, {"خذ 4111-1111-1111-1111 ", "card", "4111-1111-1111-1111 "}};
+        for (String[] p : gPins) {
+            String[] g = Dialect.scamSpan(p[0]);
+            need(g != null && p[1].equals(g[0]) && p[2].equals(g[1]), "guard.pin " + p[0] + " → " + (g == null ? null : g[0] + "|" + g[1]));
+        }
+        for (String w : new String[]{"2026", "123", "عندي 5000 ريال", "4111 1111 1111 1112", "اتصل 0551234567", "abc12345", "123456789", ""})
+            need(Dialect.scamSpan(w) == null, "guard.refuse " + w);
+        System.out.println("DIALECTCORR guard pins=" + gPins.length);
 
         // ---- 4. latency (attached path)
         long[] la = new long[cases + words];

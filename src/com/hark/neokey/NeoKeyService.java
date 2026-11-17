@@ -144,6 +144,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     private static final String PROV = "❝ ";   // W95: a proverb chip's visible mark
     private static final String SOFT = "🕊 ";   // W96: a gentler-phrase chip's mark
     private static final String OCC = "✨ ";   // W97: an occasion-phrase chip's mark
+    private static final String GUARD = "🛡 ";   // W106: anti-scam guard chip mark (tap deletes the code/card)
+    private String guardSpan;   // W106: the exact typed suffix the guard chip deletes
     private static final String SAR = "💰 ";   // W102: amount-in-words chip mark (tap replaces «1500 ريال»)
     private static final String NUM = "🔢 ";   // W101: number-in-words chip mark (tap replaces the number)
     private static final String DATE = "📅 ";   // W100: today's date chip mark (inserts after the word)
@@ -746,6 +748,21 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             view.setSuggestions(new ArrayList<>(fieldKind == 1 ? EMAIL_CHIPS.subList(0, 4) : URL_CHIPS.subList(0, 4)));
             return;
         }
+        // W106 «حارس الاحتيال»: a bare OTP or a card number typed into a chat app — warned before
+        // it is sent, whatever the layout (the number pad included); the tap deletes it.
+        guardSpan = null;
+        if (!sensitive && Dialect.chatApp(currentApp)) {
+            InputConnection gic = getCurrentInputConnection();
+            CharSequence gb = gic == null ? null : gic.getTextBeforeCursor(64, 0);
+            String[] g = gb == null ? null : Dialect.scamSpan(gb.toString());
+            if (g != null) {
+                guardSpan = g[1];
+                List<String> gl = new ArrayList<>();
+                gl.add(GUARD + ("card".equals(g[0]) ? "رقم بطاقة! لا ترسله لأحد · احذفه" : "لا ترسل رمز التحقق لأحد · احذفه"));
+                view.setSuggestions(gl);
+                return;
+            }
+        }
         if (!suggest || sensitive || decor != Decor.OFF || mode == Layouts.SYM || mode == Layouts.SYM2 || mode == Layouts.NUM) {
             view.setSuggestions(Collections.<String>emptyList());
             return;
@@ -1073,6 +1090,14 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             ic.commitText(word.substring(word.indexOf(' ') + 1) + " ", 1);   // W96/W98: the gentler phrase, whole phrase or Arabic spelling
             ic.endBatchEdit();
             softFrom = null;
+            return;
+        }
+        if (word.startsWith(GUARD)) {   // W106: delete the code / card number before it is sent
+            if (guardSpan != null) {
+                CharSequence gb = ic.getTextBeforeCursor(guardSpan.length(), 0);
+                if (gb != null && gb.toString().equals(guardSpan)) ic.deleteSurroundingText(guardSpan.length(), 0);
+            }
+            guardSpan = null;
             return;
         }
         if (word.startsWith(DATE)) {

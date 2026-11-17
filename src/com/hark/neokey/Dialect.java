@@ -350,6 +350,73 @@ public final class Dialect {
         return d <= ml[m - 1] ? new int[]{y, m, d, 0} : null;
     }
 
+    private static final String[] CHAT_APPS = {"com.whatsapp", "com.whatsapp.w4b", "org.telegram.messenger",
+            "org.telegram.plus", "com.google.android.apps.messaging", "com.samsung.android.messaging", "com.android.mms",
+            "com.facebook.orca", "com.instagram.android", "com.snapchat.android", "com.imo.android.imoim",
+            "com.discord", "com.viber.voip", "com.tencent.mm", "com.zhiliaoapp.musically", "com.twitter.android"};
+
+    /** W106 «حارس الاحتيال»: is this a chat app, where a code or a card number is someone else's to read? */
+    static boolean chatApp(String pkg) {
+        if (pkg == null) return false;
+        for (String c : CHAT_APPS) if (c.equals(pkg)) return true;
+        return false;
+    }
+
+    private static final String[] OTP_WORDS = {"رمز", "الرمز", "كود", "الكود", "التحقق", "code", "otp", "pin"};
+
+    /** W106: the text before the cursor ends in something a scammer asks for → {kind, the exact
+     *  suffix to delete}: «card» = 13–19 digits (spaces/dashes allowed) passing Luhn; «otp» = the whole
+     *  message is a bare 4–8 digit code (a 19xx/20xx year excepted), or a code right after رمز/كود/code.
+     *  Else null. Latin or Arabic-Indic digits. */
+    static String[] scamSpan(String t) {
+        if (t == null) return null;
+        int e = t.length();
+        while (e > 0 && t.charAt(e - 1) == ' ') e--;
+        int s = e, digits = 0;
+        while (s > 0) {
+            char c = t.charAt(s - 1);
+            if (Character.isDigit(c)) digits++;
+            else if (c != ' ' && c != '-') break;
+            s--;
+        }
+        while (s < e && !Character.isDigit(t.charAt(s))) s++;
+        if (digits >= 13 && digits <= 19 && (s == 0 || !Character.isLetter(t.charAt(s - 1)))) {
+            int sum = 0;
+            boolean dbl = false;
+            for (int i = e - 1; i >= s; i--) {
+                int d = Character.digit(t.charAt(i), 10);
+                if (d < 0) continue;
+                if (dbl && (d *= 2) > 9) d -= 9;
+                sum += d;
+                dbl = !dbl;
+            }
+            if (sum % 10 == 0) return new String[]{"card", t.substring(s)};
+        }
+        int r = e;
+        while (r > 0 && Character.isDigit(t.charAt(r - 1))) r--;
+        int n = e - r;
+        if (n < 4 || n > 8 || (r > 0 && Character.isLetter(t.charAt(r - 1)))) return null;
+        String head = t.substring(0, r).trim();
+        if (head.isEmpty()) {
+            if (n == 4) {
+                int y = Integer.parseInt(normDigits(t.substring(r, e)));
+                if (y >= 1900 && y <= 2099) return null;
+            }
+            return new String[]{"otp", t.substring(r)};
+        }
+        String low = head.toLowerCase(java.util.Locale.ROOT).replace(":", " ").trim();
+        int sp = low.lastIndexOf(' ');
+        String last = normAr(sp < 0 ? low : low.substring(sp + 1));
+        for (String w : OTP_WORDS) if (last.equals(normAr(w))) return new String[]{"otp", t.substring(r)};
+        return null;
+    }
+
+    private static String normDigits(String d) {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < d.length(); i++) b.append((char) ('0' + Character.digit(d.charAt(i), 10)));
+        return b.toString();
+    }
+
     static Map<String, String> pairs(String text) {
         Map<String, String> m = new HashMap<>();
         if (text != null)
