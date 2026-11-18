@@ -82,7 +82,7 @@ case "$STEP" in
   attack2)
     say; need_state ATTACK1_OK
     run_attack "published pin drift (android.jar pin flipped in the anchor)" \
-      'sed -i "s/96ccfdc84d15fad4e22d76cbb8ef38b150a4b56327957067875ca7e18113a424/06ccfdc84d15fad4e22d76cbb8ef38b150a4b56327957067875ca7e18113a424/" ci/rebuild_gate.sh' \
+      'sed -i "s/d9eb9da824d9e247a352f570f01e1169e725b2954bca9e283a71786c59b59f9a/09eb9da824d9e247a352f570f01e1169e725b2954bca9e283a71786c59b59f9a/" ci/rebuild_gate.sh' \
       'REBUILD_DRILL_FAILED tool\.android\.jar sha'
     [ $FAILED -eq 0 ] && echo ATTACK2_OK > "$STATE" || { echo "PROOF FAILED at attack2"; exit 1; }
     ;;

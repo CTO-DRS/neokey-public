@@ -1,34 +1,24 @@
-== rebuild negative proof [baseline] — 2026-11-05T18:00:04Z ==
+== rebuild negative proof [baseline] — 2026-11-18T00:06:46Z ==
 --- baseline (untampered)
-baseline: rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=37/37 tests=1503/0 dex=505636/512000 vc=79 vn=3.2
+baseline: rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=41/41 tests=2444/0 dex=599576/610000 vc=3 vn=0.3.0
 --- baseline state: OK
-== rebuild negative proof [attack1] — 2026-11-05T18:03:58Z ==
+== rebuild negative proof [attack1] — 2026-11-18T00:11:06Z ==
 
 --- attack: toolchain tamper (tools/r8.jar byte flipped)
 rc=1
-verdict: REBUILD_DRILL_FAILED tool.r8.jar sha ed7796d6557648e01412a79607fe157a1b4503942dfc94c50ab4dffb29f98486 != pin 4733945987ee0a840fafc34080b135259e01678412e07212b23f706334290294
+verdict: REBUILD_DRILL_FAILED tool.r8.jar sha 884dd03b7c850a0fe1cd908da3903c5ae251096dad6f91ba4893385a5d8fa92b != pin 9743e95de295fb6f5490e21da26536e4d0921809511423122ff20328a572e7f5
 verdict: REBUILDGATE_FAILED drill (rc=1)
 restoring and re-verifying green (a fresh full drill)…
-rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=37/37 tests=1503/0 dex=505636/512000 vc=79 vn=3.2
-== rebuild negative proof [attack2] — 2026-11-05T18:07:43Z ==
+rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=41/41 tests=2444/0 dex=599576/610000 vc=3 vn=0.3.0
+== rebuild negative proof [attack2] — 2026-11-18T00:15:24Z ==
 
 --- attack: published pin drift (android.jar pin flipped in the anchor)
 rc=1
-verdict: REBUILD_DRILL_FAILED tool.android.jar sha 96ccfdc84d15fad4e22d76cbb8ef38b150a4b56327957067875ca7e18113a424 != pin 06ccfdc84d15fad4e22d76cbb8ef38b150a4b56327957067875ca7e18113a424
+verdict: REBUILD_DRILL_FAILED tool.android.jar sha d9eb9da824d9e247a352f570f01e1169e725b2954bca9e283a71786c59b59f9a != pin 09eb9da824d9e247a352f570f01e1169e725b2954bca9e283a71786c59b59f9a
 verdict: REBUILDGATE_FAILED drill (rc=1)
 restoring and re-verifying green (a fresh full drill)…
-rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=37/37 tests=1503/0 dex=505636/512000 vc=79 vn=3.2
-== rebuild negative proof [attack3] — 2026-11-05T18:11:32Z ==
-
---- attack: dead guard (RebuildGate.verifyPinsAgainstTools neutered)
-rc=1
-verdict: REBUILD_DRILL_FAILED inner_pipeline (see build/rebuild/inner-run.out)
-verdict: REBUILDGATE_FAILED drill (rc=1)
-TAG WRONG (expected 'REBUILD regression: pins\.manifest\.char_flip')
-restoring and re-verifying green (a fresh full drill)…
-rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=37/37 tests=1503/0 dex=505636/512000 vc=79 vn=3.2
-PROOF FAILED at attack3
-== rebuild negative proof [attack3] — 2026-11-05T18:19:53Z ==
+rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=41/41 tests=2444/0 dex=599576/610000 vc=3 vn=0.3.0
+== rebuild negative proof [attack3] — 2026-11-18T00:19:42Z ==
 
 --- attack: dead guard (RebuildGate.verifyPinsAgainstTools neutered)
 rc=1
@@ -37,9 +27,9 @@ verdict: REBUILDGATE_FAILED regressions=1/24 (see REBUILD regression lines above
 verdict: REBUILDGATE_FAILED regressions=1/24 (see REBUILD regression lines above)
 verdict: REBUILDGATE_FAILED rebuildgate (rc=1)
 restoring and re-verifying green (a fresh full drill)…
-rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=37/37 tests=1503/0 dex=505636/512000 vc=79 vn=3.2
-== rebuild negative proof [finalize] — 2026-11-05T18:27:40Z ==
+rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=41/41 tests=2444/0 dex=599576/610000 vc=3 vn=0.3.0
+== rebuild negative proof [finalize] — 2026-11-18T00:28:24Z ==
 --- final full green on the restored tree
-rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=37/37 tests=1503/0 dex=505636/512000 vc=79 vn=3.2
+rc=0 [rebuild] REBUILDGATE_OK checks=24 negatives=12/12 pins=7/7 stages=41/41 tests=2444/0 dex=599576/610000 vc=3 vn=0.3.0
 
 == PROOF PASSED: all three attacks bit with their own tags, all files restored, final gate green ==
