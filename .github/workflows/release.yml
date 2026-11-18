@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '17' }
+        with: { distribution: temurin, java-version: '21' }
       - name: Fetch JVM test dependencies
         run: |
           mkdir -p tools
@@ -43,7 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '17' }
+        with: { distribution: temurin, java-version: '21' }
       - name: Signing-secrets presence check (week 31 — absent secrets = a DOCUMENTED skip, not a red run — the owner signs with the proven two-command path, docs/PHASE6-W2-REPORT.md)
         id: sec
         env:
@@ -137,7 +137,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '17' }
+        with: { distribution: temurin, java-version: '21' }
       - name: Install SDK pieces + bundletool (promotion rebuilds the same-tag AAB deterministically)
         run: |
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"

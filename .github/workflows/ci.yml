@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '17' }
+        with: { distribution: temurin, java-version: '21' }
 
       - name: Fetch JVM test dependencies
         run: |
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '17' }
+        with: { distribution: temurin, java-version: '21' }
 
       - name: Install SDK pieces expected by the build scripts
         run: |
