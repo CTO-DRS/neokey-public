@@ -51,6 +51,7 @@ SRC="src/com/hark/neokey/ClipItem.java src/com/hark/neokey/ClipRepo.java src/com
  src/com/hark/neokey/NQF.java src/com/hark/neokey/NNet.java src/com/hark/neokey/Predictor.java \
  src/com/hark/neokey/Engine.java src/com/hark/neokey/Engines.java src/com/hark/neokey/RootEngine.java src/com/hark/neokey/TashkeelEngine.java src/com/hark/neokey/GrammarNudge.java src/com/hark/neokey/AdaptEngine.java src/com/hark/neokey/StripAccept.java src/com/hark/neokey/AirSeal.java src/com/hark/neokey/OTPShield.java src/com/hark/neokey/IntegrityCert.java src/com/hark/neokey/PanicWipe.java src/com/hark/neokey/ClarityMeter.java src/com/hark/neokey/GenThemes.java src/com/hark/neokey/AACBoard.java src/com/hark/neokey/NumSmart.java src/com/hark/neokey/DialectPack.java src/com/hark/neokey/ThemeChannel.java src/com/hark/neokey/SyncV2.java src/com/hark/neokey/StoreV2.java \
  src/com/hark/neokey/Dialect.java src/com/hark/neokey/SmartSwitch.java src/com/hark/neokey/Assistant.java src/com/hark/neokey/NetGate.java \
+ src/com/hark/neokey/KeyGuard.java \
  src/com/hark/neokey/DialectAdapt.java src/com/hark/neokey/Motion.java \
  src/com/hark/neokey/SyncVault.java src/com/hark/neokey/SyncServerSim.java \
  src/com/hark/neokey/SyncState.java src/com/hark/neokey/SyncClient.java \
@@ -95,6 +96,7 @@ java -cp build/test:$JAR com.hark.neokey.DialectCorrGate   # W87: dialect-respec
 java -cp build/test:$JAR com.hark.neokey.SmartSwitchTest
 java -cp build/test:$JAR com.hark.neokey.AssistantTest
 java -cp build/test:$JAR com.hark.neokey.NetGateTest
+java -cp build/test:$JAR com.hark.neokey.KeyGuardTest
 java -cp build/test:$JAR com.hark.neokey.SyncVaultTest
 java -cp build/test:$JAR com.hark.neokey.SyncClientTest
 java -cp build/test:$JAR com.hark.neokey.ThemePackTest

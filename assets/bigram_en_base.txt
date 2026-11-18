@@ -1,0 +1,134 @@
+# bigram_en_base.txt — English next-word functional seed (G1, NEOKEY 1.0 GLOBAL)
+# Hand-curated high-frequency continuations (NOT a corpus extract): the Arabic
+# corpus file bigram_ar_base.txt has no English twin, and Dictionary.load
+# silently swallowed its absence (Dictionary.java bigram_<lang>_base.txt read).
+# Rows are keyed by the RAW word (the W-probe lesson that applies to both
+# languages: norm() keying collapses case families). Format: word<TAB>next1 next2 ...
+the	best same world way only first time most right other whole people
+a	good new lot little few bit lot day time man thing
+an	hour hour hour hour apple apple apple apple apple apple apple apple
+is	the going a not that it still now always the
+are	you they we there not going the now
+was	the a not there i it going a
+were	the they we there not the
+i	am was will would think know have can just dont love like want need
+you	are can will would know want have should are do like see
+we	are will have can should know do are going want need
+they	are will have can do know want say are going
+he	is was will would has had can said does
+she	is was will would has had can said does
+it	is was will would has had does does not seems
+this	is was way time means one makes will makes
+that	is was the way way it this you there
+there	is are was were would will must should is
+here	is are was were will you it
+will	be have not go make take come do be
+would	be like have want say say go make
+can	be get do make you see do you
+should	be have do get do do be you
+have	to been had has not you the do
+has	been to had have not the the
+had	been to have the a no not
+do	you i not it that we it they
+does	not it he she it it not
+did	not you he she it you you
+not	to a the be only just only only
+in	the a his her our your their the
+on	the a top time his her the
+at	the a least least home work least
+to	the be make do me him her get
+for	the me him her us them you the
+with	me you him her us them the the
+from	the his her our your their the the
+by	the the the far far far the
+about	it it the this that what it
+and	then the i you we it that the
+but	i the it he she they that you
+or	not the so you i it an so
+if	you i it we they the there you
+so	that much far i it we far it
+very	good well much little few good much good
+just	a like the so about what about the
+some	of of one day people of the
+any	one of of thing other one of
+all	of the these those over the the
+one	of of day day thing time day
+two	of of days times people of the
+more	than than of of time than of
+most	of of people the of of people
+other	people people things ways than people of
+new	one ones way way york way way
+good	idea thing thing time news news morning thing
+best	way way thing thing thing friend way way
+time	to to in in for of for to
+day	and of of or for for the day
+people	who in in like and are of who
+way	to to of of of in of of
+work	with on on in for of on at
+make	it it sure them me sure it it
+know	what that that how who if about it
+think	about of of that it that about it
+want	to to you me it to to to
+need	to to a you me it to to
+use	it it them this them the it it
+take	it it care a time them part it
+see	the the it them what you if you
+come	to to back from up out in back
+look	at at like like at into at at
+get	to it it a them rid up it
+give	me it you them us a them it
+find	out out it out them a out it
+say	that it it to about it that that
+tell	me you you them me us me me
+ask	for for for me him her for him
+try	to to it to to to to to
+call	me you it them me the him me
+no	one one one matter one one no no
+yes	or or or or or or or or
+of	the the a his her this their the
+it	is was will would has does seems does
+be	able able the done there there able a
+as	well well well as far if soon much
+like	to a this that it the that the
+than	the the the that the the the the
+its	own own own own own own own own
+dont	know want have need know think know want
+cant	do get be do do do do do
+my	own life life name work own life own
+your	own name name name life name name own
+our	own own own own own own own own
+their	own own own own own own own own
+out	of of of there there from out of
+up	to to with with on to to to
+when	i you it he she we you you
+what	i you is was about if about about
+where	the the the you it the the you
+who	is is will has are wants are are
+how	many much much to to do to much
+why	do does is is it not it does
+because	of of he she it they of it
+me	to with with for for for with to
+now	that that the the is is it now
+then	the the i it we he there the
+still	a the the not be is is not
+only	a the the the one one one one
+also	a the the the been been been been
+back	to to at at in from home from
+even	if if if if more more more if
+much	of of more more better more better more
+little	bit bit bit bit bit bit bit bit
+own	life way way way way way way way
+over	the the the the the the the the
+after	the the a the the the the the
+before	the the the you the you the the
+between	the the the the the the the the
+against	the the the the the the the the
+again	and and and and and and and and
+year	old old old old old old old old
+first	time time time time time time time time
+last	year year year night week time week year
+next	year time time week step time to year
+same	time time time time as way time time
+such	a an as as as a a a
+each	other other other other other other other other
+every	one one day day time day one day

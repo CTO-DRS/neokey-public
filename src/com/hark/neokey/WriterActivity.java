@@ -415,7 +415,7 @@ public class WriterActivity extends Screen {
         key.setHint(L.t("مفتاح OpenRouter (sk-or-…)"));
         key.setSingleLine(true);
         key.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        key.setText(Theme.prefs(this).getString("ai_key", ""));
+        key.setText(loadAiKey());   // G1: فك المغلف أو ترحيل النص الصريح القديم تلقائياً
         final EditText model = new EditText(this);
         model.setHint(L.t("النموذج"));
         model.setSingleLine(true);
@@ -426,11 +426,17 @@ public class WriterActivity extends Screen {
                 .setTitle(L.t("محرك الذكاء الاصطناعي"))
                 .setView(box)
                 .setPositiveButton(L.t("حفظ"), (d, w) -> {
-                    Theme.prefs(this).edit().putString("ai_key", key.getText().toString().trim())
+                    // G1: التخزين مشفراً (KeyGuard) — النص الصريح لا يُكتب أبداً،
+                    // وأي نص صريح قديم يُرحَّل ويُمسح عند أول حفظ/قراءة.
+                    saveAiKey(key.getText().toString().trim());
+                    Theme.prefs(this).edit()
                             .putString("ai_model", model.getText().toString().trim().isEmpty() ? "openrouter/auto" : model.getText().toString().trim()).apply();
                     build();
                 })
-                .setNeutralButton(L.t("حذف المفتاح"), (d, w) -> { Theme.prefs(this).edit().remove("ai_key").apply(); build(); })
+                .setNeutralButton(L.t("حذف المفتاح"), (d, w) -> {
+                    Theme.prefs(this).edit().remove("ai_key").remove("ai_key_enc").apply();
+                    build();
+                })
                 .setNegativeButton(L.t("إلغاء"), null)
                 .show();
     }
@@ -477,10 +483,86 @@ public class WriterActivity extends Screen {
         p.edit().putString("net_audit", all).apply();
     }
 
+    // ---- G1 (NEOKEY 1.0 GLOBAL): KeyGuard — تشفير مفتاح المستخدم أثناء السكون ----
+
+    /** مفتاح التشفير الجهازي: API 23+ مولّد ومقيم في AndroidKeyStore (لا يُستخرج
+     *  من الجهاز أبداً)؛ أقدم من ذلك — وفشل Keystore — مفتاح مولّد في filesDir
+     *  الخاص (قيد موثق: بلا حماية عتاد هناك، والملف خاص بالتطبيق وحده). */
+    private javax.crypto.SecretKey guardKey() {
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            try {
+                java.security.KeyStore ks = java.security.KeyStore.getInstance("AndroidKeyStore");
+                ks.load(null);
+                java.security.KeyStore.Entry e = ks.getEntry("neokey_keyguard", null);
+                if (e instanceof java.security.KeyStore.SecretKeyEntry)
+                    return ((java.security.KeyStore.SecretKeyEntry) e).getSecretKey();
+                javax.crypto.KeyGenerator kg = javax.crypto.KeyGenerator.getInstance("AES", "AndroidKeyStore");
+                android.security.keystore.KeyGenParameterSpec spec =
+                        new android.security.keystore.KeyGenParameterSpec.Builder(
+                                "neokey_keyguard",
+                                android.security.keystore.KeyProperties.PURPOSE_ENCRYPT
+                                        | android.security.keystore.KeyProperties.PURPOSE_DECRYPT)
+                                .setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
+                                .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
+                                .setKeySize(256)
+                                .build();
+                kg.init(spec);
+                return kg.generateKey();
+            } catch (Exception x) { /* Keystore مرفوض → السقوط للمفتاح المحلي الموثق */ }
+        }
+        try {
+            java.io.File f = new java.io.File(getFilesDir(), "keyguard.key");
+            byte[] mat = new byte[32];
+            if (f.exists() && f.length() == 32) {
+                java.io.FileInputStream in = new java.io.FileInputStream(f);
+                int r = in.read(mat); in.close();
+                if (r == 32) return KeyGuard.rawKey(mat);
+            }
+            new java.security.SecureRandom().nextBytes(mat);
+            java.io.FileOutputStream o = new java.io.FileOutputStream(f);
+            o.write(mat); o.close();
+            f.setReadable(false, false); f.setReadable(true, true);
+            f.setWritable(false, false); f.setWritable(true, true);
+            return KeyGuard.rawKey(mat);
+        } catch (Exception x) {
+            return null;   // فشل مغلق: بلا مفتاح لا تخزين مفتاح إطلاقاً
+        }
+    }
+
+    /** قراءة مفتاح المستخدم: فك المغلف، أو ترحيل النص الصريح القديم ثم مسحه فوراً. */
+    private String loadAiKey() {
+        SharedPreferences p = Theme.prefs(this);
+        String enc = p.getString("ai_key_enc", null);
+        if (enc != null) {
+            try { return KeyGuard.open(enc, guardKey()); }
+            catch (Exception x) { return ""; }   // فشل مغلق: مغلف تالف لا يُستخدم ولا يُعرض
+        }
+        String plain = p.getString("ai_key", "");
+        if (plain == null || plain.isEmpty()) return "";
+        saveAiKey(plain);   // ترحيل صامت: ختم + إزالة النص الصريح من التخزين
+        return plain;
+    }
+
+    /** حفظ مفتاح المستخدم مغلفاً (KeyGuard) — النص الصريح لا يُكتب في التخزين أبداً. */
+    private void saveAiKey(String plain) {
+        SharedPreferences p = Theme.prefs(this);
+        if (plain == null || plain.isEmpty()) {
+            p.edit().remove("ai_key").remove("ai_key_enc").apply();
+            return;
+        }
+        javax.crypto.SecretKey k = guardKey();
+        if (k == null) {
+            // فشل مغلق: بلا مفتاح تشفير نرفض الكتابة النصية الصريحة
+            Toast.makeText(this, L.t(getString(R.string.nk_writeractivity_keyguard_fail)), Toast.LENGTH_LONG).show();
+            return;
+        }
+        p.edit().putString("ai_key_enc", KeyGuard.seal(plain, k)).remove("ai_key").apply();
+    }
+
     private void doImprove() {
         final String draft = result.getText().toString();
         if (draft.trim().isEmpty()) return;
-        final String key = Theme.prefs(this).getString("ai_key", "");
+        final String key = loadAiKey();   // G1: يُفك من المغلف وقت الاستخدام فقط
         final String model = Theme.prefs(this).getString("ai_model", "openrouter/auto");
         final String style = Writer.CATS[cat] + "، بأسلوب " + Writer.TONES[Math.min(tone, 2)];
         if (aiBtn != null) { aiBtn.setEnabled(false); aiBtn.setText("جاري التحسين…"); }

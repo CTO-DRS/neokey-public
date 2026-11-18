@@ -303,4 +303,10 @@
     <string name="nk_setupactivity_guide4">٤- النقاط الثلاث ← السماح بالإعدادات المحظورة</string>
     <!-- origin: SetupActivity.java:3350 -->
     <string name="nk_setupactivity_guide5">٥- إمكانية الوصول ← تنبيه البنوك من NeoKey</string>
+    <!-- origin: NeoKeyService.java:2399 -->
+    <string name="nk_neokeyservice_translate_consent">أداة الترجمة ترسل النص المحدد إلى خدمة ترجمة خارجية عبر HTTPS. لا يُرسل شيء دون إذنك، وسطر التدقيق يسجل الحدث والزمن فقط — لا نصك أبداً. تسمح بهذا الإرسال؟</string>
+    <!-- origin: NeoKeyService.java:2409 -->
+    <string name="nk_neokeyservice_translate_denied">الترجمة الخارجية مغلقة من إعدادات الاتصال (بوابة الأذونات)</string>
+    <!-- origin: WriterActivity.java:556 -->
+    <string name="nk_writeractivity_keyguard_fail">تعذر تجهيز التشفير الآمن — لم يُحفظ المفتاح</string>
 </resources>

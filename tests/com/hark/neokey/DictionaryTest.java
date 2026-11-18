@@ -120,6 +120,30 @@ public class DictionaryTest {
         System.out.printf("PERF suggest(سلام,10) avg %.2f ms, predict avg %.3f ms (150k dict, JVM)%n", suggestMs, predictMs);
         check("suggest P50 gate < 80ms (regression guard)", suggestMs < 80);
         check("predict P50 gate < 5ms", predictMs < 5);
+
+        System.out.println("== Dictionary:english (G1 — NEOKEY 1.0 GLOBAL) ==");
+        // القاموس الإنجليزي الحقيقي (assets/en.txt 80k كلمة) + بذرة الثنائيات
+        // الجديدة (assets/bigram_en_base.txt — كانت غائبة وتُبتلع صامتاً).
+        Dictionary en = new Dictionary(new FakeContext(dirMain), "en");
+        await(en);
+        check("english dict loads", en.isLoaded() && en.knows("hello"));
+        List<String> enSug = en.suggest("hel", 5);
+        check("english suggest works", !enSug.isEmpty() && enSug.contains("hello"));
+        boolean latinOnly = true;
+        for (String w : enSug) for (int ci = 0; ci < w.length(); ci++)
+            if (w.charAt(ci) >= 0x0600 && w.charAt(ci) <= 0x06FF) latinOnly = false;
+        check("english suggestions carry no Arabic script", latinOnly);
+        List<String> enPred = en.predict("the", 5);
+        check("english prediction from the bigram seed (the->best/same/world...)",
+                !enPred.isEmpty());
+        boolean predLatin = true;
+        for (String w : enPred) for (int ci = 0; ci < w.length(); ci++)
+            if (w.charAt(ci) >= 0x0600 && w.charAt(ci) <= 0x06FF) predLatin = false;
+        check("english predictions carry no Arabic script (seed purity)", predLatin);
+        check("Dictionary.hasArabic gates by script",
+                Dictionary.hasArabic("سلام") && !Dictionary.hasArabic("hello")
+                        && !Dictionary.hasArabic("123 😂") && !Dictionary.hasArabic("")
+                        && !Dictionary.hasArabic(null));
         System.out.println("DictionaryTest subtotal: " + pass + " passed, " + fail + " failed");
     }
 }

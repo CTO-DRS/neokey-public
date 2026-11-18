@@ -80,6 +80,25 @@ public class NetGateTest {
         check("مفاتيح الإعدادات ثابتة",
                 "net_state".equals(NetGate.MASTER_PREF) && "net_writer_ai".equals(NetGate.capPref(NetGate.CAP_WRITER_AI)));
 
+        // ---- G1: باقة الترجمة (كانت الاتصال الوحيد خارج البوابة — إصلاح P1) ----
+        check("translate باقة معروفة افتراضها مغلق (فشل مغلق)",
+                NetGate.known(NetGate.CAP_TRANSLATE)
+                        && NetGate.full("on", null, NetGate.CAP_TRANSLATE, true).equals(NetGate.DENY_CAP)
+                        && NetGate.full("off", "on", NetGate.CAP_TRANSLATE, true).equals(NetGate.DENY_MASTER)
+                        && NetGate.full("on", "ask", NetGate.CAP_TRANSLATE, false).equals(NetGate.ASK_USER)
+                        && NetGate.full("on", "ask", NetGate.CAP_TRANSLATE, true).equals(NetGate.ALLOW_ASK)
+                        && NetGate.full("on", "on", NetGate.CAP_TRANSLATE, false).equals(NetGate.ALLOW_CAP));
+        check("النطاق الوحيد للترجمة: translate.googleapis.com/ (https فقط)",
+                "https://translate.googleapis.com/".equals(NetGate.endpoint(NetGate.CAP_TRANSLATE))
+                        && NetGate.endpointAllowed(NetGate.CAP_TRANSLATE, "https://translate.googleapis.com/translate_a/single?client=gtx")
+                        && !NetGate.endpointAllowed(NetGate.CAP_TRANSLATE, "http://translate.googleapis.com/x")
+                        && !NetGate.endpointAllowed(NetGate.CAP_TRANSLATE, "https://translate.googleapis.com.evil.com/x")
+                        && !NetGate.endpointAllowed(NetGate.CAP_TRANSLATE, "https://evil.example.com/x"));
+        String ta = NetGate.auditLine(NetGate.CAP_TRANSLATE, NetGate.ASK_USER, 1730000000000L);
+        check("سطر تدقيق الترجمة محكم بلا نص مستخدم",
+                ta.equals("NETGATE\ttranslate\tASK\task\t1730000000000") && ta.split("\t").length == 5);
+        check("مفتاح إعداد الترجمة ثابت", "net_translate".equals(NetGate.capPref(NetGate.CAP_TRANSLATE)));
+
         // ---- الأداء -------------------------------------------------------------
         long n0 = System.nanoTime();
         for (int i = 0; i < 1_000_000; i++) NetGate.full("on", "ask", NetGate.CAP_WRITER_AI, false);

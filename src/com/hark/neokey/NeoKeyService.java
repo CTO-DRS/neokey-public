@@ -1183,17 +1183,24 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
         // A2: neural top-3 completes the strip — it never displaces the
         // dictionary path, it only fills what the bigram table left empty
         // (the model's measured top-3 is the NNETGATE2 section of the gate).
+        // G1 (NEOKEY 1.0 GLOBAL): بوابة اللغة — مفردات النموذج عربية (9298/9300
+        // مُقاسة من vocab.words في nnet_ar.nqf)، فسياق لاتيني يهبط إلى <unk> ويُخرج
+        // كلمات عربية في شريط إنجليزي (سلوك مقاس قبل الإصلاح). لا سدادة عصبية
+        // إلا بسياق يحمل حرفاً عربياً — الإنجليزية تعتمد قاموسها وثنائياتها فقط.
         Predictor np = predictor;
+        String before = null;
         if (np != null && out.size() < cap) {
-            String before = null;
             if (i > 0) {
                 int j = i;
                 while (j > 0 && isWordChar(b.charAt(j - 1))) j--;
                 if (j < i) before = b.subSequence(j, i).toString();
             }
-            for (String w : np.top3(before, prev)) {
-                if (out.size() >= cap) break;
-                if (!out.contains(w)) out.add(w);
+            // بوابة اللغة نفسها: سياق عربي فقط يدخل النموذج
+            if (Dictionary.hasArabic(prev) || Dictionary.hasArabic(before)) {
+                for (String w : np.top3(before, prev)) {
+                    if (out.size() >= cap) break;
+                    if (!out.contains(w)) out.add(w);
+                }
             }
         }
         // W95: a trigger word earns a proverb chip in the lead slot; the strip keeps
@@ -2377,6 +2384,51 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
     }
 
     private void translate(final String src, final boolean selected) {
+        // G1 (NEOKEY 1.0 GLOBAL — إصلاح P1): كانت هذه الاتصال الوحيد خارج بوابة
+        // NetGate — نقرة أداة واحدة ترسل نص المستخدم إلى Google دون مفتاح رئيسي
+        // ولا موافقة ولا تدقيق، بنقص في المعمارية التي يحمي بها كل الاتصالات الأخرى.
+        // الآن نفس المسار الموحد: فشل مغلق، ثم موافقة صريحة عند "ask"، ثم سطر تدقيق
+        // بلا نص مستخدم (نفس عقد WriterActivity.audit حرفياً).
+        SharedPreferences gp = Theme.prefs(this);
+        NetGate.Decision gd = NetGate.full(gp.getString(NetGate.MASTER_PREF, "off"),
+                gp.getString(NetGate.capPref(NetGate.CAP_TRANSLATE), "off"), NetGate.CAP_TRANSLATE, false);
+        auditTranslate(gd);
+        if (gd.ask) {
+            new android.app.AlertDialog.Builder(this)
+                    .setTitle(L.t("إذن اتصال خارجي"))
+                    .setMessage(L.t(getString(R.string.nk_neokeyservice_translate_consent)))
+                    .setPositiveButton(L.t("أسمح بهذا الإرسال"), (d, w) -> {
+                        auditTranslate(NetGate.ALLOW_ASK);
+                        translateSend(src, selected);
+                    })
+                    .setNegativeButton(L.t("لا"), (d, w) -> auditTranslate(NetGate.DENY_CAP))
+                    .show();
+            return;
+        }
+        if (!gd.allowed) {
+            Toast.makeText(this, getString(R.string.nk_neokeyservice_translate_denied), Toast.LENGTH_LONG).show();
+            return;
+        }
+        translateSend(src, selected);
+    }
+
+    /** سطر تدقيق قدرة الترجمة — القدرة والقرار والزمن فقط، لا نص مستخدم أبداً. */
+    private void auditTranslate(NetGate.Decision d) {
+        SharedPreferences p = Theme.prefs(this);
+        String old = p.getString("net_audit", "");
+        String line = NetGate.auditLine(NetGate.CAP_TRANSLATE, d, System.currentTimeMillis());
+        String all = old.isEmpty() ? line : line + "\n" + old;
+        String[] rows = all.split("\n");
+        if (rows.length > 20) {
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < 20; i++) b.append(rows[i]).append('\n');
+            all = b.toString().trim();
+        }
+        p.edit().putString("net_audit", all).apply();
+    }
+
+    /** إرسال الترجمة الفعلي — يعمل فقط بعد قرار بوابة مسموح (فشل مغلق). */
+    private void translateSend(final String src, final boolean selected) {
         final boolean toEn = !TextTools.isMostlyLatin(src);
         Toast.makeText(this, toEn ? "جاري الترجمة للإنجليزي…" : "جاري الترجمة للعربي…", Toast.LENGTH_SHORT).show();
         new Thread(() -> {
@@ -2384,6 +2436,8 @@ public class NeoKeyService extends InputMethodService implements KeyboardView.Li
             try {
                 String url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
                         + (toEn ? "en" : "ar") + "&dt=t&q=" + java.net.URLEncoder.encode(src.trim(), "UTF-8");
+                // حرس النطاق الأبيض قبل أي بايت خارج — القائمة البيضاء حرفية (فشل مغلق)
+                if (!NetGate.endpointAllowed(NetGate.CAP_TRANSLATE, url)) return;
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
                 c.setConnectTimeout(6000);
                 c.setReadTimeout(8000);

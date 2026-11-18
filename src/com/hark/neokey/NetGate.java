@@ -29,13 +29,19 @@ public final class NetGate {
     public static final String CAP_WRITER_AI = "writer_ai";   // تحسين الصياغة عبر مزود المستخدم
     /** المرحلة 2، بند A2: المزامنة المشفرة — إذن منفصل عن الرئيسي، افتراضه مغلق. */
     public static final String CAP_SYNC = "sync";             // دفع/سحب الخزنة المشفرة
+    /** G1 (NEOKEY 1.0 GLOBAL — تدقيق الترجمة): أداة الترجمة كانت الاتصال الوحيد
+     *  الذي يتجاوز البوابة — نقرة واحدة تُرسل نص المستخدم إلى translate.googleapis.com
+     *  بلا مفتاح رئيسي ولا موافقة ولا سطر تدقيق. أُضيفت كباقة رسمية بنفس الفلسفة:
+     *  افتراض مغلق، موافقة صريحة، تدقيق بلا نص مستخدم. */
+    public static final String CAP_TRANSLATE = "translate";   // أداة الترجمة (نقر المستخدم)
 
-    private static final String[] CAPS = {CAP_WRITER_AI, CAP_SYNC};
+    private static final String[] CAPS = {CAP_WRITER_AI, CAP_SYNC, CAP_TRANSLATE};
 
     /** النطاق المسموح الوحيد لكل قدرة (قائمة بيضاء حرفية — فشل مغلق). */
     private static final String[][] ENDPOINTS = {
             {CAP_WRITER_AI, "https://openrouter.ai/api/v1/"},
             {CAP_SYNC, "https://sync.neokey.app/v1/"},
+            {CAP_TRANSLATE, "https://translate.googleapis.com/"},
     };
 
     public static final String MASTER_PREF = "net_state";

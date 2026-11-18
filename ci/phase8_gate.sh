@@ -190,7 +190,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PHASE7_GATE REBUILD_GATE EVAUDIT_GATE OPVERIFY_GATE CLIPIO_GATE CLIPLIB_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
-[ "${NQFPORT_ASSETS:-0}" = 33 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 33 (golden pins drifted)"   # W130: live golden has 33 (nqfport green)
+[ "${NQFPORT_ASSETS:-0}" = 34 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 34 (golden pins drifted)"   # G1/W132: live golden has 34 (bigram_en_base.txt joined the golden set via MakeGolden)
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 # the phase-7 close itself must still be zero-regression in THIS run
 echo "${PHASE7_REGRESSIONS:-?}" | grep -qE '^0/' || fail "PHASE7_REGRESSIONS ${PHASE7_REGRESSIONS:-?} is not 0/n (the phase-7 close regressed)"

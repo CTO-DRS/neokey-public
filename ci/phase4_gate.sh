@@ -69,7 +69,7 @@ TR_ENT=$(field "$TR" entries);   TR_SAVED=$(field "$TR" saved)
 TR_DEX=$(field "$TR" dex | cut -d/ -f1); TR_CEIL=$(field "$TR" dex | cut -d/ -f2)
 TR_REG=$(field "$TR" regrown);   TR_PUR=$(field "$TR" purity)
 TR_UIEN=$(field "$TR" ui_en_coupled)
-[ "${TR_ENT:-0}"   = 144 ]      || fail "trim entries ${TR_ENT:-0} != 144 (the trim inventory moved silently)"   # W130: measured live on the artifact path
+[ "${TR_ENT:-0}"   = 147 ]      || fail "trim entries ${TR_ENT:-0} != 147 (the trim inventory moved silently)"   # G1/W132: +3 relocated strings (translate consent/denied + keyguard fail)
 [ "${TR_REG:-1}"   = 0 ]        || fail "trim regrown ${TR_REG:-?} != 0 (a shell-class literal regrew)"
 [ "${TR_PUR:-0}"   -ge 36 ]     || fail "trim purity $TR_PUR < 36 (android imports lost their stubs)"
 [ "${TR_UIEN:-0}"  -ge 80 ]     || fail "trim ui_en_coupled ${TR_UIEN:-0} < 80 (translation coupling broke)"
@@ -204,7 +204,7 @@ for k in PLAY_GATE CORR_GATE NNET_GATE DIALECT_GATE ASSIST_GATE SYNC_GATE \
          PHASE3_GATE; do
   [ "${!k:-NOT_OK}" = "OK" ] || fail "$k not OK"
 done
-[ "${NQFPORT_ASSETS:-0}" = 33 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 33 (golden pins drifted)"   # W130: live golden has 33 (nqfport green)
+[ "${NQFPORT_ASSETS:-0}" = 34 ]     || fail "nqfport assets ${NQFPORT_ASSETS:-0} != 34 (golden pins drifted)"   # G1/W132: live golden has 34 (bigram_en_base.txt joined the golden set via MakeGolden)
 [ "${THEMESTORE_PACKS:-0}" -ge 25 ] || fail "themestore packs ${THEMESTORE_PACKS:-0} < 25"
 
 # versionCode bumped this week

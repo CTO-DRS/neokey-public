@@ -1,164 +1,42 @@
 {
   "spec": "NQF v1",
   "contract": "docs/NQF-PORT.md",
-  "generatedAt": "2026-11-16",
+  "generatedAt": "2026-11-18T02:45:31.722321719Z",
   "assets": {
-    "ar.txt": {
-      "bytes": 1923439,
-      "sha256": "fcc6cf243371183db10dbeabd4f5bc5c2bcacb3c341579eb47fe543ec0cf281e",
-      "lines": 150123,
-      "unique": 150123
-    },
-    "ar_gulf.txt": {
-      "bytes": 6660,
-      "sha256": "3a6c0a1a8825ca63606471593bc55353c4196ee8d92bfd6d523c981b7b960806",
-      "lines": 658,
-      "unique": 658
-    },
-    "ar_hijazi.txt": {
-      "bytes": 6594,
-      "sha256": "9fc543ac3083f636d78aba1f10453ce5c6f2722ea2b05afd2feb170944365fa8",
-      "lines": 652,
-      "unique": 652
-    },
-    "ar_najdi.txt": {
-      "bytes": 6244,
-      "sha256": "b01dff9fee8b4108f65ed32e45600bb70f82f79d5d8762929b7847845843eeb9",
-      "lines": 610,
-      "unique": 610
-    },
-    "quran.txt": {
-      "bytes": 794910,
-      "sha256": "1862ee63c70fbfc6285e0bb0b9587b89beb5b7891109a4d543d9d2cf8283e8c8"
-    },
-    "dialect_emoji.txt": {
-      "bytes": 1855,
-      "sha256": "52e6ede7d4f45ae3e2d5f523e2565fc00b65788532c7b543ee40017df381b2e2"
-    },
-    "arabizi.txt": {
-      "bytes": 2010,
-      "sha256": "139f7f1c779975294f00da3ed09adf2e7aae132b52cfaab6f179eff8eacb7600"
-    },
-    "bigram_ar_base.txt": {
-      "bytes": 1395646,
-      "sha256": "e0146d4b4a47b36eb9e9cfa2f68a5aa998c917f54e3640e9e060bc0ae7292ee7",
-      "lines": 28485,
-      "unique": 28485
-    },
-    "community_ar.dpack": {
-      "bytes": 1018,
-      "sha256": "f457bd7b6b4d6dd73488b767c3d7ad5bb41599c964a1e913808fa93d0f659a45"
-    },
-    "dialect_complete.txt": {
-      "bytes": 1003,
-      "sha256": "cc684ccd51a58fe4e94539a31c9931e150cd72bac0957be14ae9cf68e1182526"
-    },
-    "dialect_occasions.txt": {
-      "bytes": 2333,
-      "sha256": "4da3552a851aae582990320381e4784946b3a41834291eddfeec63636745848e"
-    },
-    "dialect_proverbs.txt": {
-      "bytes": 3637,
-      "sha256": "0a8f9975d4e22cd78bd7c357af76324ce5c7c85957682392393e27556a8725e0"
-    },
-    "dialect_soften.txt": {
-      "bytes": 2106,
-      "sha256": "16ce745cfc8072653014d325b907ab7e3a8b87bce803d0523979af2ec2a18fcf"
-    },
-    "dialect_synonyms.txt": {
-      "bytes": 2351,
-      "sha256": "5b1a691c86e26dffc61a2a85c1c3f52e6054ec6d0313c4e4dd3a8a6a1b1e0488"
-    },
-    "emoji_kw.txt": {
-      "bytes": 208850,
-      "sha256": "17cae4caf3e2e1a7a80caeb15f7ec7fda66bb736f5ee7ede2f84fcdd1958ee0c",
-      "lines": 1836,
-      "unique": 1836
-    },
-    "en.txt": {
-      "bytes": 645341,
-      "sha256": "92c4bb208a83ecee687447f3a62d28d003f03cf2c41005bd59d9df31b886dda3",
-      "lines": 80000,
-      "unique": 80000
-    },
-    "feedback_copy.txt": {
-      "bytes": 1671,
-      "sha256": "52ea8558def667cf8de2f32d316e416dc635c4ded3995044002fa3a911f93044"
-    },
-    "founders_catalog.json": {
-      "bytes": 22499,
-      "sha256": "556edee4c02a187485861a4086c9580433cebef70bb5a490e7c07f12a578f4da"
-    },
-    "grammar_rules.txt": {
-      "bytes": 13757,
-      "sha256": "002fccdc81ed831db302abd753ace0c8e521e05db42d3fe970e6f730ca619124"
-    },
-    "nnet_ar.nqf": {
-      "bytes": 3004240,
-      "sha256": "7100f5d45ad0cdc0ffbfb41e1cdb7d403ea190a0057c62c3c4a35ccc7c46ac08"
-    },
-    "root_index.txt": {
-      "bytes": 1122469,
-      "sha256": "900a9e6a8d8834f06ecd5b3075958faefdd0a1b91762f7866f9c736d40ec9342"
-    },
-    "tashkeel_index.txt": {
-      "bytes": 939777,
-      "sha256": "de2d26ef92089eafc19b367f15badd00312073354c7ea0e99a52bd5dbb74b50d"
-    },
-    "testset_ar.txt": {
-      "bytes": 2330,
-      "sha256": "2f86ca82c0017cff8878a11da6c457623d6563ea35cfdf4f00901a02cdfc0d46",
-      "lines": 50,
-      "unique": 50
-    },
-    "testset_dialects.txt": {
-      "bytes": 3185,
-      "sha256": "7d9eff437b77af50b7924ed52033f056132c0323e4d4a1dfd57b1de2f35386c9",
-      "lines": 69,
-      "unique": 69
-    },
-    "testset_en.txt": {
-      "bytes": 838,
-      "sha256": "65db9e55dc89f217b83bb66ed0321a8f8bbbe49356040161dc33da73e6c0ed27",
-      "lines": 30,
-      "unique": 30
-    },
-    "testset_grammar.txt": {
-      "bytes": 3007,
-      "sha256": "0f14eee64a6094499cb6e11f0c30bc87c2e774784f3d1e83f027ec8406449adc"
-    },
-    "testset_personal.txt": {
-      "bytes": 2234,
-      "sha256": "d3e66d0d0f1771d389b31781e40b37bbaa51d65297cd03f7df3e4e3adc5cbe9c"
-    },
-    "testset_otp.txt": {
-      "bytes": 1726,
-      "sha256": "d5a86915b91ffca2ed8b5de665ebb4630760916d24ca0bfd53fb0117d6fc8dad"
-    },
-    "testset_switch.txt": {
-      "bytes": 7103,
-      "sha256": "c2a5fe6ab1dadef1c831c0a9d50984a7add7393c773f8356552c6cf344fd14e7",
-      "lines": 59,
-      "unique": 59
-    },
-    "testset_tashkeel.txt": {
-      "bytes": 1712,
-      "sha256": "967c920cb0cde915aed21a42eaa552222e4c7a30ff4653c19f1993af5c6243d4"
-    },
-    "theme_phrases.txt": {
-      "bytes": 2383,
-      "sha256": "4442f620c36aba954306404eae65a200c60bf5e41c0ab89b70e36ce2825ff255"
-    },
-    "ui_en.txt": {
-      "bytes": 49656,
-      "sha256": "51b5b30eeff72bfeb1d96e3d5334394c740ebc1c1fbc834c7c75b84c3da37697",
-      "lines": 913,
-      "unique": 912
-    },
-    "writer_templates.txt": {
-      "bytes": 7081,
-      "sha256": "b5b00c6e1dcb9753d42c604126ef8645d3207e750b8436848af58c24eb21f04b"
-    }
+    "ar.txt": {"bytes": 1923439, "sha256": "fcc6cf243371183db10dbeabd4f5bc5c2bcacb3c341579eb47fe543ec0cf281e", "lines": 150123, "unique": 150123 },
+    "ar_gulf.txt": {"bytes": 6660, "sha256": "3a6c0a1a8825ca63606471593bc55353c4196ee8d92bfd6d523c981b7b960806", "lines": 658, "unique": 658 },
+    "ar_hijazi.txt": {"bytes": 6594, "sha256": "9fc543ac3083f636d78aba1f10453ce5c6f2722ea2b05afd2feb170944365fa8", "lines": 652, "unique": 652 },
+    "ar_najdi.txt": {"bytes": 6244, "sha256": "b01dff9fee8b4108f65ed32e45600bb70f82f79d5d8762929b7847845843eeb9", "lines": 610, "unique": 610 },
+    "arabizi.txt": {"bytes": 2010, "sha256": "139f7f1c779975294f00da3ed09adf2e7aae132b52cfaab6f179eff8eacb7600" },
+    "bigram_ar_base.txt": {"bytes": 1395646, "sha256": "e0146d4b4a47b36eb9e9cfa2f68a5aa998c917f54e3640e9e060bc0ae7292ee7", "lines": 28485, "unique": 28485 },
+    "bigram_en_base.txt": {"bytes": 5341, "sha256": "fcf6232736ee7aa437d38a17d083d29d3ad77986afa1508e65d42bbf0a380eb6" },
+    "community_ar.dpack": {"bytes": 1018, "sha256": "f457bd7b6b4d6dd73488b767c3d7ad5bb41599c964a1e913808fa93d0f659a45" },
+    "dialect_complete.txt": {"bytes": 1003, "sha256": "cc684ccd51a58fe4e94539a31c9931e150cd72bac0957be14ae9cf68e1182526" },
+    "dialect_emoji.txt": {"bytes": 1855, "sha256": "52e6ede7d4f45ae3e2d5f523e2565fc00b65788532c7b543ee40017df381b2e2" },
+    "dialect_occasions.txt": {"bytes": 2333, "sha256": "4da3552a851aae582990320381e4784946b3a41834291eddfeec63636745848e" },
+    "dialect_proverbs.txt": {"bytes": 3637, "sha256": "0a8f9975d4e22cd78bd7c357af76324ce5c7c85957682392393e27556a8725e0" },
+    "dialect_soften.txt": {"bytes": 2106, "sha256": "16ce745cfc8072653014d325b907ab7e3a8b87bce803d0523979af2ec2a18fcf" },
+    "dialect_synonyms.txt": {"bytes": 2351, "sha256": "5b1a691c86e26dffc61a2a85c1c3f52e6054ec6d0313c4e4dd3a8a6a1b1e0488" },
+    "emoji_kw.txt": {"bytes": 208850, "sha256": "17cae4caf3e2e1a7a80caeb15f7ec7fda66bb736f5ee7ede2f84fcdd1958ee0c", "lines": 1836, "unique": 1836 },
+    "en.txt": {"bytes": 645341, "sha256": "92c4bb208a83ecee687447f3a62d28d003f03cf2c41005bd59d9df31b886dda3", "lines": 80000, "unique": 80000 },
+    "feedback_copy.txt": {"bytes": 1671, "sha256": "52ea8558def667cf8de2f32d316e416dc635c4ded3995044002fa3a911f93044" },
+    "founders_catalog.json": {"bytes": 22499, "sha256": "556edee4c02a187485861a4086c9580433cebef70bb5a490e7c07f12a578f4da" },
+    "grammar_rules.txt": {"bytes": 13757, "sha256": "002fccdc81ed831db302abd753ace0c8e521e05db42d3fe970e6f730ca619124" },
+    "nnet_ar.nqf": {"bytes": 3004240, "sha256": "7100f5d45ad0cdc0ffbfb41e1cdb7d403ea190a0057c62c3c4a35ccc7c46ac08" },
+    "quran.txt": {"bytes": 794910, "sha256": "1862ee63c70fbfc6285e0bb0b9587b89beb5b7891109a4d543d9d2cf8283e8c8" },
+    "root_index.txt": {"bytes": 1122469, "sha256": "900a9e6a8d8834f06ecd5b3075958faefdd0a1b91762f7866f9c736d40ec9342" },
+    "tashkeel_index.txt": {"bytes": 939777, "sha256": "de2d26ef92089eafc19b367f15badd00312073354c7ea0e99a52bd5dbb74b50d" },
+    "testset_ar.txt": {"bytes": 2330, "sha256": "2f86ca82c0017cff8878a11da6c457623d6563ea35cfdf4f00901a02cdfc0d46", "lines": 50, "unique": 50 },
+    "testset_dialects.txt": {"bytes": 3185, "sha256": "7d9eff437b77af50b7924ed52033f056132c0323e4d4a1dfd57b1de2f35386c9", "lines": 69, "unique": 69 },
+    "testset_en.txt": {"bytes": 838, "sha256": "65db9e55dc89f217b83bb66ed0321a8f8bbbe49356040161dc33da73e6c0ed27", "lines": 30, "unique": 30 },
+    "testset_grammar.txt": {"bytes": 3007, "sha256": "0f14eee64a6094499cb6e11f0c30bc87c2e774784f3d1e83f027ec8406449adc" },
+    "testset_otp.txt": {"bytes": 1726, "sha256": "d5a86915b91ffca2ed8b5de665ebb4630760916d24ca0bfd53fb0117d6fc8dad" },
+    "testset_personal.txt": {"bytes": 2234, "sha256": "d3e66d0d0f1771d389b31781e40b37bbaa51d65297cd03f7df3e4e3adc5cbe9c" },
+    "testset_switch.txt": {"bytes": 7103, "sha256": "c2a5fe6ab1dadef1c831c0a9d50984a7add7393c773f8356552c6cf344fd14e7", "lines": 59, "unique": 59 },
+    "testset_tashkeel.txt": {"bytes": 1712, "sha256": "967c920cb0cde915aed21a42eaa552222e4c7a30ff4653c19f1993af5c6243d4" },
+    "theme_phrases.txt": {"bytes": 2383, "sha256": "4442f620c36aba954306404eae65a200c60bf5e41c0ab89b70e36ce2825ff255" },
+    "ui_en.txt": {"bytes": 49656, "sha256": "51b5b30eeff72bfeb1d96e3d5334394c740ebc1c1fbc834c7c75b84c3da37697", "lines": 913, "unique": 912 },
+    "writer_templates.txt": {"bytes": 7081, "sha256": "b5b00c6e1dcb9753d42c604126ef8645d3207e750b8436848af58c24eb21f04b" }
   },
   "model": {
     "file": "nnet_ar.nqf",
@@ -168,97 +46,14 @@
     "dirBytes": 246,
     "paramsQ8": 2963583,
     "tensors": [
-      {
-        "name": "emb",
-        "dtype": 1,
-        "dims": [
-          9300,
-          64
-        ],
-        "scaleBits": 1000430812,
-        "crc32": 1099306456,
-        "sha256": "75d5d685077574da3444b46b653e7886f684debc0b3826db58ea6862ac923f51",
-        "deqSha256": "0b45c27096ffb7c0e0c7a88a336af4d4f82709b0e6ceacfd2719d1daa69fd5cd"
-      },
-      {
-        "name": "fc0.b",
-        "dtype": 2,
-        "dims": [
-          240
-        ],
-        "scaleBits": 1065353216,
-        "crc32": 1986717340,
-        "sha256": "8707fd4c084a320700d24ffa6de1b501075a18f36f3b68208747600c283c33df",
-        "deqSha256": "93b4ba0071ea7db6b5035ebd6ca7171c0e724368371fa6656cea663b07218fe4"
-      },
-      {
-        "name": "fc0.w",
-        "dtype": 1,
-        "dims": [
-          240,
-          128
-        ],
-        "scaleBits": 1005594274,
-        "crc32": 2976084075,
-        "sha256": "8a0d3e21b57dad8f9b1b96484f5a6424e8c771cdb87488c39087683b1aa22564",
-        "deqSha256": "c193e46211fd33819666c1b838ca26d93f35d4bb8ad8424d2dcf91168d9f533f"
-      },
-      {
-        "name": "ln.b",
-        "dtype": 2,
-        "dims": [
-          240
-        ],
-        "scaleBits": 1065353216,
-        "crc32": 2868959307,
-        "sha256": "7c5baf0211492181540d02c03b98131dac2ea103f3b7b203e77db7ca3d127a87",
-        "deqSha256": "7d1f05e9fb98e3de11378796c92b397b19091a5715894c8fe2c3118495d9d583"
-      },
-      {
-        "name": "ln.g",
-        "dtype": 2,
-        "dims": [
-          240
-        ],
-        "scaleBits": 1065353216,
-        "crc32": 129744162,
-        "sha256": "0a3f1380773146d247769307bf33ceed8630947e1bde87c0900a73c9c710e34f",
-        "deqSha256": "0c36e6f19956a128b0961c5bdb7f7f7a90d56ba2e38dde3b716fab350f456bd2"
-      },
-      {
-        "name": "out.b",
-        "dtype": 2,
-        "dims": [
-          9300
-        ],
-        "scaleBits": 1065353216,
-        "crc32": 563847194,
-        "sha256": "439801a3d51ef4a931540951e9d017834533cab3f94605d77f9739f62b944e77",
-        "deqSha256": "5b0d20d50d3a42e92c3704a19c395ba78f7aaefdb8505101e053400f74c7845b"
-      },
-      {
-        "name": "out.w",
-        "dtype": 1,
-        "dims": [
-          9300,
-          240
-        ],
-        "scaleBits": 1013826804,
-        "crc32": 3550325765,
-        "sha256": "dfbadab8aad0c4f910eb65fedf941e8ce5acd79ae5186b4966b361b418d4d55a",
-        "deqSha256": "8d9635a11a2bd5a62f32e778843171463b4d05ae4bdf6b849c0f927ddbcd3414"
-      },
-      {
-        "name": "vocab.words",
-        "dtype": 1,
-        "dims": [
-          105663
-        ],
-        "scaleBits": 841731191,
-        "crc32": 3795239909,
-        "sha256": "fdeab1a0c881d656056f3e95f3aea99c19db88a8303f8484f85b8211ea61d2bd",
-        "deqSha256": "b0b80f648eac72da3386483e95faa7455d58a3b50e71c4e51a87642b2a008c14"
-      }
+      {"name": "emb", "dtype": 1, "dims": [9300,64], "scaleBits": 1000430812, "crc32": 1099306456, "sha256": "75d5d685077574da3444b46b653e7886f684debc0b3826db58ea6862ac923f51", "deqSha256": "0b45c27096ffb7c0e0c7a88a336af4d4f82709b0e6ceacfd2719d1daa69fd5cd"},
+      {"name": "fc0.b", "dtype": 2, "dims": [240], "scaleBits": 1065353216, "crc32": 1986717340, "sha256": "8707fd4c084a320700d24ffa6de1b501075a18f36f3b68208747600c283c33df", "deqSha256": "93b4ba0071ea7db6b5035ebd6ca7171c0e724368371fa6656cea663b07218fe4"},
+      {"name": "fc0.w", "dtype": 1, "dims": [240,128], "scaleBits": 1005594274, "crc32": 2976084075, "sha256": "8a0d3e21b57dad8f9b1b96484f5a6424e8c771cdb87488c39087683b1aa22564", "deqSha256": "c193e46211fd33819666c1b838ca26d93f35d4bb8ad8424d2dcf91168d9f533f"},
+      {"name": "ln.b", "dtype": 2, "dims": [240], "scaleBits": 1065353216, "crc32": 2868959307, "sha256": "7c5baf0211492181540d02c03b98131dac2ea103f3b7b203e77db7ca3d127a87", "deqSha256": "7d1f05e9fb98e3de11378796c92b397b19091a5715894c8fe2c3118495d9d583"},
+      {"name": "ln.g", "dtype": 2, "dims": [240], "scaleBits": 1065353216, "crc32": 129744162, "sha256": "0a3f1380773146d247769307bf33ceed8630947e1bde87c0900a73c9c710e34f", "deqSha256": "0c36e6f19956a128b0961c5bdb7f7f7a90d56ba2e38dde3b716fab350f456bd2"},
+      {"name": "out.b", "dtype": 2, "dims": [9300], "scaleBits": 1065353216, "crc32": 563847194, "sha256": "439801a3d51ef4a931540951e9d017834533cab3f94605d77f9739f62b944e77", "deqSha256": "5b0d20d50d3a42e92c3704a19c395ba78f7aaefdb8505101e053400f74c7845b"},
+      {"name": "out.w", "dtype": 1, "dims": [9300,240], "scaleBits": 1013826804, "crc32": 3550325765, "sha256": "dfbadab8aad0c4f910eb65fedf941e8ce5acd79ae5186b4966b361b418d4d55a", "deqSha256": "8d9635a11a2bd5a62f32e778843171463b4d05ae4bdf6b849c0f927ddbcd3414"},
+      {"name": "vocab.words", "dtype": 1, "dims": [105663], "scaleBits": 841731191, "crc32": 3795239909, "sha256": "fdeab1a0c881d656056f3e95f3aea99c19db88a8303f8484f85b8211ea61d2bd", "deqSha256": "b0b80f648eac72da3386483e95faa7455d58a3b50e71c4e51a87642b2a008c14"}
     ]
   }
 }

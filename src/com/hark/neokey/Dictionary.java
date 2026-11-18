@@ -229,6 +229,19 @@ final class Dictionary {
         return b.toString();
     }
 
+    /** G1 (NEOKEY 1.0 GLOBAL): هل يحوي النص أي حرف عربي (0600–06FF)؟ — نقي
+     *  JVM ليُختبر. الغرض: بوابة اللغة للسدادة العصبية في الخدمة — مفردات النموذج
+     *  عربية (9298/9300 مقاسة من vocab.words في nnet_ar.nqf)، فسياق لاتيني يهبط
+     *  إلى <unk> ويُخرج كلمات عربية في شريط إنجليزي — سلوك مقاس قبل الإصلاح. */
+    static boolean hasArabic(String s) {
+        if (s == null) return false;
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (ch >= 0x0600 && ch <= 0x06FF) return true;
+        }
+        return false;
+    }
+
     /** Up to n suggestions for the typed word, best first. */
     List<String> suggest(String typed, int n) {
         List<String> out = new ArrayList<>();

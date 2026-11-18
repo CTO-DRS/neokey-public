@@ -29,7 +29,13 @@
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher_neo"
         android:theme="@android:style/Theme.Material.NoActionBar"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:allowBackup="false">
+        <!-- G1 (NEOKEY 1.0 GLOBAL — إصلاح P1): كانت allowBackup غائبة → الافتراضي
+             منصّة = true، فمدخلات المستخدم (حافظة clips.db، كلمات التعلّم adapt_store،
+             المسودة draft_text) مؤهلة لنسخ السحابة الآلية للجهاز. لوحة مفاتيح
+             خصوصيتها ميزة = نسخ احتياطي منصّة مغلق؛ البديل المقصود هو النسخ اليدوي
+             المشفّر نفسه (BackupActivity) الذي يستثني المفتاح ai_key أصلاً. -->
 
         <activity android:name=".SetupActivity" android:exported="true"
             android:windowSoftInputMode="adjustResize">
