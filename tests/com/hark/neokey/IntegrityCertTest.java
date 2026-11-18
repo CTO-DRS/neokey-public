@@ -105,10 +105,17 @@ public class IntegrityCertTest {
             boolean pairMatches = actual != null && actual.equalsIgnoreCase(want);
             IntegrityCert.Cert live = IntegrityCert.evaluate(apk.getPath(),
                     want, vcN, vn, 2329);
+            // W133 finding: the identity substring lives ONLY in the MATCH
+            // branch's display ("vc N / vn") — the MISMATCH/UNKNOWN displays
+            // are bare. Asserting it on a stale pair (any out-of-band rebuild
+            // between runs) false-failed a correct MISMATCH bite for the first
+            // time when build.sh ran outside the pipeline. The verdict-on-the-
+            // real-pair assertion stays full-strength; the display identity is
+            // required exactly where the product puts it.
             check("live: الحكم الحي يطابق الحقيقة المقاسة للاقتران الحي",
                     live.state.equals(pairMatches
                             ? IntegrityCert.MATCH : IntegrityCert.MISMATCH)
-                            && live.display.contains("vc " + vcN + " / " + vn)
+                            && (!pairMatches || live.display.contains("vc " + vcN + " / " + vn))
                             && "0274d153a497".equals(
                             IntegrityCert.shortSha("0274d153a497a86cf94ff38f98e7b9ebe804ca699316d7395d3f86b80e096e75")));
             File tampered = File.createTempFile("nkbite", ".apk");

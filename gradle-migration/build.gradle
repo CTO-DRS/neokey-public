@@ -9,9 +9,14 @@ buildscript {
 }
 apply plugin: 'com.android.application'
 
-def manifest = file('../AndroidManifest.xml').text
-def vc = (manifest =~ /versionCode="(\d+)"/)[0][1] as Integer
-def vn = (manifest =~ /versionName="([^"]+)"/)[0][1]
+// W133: AGP 9 resolves its runtime dependencies (kotlin-stdlib …) from the PROJECT
+// repositories — the buildscript block covers only the classpath. Without this the
+// mergeReleaseNativeLibs task dies with "no repositories are defined".
+repositories { google(); mavenCentral() }
+
+def manifestText = file('../AndroidManifest.xml').text   // W133: renamed — the old `manifest` shadowed sourceSets.main.manifest and broke AGP 9 evaluation
+def vc = (manifestText =~ /versionCode="(\d+)"/)[0][1] as Integer
+def vn = (manifestText =~ /versionName="([^"]+)"/)[0][1]
 
 android {
     namespace 'com.hark.neokey'
@@ -44,7 +49,7 @@ android {
                 envFile.withInputStream { props.load(it) }
                 storeFile = ksFile
                 storePassword = props.getProperty('NEOKEY_KS_PASS')
-                keyAlias = 'neokey'
+                keyAlias = props.getProperty('NEOKEY_KEY_ALIAS') ?: 'neokey'   // W133: env-first like build.sh (drill stand-in = neokey-drill; production vault = neokey)
                 keyPassword = props.getProperty('NEOKEY_KS_PASS')
             }
         }

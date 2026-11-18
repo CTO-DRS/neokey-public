@@ -5,8 +5,8 @@
 |---|---|
 | لا مشكلات أمنية P0 | **PASS** (صفر P0؛ P1 الثلاثة أُغلقت) |
 | لا تعارض خصوصية↔تنفيذ | **PASS** (كل egress منبوّا؛ privacy.html مطابقة) |
-| بناء Release APK | **PASS عبر خط المشروع**: SignedApk يبني APK كاملاً v1+v2 من الشجرة الحية (SIGNEDAPKGATE_OK checks=14 negatives=6/6؛ sha256 متحكم به) — التوقيع بمخزن drill الموثق؛ توقيع الإنتاج بمفتاح المالك فقط |
-| بناء AAB | **BLOCKED هنا** — build_aab.sh يتطلب SDK+bundletool (غير متوفرة في البيئة) — المسار موثق ويعمل على جهاز CI/المالك |
+| بناء Release APK | **PASS عبر خط المشروع**: SignedApk يبني APK كاملاً v1+v2 من الشجرة الحية (SIGNEDAPKGATE_OK checks=14 negatives=6/6؛ sha256 متحكم به) — التوقيع بمخزن drill الموثق؛ توقيع الإنتاج بمفتاح المالك فقط. **W133: مسار Gradle الثاني مُثبت حيًا** — `./gradlew assembleRelease` (Gradle 9.6.0 + AGP 9.5.1) → `NeoKey-release.apk` بادجته مطابقة للخط اليدوي بايت-المعنى (`com.hark.neokey` vc3 0.3.0، v1+v2، شهادة drill `a80e71b9a5d15546…`) و`assembleDebug` → `com.hark.neokey.debug` |
+| بناء AAB | **PASS (W133)** — كان BLOCKED على غياب SDK+bundletool؛ حُلّت البيئة (SDK 36 + bundletool 1.18.3) وانكشف عطلان كامنان في `build_aab.sh` نفسها (`-storepass:env` صيغة apksigner لا يقبلها jarsigner — والمسار النسبي للخزنة بعد `cd build/aab`) — أُصلحا (AUDIT F12/F13) وبُني حزمة حقيقية موقعة: `NeoKey.aab` ‏6,224,247B — `bundletool validate` أخضر — dump manifest: `com.hark.neokey` vc3 0.3.0، minSdk21/targetSdk36، 3 صلاحيات — sha256 `f90c35e46ba5eadb…` — التوقيع drill الموثق |
 | الاختبارات المطلوبة | **PASS** (2483/0 + phase8/phase10) |
 | إثبات لوحة المفاتيح على أجهزة حقيقية | **BLOCKED** — لا جهاز/محاكي في هذه البيئة (الوحدة النقية + البنية IME مغطاة بالكود) |
 | إثبات جودة المحركات | **PASS (JVM)** — مجموعات testset + golden يعاد إثباتها كل تشغيل |

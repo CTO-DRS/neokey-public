@@ -20,3 +20,7 @@ tools/*.jar
 
 # python derivation-tool caches
 ci/__pycache__/
+
+# W133: Gradle project-local cache/state — the wrapper is committed, the cache is not
+.gradle/
+gradle-migration/.gradle/
